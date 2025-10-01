@@ -6,6 +6,8 @@ import com.evrental.evrentalsystem.entity.Role;
 import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.*;
+import com.evrental.evrentalsystem.response.user.UserLoginResponse;
+import com.evrental.evrentalsystem.response.user.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

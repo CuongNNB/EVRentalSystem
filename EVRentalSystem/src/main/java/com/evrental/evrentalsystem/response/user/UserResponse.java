@@ -1,4 +1,4 @@
-package com.evrental.evrentalsystem.response;
+package com.evrental.evrentalsystem.response.user;
 
 import lombok.Getter;
 import lombok.Setter;
