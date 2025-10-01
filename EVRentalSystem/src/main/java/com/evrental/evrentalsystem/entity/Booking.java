@@ -1,73 +1,77 @@
 package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.AccessLevel;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Nationalized;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id", nullable = false)
-    private Integer id;
+    Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "renter_id", nullable = false)
-    private User renter;
+    User renter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id")
-    private User staff;
+    User staff;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "license_plate", nullable = false)
-    private VehicleDetail licensePlate;
+    VehicleDetail licensePlate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
-    private Promotion promotion;
+    Promotion promotion;
 
     @ColumnDefault("sysutcdatetime()")
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    Instant createdAt = Instant.now();
 
     @Column(name = "start_time", nullable = false)
-    private Instant startTime;
+    Instant startTime;
 
     @Column(name = "expected_return_time", nullable = false)
-    private Instant expectedReturnTime;
+    Instant expectedReturnTime;
 
     @Column(name = "actual_return_time")
-    private Instant actualReturnTime;
+    Instant actualReturnTime;
 
     @Column(name = "deposit", nullable = false, precision = 10, scale = 2)
-    private BigDecimal deposit;
+    BigDecimal deposit = BigDecimal.ZERO;
 
     @Nationalized
     @ColumnDefault("N'PENDING'")
     @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    String status = "PENDING";
 
     @Nationalized
     @Column(name = "otp_code", length = 10)
-    private String otpCode;
+    String otpCode;
 
     @Column(name = "otp_expires_at")
-    private Instant otpExpiresAt;
+    Instant otpExpiresAt;
 
     @ColumnDefault("0")
     @Column(name = "otp_verified", nullable = false)
-    private Boolean otpVerified = false;
+    Boolean otpVerified = false;
 
     @ColumnDefault("0")
     @Column(name = "otp_attempts", nullable = false)
-    private Integer otpAttempts;
-
+    Integer otpAttempts = 0;
 }
