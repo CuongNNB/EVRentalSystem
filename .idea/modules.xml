@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/EVRentalSystem/EVRentalSystem.iml" filepath="$PROJECT_DIR$/EVRentalSystem/EVRentalSystem.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/MainProject.iml" filepath="$PROJECT_DIR$/.idea/MainProject.iml" />
     </modules>
   </component>

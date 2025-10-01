@@ -1,11 +1,10 @@
-package com.evrental.evrentalsystem.response;
+package com.evrental.evrentalsystem.response.vehicle;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.evrental.evrentalsystem.entity.VehicleDetail;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * DTO cho response khi trả về thông tin xe
@@ -13,6 +12,8 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
 public class VehicleResponse {
     private Integer id;
@@ -21,4 +22,6 @@ public class VehicleResponse {
     private BigDecimal price;
     private Integer seats;
     private String status; // ví dụ: "AVAILABLE" hoặc "UNAVAILABLE"
+
+    private List<VehicleDetailResponse> details;
 }
