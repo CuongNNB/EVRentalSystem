@@ -9,6 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserLoginResponse {
-    private String token;   // Fake or JWT
+    private String token;
     private UserResponse user;
 }
