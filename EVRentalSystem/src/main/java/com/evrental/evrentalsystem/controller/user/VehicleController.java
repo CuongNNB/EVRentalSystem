@@ -15,7 +15,6 @@ import java.util.List;
 @RequestMapping("/api/vehicles")
 @RequiredArgsConstructor
 public class VehicleController {
-
     private final VehicleService vehicleService;
 
     //API này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
@@ -25,9 +24,5 @@ public class VehicleController {
         return vehicleService.getAvailableVehicles();
     }
 
-
-    //Gọi API này dùng: localhost:8084/EVRentalSystem/api/vehicles/{id}
-    //Ví dụ: localhost:8084/EVRentalSystem/api/vehicles/1
-    //Trong đó {id} là id của bảng vehicle mà người dùng muốn xem chi tiết. :>
-
+    //End code here
 }

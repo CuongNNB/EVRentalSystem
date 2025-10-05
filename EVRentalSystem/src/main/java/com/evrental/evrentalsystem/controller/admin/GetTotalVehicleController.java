@@ -1,0 +1,24 @@
+package com.evrental.evrentalsystem.controller.admin;
+import com.evrental.evrentalsystem.response.admin.TotalVehicleResponse;
+import com.evrental.evrentalsystem.service.AdminService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("api/admin")
+@CrossOrigin(origins = "*")
+@Data
+@AllArgsConstructor
+public class GetTotalVehicleController {
+    private final AdminService adminService;
+
+    //API này để lấy tổng số xe tại một trạm cụ thể cho admin.
+    //Front-end gọi API này: https://localhost:8084/EVRentalSystem/api/admin/station/{stationId}/vehicles/total
+    //Ví dụ: http://localhost:8084/EVRentalSystem/api/admin/station/1/vehicles/total
+    @GetMapping("/station/{stationId}/vehicles/total")
+    public TotalVehicleResponse getTotalVehiclesByStation(@PathVariable Integer stationId) {
+        return adminService.getTotalVehiclesByStation(stationId);
+    }
+}

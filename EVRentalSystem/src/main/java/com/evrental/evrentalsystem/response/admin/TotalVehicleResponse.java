@@ -10,7 +10,5 @@ import lombok.NoArgsConstructor;
 public class TotalVehicleResponse {
     private Integer stationId;
     private String stationName;
-    private String address;
-    private String location;
-    private Integer totalVehicles;
+    private Long totalVehicles;
 }
