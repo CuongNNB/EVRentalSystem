@@ -1,6 +1,6 @@
 package com.evrental.evrentalsystem.controller.user;
 
-import com.evrental.evrentalsystem.response.vehicle.VehicleResponse;
+import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
 import com.evrental.evrentalsystem.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,18 +18,16 @@ public class VehicleController {
 
     private final VehicleService vehicleService;
 
-    //APi này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
+    //API này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
     //Front-end dùng API này thì gọi đến: localhost:8084/EVRentalSystem/api/vehicles/available
     @GetMapping("/available")
-    public ResponseEntity<List<VehicleResponse>> getAvailableVehicles() {
-        return ResponseEntity.ok(vehicleService.getAvailableVehicles());
+    public List<VehicleDetailResponse> getAvailableVehicles() {
+        return vehicleService.getAvailableVehicles();
     }
+
 
     //Gọi API này dùng: localhost:8084/EVRentalSystem/api/vehicles/{id}
     //Ví dụ: localhost:8084/EVRentalSystem/api/vehicles/1
     //Trong đó {id} là id của bảng vehicle mà người dùng muốn xem chi tiết. :>
-    @GetMapping("/{id}")
-    public ResponseEntity<VehicleResponse> getVehicleDetail(@PathVariable Integer id) {
-        return ResponseEntity.ok(vehicleService.getVehicleDetail(id));
-    }
+
 }

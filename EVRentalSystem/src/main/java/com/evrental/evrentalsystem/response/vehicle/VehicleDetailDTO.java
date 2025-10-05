@@ -8,12 +8,12 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class VehicleAtStationDTO {
-    private Integer id;
+public class VehicleDetailDTO {
+    private String licensePlate;
     private String brand;
     private String model;
-    private BigDecimal price;
-    private Integer seats;
+    private String color;
+    private String batteryCapacity;
     private String status;
-    private Integer quantity;
+    private Integer odo;
 }

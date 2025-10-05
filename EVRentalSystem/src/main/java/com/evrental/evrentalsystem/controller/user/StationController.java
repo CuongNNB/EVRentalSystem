@@ -22,8 +22,8 @@ public class StationController {
     //Gọi API này dùng: http://localhost:8084/EVRentalSystem/api/stations/search?district={Quận được lấy từ nút trạm}
     //Ví dụ: http://localhost:8084/EVRentalSystem/api/stations/search?district=Thủ Đức
     @GetMapping("/search")
-    public ResponseEntity<List<VehicleAtStationResponse>> searchByDistrict(
-            @RequestParam("district") String district) {   //khai báo thêm tên param "district" để spring biết
-        return ResponseEntity.ok(stationService.searchStationsByDistrict(district));
+    public List<VehicleAtStationResponse> searchStationsByDistrict(
+            @RequestParam("district") String district) {
+        return stationService.findStationsByDistrict(district);
     }
 }

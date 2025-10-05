@@ -13,6 +13,6 @@ public class VehicleAtStationResponse {
     private Integer stationId;
     private String stationName;
     private String address;
-    private String location; // lat,lng
-    private List<VehicleAtStationDTO> vehicles;
+    private String location;
+    private List<VehicleDetailDTO> vehicles;
 }
