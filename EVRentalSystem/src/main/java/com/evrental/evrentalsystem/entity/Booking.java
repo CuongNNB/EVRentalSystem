@@ -28,6 +28,14 @@ public class Booking {
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 
+    @ManyToOne
+    @JoinColumn(name = "vehicle_model_id", nullable = false)
+    private VehicleModel vehicleModel;
+
+    @ManyToOne
+    @JoinColumn(name = "station_id", nullable = false)
+    private Station station;
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime startTime;
     private LocalDateTime expectedReturnTime;
