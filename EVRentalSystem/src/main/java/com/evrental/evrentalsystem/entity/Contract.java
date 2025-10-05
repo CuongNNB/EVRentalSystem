@@ -1,41 +1,25 @@
 package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import lombok.*;
+import java.time.LocalDateTime;
 
-import java.time.Instant;
-
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
+@Table(name = "Contract")
 public class Contract {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "contract_id", nullable = false)
-    private Integer id;
+    private Integer contractId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "booking_id", nullable = false, unique = true)
     private Booking booking;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "renter_id", nullable = false)
-    private User renter;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "staff_id", nullable = false)
-    private User staff;
-
-    @ColumnDefault("sysutcdatetime()")
-    @Column(name = "signed_at", nullable = false)
-    private Instant signedAt;
-
-    @Nationalized
-    @ColumnDefault("N'PENDING'")
-    @Column(name = "status", nullable = false, length = 20)
+    private LocalDateTime signedAt = LocalDateTime.now();
     private String status;
-
+    private String otpCode;
 }

@@ -2,29 +2,32 @@ package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Payment")
-public class Payment {
+@Table(name = "Inspection")
+public class Inspection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer paymentId;
+    private Integer inspectionId;
 
     @ManyToOne
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    private Double total;
+    private String partName;
+
+    @Lob
+    private String picture;
 
     @ManyToOne
-    @JoinColumn(name = "method_id", nullable = false)
-    private PaymentMethod paymentMethod;
+    @JoinColumn(name = "staff_id", nullable = false)
+    private User staff;
 
-    private LocalDateTime paidAt = LocalDateTime.now();
+    private LocalDateTime inspectedAt = LocalDateTime.now();
+    private String status;
 }

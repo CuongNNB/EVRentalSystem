@@ -1,33 +1,31 @@
 package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.Nationalized;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "Vehicle_Detail")
 public class VehicleDetail {
+
     @Id
-    @Nationalized
-    @Column(name = "license_plate", nullable = false, length = 50)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(unique = true, nullable = false)
     private String licensePlate;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+    private VehicleModel vehicleModel;
 
-    @Nationalized
-    @Column(name = "color", length = 50)
+    @ManyToOne
+    @JoinColumn(name = "station_id", nullable = false)
+    private Station station;
+
     private String color;
-
-    @Nationalized
-    @Column(name = "battery_capacity", length = 50)
     private String batteryCapacity;
-
-    @Column(name = "odo")
     private Integer odo;
-
 }

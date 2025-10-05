@@ -1,29 +1,24 @@
 package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "Employee_Detail")
 public class EmployeeDetail {
+
     @Id
-    @Column(name = "employee_id", nullable = false)
-    private Integer id;
+    private Integer employeeId;
 
+    @OneToOne
     @MapsId
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "employee_id")
+    private User employee;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private User manager;
-
 }

@@ -7,20 +7,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Payment_Method")
-public class PaymentMethod {
+@Table(name = "Vehicle_Model")
+public class VehicleModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer methodId;
+    private Integer vehicleId;
 
-    private String methodName;
-
-    @Lob
-    private String description;
-
-    @Lob
-    private String qrImage;
-
+    private String brand;
+    private String model;
+    private Double price;
+    private Integer seats;
     private String status;
 }
