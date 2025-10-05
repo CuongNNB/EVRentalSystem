@@ -1,4 +1,4 @@
-﻿USE master;
+﻿    USE master;
 GO
 IF DB_ID('EVRentalSystem') IS NOT NULL
 BEGIN
