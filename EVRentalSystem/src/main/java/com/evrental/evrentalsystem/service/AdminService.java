@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class AdminService {
     private final StationRepository stationRepository;
     private final VehicleDetailRepository vehicleDetailRepository;
+
     //Hàm lấy tổng số xe tại 1 trạm cụ thể cho admin.
     public TotalVehicleResponse getTotalVehiclesByStation(Integer stationId) {
         Station station = stationRepository.findById(stationId)

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, Integer> {
+
     List<VehicleDetail> findByStation(Station station);
     //Lấy list các xe có sẵn
     @Query("SELECT v FROM VehicleDetail v WHERE v.vehicleModel.status = :status")
@@ -17,4 +18,5 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     //Đếm số xe có tại 1 trạm cụ thể
     @Query("SELECT COUNT(v) FROM VehicleDetail v WHERE v.station.stationId = :stationId")
     Long countVehiclesByStationId(@Param("stationId") Integer stationId);
+    //End code here
 }
