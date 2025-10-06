@@ -1,3 +1,4 @@
+import api from "../api/axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
@@ -18,19 +19,30 @@ export default function Login() {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    // Giả lập request
-    await new Promise((r) => setTimeout(r, 700));
+  e.preventDefault();
+  setLoading(true);
 
-    if (email.toLowerCase() === "test@gmail.com" && password === "123456") {
-      alert("Đăng nhập thành công!");
+  try {
+    const res = await api.post("/users/login", {
+      email,
+      password,
+    });
+
+    const { success, message, data } = res.data || {};
+    if (success) {
+      if (data?.token) localStorage.setItem("token", data.token);
+      alert(message || "Đăng nhập thành công!");
       navigate("/dashboard");
     } else {
-      alert("Sai email hoặc mật khẩu");
+      alert(message || "Sai email hoặc mật khẩu");
     }
+  } catch (err) {
+    console.error("Login error:", err);
+    alert(err.response?.data?.message || "Sai email hoặc mật khẩu");
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   return (
     <div className="login-page">
@@ -60,8 +72,8 @@ export default function Login() {
                 </span>
                 <input
                   id="email"
-                  type="email"
-                  placeholder="Email hoặc số điện thoại"
+                  type="text"  //allow both email and username
+                  placeholder="Email hoặc tên đăng nhập"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
