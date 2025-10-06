@@ -32,4 +32,19 @@ public class User {
 
     private String status;
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @PrePersist
+    @PreUpdate
+    private void trimFields() {
+        if (username != null) username = username.trim();
+        if (password != null) password = password.trim();
+        if (fullName != null) fullName = fullName.trim();
+        if (phone != null) phone = phone.trim();
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
+        if (address != null) address = address.trim();
+        if (role != null) role = role.trim().toUpperCase();
+        if (status != null) status = status.trim().toUpperCase();
+    }
 }

@@ -41,23 +41,34 @@ public class UserService {
     }
 
     public UserLoginResponse login(UserLoginRequest request) {
-        Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found!");
+        String input = request.getEmail();
+        String password = request.getPassword();
+
+        if (input == null || input.trim().isEmpty()) {
+            throw new RuntimeException("Email hoặc username là bắt buộc!");
         }
 
-        User user = userOpt.get();
-        if (!user.getPassword().equals(request.getPassword())) {
-            throw new RuntimeException("Invalid password!");
+        // eliminate leading/trailing whitespace
+        input = input.trim();
+
+        // Distinguish between email and username
+        User user;
+        if (input.contains("@")) {
+            user = userRepository.findByEmail(input)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email này!"));
+        } else {
+            user = userRepository.findByUsername(input)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với username này!"));
         }
 
-        String fakeToken = "token-" + user.getUsername();
+        // check password
+        if (!user.getPassword().equals(password)) {
+            throw new RuntimeException("Sai mật khẩu!");
+        }
 
-        UserLoginResponse res = new UserLoginResponse();
-        res.setToken(fakeToken);
-        res.setUser(toUserResponse(user));
-        return res;
+        return new UserLoginResponse(user.getUserId(), user.getUsername(), user.getRole());
     }
+
 
 
     public UserResponse updateProfile(Integer id, UserUpdateRequest request) {

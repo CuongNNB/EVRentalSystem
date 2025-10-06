@@ -1,14 +1,14 @@
 package com.evrental.evrentalsystem.response.user;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Response object for login result
- */
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserLoginResponse {
-    private String token;
-    private UserResponse user;
+    private Integer userId;
+    private String username;
+    private String role;
 }
