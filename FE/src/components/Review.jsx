@@ -29,12 +29,6 @@ const reviews = [
     text: "Được hướng dẫn lái xe điện chi tiết, cảm giác an toàn và hiện đại.",
     rating: 5,
   },
-  {
-    name: "Diễm My",
-    role: "Chủ doanh nghiệp",
-    text: "Ưu đãi cho khách hàng thân thiết rất tốt. Tôi sẽ quay lại. ",
-    rating: 5,
-  },
 ];
 
 export default function Reviews() {

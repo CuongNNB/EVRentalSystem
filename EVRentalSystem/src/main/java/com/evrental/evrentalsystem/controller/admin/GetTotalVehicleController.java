@@ -1,4 +1,5 @@
 package com.evrental.evrentalsystem.controller.admin;
+import com.evrental.evrentalsystem.response.admin.RentedVehicleResponse;
 import com.evrental.evrentalsystem.response.admin.TotalVehicleResponse;
 import com.evrental.evrentalsystem.service.AdminService;
 import lombok.AllArgsConstructor;
@@ -20,5 +21,13 @@ public class GetTotalVehicleController {
     @GetMapping("/station/{stationId}/vehicles/total")
     public TotalVehicleResponse getTotalVehiclesByStation(@PathVariable Integer stationId) {
         return adminService.getTotalVehiclesByStation(stationId);
+    }
+
+    // API này dùng để lấy tổng số xe có trạng thái RENTED (đang thuê) ở 1 trạm cụ thể cho ADMIN.
+    // Front-end gọi API này: https://localhost:8084/EVRentalSystem/api/admin/station/{stationId}/vehicles/rented
+    // Ví dụ: http://localhost:8084/EVRentalSystem/api/admin/station/1/vehicles/rented
+    @GetMapping("/station/{stationId}/vehicles/rented")
+    public RentedVehicleResponse getRentedVehiclesByStation(@PathVariable Integer stationId) {
+        return adminService.getRentedVehiclesByStation(stationId);
     }
 }
