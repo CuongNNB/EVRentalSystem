@@ -9,7 +9,6 @@ import lombok.*;
 @Entity
 @Table(name = "Vehicle_Model")
 public class VehicleModel {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer vehicleId;
