@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+const menuItems = [
+  { label: "Trang chủ", href: "/" },
+  { label: "Xem xe có sẵn", href: "/cars" },
+  { label: "Tìm xe theo trạm", href: "#stations" },
+  { label: "Ưu đãi", href: "#promotions" },
+];
+
 export default function Header() {
-  const menuItems = ["Trang chủ", "Xem xe có sẵn", "Tìm xe theo trạm",  "Ưu đãi"];
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -11,15 +17,17 @@ export default function Header() {
       setIsScrolled(scrollTop > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <header className={`homepage-header ${isScrolled ? 'scrolled' : ''}`}>
+    <header className={`homepage-header ${isScrolled ? "scrolled" : ""}`}>
       <div className="header-inner">
         <div className="header-brand">
-          <div className="brand-icon" aria-hidden>🚗</div>
+          <div className="brand-icon" aria-hidden>
+            🚗
+          </div>
           <div className="brand-copy">
             <span className="brand-name">EV Car Rental</span>
             <span className="brand-tagline">Thuê xe điện – lái tương lai</span>
@@ -27,11 +35,17 @@ export default function Header() {
         </div>
 
         <nav className="header-nav">
-          {menuItems.map((item) => (
-            <a key={item} href="#" className="nav-link">
-              {item}
-            </a>
-          ))}
+          {menuItems.map((item) =>
+            item.href.startsWith("#") ? (
+              <a key={item.label} href={item.href} className="nav-link">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.label} to={item.href} className="nav-link">
+                {item.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="header-actions">
@@ -46,3 +60,4 @@ export default function Header() {
     </header>
   );
 }
+
