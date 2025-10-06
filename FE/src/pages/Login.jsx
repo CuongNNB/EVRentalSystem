@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 import hero from '../picture/ảnh nền login.png';
-import { GoogleLogin } from '@react-oauth/google'
+import { GoogleLogin } from '@react-oauth/google';
+import StyleSwitcher from '../components/StyleSwitcher';
+import { initializeStyle } from '../utils/styleSwitcher';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,6 +12,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    initializeStyle();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,8 +33,8 @@ export default function Login() {
   };
 
   return (
-    <div className="login-page" style={{ backgroundImage: `url(${hero})` }}>
-
+    <div className="login-page">
+      <StyleSwitcher />
       <div className="login-form-wrapper">
         <div className="login-card">
           <header className="card-header">

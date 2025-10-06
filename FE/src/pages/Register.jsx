@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 import hero from '../picture/ảnh nền login.png';
+import StyleSwitcher from '../components/StyleSwitcher';
+import { initializeStyle } from '../utils/styleSwitcher';
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -12,6 +14,10 @@ export default function Register() {
   const [gplx, setGplx] = useState(null);
   const [cccd, setCccd] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    initializeStyle();
+  }, []);
 
   function handleFileChange(e, setter) {
     const file = e.target.files && e.target.files[0];
@@ -28,50 +34,51 @@ export default function Register() {
 
   return (
     <div className="register-page-layout">
-      <div className="register-left">
+      <StyleSwitcher />
+      <div className="login-form-wrapper">
         <div className="login-card">
           <header className="card-header">
             <div className="brand">
               <div className="logo">EV</div>
               <div className="brand-text">
-                <div className="brand-title">EV-Rental</div>
-                <div className="brand-sub">Tham gia EV-Rental ngay hôm nay</div>
+                <div className="brand-title">EV Car Rental</div>
+                <div className="brand-sub">Thuê xe điện thông minh – tiết kiệm – xanh sạch</div>
               </div>
             </div>
-            <div className="page-title">Tham gia EV-Rental ngay hôm nay</div>
+            <div className="page-title">Đăng ký tài khoản</div>
           </header>
 
           <form className="form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Tên Đăng Ký</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nhập Tên Đăng Ký" />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nhập Tên Đăng Ký" required />
             </div>
 
             <div className="form-group">
               <label>Email của bạn</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Nhập Email bạn tại đây" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Nhập Email bạn tại đây" required />
             </div>
 
             <div className="form-group">
               <label>Số điện thoại</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nhập số điện thoại tại đây" />
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nhập số điện thoại tại đây" required />
             </div>
 
             <div className="form-group">
               <label>Mật khẩu</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" required />
             </div>
 
             <div className="form-group">
               <label>Xác nhận mật khẩu</label>
-              <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Nhập lại mật khẩu" />
+              <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Nhập lại mật khẩu" required />
             </div>
 
             <div className="upload-row">
               <label className="file-input">
                 <div className="file-label">GPLX</div>
                 <div className="file-control">
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setGplx)} />
+                  <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setGplx)} required />
                   <div className="file-name">{gplx ? gplx.name : 'Chưa chọn file'}</div>
                 </div>
               </label>
@@ -79,7 +86,7 @@ export default function Register() {
               <label className="file-input">
                 <div className="file-label">CCCD</div>
                 <div className="file-control">
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setCccd)} />
+                  <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(e, setCccd)} required />
                   <div className="file-name">{cccd ? cccd.name : 'Chưa chọn file'}</div>
                 </div>
               </label>
@@ -92,10 +99,6 @@ export default function Register() {
             </div>
           </form>
         </div>
-      </div>
-
-      <div className="register-right">
-        <div className="login-illustration" style={{ backgroundImage: `url(${hero})` }}></div>
       </div>
     </div>
   );
