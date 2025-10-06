@@ -24,7 +24,6 @@ export default function Hero({ backgroundImage }) {
       <div className="hero-overlay" />
       <div className="hero-inner">
         <div className="hero-copy">
-          <span className="hero-eyebrow">EV Car Rental</span>
           <h1>
             Thuê Xe Điện <span>Lái Tương Lai</span>
           </h1>

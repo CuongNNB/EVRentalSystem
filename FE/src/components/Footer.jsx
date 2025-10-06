@@ -20,24 +20,24 @@ export default function Footer() {
           <div>
             <h4>Liên kết</h4>
             <a href="#">Lịch sử đặt xe</a>
+            <p></p>
             <a href="#">Các gói ưu đãi</a>
+            <p></p>
             <a href="#">Đối tác doanh nghiệp</a>
           </div>
           <div>
             <h4>Hỗ trợ</h4>
             <a href="#">Câu hỏi thường gặp</a>
+            <p></p>
             <a href="#">Chính sách bảo mật</a>
+            <p></p>
             <a href="#">Điều khoản sử dụng</a>
           </div>
         </div>
       </div>
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} EV Car Rental. All rights reserved.</span>
-        <div className="socials">
-          <a href="#" aria-label="Facebook">Fb</a>
-          <a href="#" aria-label="Youtube">Yt</a>
-          <a href="#" aria-label="Instagram">Ig</a>
-        </div>
+        
       </div>
     </footer>
   );
