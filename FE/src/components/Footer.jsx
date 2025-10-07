@@ -19,7 +19,8 @@ export default function Footer() {
           </div>
           <div>
             <h4>Liên kết</h4>
-            
+            <a href="#">Lịch sử đặt xe</a>
+            <p></p>
             <a href="#">Các gói ưu đãi</a>
             <p></p>
             <a href="#">Đối tác doanh nghiệp</a>
