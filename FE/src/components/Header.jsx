@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 
 const menuItems = [
-  { label: "Trang chủ", href: "/" },
-  { label: "Xem xe có sẵn", href: "/cars" },
-  { label: "Tìm xe theo trạm", href: "#stations" },
+  { label: "Trang chủ", href: "/Homepage" },
+  { label: "Xem xe có sẵn", href: "/AvailableCar" },
+  { label: "Tìm xe theo trạm", href: "/station-cars" },
   { label: "Ưu đãi", href: "#promotions" },
 ];
 

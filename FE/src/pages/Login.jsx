@@ -32,7 +32,7 @@ export default function Login() {
     if (success) {
       if (data?.token) localStorage.setItem("token", data.token);
       alert(message || "Đăng nhập thành công!");
-      navigate("/dashboard");
+      navigate("/");
     } else {
       alert(message || "Sai email hoặc mật khẩu");
     }
