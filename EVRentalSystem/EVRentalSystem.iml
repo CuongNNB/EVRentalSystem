@@ -6,10 +6,11 @@
         <setting name="validation-enabled" value="true" />
         <setting name="provider-name" value="Hibernate" />
         <datasource-mapping>
-          <factory-entry name="EVRentalSystem" value="1de7fd8e-713a-4706-8557-3b9348ffa239" />
-          <factory-entry name="entityManagerFactory" value="1de7fd8e-713a-4706-8557-3b9348ffa239" />
+          <factory-entry name="EVRentalSystem" />
+          <factory-entry name="entityManagerFactory" value="b9437189-90d5-473c-9bf9-8a9605c883bb" />
         </datasource-mapping>
         <naming-strategy-map>
+          <unit-entry name="EVRentalSystem" />
           <unit-entry name="entityManagerFactory" />
         </naming-strategy-map>
       </configuration>

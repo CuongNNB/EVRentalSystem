@@ -18,14 +18,20 @@ public class VehicleDetail {
     private String licensePlate;
 
     @ManyToOne
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id", nullable = false)
     private VehicleModel vehicleModel;
 
     @ManyToOne
-    @JoinColumn(name = "station_id", nullable = false)
+    @JoinColumn(name = "station_id", referencedColumnName = "station_id", nullable = false)
     private Station station;
 
     private String color;
     private String batteryCapacity;
     private Integer odo;
+
+    // Thêm phương thức này để lấy giá thuê xe mỗi ngày
+    public double getRentalPricePerDay() {
+        // Giả sử bạn lưu giá thuê xe trong bảng VehicleModel, và có phương thức để lấy giá mỗi ngày
+        return vehicleModel.getPrice() / 30;  // Ví dụ: Giá thuê xe mỗi ngày là giá chia cho 30 ngày
+    }
 }
