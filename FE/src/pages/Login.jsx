@@ -62,7 +62,7 @@ export default function Login() {
 
           <form className="form" onSubmit={handleSubmit}>
             <div className="form-group input-with-icon">
-              <label htmlFor="email">Email hoặc số điện thoại</label>
+              <label htmlFor="email">Đăng nhập bằng Email hoặc Username</label>
               <div className="input-inner">
                 <span className="icon email-icon" aria-hidden>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
