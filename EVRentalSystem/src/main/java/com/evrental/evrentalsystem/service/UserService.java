@@ -41,17 +41,21 @@ public class UserService {
     }
 
     public UserLoginResponse login(UserLoginRequest request) {
-        String input = request.getEmail();
+        String input = null;
+
+        // Ưu tiên email nếu có, nếu không thì lấy username
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            input = request.getEmail().trim();
+        } else if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            input = request.getUsername().trim();
+        }
+
         String password = request.getPassword();
 
-        if (input == null || input.trim().isEmpty()) {
+        if (input == null || input.isEmpty()) {
             throw new RuntimeException("Email hoặc username là bắt buộc!");
         }
 
-        // eliminate leading/trailing whitespace
-        input = input.trim();
-
-        // Distinguish between email and username
         User user;
         if (input.contains("@")) {
             user = userRepository.findByEmail(input)
@@ -61,7 +65,6 @@ public class UserService {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với username này!"));
         }
 
-        // check password
         if (!user.getPassword().equals(password)) {
             throw new RuntimeException("Sai mật khẩu!");
         }
