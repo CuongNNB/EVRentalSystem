@@ -30,11 +30,11 @@ public class Booking {
     private Promotion promotion;
 
     @ManyToOne
-    @JoinColumn(name = "vehicle_model_id", referencedColumnName = "vehicleId", nullable = false)
+    @JoinColumn(name="vehicle_model_id", nullable=false)
     private VehicleModel vehicleModel;
 
     @ManyToOne
-    @JoinColumn(name = "station_id", referencedColumnName = "stationId", nullable = false)
+    @JoinColumn(name = "station_id", nullable = false)
     private Station station;
 
     private LocalDateTime createdAt = LocalDateTime.now();

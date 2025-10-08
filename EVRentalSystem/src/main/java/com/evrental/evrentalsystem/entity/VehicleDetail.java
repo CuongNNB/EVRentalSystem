@@ -18,7 +18,7 @@ public class VehicleDetail {
     private String licensePlate;
 
     @ManyToOne
-    @JoinColumn(name = "vehicle_id", referencedColumnName = "vehicle_id", nullable = false)
+    @JoinColumn(name = "vehicle_id", nullable = false)
     private VehicleModel vehicleModel;
 
     @ManyToOne
