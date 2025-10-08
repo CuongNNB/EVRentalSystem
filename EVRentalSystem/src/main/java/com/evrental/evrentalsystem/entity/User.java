@@ -47,4 +47,15 @@ public class User {
         if (role != null) role = role.trim().toUpperCase();
         if (status != null) status = status.trim().toUpperCase();
     }
+    // Kiểm tra role hợp lệ trong lớp User
+    public void setRole(String role) {
+        if (role != null) {
+            role = role.trim().toUpperCase();
+            if (!role.equals("ADMIN") && !role.equals("STAFF") && !role.equals("RENTER")) {
+                throw new IllegalArgumentException("Invalid role: " + role);
+            }
+        }
+        this.role = role;
+    }
+
 }

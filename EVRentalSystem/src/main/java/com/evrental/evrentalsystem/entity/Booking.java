@@ -17,56 +17,57 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer bookingId;
 
-    // Liên kết với bảng User qua cột renter_id
     @ManyToOne
     @JoinColumn(name = "renter_id", referencedColumnName = "userId", nullable = false)
-    private User renter;  // Thông tin người thuê
+    private User renter;
 
-    // Liên kết với bảng VehicleDetail qua cột license_plate
     @ManyToOne
     @JoinColumn(name = "license_plate", referencedColumnName = "licensePlate", nullable = false)
-    private VehicleDetail vehicleDetail;  // Chi tiết xe
+    private VehicleDetail vehicleDetail;
 
-    // Liên kết với bảng Promotion qua cột promotion_id
     @ManyToOne
     @JoinColumn(name = "promotion_id", referencedColumnName = "promotionId")
-    private Promotion promotion;  // Khuyến mãi (nếu có)
+    private Promotion promotion;
 
-    // Liên kết với bảng VehicleModel qua cột vehicle_model_id
     @ManyToOne
     @JoinColumn(name = "vehicle_model_id", referencedColumnName = "vehicleId", nullable = false)
-    private VehicleModel vehicleModel;  // Mẫu xe
+    private VehicleModel vehicleModel;
 
-    // Liên kết với bảng Station qua cột station_id
     @ManyToOne
     @JoinColumn(name = "station_id", referencedColumnName = "stationId", nullable = false)
-    private Station station;  // Trạm
+    private Station station;
 
-    private LocalDateTime createdAt = LocalDateTime.now();  // Thời gian tạo đơn
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime startTime;
+    private LocalDateTime expectedReturnTime;
+    private LocalDateTime actualReturnTime;
 
-    private LocalDateTime startTime;  // Thời gian bắt đầu thuê
-    private LocalDateTime expectedReturnTime;  // Thời gian trả xe dự kiến
-    private LocalDateTime actualReturnTime;  // Thời gian trả xe thực tế
+    private Double deposit;
 
-    private Double deposit;  // Tiền cọc
+    // Trạng thái lưu dưới dạng String thay vì Enum
+    private String status;
 
-    private String status;  // Trạng thái giao dịch (WAITING_FOR_OTP, PENDING, COMPLETED, CANCELLED)
-
-    private Double rentalAmount;  // Tiền thuê xe (tính theo ngày)
-    private Double additionalFees = 0.0;  // Các phụ phí (phạt, vệ sinh, etc.), tạm thời = 0
-    private Double totalAmount;  // Tổng tiền (tiền thuê xe + phụ phí)
+    private Double rentalAmount;
+    private Double additionalFees = 0.0;
+    private Double totalAmount;
 
     // Tính tiền thuê xe theo ngày
     public void calculateRentalAmount() {
         if (startTime != null && expectedReturnTime != null) {
             long days = ChronoUnit.DAYS.between(startTime, expectedReturnTime);
-            double dailyRate = vehicleDetail.getRentalPricePerDay();  // Giá thuê xe mỗi ngày
+            double dailyRate = vehicleDetail.getRentalPricePerDay();
             this.rentalAmount = dailyRate * days;
+        } else {
+            // Xử lý trường hợp không có thời gian bắt đầu hoặc trả xe hợp lệ
+            this.rentalAmount = 0.0;
         }
     }
 
-    // Tính tổng số tiền (tiền thuê + phụ phí) sau khi trả xe
+    // Tính tổng số tiền (tiền thuê + phụ phí)
     public void calculateTotalAmount() {
+        if (this.rentalAmount == null) {
+            calculateRentalAmount();  // Đảm bảo rằng tiền thuê đã được tính trước khi tính tổng
+        }
         this.totalAmount = this.rentalAmount + (this.additionalFees != null ? this.additionalFees : 0);
     }
 }

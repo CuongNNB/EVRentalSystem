@@ -31,7 +31,9 @@ public class VehicleDetail {
 
     // Thêm phương thức này để lấy giá thuê xe mỗi ngày
     public double getRentalPricePerDay() {
-        // Giả sử bạn lưu giá thuê xe trong bảng VehicleModel, và có phương thức để lấy giá mỗi ngày
-        return vehicleModel.getPrice() / 30;  // Ví dụ: Giá thuê xe mỗi ngày là giá chia cho 30 ngày
+        if (vehicleModel != null && vehicleModel.getPrice() != null) {
+            return vehicleModel.getPrice() / 30;  // Hoặc theo cách tính khác
+        }
+        return 0.0;  // Trả về 0 nếu không có thông tin giá
     }
 }
