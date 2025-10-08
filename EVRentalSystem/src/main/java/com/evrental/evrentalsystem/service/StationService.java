@@ -29,7 +29,7 @@ public class StationService {
                     v.getVehicleModel().getModel(),
                     v.getColor(),
                     v.getBatteryCapacity(),
-                    v.getVehicleModel().getStatus(),
+                    v.getStatus(),
                     v.getOdo()
             )).collect(Collectors.toList());
 

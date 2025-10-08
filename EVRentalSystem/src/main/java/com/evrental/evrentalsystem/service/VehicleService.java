@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VehicleService {
     private final VehicleDetailRepository vehicleDetailRepository;
+    private final StationRepository stationRepository;
 
     //Hàm này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
     public List<VehicleDetailResponse> getAvailableVehicles() {
@@ -24,10 +26,12 @@ public class VehicleService {
                 v.getVehicleModel().getModel(),
                 v.getColor(),
                 v.getBatteryCapacity(),
-                v.getVehicleModel().getStatus(),
+                v.getStatus(),
                 v.getOdo(),
                 v.getStation().getStationName()
         )).collect(Collectors.toList());
     }
+
+
     //End code here
 }
