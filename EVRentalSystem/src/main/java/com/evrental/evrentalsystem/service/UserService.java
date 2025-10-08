@@ -1,5 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.entity.RenterDetail;
+import com.evrental.evrentalsystem.repository.RenterDetailRepository;
 import com.evrental.evrentalsystem.repository.UserRepository;
 import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.*;
@@ -9,16 +11,19 @@ import com.evrental.evrentalsystem.response.user.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Optional;
-
+import java.util.Base64;
+import org.springframework.web.multipart.MultipartFile;
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RenterDetailRepository renterDetailRepository;
 
-    public UserResponse register(UserRegisterRequest request) {
+    public UserResponse register(UserRegisterRequest request, MultipartFile gplx, MultipartFile cccdFront, MultipartFile cccdBack) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists!");
         }
@@ -30,14 +35,35 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         user.setAddress(request.getAddress());
-
         user.setRole("RENTER");
-
         user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
+        User savedUser = userRepository.save(user);
 
-        User saved = userRepository.save(user);
-        return toUserResponse(saved);
+        // save inf renter with base64 images
+
+        RenterDetail detail = new RenterDetail();
+        detail.setRenter(savedUser);
+        detail.setCccdFront(encodeToBase64(cccdFront));
+        detail.setCccdBack(encodeToBase64(cccdBack));
+        detail.setDriverLicense(encodeToBase64(gplx));
+        detail.setVerificationStatus("PENDING");
+        detail.setIsRisky(false);
+        renterDetailRepository.saveAndFlush(detail);
+
+        return toUserResponse(savedUser);
+    }
+
+    private String encodeToBase64(MultipartFile file) {
+        try {
+            if (file != null && !file.isEmpty()) {
+                return Base64.getEncoder().encodeToString(file.getBytes());
+            } else {
+                throw new RuntimeException("File upload bị trống!");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Không thể đọc file: " + file.getOriginalFilename(), e);
+        }
     }
 
     public UserLoginResponse login(UserLoginRequest request) {

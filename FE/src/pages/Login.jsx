@@ -2,7 +2,6 @@ import api from "../api/axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
-import hero from '../picture/ảnh nền login.png';
 import { GoogleLogin } from '@react-oauth/google';
 import StyleSwitcher from '../components/StyleSwitcher';
 import { initializeStyle } from '../utils/styleSwitcher';
