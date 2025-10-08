@@ -381,17 +381,3 @@ GO
 INSERT INTO Report (staff_id, admin_id, vehicle_detail_id, [description], [status]) VALUES
 (2, 1, 1, N'Xe VF e34 bị trầy nhẹ ở cản trước khi trả xe', 'RESOLVED');
 GO
-
--- ========================
--- Bổ sung thêm 10 mẫu xe điện
--- ========================
-INSERT INTO Vehicle_Model (brand, model, price, seats, [status]) VALUES
-
-GO
-
--- ========================
--- Bổ sung Vehicle_Detail cho các xe mới
--- ========================
-INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color], battery_capacity, odo) VALUES
-
-GO
