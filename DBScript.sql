@@ -381,3 +381,13 @@ GO
 INSERT INTO Report (staff_id, admin_id, vehicle_detail_id, [description], [status]) VALUES
 (2, 1, 1, N'Xe VF e34 bị trầy nhẹ ở cản trước khi trả xe', 'RESOLVED');
 GO
+
+USE EVRentalSystem;
+GO
+
+ALTER TABLE Booking
+ADD
+    rental_amount DECIMAL(10,2) NULL,
+    additional_fees DECIMAL(10,2) NULL DEFAULT 0,
+    total_amount DECIMAL(10,2) NULL;
+GO
