@@ -14,10 +14,10 @@ const carData = {
   currency: "VND",
   period: "1 ngày",
   images: [
-    "/src/anhxe/VinFast VF e34.jpg",
-    "/src/anhxe/VinFast VF e34.jpg", 
-    "/src/anhxe/VinFast VF e34.jpg",
-    "/src/anhxe/VinFast VF e34.jpg"
+    "/anhxe/VinFast VF e34.jpg",
+    "/anhxe/VinFast VF e34.jpg", 
+    "/anhxe/VinFast VF e34.jpg",
+    "/anhxe/VinFast VF e34.jpg"
   ],
   specifications: {
     seats: 4,

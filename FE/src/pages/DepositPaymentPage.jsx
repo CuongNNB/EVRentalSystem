@@ -65,36 +65,87 @@ const DepositPaymentPage = () => {
       try {
         setLoading(true);
         
-        // Demo: Use mock data instead of API call
-        const mockSummary = {
-          user: {
-            name: 'Nguyễn Văn B',
-            email: 'nguyenvanb@example.com',
-            phone: '0987654321',
-            idNumber: '012345678901',
-            address: '123 Đường ABC, Quận XYZ, TP.HCM'
-          },
-          car: {
-            name: 'VinFast VF 3',
-            image: 'https://via.placeholder.com/300x200?text=VinFast+VF3',
-            licensePlate: '51A-12345',
-            color: 'Trắng'
-          },
-          rental: {
-            startDate: '20/07/2024',
-            endDate: '25/07/2024',
-            pickupDate: '20/07/2024',
-            pickupTime: '09:00',
-            pickupLocation: 'EV Station - Bình Thạnh'
-          },
-          pricePerDay: 1000000,
-          days: 5,
-          totalPrice: 5000000,
-          depositAmount: 1500000, // 30% of total
-          rentalCode: `RENT-${contractId}`,
-          contractCode: `CT-${contractId}`,
-          isPaid: false
-        };
+        // Try to get real booking data first, fallback to mock
+        let summaryData;
+        
+        try {
+          const bookingData = localStorage.getItem('currentBooking');
+          const customerData = localStorage.getItem('registeredUser') || localStorage.getItem('user');
+          
+          if (bookingData && customerData) {
+            const booking = JSON.parse(bookingData);
+            const customer = JSON.parse(customerData);
+            
+            // Calculate deposit as 30% of daily price
+            const dailyPrice = booking.pricing?.dailyRate || 1000000;
+            const depositAmount = Math.round(dailyPrice * 0.3);
+            
+            summaryData = {
+              user: {
+                name: customer.fullName || customer.name || 'Khách hàng',
+                email: customer.email || 'email@example.com',
+                phone: customer.phone || '0987654321',
+                idNumber: customer.idNumber || '012345678901',
+                address: customer.address || 'Địa chỉ không xác định'
+              },
+              car: {
+                name: booking.car?.name || 'VinFast VF 8 Plus',
+                image: booking.car?.image || '/anhxe/VinFast VF 8 Plus.jpg',
+                licensePlate: '51A-12345',
+                color: 'Trắng'
+              },
+              rental: {
+                startDate: booking.rental?.pickupDate || '20/07/2024',
+                endDate: booking.rental?.returnDate || '25/07/2024',
+                pickupDate: booking.rental?.pickupDate || '20/07/2024',
+                pickupTime: booking.rental?.pickupTime || '09:00',
+                pickupLocation: booking.rental?.pickupLocation || 'EV Station - Bình Thạnh'
+              },
+              pricePerDay: dailyPrice,
+              days: booking.rental?.days || 1,
+              totalPrice: booking.pricing?.subtotal || dailyPrice,
+              depositAmount: depositAmount, // 30% of daily price
+              rentalCode: `RENT-${contractId}`,
+              contractCode: `CT-${contractId}`,
+              isPaid: false
+            };
+          } else {
+            throw new Error('No booking data found');
+          }
+        } catch (error) {
+          // Fallback to mock data
+          summaryData = {
+            user: {
+              name: 'Nguyễn Văn B',
+              email: 'nguyenvanb@example.com',
+              phone: '0987654321',
+              idNumber: '012345678901',
+              address: '123 Đường ABC, Quận XYZ, TP.HCM'
+            },
+            car: {
+              name: 'VinFast VF 3',
+              image: 'https://via.placeholder.com/300x200?text=VinFast+VF3',
+              licensePlate: '51A-12345',
+              color: 'Trắng'
+            },
+            rental: {
+              startDate: '20/07/2024',
+              endDate: '25/07/2024',
+              pickupDate: '20/07/2024',
+              pickupTime: '09:00',
+              pickupLocation: 'EV Station - Bình Thạnh'
+            },
+            pricePerDay: 1000000,
+            days: 5,
+            totalPrice: 5000000,
+            depositAmount: 300000, // 30% of daily price
+            rentalCode: `RENT-${contractId}`,
+            contractCode: `CT-${contractId}`,
+            isPaid: false
+          };
+        }
+        
+        const mockSummary = summaryData;
         
         setSummary(mockSummary);
         

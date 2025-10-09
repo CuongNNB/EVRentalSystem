@@ -1,0 +1,613 @@
+/* Customer Info Page Styles */
+.customer-info-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+/* Input field states */
+.customer-form input.filled {
+  background-color: #f0f9ff;
+  border-color: #0bb97f;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.customer-form input.empty {
+  background-color: #fef2f2;
+  border-color: #f87171;
+  color: #dc2626;
+  font-style: italic;
+}
+
+/* Field status indicator */
+.field-status {
+  font-size: 12px;
+  color: #0bb97f;
+  font-weight: 600;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Auto-fill notice */
+.auto-fill-notice {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #0bb97f;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.notice-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notice-text strong {
+  color: #0bb97f;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.notice-text p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.customer-info-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Loading Styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #0bb97f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 3rem;
+  gap: 3rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.step::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 100%;
+  width: 3rem;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.step:last-child::after {
+  display: none;
+}
+
+.step.completed::after {
+  background: #0bb97f;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  position: relative;
+  z-index: 2;
+}
+
+.step.completed .step-number {
+  background: #0bb97f;
+  color: white;
+}
+
+.step.active .step-number {
+  background: #0bb97f;
+  color: white;
+}
+
+.step:not(.completed):not(.active) .step-number {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.step span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.step.active span,
+.step.completed span {
+  color: #0bb97f;
+}
+
+/* Content Grid */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Info Cards */
+.info-card {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
+}
+
+.info-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  margin-bottom: 0;
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.edit-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+/* Car Information */
+.car-info {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.car-image {
+  width: 120px;
+  height: 80px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.car-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.car-details h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.car-details p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Rental Details */
+.rental-details { /* container for spacing between rows */ }
+.rental-details .detail-row + .detail-row {
+  margin-top: 1rem;
+}
+
+.detail-row {
+  margin-bottom: 1.5rem;
+}
+
+.detail-item h5 {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.975rem;
+}
+
+.detail-item p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.usage-limits {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+.usage-limits p {
+  color: #475569;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.usage-limits p:last-child {
+  margin-bottom: 0;
+}
+
+/* Customer Form */
+.customer-form { /* form container */
+  display: block;
+}
+.customer-form .form-row + .form-row {
+  margin-top: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #0bb97f;
+  box-shadow: 0 0 0 3px rgba(11, 185, 127, 0.1);
+}
+
+/* Documents Section */
+.documents-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.documents-section h4 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.document-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.document-row:last-child {
+  grid-template-columns: 1fr;
+}
+
+.document-item label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  display: block;
+}
+
+.file-display {
+  padding: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  color: #15803d;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Order Summary */
+.summary-card {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  position: sticky;
+  top: 2rem;
+}
+
+.summary-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+}
+
+.price-breakdown {
+  margin-bottom: 1.5rem;
+}
+.price-breakdown .price-row + .price-row {
+  margin-top: 0.25rem;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.price-row:last-child {
+  border-bottom: none;
+}
+
+.price-row.total {
+  border-top: 2px solid #e2e8f0;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  font-size: 1.125rem;
+}
+
+.price-row span {
+  color: #374151;
+}
+
+.payment-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fef3cd;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #fde047;
+  margin-bottom: 1.5rem;
+}
+
+.notice-icon {
+  font-size: 1.25rem;
+}
+
+.payment-notice p {
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.complete-booking-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(11, 185, 127, 0.3);
+}
+
+.complete-booking-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px -1px rgba(11, 185, 127, 0.4);
+}
+
+/* Additional Info */
+.additional-info {
+  margin-top: 2rem;
+}
+.additional-info .info-item + .info-item {
+  margin-top: 1rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.info-item h4 {
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.info-item p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .summary-card {
+    position: static;
+  }
+  
+  .progress-steps {
+    gap: 2rem;
+  }
+  
+  .step::after {
+    width: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .customer-info-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .info-card {
+    padding: 1.5rem;
+  }
+  
+  .summary-card {
+    padding: 1.5rem;
+  }
+  
+  .form-row,
+  .document-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .car-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .car-image {
+    width: 100%;
+    max-width: 200px;
+    height: 120px;
+  }
+  
+  .progress-steps {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .step::after {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .customer-info-container {
+    padding: 0.5rem;
+  }
+  
+  .info-card,
+  .summary-card {
+    padding: 1rem;
+  }
+  
+  .progress-steps {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .step {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+  
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+}

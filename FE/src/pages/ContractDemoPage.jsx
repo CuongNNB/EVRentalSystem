@@ -53,11 +53,13 @@ const ContractDemoPage = () => {
       customerEmail: 'nguyenvana@email.com'
     };
     
-    setContractData(contract);
+  setContractData(contract);
+  // Lưu dữ liệu hợp đồng tạm để trang thông tin khách hàng có thể tham chiếu nếu cần
+  localStorage.setItem('last_contract_demo', JSON.stringify(contract));
     
-    // Chuyển đến trang thanh toán sau 2 giây
+    // Chuyển đến trang thông tin khách hàng sau 2 giây
     setTimeout(() => {
-      navigate('/checkout');
+      navigate('/customer-info');
     }, 2000);
   };
 
@@ -90,7 +92,7 @@ const ContractDemoPage = () => {
               </div>
             </div>
             <h2>✅ Hợp đồng đã được ký thành công!</h2>
-            <p>Đang chuyển đến trang thanh toán...</p>
+            <p>Đang chuyển đến trang thông tin khách hàng để xác nhận chi tiết...</p>
             <div className="loading-spinner"></div>
           </div>
         </div>
@@ -114,24 +116,41 @@ const ContractDemoPage = () => {
 
         {/* Signature Section */}
         <div className="signature-section">
-          <div className="signature-grid">
-            {/* Bên B - Bên thuê xe */}
-            <SignaturePad
-              title="Bên B - Bên thuê xe"
-              subtitle="Vui lòng ký vào khung bên dưới"
-              onSignatureChange={handleSignatureChange}
-              isReadOnly={false}
-              isPreSigned={false}
-            />
-            
-            {/* Bên A - Bên cho thuê */}
-            <SignaturePad
-              title="Bên A - Bên cho thuê"
-              subtitle="Chữ ký mẫu đã được ký sẵn"
-              onSignatureChange={() => {}}
-              isReadOnly={true}
-              isPreSigned={true}
-            />
+          <div className="signature-confirm-wrapper">
+            {/* Bên A - Bên cho thuê (Khách hàng xác nhận) */}
+            <div className="signature-confirm-card">
+              <h3>Bên A - Bên cho thuê (Khách hàng)</h3>
+              <p className="signature-subtitle">Xác nhận ký hợp đồng thuê xe</p>
+              
+              <div className="confirm-box">
+                {!signed ? (
+                  <div className="confirm-content">
+                    <div className="confirm-icon">📝</div>
+                    <p className="confirm-text">
+                      Bằng việc nhấn nút bên dưới, bạn xác nhận đã đọc và đồng ý với các điều khoản trong hợp đồng thuê xe.
+                    </p>
+                    <button 
+                      className="btn-confirm-signature"
+                      onClick={() => setSigned(true)}
+                    >
+                      ✓ Xác nhận ký hợp đồng
+                    </button>
+                  </div>
+                ) : (
+                  <div className="signed-status">
+                    <div className="checkmark-circle">✓</div>
+                    <p className="signed-text">Đã xác nhận ký</p>
+                    <p className="signed-time">{new Date().toLocaleString('vi-VN')}</p>
+                    <button 
+                      className="btn-reset-signature"
+                      onClick={() => setSigned(false)}
+                    >
+                      Ký lại
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -146,7 +165,7 @@ const ContractDemoPage = () => {
           <div className="info-card">
             <h3>📋 Hướng dẫn demo</h3>
             <ol>
-              <li><strong>Bước 1:</strong> Ký vào khung "Bên B - Bên thuê xe" bằng chuột hoặc touch</li>
+              <li><strong>Bước 1:</strong> Nhấn nút "Xác nhận ký hợp đồng"</li>
               <li><strong>Bước 2:</strong> Nhấn "Gửi OTP" để nhận mã xác thực</li>
               <li><strong>Bước 3:</strong> Nhập mã OTP (sẽ hiển thị trong alert)</li>
               <li><strong>Bước 4:</strong> Xem kết quả xác thực thành công</li>
@@ -156,8 +175,8 @@ const ContractDemoPage = () => {
           <div className="info-card">
             <h3>🔧 Tính năng demo</h3>
             <ul>
-              <li>✅ Chữ ký điện tử thực tế trên canvas</li>
-              <li>✅ Lưu trữ chữ ký vào localStorage</li>
+              <li>✅ Xác nhận ký đơn giản bằng nút bấm</li>
+              <li>✅ Chỉ cần khách hàng (bên cho thuê) xác nhận</li>
               <li>✅ Gửi OTP giả lập với mã ngẫu nhiên</li>
               <li>✅ Xác thực OTP với animation</li>
               <li>✅ Hiển thị kết quả cuối cùng</li>

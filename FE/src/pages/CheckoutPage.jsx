@@ -20,7 +20,7 @@ const CheckoutPage = () => {
       actions.setCarInfo({
         id: 'GV60-2023',
         name: 'Genesis GV60 Performance',
-        image: '/src/anhxe/Genesis GV60 Performance.jpg',
+        image: '/anhxe/Genesis GV60 Performance.jpg',
         year: 2023,
         licensePlate: '30A-12345',
         dailyPrice: 900000,

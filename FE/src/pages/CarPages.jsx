@@ -19,10 +19,11 @@ const carInventory = [
     id: "vf8-plus",
     name: "VinFast VF 8 Plus",
     subtitle: "Phiên bản pin nâng cao, động cơ kép",
-    price: "2.200.000 VND/ngày",
+    price: 2200000,
+    priceDisplay: "2.200.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "AWD"],
-    image: "/src/anhxe/VinFast VF 8 Plus.jpg",
+    image: "/anhxe/VinFast VF 8 Plus.jpg",
     features: [
       { icon: "🔋", label: "Quãng đường 471 km" },
       { icon: "⚡", label: "Sạc nhanh 30 phút" },
@@ -34,10 +35,11 @@ const carInventory = [
     id: "ioniq5",
     name: "Hyundai Ioniq 5",
     subtitle: "Thiết kế tương lai, nội thất rộng rãi",
-    price: "1.950.000 VND/ngày",
+    price: 1950000,
+    priceDisplay: "1.950.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Tự động"],
-    image: "/src/anhxe/Hyundai Ioniq 5.jpg",
+    image: "/anhxe/Hyundai Ioniq 5.jpg",
     features: [
       { icon: "🔋", label: "Pin 77 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 507 km" },
@@ -49,10 +51,11 @@ const carInventory = [
     id: "kia-ev6",
     name: "Kia EV6 GT-Line",
     subtitle: "SUV coupe hiệu suất cao, sạc siêu nhanh",
-    price: "2.050.000 VND/ngày",
+    price: 2050000,
+    priceDisplay: "2.050.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "AWD"],
-    image: "/src/anhxe/Kia EV6 GT-Line.jpg",
+    image: "/anhxe/Kia EV6 GT-Line.jpg",
     features: [
       { icon: "⚡", label: "Sạc 10-80% trong 18 phút" },
       { icon: "🔋", label: "Pin 77.4 kWh" },
@@ -64,10 +67,11 @@ const carInventory = [
     id: "model3",
     name: "Tesla Model 3",
     subtitle: "Hiệu suất mạnh mẽ, Autopilot thông minh",
-    price: "2.400.000 VND/ngày",
+    price: 2400000,
+    priceDisplay: "2.400.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "4 chỗ", "Autopilot"],
-    image: "/src/anhxe/Tesla Model 3.jpg",
+    image: "/anhxe/Tesla Model 3.jpg",
     features: [
       { icon: "⚡", label: "0-100 km/h 4.4s" },
       { icon: "🧭", label: "Tự động giữ làn" },
@@ -79,10 +83,11 @@ const carInventory = [
     id: "vf5",
     name: "VinFast VF 5 Plus",
     subtitle: "Cỡ nhỏ linh hoạt, di chuyển nội đô",
-    price: "990.000 VND/ngày",
+    price: 990000,
+    priceDisplay: "990.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "5 chỗ", "Tự động"],
-    image: "/src/anhxe/VinFast VF 5 Plus.jpg",
+    image: "/anhxe/VinFast VF 5 Plus.jpg",
     features: [
       { icon: "🛣️", label: "Tầm hoạt động 300 km" },
       { icon: "🅿️", label: "Hỗ trợ đỗ xe" },
@@ -94,10 +99,11 @@ const carInventory = [
     id: "vfe34",
     name: "VinFast VF e34",
     subtitle: "Crossover điện thông minh, trợ lý giọng nói",
-    price: "1.200.000 VND/ngày",
+    price: 1200000,
+    priceDisplay: "1.200.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "5 chỗ", "FWD"],
-    image: "/src/anhxe/VinFast VF e34.jpg",
+    image: "/anhxe/VinFast VF e34.jpg",
     features: [
       { icon: "🛣️", label: "Tầm hoạt động 318 km" },
       { icon: "🗣️", label: "Trợ lý giọng nói ViVi" },
@@ -109,10 +115,11 @@ const carInventory = [
     id: "byd-dolphin",
     name: "BYD Dolphin Premium",
     subtitle: "Hatchback điện trẻ trung, tiện nghi",
-    price: "1.050.000 VND/ngày",
+    price: 1050000,
+    priceDisplay: "1.050.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "5 chỗ", "Tự động"],
-    image: "/src/anhxe/BYD Dolphin Premium.jpg",
+    image: "/anhxe/BYD Dolphin Premium.jpg",
     features: [
       { icon: "🔋", label: "Pin Blade 60 kWh" },
       { icon: "⚡", label: "Sạc nhanh DC 30 phút" },
@@ -124,10 +131,11 @@ const carInventory = [
     id: "mercedes-eqe",
     name: "Mercedes-Benz EQE 350+",
     subtitle: "Sedan hạng sang, tiện nghi chuẩn S-Class",
-    price: "2.850.000 VND/ngày",
+    price: 2850000,
+    priceDisplay: "2.850.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "5 chỗ", "Hạng sang"],
-    image: "/src/anhxe/Mercedes-Benz EQE 350+.jpg",
+    image: "/anhxe/Mercedes-Benz EQE 350+.jpg",
     features: [
       { icon: "🛋️", label: "Ghế massage Energizing" },
       { icon: "🎵", label: "Âm thanh Burmester 3D" },
@@ -139,10 +147,11 @@ const carInventory = [
     id: "audi-q8-etron",
     name: "Audi Q8 e-tron",
     subtitle: "SUV sang trọng, quattro toàn thời gian",
-    price: "2.950.000 VND/ngày",
+    price: 2950000,
+    priceDisplay: "2.950.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Quattro"],
-    image: "/src/anhxe/Audi Q8 e-tron.jpg",
+    image: "/anhxe/Audi Q8 e-tron.jpg",
     features: [
       { icon: "⚡", label: "Sạc DC 170 kW" },
       { icon: "🛣️", label: "Quattro AWD" },
@@ -155,10 +164,11 @@ const carInventory = [
     id: "tesla-model-y",
     name: "Tesla Model Y",
     subtitle: "SUV điện phổ biến nhất thế giới",
-    price: "2.600.000 VND/ngày",
+    price: 2600000,
+    priceDisplay: "2.600.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "7 chỗ", "Autopilot"],
-    image: "/src/anhxe/Tesla Model Y.jpg",
+    image: "/anhxe/Tesla Model Y.jpg",
     features: [
       { icon: "🚀", label: "0-100 km/h 3.7s" },
       { icon: "🧭", label: "Full Self-Driving" },
@@ -170,10 +180,11 @@ const carInventory = [
     id: "bmw-ix",
     name: "BMW iX xDrive50",
     subtitle: "SUV điện sang trọng, công nghệ tiên tiến",
-    price: "3.200.000 VND/ngày",
+    price: 3200000,
+    priceDisplay: "3.200.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "xDrive"],
-    image: "/src/anhxe/BMW iX xDrive50.jpg",
+    image: "/anhxe/BMW iX xDrive50.jpg",
     features: [
       { icon: "🔋", label: "Pin 111.5 kWh" },
       { icon: "⚡", label: "Sạc 10-80% 31 phút" },
@@ -185,10 +196,11 @@ const carInventory = [
     id: "porsche-taycan",
     name: "Porsche Taycan Turbo S",
     subtitle: "Sedan điện hiệu suất cao, thiết kế thể thao",
-    price: "4.500.000 VND/ngày",
+    price: 4500000,
+    priceDisplay: "4.500.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "4 chỗ", "Turbo"],
-    image: "/src/anhxe/Porsche Taycan Turbo S.jpg",
+    image: "/anhxe/Porsche Taycan Turbo S.jpg",
     features: [
       { icon: "🚀", label: "0-100 km/h 2.8s" },
       { icon: "⚡", label: "Công suất 560 kW" },
@@ -200,10 +212,11 @@ const carInventory = [
     id: "volkswagen-id4",
     name: "Volkswagen ID.4 Pro",
     subtitle: "SUV điện gia đình, thiết kế hiện đại",
-    price: "1.800.000 VND/ngày",
+    price: 1800000,
+    priceDisplay: "1.800.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "MEB"],
-    image: "/src/anhxe/Volkswagen ID.4 Pro.jpg",
+    image: "/anhxe/Volkswagen ID.4 Pro.jpg",
     features: [
       { icon: "🔋", label: "Pin 77 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 520 km" },
@@ -215,10 +228,11 @@ const carInventory = [
     id: "nissan-leaf",
     name: "Nissan Leaf e+",
     subtitle: "Hatchback điện tiên phong, đã được chứng minh",
-    price: "1.100.000 VND/ngày",
+    price: 1100000,
+    priceDisplay: "1.100.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "5 chỗ", "e-Pedal"],
-    image: "/src/anhxe/Nissan Leaf e+.jpg",
+    image: "/anhxe/Nissan Leaf e+.jpg",
     features: [
       { icon: "🔋", label: "Pin 62 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 385 km" },
@@ -230,10 +244,11 @@ const carInventory = [
     id: "ford-mustang-mach-e",
     name: "Ford Mustang Mach-E GT",
     subtitle: "SUV điện Mustang, hiệu suất mạnh mẽ",
-    price: "2.300.000 VND/ngày",
+    price: 2300000,
+    priceDisplay: "2.300.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "GT"],
-    image: "/src/anhxe/Ford Mustang Mach-E GT.jpg",
+    image: "/anhxe/Ford Mustang Mach-E GT.jpg",
     features: [
       { icon: "🚀", label: "0-100 km/h 3.7s" },
       { icon: "🔋", label: "Pin 88 kWh" },
@@ -245,10 +260,11 @@ const carInventory = [
     id: "polestar-2",
     name: "Polestar 2 Performance",
     subtitle: "Sedan điện cao cấp, thiết kế Bắc Âu",
-    price: "2.800.000 VND/ngày",
+    price: 2800000,
+    priceDisplay: "2.800.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "5 chỗ", "Performance"],
-    image: "/src/anhxe/Polestar 2 Performance.jpg",
+    image: "/anhxe/Polestar 2 Performance.jpg",
     features: [
       { icon: "⚡", label: "Công suất 300 kW" },
       { icon: "🔋", label: "Pin 78 kWh" },
@@ -260,10 +276,11 @@ const carInventory = [
     id: "rivian-r1t",
     name: "Rivian R1T Adventure",
     subtitle: "Pickup điện đầu tiên, khả năng off-road",
-    price: "3.800.000 VND/ngày",
+    price: 3800000,
+    priceDisplay: "3.800.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Adventure"],
-    image: "/src/anhxe/Rivian R1T Adventure.jpg",
+    image: "/anhxe/Rivian R1T Adventure.jpg",
     features: [
       { icon: "🔋", label: "Pin 135 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 505 km" },
@@ -275,10 +292,11 @@ const carInventory = [
     id: "lucid-air",
     name: "Lucid Air Dream Range",
     subtitle: "Sedan điện tầm xa, nội thất sang trọng",
-    price: "4.200.000 VND/ngày",
+    price: 4200000,
+    priceDisplay: "4.200.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "5 chỗ", "Luxury"],
-    image: "/src/anhxe/Lucid Air Dream Range.jpg",
+    image: "/anhxe/Lucid Air Dream Range.jpg",
     features: [
       { icon: "🔋", label: "Pin 112 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 832 km" },
@@ -290,10 +308,11 @@ const carInventory = [
     id: "hyundai-ioniq-6",
     name: "Hyundai Ioniq 6",
     subtitle: "Sedan điện tương lai, hiệu suất khí động học",
-    price: "2.100.000 VND/ngày",
+    price: 2100000,
+    priceDisplay: "2.100.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "5 chỗ", "Aerodynamic"],
-    image: "/src/anhxe/Hyundai Ioniq 6.jpg",
+    image: "/anhxe/Hyundai Ioniq 6.jpg",
     features: [
       { icon: "🔋", label: "Pin 77.4 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 610 km" },
@@ -305,10 +324,11 @@ const carInventory = [
     id: "kia-ev9",
     name: "Kia EV9 GT-Line",
     subtitle: "SUV điện 7 chỗ, thiết kế bold",
-    price: "2.700.000 VND/ngày",
+    price: 2700000,
+    priceDisplay: "2.700.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "7 chỗ", "GT-Line"],
-    image: "/src/anhxe/Kia EV9 GT-Line.jpg",
+    image: "/anhxe/Kia EV9 GT-Line.jpg",
     features: [
       { icon: "🔋", label: "Pin 99.8 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 541 km" },
@@ -320,10 +340,11 @@ const carInventory = [
     id: "genesis-gv60",
     name: "Genesis GV60 Performance",
     subtitle: "SUV điện hạng sang, thiết kế độc đáo",
-    price: "2.400.000 VND/ngày",
+    price: 2400000,
+    priceDisplay: "2.400.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Luxury"],
-    image: "/src/anhxe/Genesis GV60 Performance.jpg",
+    image: "/anhxe/Genesis GV60 Performance.jpg",
     features: [
       { icon: "🔋", label: "Pin 77.4 kWh" },
       { icon: "⚡", label: "Công suất 320 kW" },
@@ -335,10 +356,11 @@ const carInventory = [
     id: "volvo-xc40-recharge",
     name: "Volvo XC40 Recharge",
     subtitle: "SUV điện an toàn, thiết kế Bắc Âu",
-    price: "1.900.000 VND/ngày",
+    price: 1900000,
+    priceDisplay: "1.900.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Safety"],
-    image: "/src/anhxe/Volvo XC40 Recharge.jpg",
+    image: "/anhxe/Volvo XC40 Recharge.jpg",
     features: [
       { icon: "🔋", label: "Pin 78 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 418 km" },
@@ -350,10 +372,11 @@ const carInventory = [
     id: "mazda-mx-30",
     name: "Mazda MX-30",
     subtitle: "Crossover điện nhỏ gọn, thiết kế độc đáo",
-    price: "1.300.000 VND/ngày",
+    price: 1300000,
+    priceDisplay: "1.300.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "4 chỗ", "Kodo"],
-    image: "/src/anhxe/Mazda MX-30.jpg",
+    image: "/anhxe/Mazda MX-30.jpg",
     features: [
       { icon: "🔋", label: "Pin 35.5 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 200 km" },
@@ -365,10 +388,11 @@ const carInventory = [
     id: "mini-cooper-se",
     name: "MINI Cooper SE",
     subtitle: "Hatchback điện nhỏ gọn, vui nhộn",
-    price: "1.150.000 VND/ngày",
+    price: 1150000,
+    priceDisplay: "1.150.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "4 chỗ", "Fun"],
-    image: "/src/anhxe/MINI Cooper SE.jpg",
+    image: "/anhxe/MINI Cooper SE.jpg",
     features: [
       { icon: "🔋", label: "Pin 32.6 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 233 km" },
@@ -380,10 +404,11 @@ const carInventory = [
     id: "fiat-500e",
     name: "Fiat 500e",
     subtitle: "Hatchback điện Ý, thiết kế retro",
-    price: "1.000.000 VND/ngày",
+    price: 1000000,
+    priceDisplay: "1.000.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "4 chỗ", "Retro"],
-    image: "/src/anhxe/Fiat 500e.jpg",
+    image: "/anhxe/Fiat 500e.jpg",
     features: [
       { icon: "🔋", label: "Pin 42 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 320 km" },
@@ -396,10 +421,11 @@ const carInventory = [
     id: "tesla-model-s",
     name: "Tesla Model S Plaid",
     subtitle: "Sedan điện hiệu suất cao nhất, 0-100km/h 2.1s",
-    price: "3.500.000 VND/ngày",
+    price: 3500000,
+    priceDisplay: "3.500.000 VND/ngày",
     category: "Sedan",
     tags: ["EV", "5 chỗ", "Plaid"],
-    image: "/src/anhxe/Tesla Model S Plaid.jpg",
+    image: "/anhxe/Tesla Model S Plaid.jpg",
     features: [
       { icon: "🚀", label: "0-100 km/h 2.1s" },
       { icon: "🔋", label: "Tầm hoạt động 628 km" },
@@ -411,10 +437,11 @@ const carInventory = [
     id: "jaguar-i-pace",
     name: "Jaguar I-PACE",
     subtitle: "SUV điện sang trọng Anh, thiết kế thể thao",
-    price: "2.500.000 VND/ngày",
+    price: 2500000,
+    priceDisplay: "2.500.000 VND/ngày",
     category: "SUV",
     tags: ["EV", "5 chỗ", "Luxury"],
-    image: "/src/anhxe/Jaguar I-PACE.jpg",
+    image: "/anhxe/Jaguar I-PACE.jpg",
     features: [
       { icon: "🔋", label: "Pin 90 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 470 km" },
@@ -426,10 +453,11 @@ const carInventory = [
     id: "smart-eq-fortwo",
     name: "smart EQ fortwo",
     subtitle: "Xe điện đô thị nhỏ gọn, dễ đỗ xe",
-    price: "850.000 VND/ngày",
+    price: 850000,
+    priceDisplay: "850.000 VND/ngày",
     category: "Compact",
     tags: ["EV", "2 chỗ", "Urban"],
-    image: "/src/anhxe/smart EQ fortwo.jpg",
+    image: "/anhxe/smart EQ fortwo.jpg",
     features: [
       { icon: "🔋", label: "Pin 17.6 kWh" },
       { icon: "🛣️", label: "Tầm hoạt động 159 km" },
@@ -447,7 +475,8 @@ function CarCard({ car }) {
   };
 
   const handleBookNow = () => {
-    navigate(`/booking/${car.id}`);
+    // Truyền kèm ảnh, tên xe và giá sang trang đặt xe để hiển thị đúng
+    navigate(`/booking/${car.id}`, { state: { image: car.image, name: car.name, carId: car.id, price: car.price } });
   };
 
   return (
@@ -474,7 +503,7 @@ function CarCard({ car }) {
         </div>
         <div className="car-card__price-wrapper">
           <span className="car-card__price-label">Giá từ</span>
-          <p className="car-card__price">{car.price}</p>
+          <p className="car-card__price">{car.priceDisplay}</p>
         </div>
       </div>
 
@@ -528,8 +557,7 @@ export default function CarPages() {
       return carInventory.filter((car) => 
         car.tags.includes("Luxury") || 
         car.tags.includes("Hạng sang") ||
-        car.price.includes("3.") || 
-        car.price.includes("4.")
+        car.price >= 3000000
       );
     }
     if (activeFilter === "Performance") {

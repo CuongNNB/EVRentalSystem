@@ -26,7 +26,7 @@ const PaymentSuccessPage = () => {
         name: 'Genesis GV60 Performance',
         year: 2023,
         licensePlate: '30A-12345',
-        image: '/src/anhxe/Genesis GV60 Performance.jpg'
+        image: '/anhxe/Genesis GV60 Performance.jpg'
       },
       dates: {
         pickup: '2025-01-15T09:00:00+07:00',
@@ -217,7 +217,7 @@ END:VCALENDAR`;
                     src={bookingData.carInfo.image} 
                     alt={bookingData.carInfo.name}
                     onError={(e) => {
-                      e.target.src = '/src/anhxe/Genesis GV60 Performance.jpg';
+                      e.target.src = '/anhxe/Genesis GV60 Performance.jpg';
                     }}
                   />
                 </div>

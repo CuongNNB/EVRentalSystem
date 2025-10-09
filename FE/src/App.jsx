@@ -17,6 +17,7 @@ import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import ContractDemoPage from "./pages/ContractDemoPage";
 import DemoFlowPage from "./pages/DemoFlowPage";
 import DashboardUser from "./pages/DashboardUser";
+import CustomerInfoPage from "./pages/CustomerInfoPage";
 import StaffLayout from "./pages/staff/StaffLayout";
 import OrdersList from "./pages/staff/Orders/OrdersList";
 import OrderDetail from "./pages/staff/Orders/OrderDetail";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/contract/:id" element={<ContractPage />} />
             <Route path="/contract-success" element={<ProtectedRoute><ContractSuccessPage /></ProtectedRoute>} />
             <Route path="/deposit-payment" element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} />
+            <Route path="/customer-info" element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/checkout/success" element={<PaymentSuccessPage />} />
             <Route path="/contract-demo" element={<ContractDemoPage />} />
@@ -58,4 +60,3 @@ function App() {
 }
 
 export default App;
-

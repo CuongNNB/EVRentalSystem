@@ -55,6 +55,138 @@
   margin-bottom: 2rem;
 }
 
+/* Signature Confirm Wrapper */
+.signature-confirm-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.signature-confirm-card {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  max-width: 600px;
+  width: 100%;
+}
+
+.signature-confirm-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.signature-subtitle {
+  color: #64748b;
+  font-size: 0.975rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-box {
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 2px dashed #cbd5e1;
+}
+
+.confirm-content {
+  text-align: center;
+}
+
+.confirm-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.confirm-text {
+  color: #475569;
+  font-size: 0.975rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.btn-confirm-signature {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(11, 185, 127, 0.3);
+}
+
+.btn-confirm-signature:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px -1px rgba(11, 185, 127, 0.4);
+}
+
+.btn-confirm-signature:active {
+  transform: translateY(0);
+}
+
+.signed-status {
+  text-align: center;
+  padding: 1rem;
+}
+
+.checkmark-circle {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  animation: checkmarkPulse 2s ease-in-out infinite;
+}
+
+.signed-text {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.signed-time {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.btn-reset-signature {
+  padding: 0.5rem 1.5rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.btn-reset-signature:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
 /* OTP Section - already styled in OtpSection.css */
 
 /* Demo Info */
@@ -235,6 +367,10 @@
     gap: 1.5rem;
   }
   
+  .signature-confirm-card {
+    max-width: 100%;
+  }
+  
   .demo-info {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -256,6 +392,23 @@
   
   .demo-subtitle {
     font-size: 1rem;
+  }
+  
+  .signature-confirm-card {
+    padding: 1.5rem;
+  }
+  
+  .confirm-box {
+    padding: 1.5rem;
+  }
+  
+  .confirm-icon {
+    font-size: 2.5rem;
+  }
+  
+  .btn-confirm-signature {
+    padding: 0.875rem 1.75rem;
+    font-size: 0.975rem;
   }
   
   .info-card {

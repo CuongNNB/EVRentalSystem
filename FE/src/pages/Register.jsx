@@ -9,6 +9,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [gplxFront, setGplxFront] = useState(null);
@@ -33,7 +34,7 @@ export default function Register() {
     setError("");
     
     // Validation
-    if (!name || !email || !phone || !password || !confirm) {
+    if (!name || !email || !phone || !address || !password || !confirm) {
       setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
@@ -58,6 +59,7 @@ export default function Register() {
     formData.append('name', name);
     formData.append('email', email);
     formData.append('phone', phone);
+    formData.append('address', address);
     formData.append('password', password);
     formData.append('gplxFront', gplxFront);
     formData.append('gplxBack', gplxBack);
@@ -71,9 +73,15 @@ export default function Register() {
         // Lưu thông tin user vào localStorage để sử dụng khi đăng nhập
         const userInfo = {
           name: name,
+          fullName: name, // Thêm fullName để tương thích
           email: email,
           phone: phone,
-          role: 'USER'
+          address: address,
+          role: 'USER',
+          birthDate: "01/01/1990", // Default value
+          idCardFront: cccdFront ? cccdFront.name : null,
+          idCardBack: cccdBack ? cccdBack.name : null,
+          driverLicense: gplxFront ? gplxFront.name : null
         };
         localStorage.setItem('registeredUser', JSON.stringify(userInfo));
         
@@ -131,6 +139,19 @@ export default function Register() {
             <div className="form-group">
               <label>Số điện thoại</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Nhập số điện thoại tại đây" required />
+            </div>
+
+            <div className="form-group full">
+              <label>Địa chỉ</label>
+              <textarea 
+                value={address} 
+                onChange={(e) => setAddress(e.target.value)} 
+                placeholder="Nhập địa chỉ đầy đủ của bạn (số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố)" 
+                required 
+                rows="2"
+                className="address-textarea"
+                style={{ resize: 'none' }}
+              />
             </div>
 
             <div className="form-group">

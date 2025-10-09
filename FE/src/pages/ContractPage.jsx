@@ -155,9 +155,9 @@ export default function ContractPage() {
       setRenterSign(signatureData);
       setIsSignedB(true);
       
-      // Demo: Chuyển thẳng đến trang thanh toán sau khi ký
+      // Demo: Chuyển đến trang thông tin khách hàng sau khi ký
       setTimeout(() => {
-        navigate(`/contract/${contractId}/payment`);
+        navigate('/customer-info');
       }, 1000);
     }
   };

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -14,7 +14,7 @@ const getCarData = (carId) => {
       name: "VinFast VF3",
       brand: "VinFast",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/VinFast VF 5 Plus.jpg",
+      image: "/anhxe/VinFast VF 5 Plus.jpg",
       specifications: {
         seats: "2 chỗ",
         battery: "18.64 kWh",
@@ -39,7 +39,7 @@ const getCarData = (carId) => {
       name: "VinFast VF 8 Plus",
       brand: "VinFast",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/VinFast VF 8 Plus.jpg",
+      image: "/anhxe/VinFast VF 8 Plus.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "87.7 kWh",
@@ -64,7 +64,7 @@ const getCarData = (carId) => {
       name: "Hyundai Ioniq 5",
       brand: "Hyundai",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Hyundai Ioniq 5.jpg",
+      image: "/anhxe/Hyundai Ioniq 5.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "77 kWh",
@@ -89,7 +89,7 @@ const getCarData = (carId) => {
       name: "Tesla Model 3",
       brand: "Tesla",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Tesla Model 3.jpg",
+      image: "/anhxe/Tesla Model 3.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "75 kWh",
@@ -114,7 +114,7 @@ const getCarData = (carId) => {
       name: "BMW iX xDrive50",
       brand: "BMW",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/BMW iX xDrive50.jpg",
+      image: "/anhxe/BMW iX xDrive50.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "111.5 kWh",
@@ -139,7 +139,7 @@ const getCarData = (carId) => {
       name: "Kia EV6 GT-Line",
       brand: "Kia",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Kia EV6 GT-Line.jpg",
+      image: "/anhxe/Kia EV6 GT-Line.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "77.4 kWh",
@@ -164,7 +164,7 @@ const getCarData = (carId) => {
       name: "Porsche Taycan Turbo S",
       brand: "Porsche",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Porsche Taycan Turbo S.jpg",
+      image: "/anhxe/Porsche Taycan Turbo S.jpg",
       specifications: {
         seats: "4 chỗ",
         battery: "93.4 kWh",
@@ -189,7 +189,7 @@ const getCarData = (carId) => {
       name: "Mercedes-Benz EQE 350+",
       brand: "Mercedes-Benz",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Mercedes-Benz EQE 350+.jpg",
+      image: "/anhxe/Mercedes-Benz EQE 350+.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "90.6 kWh",
@@ -214,7 +214,7 @@ const getCarData = (carId) => {
       name: "Audi Q8 e-tron",
       brand: "Audi",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Audi Q8 e-tron.jpg",
+      image: "/anhxe/Audi Q8 e-tron.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "114 kWh",
@@ -239,7 +239,7 @@ const getCarData = (carId) => {
       name: "Tesla Model 3",
       brand: "Tesla",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Tesla Model 3.jpg",
+      image: "/anhxe/Tesla Model 3.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "75 kWh",
@@ -264,7 +264,7 @@ const getCarData = (carId) => {
       name: "Tesla Model Y",
       brand: "Tesla",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Tesla Model Y.jpg",
+      image: "/anhxe/Tesla Model Y.jpg",
       specifications: {
         seats: "7 chỗ",
         battery: "75 kWh",
@@ -289,7 +289,7 @@ const getCarData = (carId) => {
       name: "BMW iX xDrive50",
       brand: "BMW",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/BMW iX xDrive50.jpg",
+      image: "/anhxe/BMW iX xDrive50.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "111.5 kWh",
@@ -314,7 +314,7 @@ const getCarData = (carId) => {
       name: "VinFast VF 8 Plus",
       brand: "VinFast",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/VinFast VF 8 Plus.jpg",
+      image: "/anhxe/VinFast VF 8 Plus.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "87.7 kWh",
@@ -339,7 +339,7 @@ const getCarData = (carId) => {
       name: "VinFast VF 5 Plus",
       brand: "VinFast",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/VinFast VF 5 Plus.jpg",
+      image: "/anhxe/VinFast VF 5 Plus.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "37.23 kWh",
@@ -364,7 +364,7 @@ const getCarData = (carId) => {
       name: "VinFast VF e34",
       brand: "VinFast",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/VinFast VF e34.jpg",
+      image: "/anhxe/VinFast VF e34.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "42 kWh",
@@ -389,7 +389,7 @@ const getCarData = (carId) => {
       name: "BYD Dolphin Premium",
       brand: "BYD",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/BYD Dolphin Premium.jpg",
+      image: "/anhxe/BYD Dolphin Premium.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "60 kWh",
@@ -414,7 +414,7 @@ const getCarData = (carId) => {
       name: "Volkswagen ID.4 Pro",
       brand: "Volkswagen",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Volkswagen ID.4 Pro.jpg",
+      image: "/anhxe/Volkswagen ID.4 Pro.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "77 kWh",
@@ -439,7 +439,7 @@ const getCarData = (carId) => {
       name: "Nissan Leaf e+",
       brand: "Nissan",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Nissan Leaf e+.jpg",
+      image: "/anhxe/Nissan Leaf e+.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "62 kWh",
@@ -464,7 +464,7 @@ const getCarData = (carId) => {
       name: "Ford Mustang Mach-E GT",
       brand: "Ford",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Ford Mustang Mach-E GT.jpg",
+      image: "/anhxe/Ford Mustang Mach-E GT.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "88 kWh",
@@ -489,7 +489,7 @@ const getCarData = (carId) => {
       name: "Polestar 2 Performance",
       brand: "Polestar",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Polestar 2 Performance.jpg",
+      image: "/anhxe/Polestar 2 Performance.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "78 kWh",
@@ -514,7 +514,7 @@ const getCarData = (carId) => {
       name: "Rivian R1T Adventure",
       brand: "Rivian",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Rivian R1T Adventure.jpg",
+      image: "/anhxe/Rivian R1T Adventure.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "135 kWh",
@@ -539,7 +539,7 @@ const getCarData = (carId) => {
       name: "Lucid Air Dream Range",
       brand: "Lucid",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Lucid Air Dream Range.jpg",
+      image: "/anhxe/Lucid Air Dream Range.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "112 kWh",
@@ -564,7 +564,7 @@ const getCarData = (carId) => {
       name: "Hyundai Ioniq 6",
       brand: "Hyundai",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Hyundai Ioniq 6.jpg",
+      image: "/anhxe/Hyundai Ioniq 6.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "77.4 kWh",
@@ -589,7 +589,7 @@ const getCarData = (carId) => {
       name: "Kia EV9 GT-Line",
       brand: "Kia",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Kia EV9 GT-Line.jpg",
+      image: "/anhxe/Kia EV9 GT-Line.jpg",
       specifications: {
         seats: "7 chỗ",
         battery: "99.8 kWh",
@@ -614,7 +614,7 @@ const getCarData = (carId) => {
       name: "Genesis GV60 Performance",
       brand: "Genesis",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Genesis GV60 Performance.jpg",
+      image: "/anhxe/Genesis GV60 Performance.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "77.4 kWh",
@@ -639,7 +639,7 @@ const getCarData = (carId) => {
       name: "Volvo XC40 Recharge",
       brand: "Volvo",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Volvo XC40 Recharge.jpg",
+      image: "/anhxe/Volvo XC40 Recharge.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "78 kWh",
@@ -664,7 +664,7 @@ const getCarData = (carId) => {
       name: "Mazda MX-30",
       brand: "Mazda",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Mazda MX-30.jpg",
+      image: "/anhxe/Mazda MX-30.jpg",
       specifications: {
         seats: "4 chỗ",
         battery: "35.5 kWh",
@@ -689,7 +689,7 @@ const getCarData = (carId) => {
       name: "MINI Cooper SE",
       brand: "MINI",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/MINI Cooper SE.jpg",
+      image: "/anhxe/MINI Cooper SE.jpg",
       specifications: {
         seats: "4 chỗ",
         battery: "32.6 kWh",
@@ -714,7 +714,7 @@ const getCarData = (carId) => {
       name: "Fiat 500e",
       brand: "Fiat",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Fiat 500e.jpg",
+      image: "/anhxe/Fiat 500e.jpg",
       specifications: {
         seats: "4 chỗ",
         battery: "42 kWh",
@@ -739,7 +739,7 @@ const getCarData = (carId) => {
       name: "Tesla Model S Plaid",
       brand: "Tesla",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Tesla Model S Plaid.jpg",
+      image: "/anhxe/Tesla Model S Plaid.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "100 kWh",
@@ -764,7 +764,7 @@ const getCarData = (carId) => {
       name: "Jaguar I-PACE",
       brand: "Jaguar",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/Jaguar I-PACE.jpg",
+      image: "/anhxe/Jaguar I-PACE.jpg",
       specifications: {
         seats: "5 chỗ",
         battery: "90 kWh",
@@ -789,7 +789,7 @@ const getCarData = (carId) => {
       name: "smart EQ fortwo",
       brand: "smart",
       location: "Thành phố Hồ Chí Minh",
-      image: "/src/anhxe/smart EQ fortwo.jpg",
+      image: "/anhxe/smart EQ fortwo.jpg",
       specifications: {
         seats: "2 chỗ",
         battery: "17.6 kWh",
@@ -838,10 +838,19 @@ const pickupLocations = [
 export default function BookingPage() {
   const { carId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   
   // Lấy dữ liệu xe dựa trên carId
   const carData = getCarData(carId);
+  // Nếu từ trang danh sách đã truyền kèm ảnh/tên/giá qua state, ưu tiên dùng để đảm bảo đồng nhất
+  const bookingImage = location.state?.image || carData.image;
+  const bookingName = location.state?.name || carData.name;
+  const bookingPrice = location.state?.price || carData.price;
+  
+  // Debug log
+  console.log('BookingPage - carData:', carData);
+  console.log('BookingPage - image used:', bookingImage);
   
   // Phí đặt cọc sẽ tự động cập nhật khi carData thay đổi
   // Logic: deposit = dailyPrice * 0.3 (30% giá thuê xe 1 ngày)
@@ -878,16 +887,21 @@ export default function BookingPage() {
 
   // Hàm tính phí đặt cọc (30% giá thuê xe 1 ngày)
   const calculateDeposit = (dailyPrice) => {
-    return Math.round(dailyPrice * 0.3);
+    const depositRate = 0.3; // 30%
+    const deposit = dailyPrice * depositRate;
+    return Math.round(deposit);
   };
 
   const calculateTotal = () => {
     const days = calculateRentalDays();
-    const dailyPrice = carData.price;
+    const dailyPrice = bookingPrice || carData.price;
     const totalRental = dailyPrice * days;
     
     // Phí đặt cọc = 30% giá thuê xe 1 ngày (không phụ thuộc vào số ngày thuê)
     const deposit = calculateDeposit(dailyPrice);
+    
+    // Debug log để kiểm tra tính toán
+    console.log(`Car: ${bookingName}, Daily Price: ${dailyPrice}, Deposit (30%): ${deposit}`);
     
     return {
       dailyPrice: dailyPrice,
@@ -908,6 +922,29 @@ export default function BookingPage() {
     // Simulate booking process
     setTimeout(() => {
       setIsBooking(false);
+      // Lưu bản tóm tắt đặt chỗ cho các trang sau (CustomerInfoPage, Checkout)
+      const summary = {
+        car: { id: carId, name: bookingName, image: bookingImage },
+        rental: {
+          pickupLocation: formData.pickupLocation,
+          pickupDate: formData.bookingDate,
+          pickupTime: formData.pickupTime,
+          returnLocation: formData.pickupLocation,
+          returnDate: formData.returnDate,
+          returnTime: formData.returnTime,
+          days: calculateRentalDays()
+        },
+        pricing: {
+          dailyRate: calculateTotal().dailyPrice,
+          days: calculateTotal().days,
+          subtotal: calculateTotal().totalRental,
+          vat: Math.round(calculateTotal().totalRental * 0.1),
+          total: Math.round(calculateTotal().totalRental * 1.1),
+          km_limit: "200km/ngày",
+          overage_fee: "2.000 đ/km"
+        }
+      };
+      localStorage.setItem('currentBooking', JSON.stringify(summary));
       // Chuyển đến trang hợp đồng thay vì alert
       navigate(`/contract/${carId}`);
     }, 2000);
@@ -1052,15 +1089,29 @@ export default function BookingPage() {
             <div className="car-details-section">
               <div className="car-details-card">
                 <div className="car-image-container">
-                  <img 
-                    src={carData.image} 
-                    alt={carData.name}
-                    className="car-image"
-                  />
+                  {bookingImage ? (
+                    <img 
+                      src={bookingImage} 
+                      alt={bookingName}
+                      className="car-image"
+                      onError={(e) => {
+                        console.error('Error loading car image:', bookingImage);
+                        e.target.src = '/anhxe/VinFast VF 5 Plus.jpg'; // Fallback image
+                      }}
+                      onLoad={() => {
+                        console.log('Car image loaded successfully:', bookingImage);
+                      }}
+                    />
+                  ) : (
+                    <div className="car-image-placeholder">
+                      <div className="placeholder-icon">🚗</div>
+                      <div className="placeholder-text">Đang tải ảnh xe...</div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="car-info">
-                  <h3 className="car-name">{carData.name}</h3>
+                  <h3 className="car-name">{bookingName}</h3>
                   <p className="car-location">{carData.location}</p>
                 </div>
 

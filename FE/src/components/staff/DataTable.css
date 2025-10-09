@@ -1,0 +1,238 @@
+/* DataTable Component Styles */
+.data-table-container {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-table-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Header Styles */
+.data-table__header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.data-table__cell--header {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.data-table__cell--sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.data-table__cell--sortable:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.data-table__cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.data-table__sort-icon {
+  opacity: 0.5;
+  font-size: 12px;
+  transition: opacity 0.2s ease;
+}
+
+.data-table__cell--sortable:hover .data-table__sort-icon {
+  opacity: 1;
+}
+
+/* Body Styles */
+.data-table__body {
+  background: white;
+}
+
+.data-table__row {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.data-table__row:hover {
+  background: #f8fafc;
+}
+
+.data-table__row:last-child {
+  border-bottom: none;
+}
+
+.data-table__row--empty {
+  background: #fafbfc;
+}
+
+.data-table__cell {
+  padding: 16px 20px;
+  vertical-align: middle;
+  color: #475569;
+  font-size: 14px;
+}
+
+.data-table__cell--empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* Status Badge Styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.status-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.status-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.status-success-muted {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #dcfce7;
+}
+
+.status-default {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Empty State */
+.data-table__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+}
+
+.data-table__empty-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.data-table__empty-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .data-table__cell {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .data-table__cell--header {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+  
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-table__cell {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .data-table__cell--header {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  
+  .data-table__empty-state {
+    gap: 8px;
+  }
+  
+  .data-table__empty-icon {
+    font-size: 24px;
+  }
+  
+  .data-table__empty-state p {
+    font-size: 13px;
+  }
+}
+
+/* Animation for loading states */
+@keyframes dataTableShimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.data-table__row--loading {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200px 100%;
+  animation: dataTableShimmer 1.5s infinite;
+}
+
+/* Focus styles for accessibility */
+.data-table__cell--sortable:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.data-table__row:focus-within {
+  background: #f0f9ff;
+  box-shadow: inset 0 0 0 2px #3b82f6;
+}

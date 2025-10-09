@@ -36,11 +36,11 @@ export default function Login() {
         { withCredentials: true }
       );
       const { user, token } = response.data;
-
+      
       // Lưu token và user vào localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-
+      
       // Lưu session vào context
       loginWithSession(user, token);
 
@@ -80,7 +80,7 @@ export default function Login() {
 
         localStorage.setItem('token', mockToken);
         localStorage.setItem('user', JSON.stringify(mockUser));
-
+        
         alert("Đăng nhập thành công!");
         navigate("/dashboard");
       } else {
@@ -121,7 +121,7 @@ export default function Login() {
             )}
 
             <div className="form-group input-with-icon">
-              <label htmlFor="email">Email hoặc số điện thoại</label>
+              <label htmlFor="email">Email</label>
               <div className="input-inner">
                 <span className="icon email-icon" aria-hidden>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -132,7 +132,7 @@ export default function Login() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="Email hoặc số điện thoại"
+                  placeholder="Nhập email của bạn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
