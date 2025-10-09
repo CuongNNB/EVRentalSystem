@@ -17,6 +17,12 @@ import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import ContractDemoPage from "./pages/ContractDemoPage";
 import DemoFlowPage from "./pages/DemoFlowPage";
 import DashboardUser from "./pages/DashboardUser";
+import StaffLayout from "./pages/staff/StaffLayout";
+import OrdersList from "./pages/staff/Orders/OrdersList";
+import OrderDetail from "./pages/staff/Orders/OrderDetail";
+import HandoverCar from "./pages/staff/Orders/HandoverCar";
+import ReturnCar from "./pages/staff/Orders/ReturnCar";
+import ExtraFee from "./pages/staff/Orders/ExtraFee";
 
 function App() {
   return (
@@ -34,10 +40,16 @@ function App() {
             <Route path="/contract/:id" element={<ContractPage />} />
             <Route path="/contract-success" element={<ProtectedRoute><ContractSuccessPage /></ProtectedRoute>} />
             <Route path="/deposit-payment" element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/checkout/success" element={<PaymentSuccessPage />} />
-              <Route path="/contract-demo" element={<ContractDemoPage />} />
-              <Route path="/demo-flow" element={<DemoFlowPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/checkout/success" element={<PaymentSuccessPage />} />
+            <Route path="/contract-demo" element={<ContractDemoPage />} />
+            <Route path="/demo-flow" element={<DemoFlowPage />} />
+            <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
+            <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
+            <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+            <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
+            <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><ReturnCar /></ProtectedRoute>} />
+            <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
           </Routes>
         </Router>
       </CheckoutProvider>
