@@ -33,7 +33,11 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, password });
       const { user, token } = response.data;
       
-      // Lưu session vào localStorage
+      // Lưu token và user vào localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Lưu session vào context
       loginWithSession(user, token);
       
       alert("Đăng nhập thành công!");
@@ -45,6 +49,13 @@ export default function Login() {
       const result = await login({ email, password });
       
       if (result.success) {
+        // Lưu mock data vào localStorage
+        const mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
+        const mockToken = 'mock-token-' + Date.now();
+        
+        localStorage.setItem('token', mockToken);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        
         alert("Đăng nhập thành công!");
         navigate("/dashboard");
       } else {
@@ -199,8 +210,12 @@ export default function Login() {
                     }
                     const data = await res.json()
                     console.log('Server auth response', data)
+                    
+                    // Lưu token và user vào localStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
                     alert(`Xin chào ${data.user.name}`)
-                    localStorage.setItem('token', data.token)
                     navigate('/dashboard')
                   } catch (err) {
                     console.error('Google SSO error:', err)
