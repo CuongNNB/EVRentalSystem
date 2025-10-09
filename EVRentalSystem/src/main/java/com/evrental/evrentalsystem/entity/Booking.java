@@ -47,8 +47,11 @@ public class Booking {
     // Trạng thái lưu dưới dạng String thay vì Enum
     private String status;
 
+    @Transient
     private Double rentalAmount;
+    @Transient
     private Double additionalFees = 0.0;
+    @Transient
     private Double totalAmount;
 
     // Tính tiền thuê xe theo ngày

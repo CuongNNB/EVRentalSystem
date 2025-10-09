@@ -2,12 +2,15 @@ package com.evrental.evrentalsystem.repository;
 
 import com.evrental.evrentalsystem.entity.Station;
 import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.entity.VehicleModel;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, Integer> {
 
@@ -33,5 +36,9 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
           AND v.status = 'FIXING'
     """)
     List<VehicleDetail> findFixingVehiclesByStation(@Param("stationId") Integer stationId);
+
+    Optional<VehicleDetail> findFirstByVehicleModelAndStatus(VehicleModel vehicleModel, String status);
+
+
     //End code here
 }

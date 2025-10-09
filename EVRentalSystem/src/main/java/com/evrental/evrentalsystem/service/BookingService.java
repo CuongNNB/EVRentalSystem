@@ -1,88 +1,82 @@
 package com.evrental.evrentalsystem.service;
 
-import com.evrental.evrentalsystem.entity.Booking;
+import com.evrental.evrentalsystem.entity.*;
+import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
-import com.evrental.evrentalsystem.entity.User;
-import com.evrental.evrentalsystem.repository.BookingRepository;
-import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
-import com.evrental.evrentalsystem.repository.UserRepository;
+import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookingService {
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final VehicleModelRepository vehicleModelRepository;
+    private final VehicleDetailRepository vehicleDetailRepository;
+    private final StationRepository stationRepository;
+    private final BookingRepository bookingRepository;
 
-    @Autowired
-    private VehicleDetailRepository vehicleDetailRepository;
+    public BookingResponseDTO createBooking(BookingRequest request) {
+        BookingResponseDTO response = new BookingResponseDTO();
 
-    @Autowired
-    private UserRepository userRepository;
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // Tạo booking mới
-    public Booking createBooking(User user, BookingRequest request) {
-        // Kiểm tra xem thời gian bắt đầu có hợp lệ không (startTime < expectedReturnTime)
-        if (request.getStartTime().isAfter(request.getExpectedReturnTime())) {
-            throw new IllegalArgumentException("Start time cannot be after expected return time");
-        }
+        VehicleModel model = vehicleModelRepository.findById(request.getVehicleModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found"));
 
-        // Lấy thông tin xe từ biển số xe
-        var vehicleDetail = vehicleDetailRepository.findByLicensePlate(request.getLicensePlate());
+        Station station = stationRepository.findById(request.getStationId())
+                .orElseThrow(() -> new RuntimeException("Station not found"));
+
+        VehicleDetail vehicleDetail = vehicleDetailRepository
+                .findFirstByVehicleModelAndStatus(model, "AVAILABLE")
+                .orElse(null);
+
         if (vehicleDetail == null) {
-            throw new IllegalArgumentException("Vehicle not found");
+            response.setMessage("No available vehicle for this model");
+            return response;
         }
 
-        // Khởi tạo booking
+        // Tính số ngày thuê
+        long days = ChronoUnit.DAYS.between(request.getStartTime(), request.getExpectedReturnTime());
+        if (days <= 0) days = 1; // Nếu thuê trong cùng ngày, tính 1 ngày
+
+        double totalAmount = model.getPrice() * days;
+
         Booking booking = new Booking();
-        booking.setRenter(user);  // Người thuê
-        booking.setVehicleDetail(vehicleDetail);  // Chi tiết xe
+        booking.setRenter(user);
+        booking.setVehicleModel(model);
+        booking.setVehicleDetail(vehicleDetail);
+        booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
-        booking.setDeposit(request.getDeposit());
-        booking.setStatus("WAITING_FOR_OTP");  // Trạng thái ban đầu
-        booking.setCreatedAt(LocalDateTime.now());
-
-        // Tính toán tiền thuê
-        booking.calculateRentalAmount();
-
-        // Lưu vào database
-        return bookingRepository.save(booking);
-    }
-
-    // Cập nhật trạng thái booking sau khi xác thực OTP
-    public void updateBookingStatusAfterOtp(Booking booking) {
-        // Kiểm tra trạng thái trước khi cập nhật
-        if ("PENDING".equals(booking.getStatus())) {
-            return; // Không cần cập nhật nếu trạng thái đã là PENDING
-        }
-
         booking.setStatus("PENDING");
+        booking.setDeposit(0.0);
+        booking.setRentalAmount(model.getPrice());
+        booking.setTotalAmount(totalAmount);
+
         bookingRepository.save(booking);
-    }
 
-    // Tìm booking theo email của người dùng
-    public Booking findBookingByUserEmail(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
-        }
-        User user = userOptional.get();
+        // Cập nhật status xe
+        vehicleDetail.setStatus("RENTING");
+        vehicleDetailRepository.save(vehicleDetail);
 
-        // Tìm booking của người dùng theo userId
-        return bookingRepository.findByRenter_UserId(user.getUserId()).stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
-    }
+        // Mapping sang response
+        response.setBookingId(booking.getBookingId());
+        response.setUserName(user.getFullName());
+        response.setVehicleModel(model.getModel());
+        response.setStationName(station.getStationName());
+        response.setStatus(booking.getStatus());
+        response.setTotalAmount(totalAmount);
+        response.setMessage("Booking created successfully");
 
-    // Tìm tất cả các booking theo trạng thái
-    public List<Booking> findBookingsByStatus(String status) {
-        return bookingRepository.findByStatus(status);  // Tìm tất cả các booking theo trạng thái
+        return response;
     }
 }
-
