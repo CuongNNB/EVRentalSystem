@@ -1,0 +1,609 @@
+/* Booking Page Styles */
+.booking-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.booking-main {
+  padding: 2rem 0;
+  min-height: calc(100vh - 200px);
+}
+
+.booking-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.booking-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-align: center;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.booking-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* Left Column - Booking Form */
+.booking-form-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #0bb97f;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #374151;
+  background: white;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0bb97f;
+  box-shadow: 0 0 0 3px rgba(11, 185, 127, 0.1);
+}
+
+/* No icons - clean input fields */
+
+.form-select-wrapper {
+  position: relative;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.875rem 2.5rem 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #374151;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  box-sizing: border-box;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3e%3cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px 16px;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #0bb97f;
+  box-shadow: 0 0 0 3px rgba(11, 185, 127, 0.1);
+}
+
+/* No select icon */
+
+/* Right Column - Car Details */
+.car-details-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.car-details-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  position: sticky;
+  top: 2rem;
+}
+
+.car-image-container {
+  width: 100%;
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  background: #f8fafc;
+}
+
+.car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.car-image:hover {
+  transform: scale(1.05);
+}
+
+.car-info {
+  margin-bottom: 2rem;
+}
+
+.car-name {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.car-location {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.car-specifications {
+  margin-bottom: 2rem;
+  background: #f9fafb;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.specs-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 1.5rem 0;
+  padding: 2rem 2rem 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.specs-title::before {
+  content: "⚙️";
+  font-size: 1.2rem;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  padding: 0 2rem 2rem 2rem;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.spec-item:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 25px rgba(11, 185, 127, 0.15);
+  border-color: #0bb97f;
+  background: linear-gradient(135deg, #f8fffe, #f0fdfa);
+}
+
+.spec-icon {
+  font-size: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(11, 185, 127, 0.3);
+  transition: all 0.3s ease;
+}
+
+.spec-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.spec-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #06b6d4;
+  margin-bottom: 0.25rem;
+}
+
+.spec-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.car-features {
+  margin-bottom: 2rem;
+}
+
+.features-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  border-color: #0bb97f;
+  transform: translateX(4px);
+}
+
+.feature-icon {
+  color: #0bb97f;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.feature-text {
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.cost-summary {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cost-item:last-child {
+  border-bottom: none;
+}
+
+.cost-item.total-cost {
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  color: white;
+  margin: 0 -1.5rem -1.5rem -1.5rem;
+  padding: 1.5rem;
+  border-radius: 0 0 16px 16px;
+  border: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.cost-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.cost-item.total-cost .cost-label {
+  color: white;
+}
+
+.cost-value {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.cost-item.total-cost .cost-value {
+  color: white;
+  font-size: 1.2rem;
+}
+
+.book-button {
+  width: 100%;
+  background: linear-gradient(135deg, #0bb97f, #06b6d4);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.book-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(11, 185, 127, 0.3);
+}
+
+.book-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.book-button.loading {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #0bb97f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Animation for specifications */
+.specs-grid {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.spec-item {
+  animation: slideInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.spec-item:nth-child(1) { animation-delay: 0.1s; }
+.spec-item:nth-child(2) { animation-delay: 0.2s; }
+.spec-item:nth-child(3) { animation-delay: 0.3s; }
+.spec-item:nth-child(4) { animation-delay: 0.4s; }
+.spec-item:nth-child(5) { animation-delay: 0.5s; }
+.spec-item:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .booking-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .car-details-card {
+    position: static;
+  }
+  
+  .specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-container {
+    padding: 0 1rem;
+  }
+  
+  .booking-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-card,
+  .car-details-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .car-image-container {
+    height: 250px;
+  }
+  
+  .car-name {
+    font-size: 1.5rem;
+  }
+  
+  .book-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .booking-main {
+    padding: 1rem 0;
+  }
+  
+  .booking-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-card,
+  .car-details-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .car-image-container {
+    height: 200px;
+  }
+  
+  .specs-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 1rem 1rem 1rem;
+  }
+  
+  .specs-title {
+    padding: 1.5rem 1rem 1rem 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .spec-item {
+    padding: 1rem 0.75rem;
+  }
+  
+  .cost-summary {
+    padding: 1rem;
+  }
+  
+  .cost-item.total-cost {
+    margin: 0 -1rem -1rem -1rem;
+    padding: 1rem;
+  }
+}
+
+/* Animation for page load */
+.booking-content {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effects for interactive elements */
+.spec-item:hover .spec-icon {
+  transform: scale(1.1);
+}
+
+.feature-item:hover .feature-icon {
+  transform: scale(1.2);
+}
+
+/* Focus states for accessibility */
+.book-button:focus,
+.form-input:focus,
+.form-select:focus {
+  outline: 2px solid #0bb97f;
+  outline-offset: 2px;
+}
+
+/* Loading state for images */
+.car-image {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom scrollbar for select dropdowns */
+.form-select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-select::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.form-select::-webkit-scrollbar-thumb {
+  background: #0bb97f;
+  border-radius: 4px;
+}
+
+.form-select::-webkit-scrollbar-thumb:hover {
+  background: #089067;
+}
