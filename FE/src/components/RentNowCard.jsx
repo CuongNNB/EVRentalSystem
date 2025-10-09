@@ -7,7 +7,7 @@ const RentNowCard = ({ carId }) => {
 
   const handleRentNow = () => {
     if (carId) {
-      navigate(`/contract/${carId}`);
+      navigate(`/checkout`);
     } else {
       navigate('/cars');
     }

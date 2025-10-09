@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+﻿import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -7,11 +7,14 @@ const menuItems = [
   { label: "Xem xe có sẵn", href: "/cars" },
   { label: "Tìm xe theo trạm", href: "#stations" },
   { label: "Ưu đãi", href: "#promotions" },
+  { label: "Demo Flow Hoàn Chỉnh", href: "/demo-flow" },
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [localUser, setLocalUser] = useState(null);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +24,21 @@ export default function Header() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Kiểm tra user trong localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        setLocalUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        setLocalUser(null);
+      }
+    } else {
+      setLocalUser(null);
+    }
   }, []);
 
   return (
@@ -51,16 +69,28 @@ export default function Header() {
         </nav>
 
         <div className="header-actions">
-          {user ? (
+          {(user || localUser) ? (
             <div className="user-menu">
               <span className="user-greeting">
-                Xin chào, <strong>{user.name || user.email}</strong>
+                Xin chào, <strong>{(user || localUser)?.name || (user || localUser)?.email}</strong>
               </span>
               <button 
                 className="btn text-btn" 
                 onClick={() => {
-                  logout();
-                  window.location.href = '/';
+                  // Xóa localStorage
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  
+                  // Logout từ context
+                  if (logout) {
+                    logout();
+                  }
+                  
+                  // Reset local state
+                  setLocalUser(null);
+                  
+                  // Navigate về trang chủ
+                  navigate('/');
                 }}
               >
                 Đăng xuất
