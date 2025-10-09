@@ -1,5 +1,6 @@
 ﻿import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const menuItems = [
   { label: "Trang chủ", href: "/" },
@@ -10,6 +11,7 @@ const menuItems = [
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,12 +51,31 @@ export default function Header() {
         </nav>
 
         <div className="header-actions">
-          <Link className="btn text-btn" to="/login">
-            Đăng nhập
-          </Link>
-          <Link className="btn primary-btn" to="/register">
-            Đăng ký
-          </Link>
+          {user ? (
+            <div className="user-menu">
+              <span className="user-greeting">
+                Xin chào, <strong>{user.name || user.email}</strong>
+              </span>
+              <button 
+                className="btn text-btn" 
+                onClick={() => {
+                  logout();
+                  window.location.href = '/';
+                }}
+              >
+                Đăng xuất
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link className="btn text-btn" to="/login">
+                Đăng nhập
+              </Link>
+              <Link className="btn primary-btn" to="/register">
+                Đăng ký
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

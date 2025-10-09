@@ -1,47 +1,57 @@
-import api from "../api/axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 import { GoogleLogin } from '@react-oauth/google';
 import StyleSwitcher from '../components/StyleSwitcher';
 import { initializeStyle } from '../utils/styleSwitcher';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login, loginWithSession, loading } = useAuth();
 
   useEffect(() => {
     initializeStyle();
   }, []);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const res = await api.post("/users/login", {
-      email,
-      password,
-    });
-
-    const { success, message, data } = res.data || {};
-    if (success) {
-      if (data?.token) localStorage.setItem("token", data.token);
-      alert(message || "Đăng nhập thành công!");
-      navigate("/dashboard");
-    } else {
-      alert(message || "Sai email hoặc mật khẩu");
+    e.preventDefault();
+    setError("");
+    
+    if (!email || !password) {
+      setError("Vui lòng nhập đầy đủ thông tin");
+      return;
     }
-  } catch (err) {
-    console.error("Login error:", err);
-    alert(err.response?.data?.message || "Sai email hoặc mật khẩu");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      // Thử login với API thực tế trước
+      const response = await api.post('/auth/login', { email, password });
+      const { user, token } = response.data;
+      
+      // Lưu session vào localStorage
+      loginWithSession(user, token);
+      
+      alert("Đăng nhập thành công!");
+      navigate("/dashboard");
+    } catch (apiError) {
+      // Nếu API thực tế fail, fallback về mock API
+      console.log('Real API failed, trying mock API...', apiError);
+      
+      const result = await login({ email, password });
+      
+      if (result.success) {
+        alert("Đăng nhập thành công!");
+        navigate("/dashboard");
+      } else {
+        setError(result.message || "Đăng nhập thất bại");
+      }
+    }
+  };
 
   return (
     <div className="login-page">
@@ -60,8 +70,22 @@ export default function Login() {
           </header>
 
           <form className="form" onSubmit={handleSubmit}>
+            {error && (
+              <div className="error-message" style={{ 
+                color: '#e74c3c', 
+                backgroundColor: '#fdf2f2', 
+                border: '1px solid #fecaca', 
+                borderRadius: '6px', 
+                padding: '12px', 
+                marginBottom: '16px',
+                fontSize: '14px'
+              }}>
+                {error}
+              </div>
+            )}
+            
             <div className="form-group input-with-icon">
-              <label htmlFor="email">Đăng nhập bằng Email hoặc Username</label>
+              <label htmlFor="email">Email hoặc số điện thoại</label>
               <div className="input-inner">
                 <span className="icon email-icon" aria-hidden>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -71,8 +95,8 @@ export default function Login() {
                 </span>
                 <input
                   id="email"
-                  type="text"  //allow both email and username
-                  placeholder="Email hoặc tên đăng nhập"
+                  type="email"
+                  placeholder="Email hoặc số điện thoại"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -148,8 +172,12 @@ export default function Login() {
                     console.log('authServer=', authServer)
                     // quick health check to ensure auth server is reachable
                     try {
-                      const h = await fetch(`${authServer}/health`).catch((e) => { throw e })
-                      if (!h.ok) throw new Error(`health check failed: ${h.status}`)
+                      const h = await fetch(`${authServer}/health`)
+                      if (!h.ok) {
+                        console.error(`Health check failed: ${h.status}`)
+                        alert('Đăng nhập Google thất bại: không thể kết nối tới auth server. Kiểm tra server đang chạy và CORS. Xem console/server logs.')
+                        return
+                      }
                       const health = await h.json().catch(() => ({}))
                       console.log('auth server health:', health)
                     } catch (e) {
@@ -165,7 +193,9 @@ export default function Login() {
                     })
                     if (!res.ok) {
                       const text = await res.text().catch(() => '')
-                      throw new Error(`Auth failed (${res.status}): ${text}`)
+                      console.error(`Auth failed (${res.status}): ${text}`)
+                      alert('Đăng nhập Google thất bại: ' + text)
+                      return
                     }
                     const data = await res.json()
                     console.log('Server auth response', data)
