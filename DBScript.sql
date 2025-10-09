@@ -15,7 +15,7 @@ GO
 -- (1) User
 -- ============================
 CREATE TABLE [User] (
-    user_id     INT IDENTITY(1,1) PRIMARY KEY,
+                        user_id     INT IDENTITY(1,1) PRIMARY KEY,
     username    NVARCHAR(100) NOT NULL UNIQUE,
     [password]  NVARCHAR(255) NOT NULL,
     full_name   NVARCHAR(255),
@@ -25,27 +25,27 @@ CREATE TABLE [User] (
     role        NVARCHAR(50) NOT NULL,
     [status]    NVARCHAR(50),
     created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
-);
+    );
 
 -- ============================
 -- (2) Renter_Detail
 -- ============================
 CREATE TABLE Renter_Detail (
-    renter_id       INT PRIMARY KEY,
-    cccd_front      NVARCHAR(MAX),
-    cccd_back       NVARCHAR(MAX),
-    driver_license  NVARCHAR(50),
-    verification_status NVARCHAR(50),
-    is_risky        BIT NOT NULL DEFAULT 0,
-    CONSTRAINT FK_RenterDetail_User FOREIGN KEY (renter_id) REFERENCES [User](user_id)
+                               renter_id       INT PRIMARY KEY,
+                               cccd_front      NVARCHAR(MAX),
+                               cccd_back       NVARCHAR(MAX),
+                               driver_license  NVARCHAR(50),
+                               verification_status NVARCHAR(50),
+                               is_risky        BIT NOT NULL DEFAULT 0,
+                               CONSTRAINT FK_RenterDetail_User FOREIGN KEY (renter_id) REFERENCES [User](user_id)
 );
 
 -- ============================
 -- (3) Station
 -- ============================
 CREATE TABLE Station (
-    station_id   INT IDENTITY(1,1) PRIMARY KEY,
-    station_name NVARCHAR(255) NOT NULL,
+                         station_id   INT IDENTITY(1,1) PRIMARY KEY,
+                         station_name NVARCHAR(255) NOT NULL,
     [address]    NVARCHAR(500) NOT NULL,
     [location]   NVARCHAR(255)
 );
@@ -54,46 +54,46 @@ CREATE TABLE Station (
 -- (4) Employee_Detail
 -- ============================
 CREATE TABLE Employee_Detail (
-    employee_id INT PRIMARY KEY,
-    station_id  INT NOT NULL,
-    CONSTRAINT FK_Emp_User    FOREIGN KEY (employee_id) REFERENCES [User](user_id),
-    CONSTRAINT FK_Emp_Station FOREIGN KEY (station_id)  REFERENCES Station(station_id)
+                                 employee_id INT PRIMARY KEY,
+                                 station_id  INT NOT NULL,
+                                 CONSTRAINT FK_Emp_User    FOREIGN KEY (employee_id) REFERENCES [User](user_id),
+                                 CONSTRAINT FK_Emp_Station FOREIGN KEY (station_id)  REFERENCES Station(station_id)
 );
 
 -- ============================
 -- (5) Vehicle_Model
 -- ============================
 CREATE TABLE Vehicle_Model (
-    vehicle_id  INT IDENTITY(1,1) PRIMARY KEY,
-    brand       NVARCHAR(100) NOT NULL,
-    model       NVARCHAR(100) NOT NULL,
-    price       DECIMAL(10,2) NOT NULL,
-    seats       INT NOT NULL,
-    
+                               vehicle_id  INT IDENTITY(1,1) PRIMARY KEY,
+                               brand       NVARCHAR(100) NOT NULL,
+                               model       NVARCHAR(100) NOT NULL,
+                               price       DECIMAL(10,2) NOT NULL,
+                               seats       INT NOT NULL,
+
 );
 
 -- ============================
 -- (6) Vehicle_Detail
 -- ============================
 CREATE TABLE Vehicle_Detail (
-    id                  INT IDENTITY(1,1) PRIMARY KEY,
-    license_plate       NVARCHAR(50) NOT NULL UNIQUE,
-    vehicle_id          INT NOT NULL,
-    station_id          INT NOT NULL,
+                                id                  INT IDENTITY(1,1) PRIMARY KEY,
+                                license_plate       NVARCHAR(50) NOT NULL UNIQUE,
+                                vehicle_id          INT NOT NULL,
+                                station_id          INT NOT NULL,
     [color]             NVARCHAR(50),
     battery_capacity    NVARCHAR(50),
     odo                 INT,
     [status]    NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model(vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station(station_id)
-);
+    );
 
 -- ============================
 -- (7) Promotion
 -- ============================
 CREATE TABLE Promotion (
-    promotion_id    INT IDENTITY(1,1) PRIMARY KEY,
-    promo_name      NVARCHAR(100) NOT NULL UNIQUE,
+                           promotion_id    INT IDENTITY(1,1) PRIMARY KEY,
+                           promo_name      NVARCHAR(100) NOT NULL UNIQUE,
     [description]   NVARCHAR(MAX),
     discount_percent FLOAT,
     start_time      DATETIME2 NOT NULL,
@@ -105,31 +105,31 @@ CREATE TABLE Promotion (
 -- (8) Booking
 -- ============================
 CREATE TABLE Booking (
-    booking_id              INT IDENTITY(1,1) PRIMARY KEY,
-    renter_id               INT NOT NULL,
-    vehicle_model_id        INT NOT NULL,
-    station_id              INT NOT NULL,
-    license_plate           NVARCHAR(50) NOT NULL,
-    promotion_id            INT NULL,
-    created_at              DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    start_time              DATETIME2 NOT NULL,
-    expected_return_time    DATETIME2 NOT NULL,
-    actual_return_time      DATETIME2,
-    deposit                 DECIMAL(10,2) NOT NULL,
+                         booking_id              INT IDENTITY(1,1) PRIMARY KEY,
+                         renter_id               INT NOT NULL,
+                         vehicle_model_id        INT NOT NULL,
+                         station_id              INT NOT NULL,
+                         license_plate           NVARCHAR(50) NOT NULL,
+                         promotion_id            INT NULL,
+                         created_at              DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                         start_time              DATETIME2 NOT NULL,
+                         expected_return_time    DATETIME2 NOT NULL,
+                         actual_return_time      DATETIME2,
+                         deposit                 DECIMAL(10,2) NOT NULL,
     [status]                NVARCHAR(50),
     CONSTRAINT FK_Booking_Station   FOREIGN KEY (station_id) REFERENCES Station(station_id),
     CONSTRAINT FK_Booking_Renter    FOREIGN KEY (renter_id)    REFERENCES [User](user_id),
     CONSTRAINT FK_Booking_License   FOREIGN KEY (license_plate) REFERENCES Vehicle_Detail(license_plate),
     CONSTRAINT FK_Booking_Vehicle   FOREIGN KEY (vehicle_model_id) REFERENCES Vehicle_Model(vehicle_id),
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion(promotion_id)
-);
+    );
 
 -- ============================
 -- (9) Payment_Method
 -- ============================
 CREATE TABLE Payment_Method (
-    method_id    INT IDENTITY(1,1) PRIMARY KEY,
-    method_name  NVARCHAR(100) NOT NULL,
+                                method_id    INT IDENTITY(1,1) PRIMARY KEY,
+                                method_name  NVARCHAR(100) NOT NULL,
     [description] NVARCHAR(MAX),
     qr_image     NVARCHAR(MAX),
     [status]     NVARCHAR(50)
@@ -139,104 +139,104 @@ CREATE TABLE Payment_Method (
 -- (10) Payment
 -- ============================
 CREATE TABLE Payment (
-    payment_id  INT IDENTITY(1,1) PRIMARY KEY,
-    booking_id  INT NOT NULL UNIQUE,
-    total       DECIMAL(10,2) NOT NULL,
-    method_id   INT NOT NULL,
-    paid_at     DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_Payment_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id),
-    CONSTRAINT FK_Payment_Method  FOREIGN KEY (method_id)  REFERENCES Payment_Method(method_id)
+                         payment_id  INT IDENTITY(1,1) PRIMARY KEY,
+                         booking_id  INT NOT NULL UNIQUE,
+                         total       DECIMAL(10,2) NOT NULL,
+                         method_id   INT NOT NULL,
+                         paid_at     DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                         CONSTRAINT FK_Payment_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id),
+                         CONSTRAINT FK_Payment_Method  FOREIGN KEY (method_id)  REFERENCES Payment_Method(method_id)
 );
 
 -- ============================
 -- (11) Inspection
 -- ============================
 CREATE TABLE Inspection (
-    inspection_id   INT IDENTITY(1,1) PRIMARY KEY,
-    booking_id      INT NOT NULL,
-    part_name       NVARCHAR(100) NOT NULL,
-    picture         NVARCHAR(MAX) NULL,
-    staff_id        INT NOT NULL,
-    inspected_at    DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                            inspection_id   INT IDENTITY(1,1) PRIMARY KEY,
+                            booking_id      INT NOT NULL,
+                            part_name       NVARCHAR(100) NOT NULL,
+                            picture         NVARCHAR(MAX) NULL,
+                            staff_id        INT NOT NULL,
+                            inspected_at    DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     [status]        NVARCHAR(50),
     CONSTRAINT FK_Inspection_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id),
     CONSTRAINT FK_Inspection_Staff   FOREIGN KEY (staff_id)   REFERENCES [User](user_id)
-);
+    );
 
 -- ============================
 -- (12) Additional_Fee
 -- ============================
 CREATE TABLE Additional_Fee (
-    fee_id      INT IDENTITY(1,1) PRIMARY KEY,
-    booking_id  INT NOT NULL,
-    fee_name    NVARCHAR(100) NOT NULL,
-    amount      DECIMAL(10,2) NOT NULL,
-    description NVARCHAR(MAX),
-    created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_Fee_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
+                                fee_id      INT IDENTITY(1,1) PRIMARY KEY,
+                                booking_id  INT NOT NULL,
+                                fee_name    NVARCHAR(100) NOT NULL,
+                                amount      DECIMAL(10,2) NOT NULL,
+                                description NVARCHAR(MAX),
+                                created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                                CONSTRAINT FK_Fee_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
 );
 
 -- ============================
 -- (13) Contract
 -- ============================
 CREATE TABLE Contract (
-    contract_id INT IDENTITY(1,1) PRIMARY KEY,
-    booking_id  INT NOT NULL UNIQUE,
-    signed_at   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                          contract_id INT IDENTITY(1,1) PRIMARY KEY,
+                          booking_id  INT NOT NULL UNIQUE,
+                          signed_at   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     [status]    NVARCHAR(50),
     otp_code        NVARCHAR(10) NULL,
     CONSTRAINT FK_Contract_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
-);
+    );
 
 -- ============================
 -- (14) Review
 -- ============================
 CREATE TABLE Review (
-    review_id   INT IDENTITY(1,1) PRIMARY KEY,
-    booking_id  INT NOT NULL UNIQUE,
-    rating      INT NOT NULL,
-    comment     NVARCHAR(MAX),
-    created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_Review_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
+                        review_id   INT IDENTITY(1,1) PRIMARY KEY,
+                        booking_id  INT NOT NULL UNIQUE,
+                        rating      INT NOT NULL,
+                        comment     NVARCHAR(MAX),
+                        created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                        CONSTRAINT FK_Review_Booking FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
 );
 
 -- ============================
 -- (15) Holiday_Fee
 -- ============================
 CREATE TABLE Holiday_Fee (
-    holiday_id   INT IDENTITY(1,1) PRIMARY KEY,
-    fee_name     NVARCHAR(100) NOT NULL,
-    start_date   DATE NOT NULL,
-    end_date     DATE NOT NULL,
-    value        FLOAT NOT NULL,
+                             holiday_id   INT IDENTITY(1,1) PRIMARY KEY,
+                             fee_name     NVARCHAR(100) NOT NULL,
+                             start_date   DATE NOT NULL,
+                             end_date     DATE NOT NULL,
+                             value        FLOAT NOT NULL,
     [status]     NVARCHAR(50),
     created_at   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
-);
+    );
 
 -- ============================
 -- (16) Report
 -- ============================
 CREATE TABLE Report (
-    report_id          INT IDENTITY(1,1) PRIMARY KEY,
-    staff_id           INT NOT NULL,
-    admin_id           INT NOT NULL,
-    vehicle_detail_id  INT NOT NULL,
-    description        NVARCHAR(MAX) NOT NULL,
+                        report_id          INT IDENTITY(1,1) PRIMARY KEY,
+                        staff_id           INT NOT NULL,
+                        admin_id           INT NOT NULL,
+                        vehicle_detail_id  INT NOT NULL,
+                        description        NVARCHAR(MAX) NOT NULL,
     [status]           NVARCHAR(50),
     created_at         DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Report_Staff   FOREIGN KEY (staff_id)  REFERENCES [User](user_id),
     CONSTRAINT FK_Report_Admin   FOREIGN KEY (admin_id)  REFERENCES [User](user_id),
     CONSTRAINT FK_Report_VDetail FOREIGN KEY (vehicle_detail_id) REFERENCES Vehicle_Detail(id)
-);
+    );
 
 
 -- ========================
 -- 1. User
 -- ========================
 INSERT INTO [User] (username, [password], full_name, phone, email, [address], role, [status], created_at) VALUES
-('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'baocuongg@gmail.com', N'Hồ Chí Minh', 'ADMIN', 'ACTIVE', GETDATE()),   -- user_id = 1
-('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF', 'ACTIVE', GETDATE()), -- user_id = 2
-('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE', GETDATE());             -- user_id = 3
+    ('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'baocuongg@gmail.com', N'Hồ Chí Minh', 'ADMIN', 'ACTIVE', GETDATE()),   -- user_id = 1
+    ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF', 'ACTIVE', GETDATE()), -- user_id = 2
+    ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE', GETDATE());             -- user_id = 3
 GO
 
 -- ========================
@@ -269,19 +269,19 @@ GO
 -- 5. Vehicle_Model
 -- ========================
 INSERT INTO Vehicle_Model (brand, model, price, seats) VALUES
-(N'VinFast', N'VF e34', 1200000, 5),   -- vehicle_id = 1
-(N'VinFast', N'VF 8',   2000000, 5),   -- vehicle_id = 2
-(N'Tesla',   N'Model 3', 2500000, 5),  -- vehicle_id = 3
-(N'VinFast', N'VF 5 Plus',       900000, 5),
-(N'VinFast', N'VF 9',           3000000, 7),
-(N'Tesla',   N'Model Y',        2800000, 5),
-(N'Tesla',   N'Model X',        3500000, 7),
-(N'Hyundai', N'IONIQ 5',        2200000, 5),
-(N'Kia',     N'EV6',            2100000, 5),
-(N'Nissan',  N'Leaf',           1500000, 5),
-(N'BMW',     N'i4 eDrive40',    3200000, 5),
-(N'Mercedes-Benz', N'EQE 300',  3400000, 5),
-(N'Porsche', N'Taycan 4S',      4500000, 4);
+(N'VinFast', N'VF e34', 1200, 5),   -- vehicle_id = 1
+(N'VinFast', N'VF 8',   2000, 5),   -- vehicle_id = 2
+(N'Tesla',   N'Model 3', 2500, 5),  -- vehicle_id = 3
+(N'VinFast', N'VF 5 Plus',       1500, 5),
+(N'VinFast', N'VF 9',           1600, 7),
+(N'Tesla',   N'Model Y',        1700, 5),
+(N'Tesla',   N'Model X',        1700, 7),
+(N'Hyundai', N'IONIQ 5',        1700, 5),
+(N'Kia',     N'EV6',            1700, 5),
+(N'Nissan',  N'Leaf',           1700, 5),
+(N'BMW',     N'i4 eDrive40',    1320, 5),
+(N'Mercedes-Benz', N'EQE 300',  1340, 5),
+(N'Porsche', N'Taycan 4S',      1450, 4);
 GO
 
 -- ========================
