@@ -22,7 +22,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Vui lòng nhập đầy đủ thông tin");
       return;
@@ -30,38 +30,42 @@ export default function Login() {
 
     try {
       // Thử login với API thực tế trước
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post(
+        "/api/users/login",
+        { username: email, password },
+        { withCredentials: true }
+      );
       const { user, token } = response.data;
-      
+
       // Lưu token và user vào localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       // Lưu session vào context
       loginWithSession(user, token);
-      
+
       alert("Đăng nhập thành công!");
       navigate("/dashboard");
     } catch (apiError) {
       // Nếu API thực tế fail, fallback về mock API
       console.log('Real API failed, trying mock API...', apiError);
-      
+
       const result = await login({ email, password });
-      
+
       if (result.success) {
         // Lấy thông tin user từ localStorage (nếu đã đăng ký)
         const registeredUser = localStorage.getItem('registeredUser');
         let mockUser;
-        
+
         if (registeredUser) {
           try {
             const userData = JSON.parse(registeredUser);
-            mockUser = { 
-              id: 1, 
-              name: userData.name, 
-              email: userData.email, 
+            mockUser = {
+              id: 1,
+              name: userData.name,
+              email: userData.email,
               phone: userData.phone,
-              role: userData.role 
+              role: userData.role
             };
           } catch (error) {
             console.error('Error parsing registered user:', error);
@@ -71,12 +75,12 @@ export default function Login() {
           // Fallback nếu không có thông tin đăng ký
           mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
         }
-        
+
         const mockToken = 'mock-token-' + Date.now();
-        
+
         localStorage.setItem('token', mockToken);
         localStorage.setItem('user', JSON.stringify(mockUser));
-        
+
         alert("Đăng nhập thành công!");
         navigate("/dashboard");
       } else {
@@ -103,26 +107,26 @@ export default function Login() {
 
           <form className="form" onSubmit={handleSubmit}>
             {error && (
-              <div className="error-message" style={{ 
-                color: '#e74c3c', 
-                backgroundColor: '#fdf2f2', 
-                border: '1px solid #fecaca', 
-                borderRadius: '6px', 
-                padding: '12px', 
+              <div className="error-message" style={{
+                color: '#e74c3c',
+                backgroundColor: '#fdf2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '6px',
+                padding: '12px',
                 marginBottom: '16px',
                 fontSize: '14px'
               }}>
                 {error}
               </div>
             )}
-            
+
             <div className="form-group input-with-icon">
               <label htmlFor="email">Email hoặc số điện thoại</label>
               <div className="input-inner">
                 <span className="icon email-icon" aria-hidden>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16v16H4z"/>
-                    <path d="M22 6L12 13 2 6"/>
+                    <path d="M4 4h16v16H4z" />
+                    <path d="M22 6L12 13 2 6" />
                   </svg>
                 </span>
                 <input
@@ -231,11 +235,11 @@ export default function Login() {
                     }
                     const data = await res.json()
                     console.log('Server auth response', data)
-                    
+
                     // Lưu token và user vào localStorage
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    
+
                     alert(`Xin chào ${data.user.name}`)
                     navigate('/dashboard')
                   } catch (err) {

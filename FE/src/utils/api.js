@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3001/api", // Backend server URL
-  timeout: 10000,
+  baseURL: "http://localhost:8084/EVRentalSystem", // đúng URL backend
+  withCredentials: true, // gửi session cookie
 });
 
 // Gắn token vào header mỗi khi gọi API
