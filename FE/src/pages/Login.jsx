@@ -49,8 +49,29 @@ export default function Login() {
       const result = await login({ email, password });
       
       if (result.success) {
-        // Lưu mock data vào localStorage
-        const mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
+        // Lấy thông tin user từ localStorage (nếu đã đăng ký)
+        const registeredUser = localStorage.getItem('registeredUser');
+        let mockUser;
+        
+        if (registeredUser) {
+          try {
+            const userData = JSON.parse(registeredUser);
+            mockUser = { 
+              id: 1, 
+              name: userData.name, 
+              email: userData.email, 
+              phone: userData.phone,
+              role: userData.role 
+            };
+          } catch (error) {
+            console.error('Error parsing registered user:', error);
+            mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
+          }
+        } else {
+          // Fallback nếu không có thông tin đăng ký
+          mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
+        }
+        
         const mockToken = 'mock-token-' + Date.now();
         
         localStorage.setItem('token', mockToken);

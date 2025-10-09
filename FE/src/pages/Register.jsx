@@ -68,6 +68,15 @@ export default function Register() {
       const result = await register(formData);
       
       if (result.success) {
+        // Lưu thông tin user vào localStorage để sử dụng khi đăng nhập
+        const userInfo = {
+          name: name,
+          email: email,
+          phone: phone,
+          role: 'USER'
+        };
+        localStorage.setItem('registeredUser', JSON.stringify(userInfo));
+        
         alert("Đăng ký thành công! Vui lòng đăng nhập.");
         navigate('/login');
       } else {
