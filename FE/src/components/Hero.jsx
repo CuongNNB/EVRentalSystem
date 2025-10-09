@@ -1,9 +1,10 @@
 import { useState } from "react";
 
 const stats = [
-  { value: "500+", label: "hành trình đã hoàn tất" },
-  { value: "50+", label: "mẫu xe điện sẵn sàng" },
-  { value: "90%", label: "khách hàng quay lại" },
+  { value: "50+", label: "trạm thuê xe toàn quốc" },
+  { value: "200+", label: "xe điện sẵn sàng" },
+  { value: "10K+", label: "hành trình đã hoàn tất" },
+  { value: "95%", label: "khách hàng hài lòng" },
 ];
 
 export default function Hero({ backgroundImage }) {
@@ -28,8 +29,9 @@ export default function Hero({ backgroundImage }) {
             Thuê Xe Điện <span>Lái Tương Lai</span>
           </h1>
           <p>
-            Trải nghiệm xe điện thế hệ mới với thủ tục minh bạch, hỗ trợ tận tâm
-            và ưu đãi hấp dẫn. Lên lịch nhận xe chỉ trong một phút.
+            Hệ thống trạm thuê xe điện toàn quốc với 50+ điểm phủ sóng. 
+            Xác thực nhanh 5 phút, đặt xe linh hoạt, thanh toán đa dạng. 
+            Trải nghiệm xe điện thế hệ mới ngay hôm nay.
           </p>
 
           <div className="hero-rating">
@@ -57,7 +59,7 @@ export default function Hero({ backgroundImage }) {
         <div className="hero-card" role="form" aria-label="Đặt xe ngay">
           <div className="hero-card__header">
             <h3>Đặt xe ngay</h3>
-            <p>Chọn điểm nhận xe và thời gian phù hợp</p>
+            <p>Chọn địa điểm và thời gian thuê xe phù hợp</p>
           </div>
           <form className="booking-form" onSubmit={handleSubmit}>
             <label className="form-field">
@@ -65,21 +67,43 @@ export default function Hero({ backgroundImage }) {
                 <span className="field-icon">📍</span>
                 Địa điểm nhận xe
               </span>
-              <input type="text" placeholder="Ví dụ: EV Station - Quận 1" required />
+              <select className="form-select" required>
+                <option value="">Chọn trạm thuê xe</option>
+                <option value="binh-thanh">EV Station - Bình Thạnh</option>
+                <option value="thu-duc">EV Station - Thủ Đức</option>
+                <option value="bien-hoa">EV Station - Biên Hòa</option>
+                <option value="my-tho">EV Station - TP Mỹ Tho</option>
+                <option value="ben-tre">EV Station - TP Bến Tre</option>
+                <option value="tan-binh">EV Station - Tân Bình</option>
+                <option value="long-an">EV Station - Long An</option>
+                <option value="can-tho">EV Station - Cần Thơ</option>
+                <option value="binh-duong">EV Station - Bình Dương</option>
+                <option value="vung-tau">EV Station - Vũng Tàu</option>
+              </select>
             </label>
             <label className="form-field">
               <span className="field-label">
                 <span className="field-icon">⏰</span>
                 Thời gian bắt đầu
               </span>
-              <input type="datetime-local" required />
+              <input 
+                type="datetime-local" 
+                required 
+                min={new Date().toISOString().slice(0, 16)}
+                placeholder="Chọn ngày và giờ bắt đầu"
+              />
             </label>
             <label className="form-field">
               <span className="field-label">
                 <span className="field-icon">⏰</span>
                 Thời gian kết thúc
               </span>
-              <input type="datetime-local" required />
+              <input 
+                type="datetime-local" 
+                required 
+                min={new Date().toISOString().slice(0, 16)}
+                placeholder="Chọn ngày và giờ kết thúc"
+              />
             </label>
             <button type="submit" className="btn primary-btn booking-submit" disabled={isLoading}>
               <span className="btn-text" style={{display: isLoading ? 'none' : 'block'}}>Đặt ngay</span>
