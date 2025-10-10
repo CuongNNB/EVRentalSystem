@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+//ửa
 @Service
 @RequiredArgsConstructor
 public class VehicleService {
@@ -21,14 +21,15 @@ public class VehicleService {
         List<VehicleDetail> vehicles = vehicleDetailRepository.findByVehicleModelStatus("AVAILABLE");
         return vehicles.stream().map(v -> new VehicleDetailResponse(
                 v.getId(),
-                v.getLicensePlate(),
                 v.getVehicleModel().getBrand(),
                 v.getVehicleModel().getModel(),
                 v.getColor(),
                 v.getBatteryCapacity(),
                 v.getStatus(),
                 v.getOdo(),
-                v.getStation().getStationName()
+                v.getPicture(),
+                v.getStation().getStationName(),
+                v.getVehicleModel().getPrice()
         )).collect(Collectors.toList());
     }
 

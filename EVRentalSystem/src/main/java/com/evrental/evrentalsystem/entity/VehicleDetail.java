@@ -28,6 +28,7 @@ public class VehicleDetail {
     private String color;
     private String batteryCapacity;
     private Integer odo;
+    private String picture;
     private String status;
 
     // Thêm phương thức này để lấy giá thuê xe mỗi ngày

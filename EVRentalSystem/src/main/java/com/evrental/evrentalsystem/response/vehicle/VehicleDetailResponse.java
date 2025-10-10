@@ -9,12 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class VehicleDetailResponse {
     private Integer id;
-    private String licensePlate;
     private String brand;
     private String model;
     private String color;
     private String batteryCapacity;
     private String status;
     private Integer odo;
+    private String picture;
     private String stationName;
+    private double price; //
 }

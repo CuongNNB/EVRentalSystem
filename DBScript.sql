@@ -83,6 +83,7 @@ CREATE TABLE Vehicle_Detail (
     [color]             NVARCHAR(50),
     battery_capacity    NVARCHAR(50),
     odo                 INT,
+	picture    NVARCHAR(50),
     [status]    NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model(vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station(station_id)
@@ -287,20 +288,20 @@ GO
 -- ========================
 -- 6. Vehicle_Detail
 -- ========================
-INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color], battery_capacity, odo, [status]) VALUES
-('51A-12345', 1, 1, N'Trắng', N'42 kWh', 1000, 'AVAILABLE'),
-('51B-67890', 2, 1, N'Đen',   N'82 kWh', 2500, 'AVAILABLE'),
-('51C-11111', 3, 2, N'Xám',   N'60 kWh', 5000, 'AVAILABLE'),
-('51D-10001', 4, 1, N'Xanh', N'37 kWh', 1500, 'AVAILABLE'),
-('51D-10002', 5, 2, N'Bạc', N'92 kWh', 2000, 'RENTED'),
-('51D-10003', 6, 1, N'Đỏ', N'75 kWh', 1200, 'AVAILABLE'),
-('51D-10004', 7, 2, N'Trắng', N'100 kWh', 2500, 'FIXING'),
-('51D-10005', 8, 1, N'Xám', N'58 kWh', 1700, 'AVAILABLE'),
-('51D-10006', 9, 1, N'Xanh dương', N'77 kWh', 2300, 'AVAILABLE'),
-('51D-10007', 10, 2, N'Vàng', N'40 kWh', 800, 'FIXING'),
-('51D-10008', 11, 2, N'Bạc', N'83 kWh', 900, 'AVAILABLE'),
-('51D-10009', 12, 1, N'Đen', N'90 kWh', 1100, 'RENTED'),
-('51D-10010', 13, 1, N'Trắng ngọc trai', N'93 kWh', 3000, 'RENTED');
+INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color], battery_capacity, odo, picture, [status]) VALUES
+('51A-12345', 1, 1, N'Trắng', N'42 kWh', 1000, '1.jpg','AVAILABLE'),
+('51B-67890', 2, 1, N'Đen',   N'82 kWh', 2500, '2.jpg','AVAILABLE'),
+('51C-11111', 3, 2, N'Xám',   N'60 kWh', 5000, '3.jpg','AVAILABLE'),
+('51D-10001', 4, 1, N'Xanh', N'37 kWh', 1500, '4.jpg','AVAILABLE'),
+('51D-10002', 5, 2, N'Bạc', N'92 kWh', 2000, '5.jpg','RENTED'),
+('51D-10003', 6, 1, N'Đỏ', N'75 kWh', 1200, '6.jpg','AVAILABLE'),
+('51D-10004', 7, 2, N'Trắng', N'100 kWh', 2500, '7.jpg','FIXING'),
+('51D-10005', 8, 1, N'Xám', N'58 kWh', 1700, '8.jpg','AVAILABLE'),
+('51D-10006', 9, 1, N'Xanh dương', N'77 kWh', 2300, '9.jpg','AVAILABLE'),
+('51D-10007', 10, 2, N'Vàng', N'40 kWh', 800, '10.jpg','FIXING'),
+('51D-10008', 11, 2, N'Bạc', N'83 kWh', 900, '11.jpg','AVAILABLE'),
+('51D-10009', 12, 1, N'Đen', N'90 kWh', 1100, '12.jpg','RENTED'),
+('51D-10010', 13, 1, N'Trắng ngọc trai', N'93 kWh', 3000, '13.jpg','RENTED');
 GO
 
 -- ========================
