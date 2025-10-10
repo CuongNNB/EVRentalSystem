@@ -31,7 +31,6 @@ public class UserController {
             @RequestParam("cccdBack") MultipartFile cccdBack
     ) {
         try {
-            // Tạo request object
             UserRegisterRequest req = new UserRegisterRequest();
             req.setUsername(username);
             req.setEmail(email);

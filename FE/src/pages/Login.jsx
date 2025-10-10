@@ -30,7 +30,7 @@ export default function Login() {
     try {
       const response = await api.post(
         "/api/users/login",
-        { username: email, password },
+        { email, password },
         { withCredentials: true }
       );
 

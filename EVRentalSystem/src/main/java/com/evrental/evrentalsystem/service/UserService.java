@@ -9,7 +9,9 @@ import com.evrental.evrentalsystem.response.*;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.security.JwtService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
@@ -29,9 +32,13 @@ public class UserService {
     @Autowired
     private RenterDetailRepository renterDetailRepository;
 
+    @Transactional
     public UserResponse register(UserRegisterRequest request, MultipartFile gplx, MultipartFile cccdFront, MultipartFile cccdBack) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists!");
+        }
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email đã tồn tại!");
         }
 
         User user = new User();
@@ -44,6 +51,7 @@ public class UserService {
         user.setRole("RENTER");
         user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
+
         User savedUser = userRepository.save(user);
 
         // save inf renter with base64 images
@@ -73,35 +81,21 @@ public class UserService {
     }
 
     public UserLoginResponse login(UserLoginRequest request) {
-        String input = null;
-
-        // Ưu tiên email nếu có, nếu không thì lấy username
-        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
-            input = request.getEmail().trim();
-        } else if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
-            input = request.getUsername().trim();
-        }
-
+        String email = request.getEmail();
         String password = request.getPassword();
 
-        if (input == null || input.isEmpty()) {
-            throw new RuntimeException("Email hoặc username là bắt buộc!");
+        if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email và mật khẩu là bắt buộc!");
         }
 
-        User user;
-        if (input.contains("@")) {
-            user = userRepository.findByEmail(input)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email này!"));
-        } else {
-            user = userRepository.findByUsername(input)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với username này!"));
-        }
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với email này!"));
 
         if (!user.getPassword().equals(password)) {
-            throw new RuntimeException("Sai mật khẩu!");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai mật khẩu!");
         }
 
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user.getEmail());
 
         return new UserLoginResponse(
                 user.getUserId(),
@@ -112,7 +106,6 @@ public class UserService {
                 token
         );
     }
-
 
     public UserResponse updateProfile(Integer id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
