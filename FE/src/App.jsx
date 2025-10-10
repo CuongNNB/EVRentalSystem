@@ -62,3 +62,4 @@ function App() {
 }
 
 export default App;
+// Compare this snippet from src/pages/ContractDemoPage.jsx:

@@ -71,7 +71,7 @@ const ContractDemoPage = () => {
     setContractData(null);
     localStorage.removeItem('contractDemoState');
   };
-
+//  Hiển thị trang thành công nếu đã ký và xác thực OTP
   if (verified && contractData) {
     return (
       <div className="contract-demo-page">

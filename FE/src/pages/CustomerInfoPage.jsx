@@ -20,7 +20,7 @@ const CustomerInfoPage = () => {
 
     console.log('CustomerInfoPage - savedCustomer:', savedCustomer);
     console.log('CustomerInfoPage - savedUser:', savedUser);
-
+//  console.log('CustomerInfoPage - savedBooking:', savedBooking);
     // Ưu tiên lấy từ registeredUser, nếu không có thì lấy từ user (login)
     if (savedCustomer) {
       try {

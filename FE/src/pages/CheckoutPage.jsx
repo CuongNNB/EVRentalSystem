@@ -13,7 +13,7 @@ const CheckoutPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
-
+//  Determine current step based on URL
   // Mock data - in real app, this would come from route params or API
   useEffect(() => {
     if (!state.carInfo) {
