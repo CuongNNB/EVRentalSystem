@@ -17,5 +17,5 @@ public class VehicleDetailResponse {
     private Integer odo;
     private String picture;
     private String stationName;
-    private double price;
+    private double price; //
 }
