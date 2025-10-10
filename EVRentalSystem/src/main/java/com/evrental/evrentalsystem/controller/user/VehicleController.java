@@ -18,7 +18,7 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     //API này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
-    //Front-end dùng API này thì gọi đến: http://localhost:8084/EVRentalSystem/api/vehicles/available
+    //Front-end dùng API này thì gọi đến: https://localhost:8084/EVRentalSystem/api/vehicles/available
     @GetMapping("/available")
     public List<VehicleDetailResponse> getAvailableVehicles() {
         return vehicleService.getAvailableVehicles();

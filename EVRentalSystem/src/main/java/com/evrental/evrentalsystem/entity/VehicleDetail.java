@@ -27,7 +27,6 @@ public class VehicleDetail {
 
     private String color;
     private String batteryCapacity;
-    private String picture;
     private Integer odo;
     private String status;
 

@@ -15,7 +15,6 @@ public class VehicleDetailResponse {
     private String color;
     private String batteryCapacity;
     private String status;
-    private String picture;
     private Integer odo;
     private String stationName;
 }
