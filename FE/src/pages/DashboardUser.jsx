@@ -10,26 +10,27 @@ const DashboardUser = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Lấy thông tin user từ localStorage
-    const userData = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (!token || !userData) {
-      navigate('/login');
-      return;
-    }
+ useEffect(() => {
+  // Lấy thông tin user từ localStorage (đúng key theo AuthContext)
+  const userData = localStorage.getItem('ev_user');
+  const token = localStorage.getItem('ev_token');
 
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      navigate('/login');
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate]);
+  if (!token || !userData || userData === "undefined" || userData === "null") {
+    navigate('/login');
+    return;
+  }
+
+  try {
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    localStorage.removeItem('ev_user'); // dọn dữ liệu hỏng
+    navigate('/login');
+  } finally {
+    setLoading(false);
+  }
+}, [navigate]);
 
   const dashboardCards = [
     {
@@ -79,8 +80,8 @@ const DashboardUser = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('ev_token');
+    localStorage.removeItem('ev_user');
     navigate('/login');
   };
 
@@ -111,7 +112,7 @@ const DashboardUser = () => {
         >
           <div className="welcome-content">
             <h1 className="welcome-title">
-              Xin chào, {user?.name || 'Khách hàng'} 👋
+             Xin chào, {user?.fullName || user?.name || user?.username || "Khách hàng"} 👋
             </h1>
             <p className="welcome-subtitle">
               Chào mừng bạn đến với EV Rental Dashboard

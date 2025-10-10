@@ -27,67 +27,36 @@ export default function Login() {
       setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
-
     try {
-      // Thử login với API thực tế trước
       const response = await api.post(
         "/api/users/login",
         { username: email, password },
         { withCredentials: true }
       );
-      const { user, token } = response.data;
-      
-      // Lưu token và user vào localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Lưu session vào context
+
+      const loginData = response.data?.data || response.data;
+      const user = loginData.user || loginData;
+      const token = loginData.token || loginData.jwt || "mock-token";
+
+      if (!user) {
+        setError("Không nhận được thông tin người dùng từ API");
+        return;
+      }
+
+      // Lưu token và user
+      localStorage.setItem('ev_token', token);
+      localStorage.setItem('ev_user', JSON.stringify(user));
+
+      // Cập nhật context
       loginWithSession(user, token);
 
       alert("Đăng nhập thành công!");
       navigate("/dashboard");
     } catch (apiError) {
-      // Nếu API thực tế fail, fallback về mock API
-      console.log('Real API failed, trying mock API...', apiError);
-
-      const result = await login({ email, password });
-
-      if (result.success) {
-        // Lấy thông tin user từ localStorage (nếu đã đăng ký)
-        const registeredUser = localStorage.getItem('registeredUser');
-        let mockUser;
-
-        if (registeredUser) {
-          try {
-            const userData = JSON.parse(registeredUser);
-            mockUser = {
-              id: 1,
-              name: userData.name,
-              email: userData.email,
-              phone: userData.phone,
-              role: userData.role
-            };
-          } catch (error) {
-            console.error('Error parsing registered user:', error);
-            mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
-          }
-        } else {
-          // Fallback nếu không có thông tin đăng ký
-          mockUser = { id: 1, name: 'Nguyễn Văn A', email: email, role: 'USER' };
-        }
-
-        const mockToken = 'mock-token-' + Date.now();
-
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        alert("Đăng nhập thành công!");
-        navigate("/dashboard");
-      } else {
-        setError(result.message || "Đăng nhập thất bại");
-      }
+      console.error("Login failed:", apiError);
+      setError("Đăng nhập thất bại, vui lòng kiểm tra lại.");
     }
-  };
+  }
 
   return (
     <div className="login-page">

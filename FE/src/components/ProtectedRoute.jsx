@@ -9,24 +9,24 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     // Kiểm tra token trong localStorage
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
+    const token = localStorage.getItem('ev_token');
+    const userData = localStorage.getItem('ev_user');
+
     if (token && userData) {
       setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);
     }
-    
+
     setIsLoading(false);
   }, []);
 
   if (loading || isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         fontSize: '18px'
       }}>

@@ -8,15 +8,21 @@ import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.*;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
+import com.evrental.evrentalsystem.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Base64;
+
 import org.springframework.web.multipart.MultipartFile;
+
 @Service
 public class UserService {
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private UserRepository userRepository;
@@ -95,9 +101,17 @@ public class UserService {
             throw new RuntimeException("Sai mật khẩu!");
         }
 
-        return new UserLoginResponse(user.getUserId(), user.getUsername(), user.getRole());
-    }
+        String token = jwtService.generateToken(user.getUsername());
 
+        return new UserLoginResponse(
+                user.getUserId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole(),
+                token
+        );
+    }
 
 
     public UserResponse updateProfile(Integer id, UserUpdateRequest request) {

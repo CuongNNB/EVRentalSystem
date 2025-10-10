@@ -27,19 +27,21 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    // Kiểm tra user trong localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        setLocalUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        setLocalUser(null);
-      }
-    } else {
+  // Kiểm tra user trong localStorage (dùng key chuẩn)
+  const userData = localStorage.getItem('ev_user');
+
+  if (userData && userData !== "undefined" && userData !== "null") {
+    try {
+      setLocalUser(JSON.parse(userData));
+    } catch (error) {
+      console.error('Error parsing user data:', error);
       setLocalUser(null);
     }
-  }, []);
+  } else {
+    setLocalUser(null);
+  }
+}, []);
+
 
   return (
     <header className={`homepage-header ${isScrolled ? "scrolled" : ""}`}>
@@ -78,8 +80,8 @@ export default function Header() {
                 className="btn text-btn" 
                 onClick={() => {
                   // Xóa localStorage
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('user');
+                  localStorage.removeItem('ev_token');
+                  localStorage.removeItem('ev_user');
                   
                   // Logout từ context
                   if (logout) {
