@@ -15,4 +15,5 @@ public class BookingsInStationResponse {
     public LocalDateTime startDate;
     public LocalDateTime endDate;
     public String status;
+    public double totalAmount;
 }

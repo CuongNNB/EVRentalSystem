@@ -30,8 +30,8 @@ public class StaffService {
                     response.vehicleModel = booking.getVehicleModel() != null ? booking.getVehicleModel().getModel() : "Unknown"; // Giả sử có trường modelName trong VehicleModel
                     response.startDate = booking.getStartTime();
                     response.endDate = booking.getExpectedReturnTime();
+                    response.totalAmount = booking.getTotalAmount();
                     response.status = booking.getStatus();
-
                     return response;
                 })
                 .collect(Collectors.toList()); // Thu thập các đối tượng vào danh sách

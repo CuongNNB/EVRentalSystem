@@ -73,4 +73,16 @@ public class Booking {
         }
         this.totalAmount = this.rentalAmount + (this.additionalFees != null ? this.additionalFees : 0);
     }
+
+    @PrePersist
+    public void prePersist() {
+        calculateRentalAmount();
+        calculateTotalAmount();
+    }
+
+    @PostLoad
+    public void postLoad() {
+        calculateRentalAmount();
+        calculateTotalAmount();
+    }
 }
