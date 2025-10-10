@@ -27,6 +27,7 @@ public class VehicleService {
                 v.getColor(),
                 v.getBatteryCapacity(),
                 v.getStatus(),
+                v.getPicture(),
                 v.getOdo(),
                 v.getStation().getStationName()
         )).collect(Collectors.toList());
