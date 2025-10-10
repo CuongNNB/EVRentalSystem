@@ -16,5 +16,6 @@ public class VehicleDetailResponse {
     private String batteryCapacity;
     private String status;
     private Integer odo;
+    private String picture;
     private String stationName;
 }
