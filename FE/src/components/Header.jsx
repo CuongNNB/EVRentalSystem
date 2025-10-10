@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 const menuItems = [
   { label: "Trang chủ", href: "/" },
   { label: "Xem xe có sẵn", href: "/cars" },
-  { label: "Tìm xe theo trạm", href: "#stations" },
+  { label: "Tìm xe theo trạm", href: "/station-cars" },
   { label: "Ưu đãi", href: "#promotions" },
   { label: "Demo Flow Hoàn Chỉnh", href: "/demo-flow" },
 ];

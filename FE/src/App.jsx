@@ -24,6 +24,7 @@ import OrderDetail from "./pages/staff/Orders/OrderDetail";
 import HandoverCar from "./pages/staff/Orders/HandoverCar";
 import ReturnCar from "./pages/staff/Orders/ReturnCar";
 import ExtraFee from "./pages/staff/Orders/ExtraFee";
+import StationCarView from "./pages/StationCarView";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
             <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><ReturnCar /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
+            <Route path="/station-cars" element={<StationCarView />} />
           </Routes>
         </Router>
       </CheckoutProvider>
