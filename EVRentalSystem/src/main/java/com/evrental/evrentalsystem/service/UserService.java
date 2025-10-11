@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Date;
 
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -103,6 +104,12 @@ public class UserService {
                 user.getFullName(),
                 user.getEmail(),
                 user.getRole(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getCreatedAt(),
+                user.getRenterDetail().getCccdFront(),
+                user.getRenterDetail().getCccdBack(),
+                user.getRenterDetail().getDriverLicense(),
                 token
         );
     }

@@ -33,6 +33,9 @@ public class User {
     private String status;
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToOne(mappedBy = "renter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private RenterDetail renterDetail;
+
     @PrePersist
     @PreUpdate
     private void trimFields() {
