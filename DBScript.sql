@@ -10,7 +10,7 @@ CREATE DATABASE EVRentalSystem;
 GO
 USE EVRentalSystem;
 GO
-
+--
 -- ============================
 -- (1) User
 -- ============================

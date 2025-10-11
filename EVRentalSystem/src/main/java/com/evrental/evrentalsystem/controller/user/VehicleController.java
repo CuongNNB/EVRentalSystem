@@ -25,7 +25,7 @@ public class VehicleController {
         return vehicleService.getAvailableVehicles();
     }
 
-
+    //
     @GetMapping("/{id}")
     public VehicleWithIdResponse getVehicleById(@PathVariable Integer id) {
         return vehicleService.getVehicleFullDetail(id);

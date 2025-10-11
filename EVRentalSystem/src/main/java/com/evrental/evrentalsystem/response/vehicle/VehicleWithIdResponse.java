@@ -3,7 +3,7 @@ import lombok.Data;
 
 @Data
 public class VehicleWithIdResponse {
-    // VehicleDetail
+    // VehicleDetail sd
     private Integer id;
     private String licensePlate;
     private String color;

@@ -33,7 +33,7 @@ public class VehicleService {
                 v.getVehicleModel().getPrice()
         )).collect(Collectors.toList());
     }
-
+//
     public VehicleWithIdResponse getVehicleFullDetail(Integer id) {
         VehicleDetail v = vehicleDetailRepository.findDetailWithModelAndStation(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with id=" + id));
