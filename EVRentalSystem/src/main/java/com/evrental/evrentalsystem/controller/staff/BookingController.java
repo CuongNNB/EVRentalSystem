@@ -21,6 +21,7 @@ public class BookingController {
     private StaffService staffService;
 
     // API GET để lấy danh sách bookings theo stationId
+    // GET http://localhost:8084/EVRentalSystem/api/bookings/station/1
     @GetMapping("/station/{stationId}")
     public ResponseEntity<ApiResponse<List<BookingsInStationResponse>>> getBookingsByStation(@PathVariable Integer stationId) {
         try {
@@ -40,7 +41,8 @@ public class BookingController {
         }
     }
 
-    //API đổi status của booking theo id, ví dụ: PUT http://localhost:8084/EVRentalSystem/api/bookings/1/status?status=Pending_Deposit_Confirmation
+    // API đổi status của booking theo id
+    // PUT http://localhost:8084/EVRentalSystem/api/bookings/1/status?status=Pending_Deposit_Confirmation
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateBookingStatus(
             @PathVariable int id,
