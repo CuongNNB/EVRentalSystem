@@ -34,7 +34,7 @@ CREATE TABLE Renter_Detail (
                                renter_id       INT PRIMARY KEY,
                                cccd_front      NVARCHAR(MAX),
                                cccd_back       NVARCHAR(MAX),
-                               driver_license  NVARCHAR(50),
+                               driver_license  NVARCHAR(MAX),
                                verification_status NVARCHAR(50),
                                is_risky        BIT NOT NULL DEFAULT 0,
                                CONSTRAINT FK_RenterDetail_User FOREIGN KEY (renter_id) REFERENCES [User](user_id)

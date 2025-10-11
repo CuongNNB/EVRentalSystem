@@ -4,6 +4,7 @@ import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
+import com.evrental.evrentalsystem.response.vehicle.VehicleWithIdResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,38 @@ public class VehicleService {
         )).collect(Collectors.toList());
     }
 
+    public VehicleWithIdResponse getVehicleFullDetail(Integer id) {
+        VehicleDetail v = vehicleDetailRepository.findDetailWithModelAndStation(id)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found with id=" + id));
 
+        VehicleWithIdResponse res = new VehicleWithIdResponse();
+        // VehicleDetail
+        res.setId(v.getId());
+        res.setLicensePlate(v.getLicensePlate());
+        res.setColor(v.getColor());
+        res.setBatteryCapacity(v.getBatteryCapacity());
+        res.setStatus(v.getStatus());
+        res.setOdo(v.getOdo());
+        res.setPicture(v.getPicture());
+
+        // VehicleModel
+        if (v.getVehicleModel() != null) {
+            res.setVehicleModelId(v.getVehicleModel().getVehicleId());
+            res.setBrand(v.getVehicleModel().getBrand());
+            res.setModel(v.getVehicleModel().getModel());
+            res.setSeats(v.getVehicleModel().getSeats());
+            res.setPrice(v.getVehicleModel().getPrice());
+        }
+
+        // Station
+        if (v.getStation() != null) {
+            res.setStationId(v.getStation().getStationId());
+            res.setStationName(v.getStation().getStationName());
+            res.setStationAddress(v.getStation().getAddress());
+            res.setStationLocation(v.getStation().getLocation());
+        }
+
+        return res;
+    }
     //End code here
 }

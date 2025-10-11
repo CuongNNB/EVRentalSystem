@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.controller.user;
 
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
+import com.evrental.evrentalsystem.response.vehicle.VehicleWithIdResponse;
 import com.evrental.evrentalsystem.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,5 +25,10 @@ public class VehicleController {
         return vehicleService.getAvailableVehicles();
     }
 
+
+    @GetMapping("/{id}")
+    public VehicleWithIdResponse getVehicleById(@PathVariable Integer id) {
+        return vehicleService.getVehicleFullDetail(id);
+    }
     //End code here
 }
