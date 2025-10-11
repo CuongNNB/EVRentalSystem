@@ -22,8 +22,22 @@ public class BookingController {
 
     // API GET để lấy danh sách bookings theo stationId
     @GetMapping("/station/{stationId}")
-    public List<BookingsInStationResponse> getBookingsByStation(@PathVariable Integer stationId) {
-        return staffService.bookingsInStation(stationId);
+    public ResponseEntity<ApiResponse<List<BookingsInStationResponse>>> getBookingsByStation(@PathVariable Integer stationId) {
+        try {
+            List<BookingsInStationResponse> bookings = staffService.bookingsInStation(stationId);
+
+            if (bookings == null || bookings.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("No bookings found for station ID: " + stationId, null));
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Bookings fetched successfully", bookings));
+
+        } catch (Exception e) {
+            log.error("❌ Error fetching bookings for station ID {}: {}", stationId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Error fetching bookings", null));
+        }
     }
 
     //API đổi status của booking theo id, ví dụ: PUT http://localhost:8084/EVRentalSystem/api/bookings/1/status?status=Pending_Deposit_Confirmation
