@@ -749,3 +749,32 @@
     background-position: -200% 0;
   }
 }
+
+/* ========================= */
+/* Hiệu ứng chuyển ảnh mượt  */
+/* ========================= */
+
+/* Ảnh chính chuyển mượt khi thay đổi */
+/* Hiệu ứng mờ dần khi chuyển ảnh */
+.main-image {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.5s ease, transform 0.6s ease;
+}
+
+.main-image.fade-out {
+  opacity: 0;
+  transform: scale(1.02);
+}
+
+/* Khi thumbnail đang active thì sáng hơn nhẹ */
+.thumbnail.active img {
+  filter: brightness(1.05);
+  transform: scale(1.05);
+  transition: all 0.4s ease;
+}
+
+/* Thêm hiệu ứng mượt khi hover thumbnail */
+.thumbnail img {
+  transition: all 0.3s ease-in-out;
+}
