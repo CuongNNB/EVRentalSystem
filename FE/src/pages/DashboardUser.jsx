@@ -112,7 +112,7 @@ const DashboardUser = () => {
         >
           <div className="welcome-content">
             <h1 className="welcome-title">
-             Xin chào, {user?.fullName || user?.name || user?.username || "Khách hàng"} 👋
+              Xin chào, {user?.fullName || user?.name || user?.username || "Khách hàng"} 👋
             </h1>
             <p className="welcome-subtitle">
               Chào mừng bạn đến với EV Rental Dashboard

@@ -15,7 +15,7 @@ GO
 -- (1) User
 -- ============================
 CREATE TABLE [User] (
-                        user_id     INT IDENTITY(1,1) PRIMARY KEY,
+    user_id     INT IDENTITY(1,1) PRIMARY KEY,
     username    NVARCHAR(100) NOT NULL UNIQUE,
     [password]  NVARCHAR(255) NOT NULL,
     full_name   NVARCHAR(255),
