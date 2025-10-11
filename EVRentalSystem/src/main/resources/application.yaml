@@ -13,6 +13,17 @@ spring:
       ddl-auto: none
     database-platform: org.hibernate.dialect.SQLServerDialect
     show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USER}
+    password: ${GMAIL_PASS}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 server:
   port: 8084
   servlet:

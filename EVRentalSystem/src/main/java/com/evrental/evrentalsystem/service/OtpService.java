@@ -12,14 +12,14 @@ public class OtpService {
     private final Map<Integer, OtpData> otpStorage = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
-    // Sinh OTP cho contract
+
     public String generateOtp(Integer bookingId) {
         String otp = String.format("%06d", random.nextInt(999999));
         otpStorage.put(bookingId, new OtpData(otp, LocalDateTime.now().plusMinutes(5), 0));
         return otp;
     }
 
-    // Kiểm tra OTP
+
     public boolean verifyOtp(Integer bookingId, String otp) {
         OtpData data = otpStorage.get(bookingId);
         if (data == null) return false;
@@ -30,12 +30,12 @@ public class OtpService {
         }
 
         if (data.code().equals(otp)) {
-            otpStorage.remove(bookingId); // Xóa sau khi đúng
+            otpStorage.remove(bookingId);
             return true;
         } else {
             data.incrementAttempts();
             if (data.attempts() >= 3) {
-                otpStorage.remove(bookingId); // Quá 3 lần → xóa
+                otpStorage.remove(bookingId);
             }
             return false;
         }

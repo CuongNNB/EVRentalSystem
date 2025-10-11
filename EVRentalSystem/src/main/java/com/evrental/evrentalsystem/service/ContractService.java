@@ -11,7 +11,7 @@ public class ContractService {
 
     private final ContractRepository contractRepository;
     private final MailService mailService;
-    private final OtpService otpService;
+     private final OtpService otpService;
 
     @Transactional
     public String sendOtpForContract(Integer bookingId, String email) {

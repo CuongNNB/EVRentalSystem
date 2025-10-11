@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ContractController {
 
-    private final ContractService contractService;
+     private final ContractService contractService;
 
     @PostMapping("/send-otp")
     public String sendOtp(@RequestParam Integer bookingId, @RequestParam String email) {
