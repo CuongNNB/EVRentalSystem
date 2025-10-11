@@ -3,15 +3,19 @@ package com.evrental.evrentalsystem.service;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
 import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.repository.BookingRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class StaffService {
-    @Autowired
-    private BookingRepository bookingRepository;
+
+    private final BookingRepository bookingRepository;
 
     public List<BookingsInStationResponse> bookingsInStation(Integer stationId) {
         // Tìm danh sách booking theo stationId
@@ -35,6 +39,22 @@ public class StaffService {
                     return response;
                 })
                 .collect(Collectors.toList()); // Thu thập các đối tượng vào danh sách
+    }
+
+    public boolean changeStatus(int id, String status) {
+        try {
+            int updated = bookingRepository.updateBookingStatus(id, status);
+            if (updated > 0) {
+                log.info("✅ Update success! (Booking ID: {})", id);
+                return true;
+            } else {
+                log.warn("⚠️ No booking found with ID: {}", id);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("❌ Error updating booking status for ID: {}", id, e);
+            throw e; // ném lỗi lên controller
+        }
     }
 
 }
