@@ -1,0 +1,184 @@
+/* ==== HEADER CHUNG ==== */
+.homepage-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    background: #ffffff;
+    border-bottom: 10px solid #e5e7eb;
+    z-index: 100;
+    transition: all 0.3s ease;
+}
+
+/* ✅ Container giới hạn chiều rộng — tăng độ rộng */
+.header-container {
+    max-width: 1480px; /* 🔥 tăng từ 1320px lên 1480px */
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 2rem; /* 🔥 thêm padding cho rộng thoáng hơn */
+}
+
+/* Khi cuộn */
+.homepage-header.scrolled {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ==== Logo ==== */
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-icon {
+    font-size: 1.4rem;
+    width: 48px; /* 🔥 tăng size logo */
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 1.2rem; /* 🔥 chữ to hơn chút */
+    color: #0f172a;
+}
+
+.brand-tagline {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+/* ==== Menu ==== */
+.header-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2.25rem; /* 🔥 giãn khoảng cách menu */
+    flex: 1;
+}
+
+.nav-link {
+    color: #475569;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* 🎯 Hiệu ứng hover underline mượt */
+.nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: #10b981;
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.nav-link:hover {
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* ==== User/Actions ==== */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem; /* 🔥 giãn nút user */
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-greeting {
+    font-size: 0.95rem;
+    color: #334155;
+}
+
+.user-greeting strong {
+    color: #10b981;
+}
+
+.btn {
+    cursor: pointer;
+    font-size: 0.95rem;
+    border: none;
+    outline: none;
+    background: none;
+}
+
+.text-btn {
+    color: #0f172a; /* Chữ đen mặc định */
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+}
+
+/* Hover: chỉ đổi nền gradient, giữ chữ đen rõ ràng */
+.text-btn:hover {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #0f172a !important; /* 🔥 Ép màu chữ đen */
+    border: 1px solid rgba(16, 185, 129, 0.3); /* nhẹ, giúp text tách nền */
+    box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Optional: khi click */
+.text-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 992px) {
+    .header-nav {
+        display: none;
+    }
+
+    .header-container {
+        flex-wrap: wrap;
+    }
+}
