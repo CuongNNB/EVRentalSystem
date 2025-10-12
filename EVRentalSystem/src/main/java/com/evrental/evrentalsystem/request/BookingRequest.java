@@ -14,4 +14,5 @@ public class BookingRequest {
     private Integer stationId;
     private LocalDateTime startTime;
     private LocalDateTime expectedReturnTime;
+    private Double deposit;
 }

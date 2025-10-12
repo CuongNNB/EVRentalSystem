@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, Car, Clock, Battery, Users } from 'lucide-react';
+import Header from '../components/Header';
+import StationMap from '../components/StationMap';
+import { carDatabase } from '../data/carData';
 import './StationCarView.css';
 
 const StationCarView = () => {
+  const navigate = useNavigate();
   const [selectedDistrict, setSelectedDistrict] = useState('Quận 1');
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,75 +19,25 @@ const StationCarView = () => {
     'Quận 11', 'Quận 12', 'Thủ Đức', 'Gò Vấp', 'Bình Thạnh'
   ];
 
-  // Mock data for cars
-  const mockCars = [
-    {
-      id: 1,
-      name: 'Tesla Model 3',
-      image: '/anhxe/Tesla Model 3.jpg',
-      price: '1,200,000',
-      battery: '85%',
-      seats: 5,
-      distance: '2.5km',
-      station: 'Trạm Quận 1'
-    },
-    {
-      id: 2,
-      name: 'BMW iX xDrive50',
-      image: '/anhxe/BMW iX xDrive50.jpg',
-      price: '1,800,000',
-      battery: '92%',
-      seats: 5,
-      distance: '1.8km',
-      station: 'Trạm Quận 1'
-    },
-    {
-      id: 3,
-      name: 'Mercedes-Benz EQE 350+',
-      image: '/anhxe/Mercedes-Benz EQE 350+.jpg',
-      price: '2,200,000',
-      battery: '78%',
-      seats: 5,
-      distance: '3.2km',
-      station: 'Trạm Quận 1'
-    },
-    {
-      id: 4,
-      name: 'Porsche Taycan Turbo S',
-      image: '/anhxe/Porsche Taycan Turbo S.jpg',
-      price: '3,500,000',
-      battery: '88%',
-      seats: 4,
-      distance: '4.1km',
-      station: 'Trạm Quận 1'
-    },
-    {
-      id: 5,
-      name: 'Audi Q8 e-tron',
-      image: '/anhxe/Audi Q8 e-tron.jpg',
-      price: '2,800,000',
-      battery: '95%',
-      seats: 5,
-      distance: '2.9km',
-      station: 'Trạm Quận 1'
-    },
-    {
-      id: 6,
-      name: 'Hyundai Ioniq 5',
-      image: '/anhxe/Hyundai Ioniq 5.jpg',
-      price: '1,500,000',
-      battery: '82%',
-      seats: 5,
-      distance: '1.5km',
-      station: 'Trạm Quận 1'
-    }
-  ];
+  // Convert carDatabase to station format with additional station info
+  const getStationCars = () => {
+    return Object.values(carDatabase).map(car => ({
+      id: car.id,
+      name: car.name,
+      image: car.images[0], // Use first image
+      price: car.price.toLocaleString('vi-VN'),
+      battery: `${Math.floor(Math.random() * 20) + 80}%`, // Random battery 80-99%
+      seats: car.specifications.seats,
+      distance: `${(Math.random() * 3 + 1).toFixed(1)}km`, // Random distance 1-4km
+      station: `Trạm ${selectedDistrict}`
+    }));
+  };
 
   useEffect(() => {
     // Simulate loading cars for selected district
     setLoading(true);
     setTimeout(() => {
-      setCars(mockCars);
+      setCars(getStationCars());
       setLoading(false);
     }, 800);
   }, [selectedDistrict]);
@@ -96,128 +51,106 @@ const StationCarView = () => {
     console.log('Finding nearby cars...');
   };
 
-  return (
-    <div className="station-car-view">
-      {/* Header Section */}
-      <div className="header-section">
-        <h1 className="header-title">Xem xe theo trạm</h1>
-        <p className="header-description">
-          Chọn trạm hoặc xem bản đồ để tìm xe phù hợp
-        </p>
-      </div>
+  const handleViewDetails = (carId) => {
+    navigate(`/car/${carId}`);
+  };
 
-      {/* Filter Section */}
-      <div className="filter-section">
-        <div className="filter-buttons">
+  return (
+    <div className="station-page">
+      <Header />
+      <main className="station-page__main">
+        {/* Header Section */}
+        <div className="station-page__intro">
+          <div className="station-page__badge">TÌM XE THEO TRẠM</div>
+          <h1 className="station-page__title">Xem xe theo trạm</h1>
+          <p className="station-page__description">
+            Chọn trạm hoặc xem bản đồ để tìm xe phù hợp với nhu cầu của bạn
+          </p>
+        </div>
+
+        {/* Filter Section */}
+        <div className="station-filters">
           {districts.map((district) => (
             <button
               key={district}
-              className={`filter-btn ${selectedDistrict === district ? 'active' : ''}`}
+              className={`station-filters__button ${selectedDistrict === district ? 'is-active' : ''}`}
               onClick={() => handleDistrictSelect(district)}
             >
               {district}
             </button>
           ))}
         </div>
-        <div className="advanced-filter">
-          <button className="filter-advanced-btn">
-            <span>⚙️</span>
-            Bộ lọc nâng cao
-          </button>
-        </div>
-      </div>
 
-      {/* Map Section */}
-      <div className="map-section">
-        <div className="map-header">
-          <MapPin className="map-icon" />
-          <span>Bản đồ trạm xe</span>
-        </div>
-        <div className="map-container">
-          <div className="map-placeholder">
-            <div className="map-content">
-              <MapPin className="map-pin" />
-              <h3>Bản đồ trạm xe điện</h3>
-              <p>Hiển thị vị trí các trạm xe trong {selectedDistrict}</p>
-              <div className="map-stations">
-                <div className="station-marker">
-                  <div className="marker-dot"></div>
-                  <span>Trạm Quận 1 – 5 xe khả dụng</span>
-                </div>
-                <div className="station-marker">
-                  <div className="marker-dot"></div>
-                  <span>Trạm Quận 2 – 3 xe khả dụng</span>
-                </div>
-              </div>
+        {/* Map Section */}
+        <StationMap 
+          selectedDistrict={selectedDistrict}
+          onFindNearby={handleFindNearby}
+        />
+
+        {/* Cars Section */}
+        <div className="station-cars">
+          <div className="station-cars__header">
+            <h2>Xe có sẵn tại {selectedDistrict}</h2>
+            <span className="station-cars__count">{cars.length} xe khả dụng</span>
+          </div>
+
+          {loading ? (
+            <div className="station-cars__loading">
+              <div className="station-cars__spinner"></div>
+              <p>Đang tải danh sách xe...</p>
             </div>
-          </div>
-          <button className="floating-search-btn" onClick={handleFindNearby}>
-            <Search className="search-icon" />
-            Tìm quanh đây
-          </button>
-        </div>
-      </div>
-
-      {/* Cars Section */}
-      <div className="cars-section">
-        <div className="cars-header">
-          <h2>Xe có sẵn tại {selectedDistrict}</h2>
-          <span className="cars-count">{cars.length} xe khả dụng</span>
-        </div>
-
-        {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Đang tải danh sách xe...</p>
-          </div>
-        ) : cars.length === 0 ? (
-          <div className="no-cars-container">
-            <Car className="no-cars-icon" />
-            <h3>Không có xe khả dụng</h3>
-            <p>Hiện tại không có xe nào tại trạm này</p>
-            <button className="view-other-stations-btn">
-              Xem trạm khác
-            </button>
-          </div>
-        ) : (
-          <div className="cars-grid fade-in">
-            {cars.map((car) => (
-              <div key={car.id} className="car-card">
-                <div className="car-image-container">
-                  <img src={car.image} alt={car.name} className="car-image" />
-                  <div className="car-badge">
-                    <Battery className="battery-icon" />
-                    {car.battery}
+          ) : cars.length === 0 ? (
+            <div className="station-cars__empty">
+              <Car className="station-cars__empty-icon" />
+              <h3>Không có xe khả dụng</h3>
+              <p>Hiện tại không có xe nào tại trạm này</p>
+              <button className="station-cars__empty-btn">
+                Xem trạm khác
+              </button>
+            </div>
+          ) : (
+            <div className="station-cars__grid">
+              {cars.map((car) => (
+                <div key={car.id} className="station-car-card">
+                  <div className="station-car-card__media">
+                    <img src={car.image} alt={car.name} className="station-car-card__image" />
+                    <div className="station-car-card__badge">
+                      <Battery className="station-car-card__battery-icon" />
+                      {car.battery}
+                    </div>
+                  </div>
+                  <div className="station-car-card__content">
+                    <h3 className="station-car-card__name">{car.name}</h3>
+                    <div className="station-car-card__features">
+                      <div className="station-car-card__feature">
+                        <Users className="station-car-card__feature-icon" />
+                        <span>{car.seats} chỗ</span>
+                      </div>
+                      <div className="station-car-card__feature">
+                        <MapPin className="station-car-card__feature-icon" />
+                        <span>{car.distance}</span>
+                      </div>
+                      <div className="station-car-card__feature">
+                        <Clock className="station-car-card__feature-icon" />
+                        <span>2 phút</span>
+                      </div>
+                    </div>
+                    <div className="station-car-card__actions">
+                      <div className="station-car-card__price">{car.price}đ/ngày</div>
+                      <button 
+                        className="station-car-card__btn"
+                        onClick={() => handleViewDetails(car.id)}
+                      >
+                        Xem chi tiết
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="car-info">
-                  <h3 className="car-name">{car.name}</h3>
-                  <div className="car-details">
-                    <div className="car-detail-item">
-                      <Users className="detail-icon" />
-                      <span>{car.seats} chỗ</span>
-                    </div>
-                    <div className="car-detail-item">
-                      <MapPin className="detail-icon" />
-                      <span>{car.distance}</span>
-                    </div>
-                    <div className="car-detail-item">
-                      <Clock className="detail-icon" />
-                      <span>2 phút</span>
-                    </div>
-                  </div>
-                  <div className="car-price-section">
-                    <span className="car-price">{car.price}đ/ngày</span>
-                    <button className="car-btn">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserBookingController {
 
     private final BookingService bookingService;
-
+    //API: http://localhost:8084/EVRentalSystem/api/user/booking
     @PostMapping("/booking")
     public BookingResponseDTO createBooking(@RequestBody BookingRequest request) {
         return bookingService.createBooking(request);

@@ -3,6 +3,7 @@ package com.evrental.evrentalsystem.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,9 +25,9 @@ public class MailService {
 
             helper.setFrom(fromEmail);
             helper.setTo(toEmail);
-            helper.setSubject("EVRental - Mã xác nhận hợp đồng");
+            helper.setSubject("Hệ thống cho thuê xe điện EV Rental - Mã xác nhận hợp đồng");
             helper.setText("""
-                    <p>Xin chào,</p>
+                    <p>Xin chào bạn,</p>
                     <p>Mã OTP xác nhận ký hợp đồng của bạn là: <b>%s</b></p>
                     <p>Mã có hiệu lực trong 5 phút.</p>
                     <br>

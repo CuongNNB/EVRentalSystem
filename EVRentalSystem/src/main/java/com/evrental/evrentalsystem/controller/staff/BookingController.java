@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.controller.staff;
 
 import com.evrental.evrentalsystem.response.ApiResponse;
+import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
 import com.evrental.evrentalsystem.service.StaffService;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +22,7 @@ public class BookingController {
     private StaffService staffService;
 
     // API GET để lấy danh sách bookings theo stationId
+    // GET http://localhost:8084/EVRentalSystem/api/bookings/station/1
     @GetMapping("/station/{stationId}")
     public ResponseEntity<ApiResponse<List<BookingsInStationResponse>>> getBookingsByStation(@PathVariable Integer stationId) {
         try {
@@ -40,7 +42,8 @@ public class BookingController {
         }
     }
 
-    //API đổi status của booking theo id, ví dụ: PUT http://localhost:8084/EVRentalSystem/api/bookings/1/status?status=Pending_Deposit_Confirmation
+    // API đổi status của booking theo id
+    // PUT http://localhost:8084/EVRentalSystem/api/bookings/1/status?status=Pending_Deposit_Confirmation
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateBookingStatus(
             @PathVariable int id,
@@ -62,4 +65,6 @@ public class BookingController {
                     .body(ApiResponse.error("Error updating booking status", null));
         }
     }
+
+
 }

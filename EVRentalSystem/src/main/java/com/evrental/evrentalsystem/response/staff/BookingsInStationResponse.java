@@ -11,9 +11,11 @@ public class BookingsInStationResponse {
     public Integer id;
     public String customerName;
     public String customerNumber;
+    public Integer vehicleModelId;
     public String vehicleModel;
     public LocalDateTime startDate;
     public LocalDateTime endDate;
     public String status;
     public double totalAmount;
+
 }

@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
 import Steps from "../components/Steps";
@@ -8,6 +10,30 @@ import heroBg from '../picture/nen.png';
 
 
 export default function Homepage() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  // Check if user is logged in using AuthContext
+  const isLoggedIn = () => {
+    return isAuthenticated();
+  };
+
+  // Handle button clicks with auth check
+  const handleBookCar = () => {
+    if (isLoggedIn()) {
+      navigate('/cars'); // Navigate to cars page if logged in
+    } else {
+      navigate('/login'); // Navigate to login page if not logged in
+    }
+  };
+
+  const handleLearnMore = () => {
+    if (isLoggedIn()) {
+      navigate('/cars'); // Navigate to cars page if logged in
+    } else {
+      navigate('/login'); // Navigate to login page if not logged in
+    }
+  };
 
   return (
     <div className="homepage">
@@ -102,7 +128,7 @@ export default function Homepage() {
             </div>
             
             <div className="choose-cta">
-              <button className="btn primary-btn">Bắt đầu trải nghiệm ngay</button>
+              <button className="btn primary-btn" onClick={handleBookCar}>Bắt đầu trải nghiệm ngay</button>
             </div>
           </div>
         </section>
@@ -164,8 +190,8 @@ export default function Homepage() {
             <h2>Trải nghiệm xe điện ngay hôm nay</h2>
             <p>Tham gia hàng nghìn khách hàng đã chọn EV Car Rental cho hành trình xanh</p>
             <div className="cta-buttons">
-              <button className="btn primary-btn cta-main">Đặt xe ngay</button>
-              <button className="btn secondary-btn cta-secondary">Tìm hiểu thêm</button>
+              <button className="btn primary-btn cta-main" onClick={handleBookCar}>Đặt xe ngay</button>
+              <button className="btn secondary-btn cta-secondary" onClick={handleLearnMore}>Tìm hiểu thêm</button>
             </div>
           </div>
         </section>

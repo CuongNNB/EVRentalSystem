@@ -37,9 +37,9 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
             <Route path="/cars" element={<CarPages />} />
-            <Route path="/car/:id" element={<CarDetail />} />
-            <Route path="/booking/:id" element={<BookingPage />} />
-            <Route path="/contract/:id" element={<ContractPage />} />
+              <Route path="/car/:id" element={<CarDetail />} />
+              <Route path="/booking/:carId" element={<BookingPage />} />
+              <Route path="/contract/:carId" element={<ContractPage />} />
             <Route path="/contract-success" element={<ProtectedRoute><ContractSuccessPage /></ProtectedRoute>} />
             <Route path="/deposit-payment" element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} />
             <Route path="/customer-info" element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} />
