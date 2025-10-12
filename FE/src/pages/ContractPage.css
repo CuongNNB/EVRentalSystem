@@ -43,7 +43,7 @@
 }
 
 /* ===================== */
-/* MAIN SCROLL BOX (Điều 1–3) */
+/* MAIN SCROLL BOX */
 /* ===================== */
 
 .contract-scroll-box {
@@ -69,7 +69,7 @@
     background-color: #64748b;
 }
 
-/* Fade overlay effect (optional) */
+/* Fade overlay effect */
 .contract-scroll-box::after {
     content: "";
     position: sticky;
@@ -82,7 +82,7 @@
 }
 
 /* ===================== */
-/* CONTENT INSIDE SCROLL */
+/* CONTENT */
 /* ===================== */
 
 .contract-content h2 {
@@ -206,6 +206,7 @@
     border-radius: 16px;
     border: 1px solid #e2e8f0;
     animation: slideInUp 0.5s ease-out;
+    text-align: center;
 }
 
 .otp-section h2 {
@@ -213,20 +214,34 @@
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 1.5rem;
-    text-align: center;
 }
 
+/* 🔹 Hiển thị dọc từng phần */
 .otp-container {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
     margin: 1.5rem 0;
+}
+
+.otp-container input {
+    display: inline-block;
+    margin-bottom: 1rem;
 }
 
 .otp-actions {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column; /* 🔹 xếp nút theo chiều dọc */
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.otp-actions button {
+    width: 220px; /* 🔹 cùng chiều rộng, dễ nhìn */
+    text-align: center;
 }
 
 .btn-primary,
@@ -304,13 +319,17 @@
         padding: 1.5rem;
     }
 
+    .otp-actions button {
+        width: 100%; /* 🔹 full width trên mobile */
+    }
+
     .signature-grid {
         grid-template-columns: 1fr;
     }
 }
 
 /* ===================== */
-/* ANIMATIONS s*/
+/* ANIMATIONS */
 /* ===================== */
 
 @keyframes fadeInUp {

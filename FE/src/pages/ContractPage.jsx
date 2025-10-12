@@ -150,11 +150,33 @@ export default function ContractPage() {
                 setOtpVerified(true);
                 setOtpMessage("✅ Xác thực OTP thành công!");
                 setOtpError("");
+
+                const contractSummary = {
+                    contractId: contractData.contractId,
+                    bookingId,
+                    user,
+                    car,
+                    totals,
+                    contractData,
+                    fullBooking,
+                    response: backendResponse,
+                    renterSign,
+                    ownerSign,
+                    createdAt: new Date().toISOString(),
+                    verifyMessage: result,
+                };
+
+                // Lưu lại vào localStorage để dự phòng
+                localStorage.setItem("currentContract", JSON.stringify(contractSummary));
+
+                // ✅ Forward qua trang tiếp theo (ví dụ deposit-payment)
+                navigate("/deposit-payment", { state: { contractSummary } });
+
             } else {
-                setOtpError("❌ Sai OTP, vui lòng thử lại");
+                setOtpError("Sai OTP, vui lòng thử lại");
             }
         } catch (err) {
-            console.error("❌ Lỗi verify OTP:", err);
+            console.error("Lỗi verify OTP:", err);
             setOtpError("Không thể xác thực OTP. Vui lòng thử lại.");
         }
     };
@@ -215,6 +237,38 @@ export default function ContractPage() {
                             <p><strong>Số ngày thuê:</strong> {contractData.car.rentalDays} ngày</p>
                             <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
                             <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
+
+                            <h2>Điều 5: Trách nhiệm khi vi phạm</h2>
+                            <p>• Nếu gây hư hỏng, mất mát phụ tùng, Bên B chịu chi phí sửa chữa hoặc bồi thường thực tế theo báo giá của Bên A.</p>
+                            <p>• Nếu trả xe trễ hơn thời gian quy định, Bên B phải chịu phụ thu 20% giá thuê/ngày cho mỗi ngày chậm trễ.</p>
+                            <p>• Nếu Bên B vi phạm các điều khoản sử dụng xe hoặc pháp luật Việt Nam, Bên A có quyền đơn phương chấm dứt hợp đồng mà không hoàn lại tiền đặt cọc.</p>
+
+                            <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
+                            <p>• Xe đã được đăng ký bảo hiểm bắt buộc dân sự, chi phí bồi thường sẽ tuân theo quy định của công ty bảo hiểm.</p>
+                            <p>• Mỗi gói thuê bao gồm <strong>{contractData.car.includedKm}</strong> km/ngày. Nếu vượt quá giới hạn này, phụ thu 5.000₫/km sẽ được áp dụng.</p>
+                            <p>• Trường hợp tai nạn xảy ra do lỗi của Bên B, Bên B chịu toàn bộ chi phí khắc phục và bồi thường cho Bên A.</p>
+
+                            <h2>Điều 7: Chấm dứt và hiệu lực hợp đồng</h2>
+                            <p>• Hợp đồng có hiệu lực kể từ khi hai bên ký tên và xác thực OTP.</p>
+                            <p>• Nếu một bên vi phạm nghiêm trọng các điều khoản, bên còn lại có quyền chấm dứt hợp đồng và yêu cầu bồi thường thiệt hại.</p>
+                            <p>• Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng; nếu không đạt thỏa thuận, vụ việc sẽ được đưa ra Tòa án Nhân dân TP.HCM.</p>
+
+                            <h2>Điều 8: Nghĩa vụ bảo dưỡng và nhiên liệu</h2>
+                            <p>• Bên B có trách nhiệm kiểm tra tình trạng xe trước khi nhận và báo ngay cho Bên A nếu phát hiện lỗi kỹ thuật.</p>
+                            <p>• Xe được giao trong tình trạng sạc đầy pin; Bên B cần hoàn trả xe với mức pin không thấp hơn 20%.</p>
+                            <p>• Mọi chi phí phát sinh do sử dụng sai cách hoặc không tuân thủ hướng dẫn kỹ thuật sẽ do Bên B chịu trách nhiệm.</p>
+
+                            <h2>Điều 9: Gia hạn và hủy hợp đồng</h2>
+                            <p>• Bên B có thể gia hạn thời gian thuê xe nếu thông báo trước ít nhất 12 giờ và được Bên A chấp thuận.</p>
+                            <p>• Nếu Bên B muốn hủy hợp đồng sau khi đã đặt cọc, số tiền đặt cọc sẽ không được hoàn lại.</p>
+                            <p>• Trường hợp bất khả kháng (thiên tai, dịch bệnh, tai nạn nghiêm trọng, v.v.) hai bên sẽ thương lượng giải pháp hợp lý.</p>
+
+                            <h2>Điều 10: Cam kết của các bên</h2>
+                            <p>• Bên A cam kết cung cấp xe đảm bảo chất lượng, an toàn và đúng thời gian đã thỏa thuận.</p>
+                            <p>• Bên B cam kết cung cấp thông tin cá nhân chính xác và sử dụng xe đúng mục đích thuê.</p>
+                            <p>• Hai bên cam kết tuân thủ đầy đủ các điều khoản của hợp đồng này và cùng chịu trách nhiệm trước pháp luật nếu vi phạm.</p>
+
+
                         </div>
                     </div>
 
