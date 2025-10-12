@@ -23,33 +23,27 @@ const paymentMethods = [
     "Thanh toán khi nhận xe",
 ];
 
-const pickupLocations = [
-    "EV Station - Bình Thạnh",
-    "EV Station - Thủ Đức",
-    "EV Station - Biên Hòa",
-    "EV Station - TP Mỹ Tho",
-    "EV Station - TP Bến Tre",
-    "EV Station - Tân Bình",
-    "EV Station - Long An",
-    "EV Station - Cần Thơ",
-    "EV Station - Bình Dương",
-    "EV Station - Vũng Tàu",
-];
-
 export default function BookingPage() {
-    const { carId } = useParams(); // ✅ chuẩn với route mới
+    const { carId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
+    const { user: contextUser } = useAuth();
+    const localUser = JSON.parse(localStorage.getItem("ev_user"));
+    const user = contextUser || localUser
 
     // ✅ Lấy dữ liệu xe từ CarDetail
     const passedCar = location.state;
     const bookingImage = passedCar?.images?.[0] || "/anhxe/default.jpg";
     const bookingName = passedCar?.name || "Xe điện";
+    const pickupStation = passedCar?.stationName;
     const bookingPrice = passedCar?.price ? passedCar.price * 1000 : 1000000;
+
+    // ✅ Thông tin mặc định nếu không có dữ liệu truyền sang
     const carData = passedCar || {
         id: carId,
         name: bookingName,
+        stationId: 1,
+        stationName: "EV Station - Bình Thạnh",
         location: "Thành phố Hồ Chí Minh",
         specifications: {
             seats: 4,
@@ -61,16 +55,17 @@ export default function BookingPage() {
         },
     };
 
-    // ✅ Lấy thông tin user từ context (đã login)
+    // ✅ Lấy thông tin user
     const storedUser = user && user.email
         ? {
-            name: user.fullName || user.name || "Người dùng",
+            id: user.id || user.userId || user?.data?.id,
+            name: user.fullName || user.name || user.username || "Người dùng",
             email: user.email,
             phone: user.phone || user.phoneNumber || "",
         }
-        : { name: "Người dùng", email: "user@gmail.com", phone: "" };
+        : { id: 1, name: "Người dùng", email: "user@gmail.com", phone: "" };
 
-    // ✅ Ngày & giờ mặc định: hôm nay và ngày mai
+    // ✅ Ngày & giờ mặc định
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -82,7 +77,7 @@ export default function BookingPage() {
         pickupDateTime: formatDateTimeLocal(now),
         returnDateTime: formatDateTimeLocal(tomorrow),
         paymentMethod: "Thanh toán qua điện thoại",
-        pickupLocation: "EV Station - Bình Thạnh",
+        pickupLocation: carData.stationName,
     });
 
     const [isBooking, setIsBooking] = useState(false);
@@ -98,7 +93,7 @@ export default function BookingPage() {
         return Math.ceil(diff / (1000 * 60 * 60 * 24)) || 1;
     };
 
-    // ✅ Tính tiền đặt cọc = 30% tổng tiền
+    // ✅ Tính tiền đặt cọc = 30%
     const calculateTotal = () => {
         const days = calculateRentalDays();
         const dailyPrice = bookingPrice;
@@ -110,46 +105,66 @@ export default function BookingPage() {
     const totals = calculateTotal();
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
 
-    // ✅ Khi ấn “Đặt xe ngay”
-    const handleBooking = () => {
+    // ✅ Gọi API đặt xe
+    const handleBooking = async () => {
         setIsBooking(true);
 
-        const summary = {
-            car: {
-                id: carId,
-                name: bookingName,
-                image: bookingImage,
-                licensePlate: "Đang cập nhật",
-                color: "Trắng",
-            },
-            rental: {
-                pickupLocation: formData.pickupLocation,
-                pickupDate: formData.pickupDateTime,
-                returnDate: formData.returnDateTime,
-                days: calculateRentalDays(),
-            },
-            pricing: {
-                dailyRate: totals.dailyPrice,
-                days: totals.days,
-                subtotal: totals.totalRental,
-                vat: Math.round(totals.totalRental * 0.1),
-                total: Math.round(totals.totalRental * 1.1),
-                deposit: totals.deposit,
-            },
-            renter: {
-                name: formData.renterName,
-                email: formData.email,
-                phone: formData.phoneNumber,
-            },
+        const payload = {
+            userId: storedUser.id,
+            vehicleModelId: passedCar?.id || parseInt(carId),
+            stationId: passedCar?.stationId || carData.stationId,
+            startTime: formData.pickupDateTime,
+            expectedReturnTime: formData.returnDateTime,
+            deposit: totals.deposit, // ✅ gửi tiền cọc
         };
 
-        // ✅ Lưu thông tin booking vào localStorage
-        localStorage.setItem("currentBooking", JSON.stringify(summary));
+        console.log("📤 Payload gửi backend:", payload);
 
-        // ✅ Điều hướng đến trang hợp đồng
-        navigate(`/contract/${carId}`, { state: summary });
+        try {
+            const response = await fetch("http://localhost:8084/EVRentalSystem/api/user/booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
 
-        setIsBooking(false);
+            if (!response.ok) throw new Error("Booking failed");
+
+            const data = await response.json();
+            console.log("✅ Booking success:", data);
+
+            // ✅ Tạo object fullBooking gom toàn bộ dữ liệu
+            const fullBooking = {
+                bookingPayload: payload,
+                bookingForm: formData,
+                carData,
+                user: storedUser,
+                totals,
+                depositAmount: totals.deposit,
+                timestamp: new Date().toISOString(),
+            };
+
+            // ✅ Lưu list vào localStorage
+            const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
+            existingBookings.push({ ...fullBooking, response: data });
+            localStorage.setItem("bookingList", JSON.stringify(existingBookings));
+
+            // ✅ Lưu booking hiện tại (cho ContractPage dự phòng)
+            localStorage.setItem("currentBooking", JSON.stringify({ ...fullBooking, response: data }));
+
+            // ✅ Forward toàn bộ sang ContractPage
+            navigate(`/contract/${carId}`, {
+                state: {
+                    fullBooking,
+                    response: data,
+                },
+            });
+
+        } catch (error) {
+            console.error("❌ Lỗi khi đặt xe:", error);
+            alert("Đặt xe thất bại! Vui lòng thử lại.");
+        } finally {
+            setIsBooking(false);
+        }
     };
 
     return (
@@ -160,7 +175,7 @@ export default function BookingPage() {
                     <h1 className="booking-title">Đặt xe</h1>
 
                     <div className="booking-content">
-                        {/* Bên trái: form */}
+                        {/* Form bên trái */}
                         <div className="booking-form-section">
                             <div className="form-card">
                                 <h2 className="form-title">Thông tin người thuê</h2>
@@ -232,17 +247,12 @@ export default function BookingPage() {
 
                                 <div className="form-group">
                                     <label className="form-label">Địa điểm nhận xe</label>
-                                    <div className="form-select-wrapper">
-                                        <select
-                                            className="form-select"
-                                            value={formData.pickupLocation}
-                                            onChange={(e) => handleInputChange("pickupLocation", e.target.value)}
-                                        >
-                                            {pickupLocations.map((loc) => (
-                                                <option key={loc} value={loc}>{loc}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={pickupStation || formData.pickupLocation}
+                                        readOnly
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -256,7 +266,7 @@ export default function BookingPage() {
 
                                 <div className="car-info">
                                     <h3 className="car-name">{bookingName}</h3>
-                                    <p className="car-location">{carData.location}</p>
+                                    <p className="car-location">{pickupStation}</p>
                                 </div>
 
                                 <div className="car-specifications">

@@ -12,55 +12,64 @@ export default function ContractPage() {
     const navigate = useNavigate();
     const renterSignRef = useRef(null);
 
-    // ✅ Lấy dữ liệu booking từ state hoặc localStorage
-    const bookingData =
-        location.state || JSON.parse(localStorage.getItem("currentBooking"));
+    // ✅ Lấy dữ liệu từ BookingPage (state hoặc localStorage)
+    const { fullBooking, response } = location.state || {};
+    const storedBooking =
+        fullBooking || JSON.parse(localStorage.getItem("currentBooking")) || {};
+
+    // ✅ Gộp dữ liệu cần thiết
+    const booking = storedBooking.bookingForm || {};
+    const car = storedBooking.carData || {};
+    const totals = storedBooking.totals || {};
+    const user = storedBooking.user || {};
+    const backendResponse = response || storedBooking.response || {};
 
     const [contractData] = useState(() => ({
         contractId: `EV${Date.now()}`,
         renter: {
-            name: bookingData?.renter?.name || "Họ và Tên",
-            email: bookingData?.renter?.email || "Email người thuê",
-            phone: bookingData?.renter?.phone || "Số điện thoại",
-            address: "Địa chỉ",
-            birthDate: "Ngày sinh",
-            idNumber: "Số căn cước công dân",
-            licenseNumber: "Bằng lái xe",
+            name: user.name || backendResponse.renterName || "Người thuê xe",
+            email: user.email || "user@gmail.com",
+            phone: user.phone || "Chưa cập nhật",
+            address: "Chưa cập nhật",
+            birthDate: "Chưa cập nhật",
+            idNumber: "Chưa cập nhật",
+            licenseNumber: "Chưa cập nhật",
         },
         car: {
-            name: bookingData?.car?.name || "VinFast VF e34",
-            licensePlate: bookingData?.car?.licensePlate || "51A-12345",
-            color: bookingData?.car?.color || "Trắng",
-            price: bookingData?.pricing?.dailyRate || 1000000,
-            rentalDays: bookingData?.rental?.days || 1,
-            totalAmount: bookingData?.pricing?.subtotal || 1000000,
-            deposit: bookingData?.pricing?.deposit || 300000,
+            name: backendResponse.vehicleModel || car.name || "Xe điện",
+            color: car.color || "Trắng",
+            price: totals.dailyPrice || backendResponse.totalAmount || 0,
+            rentalDays: totals.days || 1,
+            totalAmount: backendResponse.totalAmount || totals.totalRental || 0,
+            deposit: totals.deposit || backendResponse.deposit || 0,
+            station: backendResponse.stationName || car.stationName || "EV Station",
             includedKm: 200,
         },
         rental: {
-            startDate: bookingData?.rental?.pickupDate
-                ? new Date(bookingData.rental.pickupDate).toLocaleDateString("vi-VN")
+            startDate: booking.pickupDateTime
+                ? new Date(booking.pickupDateTime).toLocaleDateString("vi-VN")
                 : "Hôm nay",
-            endDate: bookingData?.rental?.returnDate
-                ? new Date(bookingData.rental.returnDate).toLocaleDateString("vi-VN")
+            endDate: booking.returnDateTime
+                ? new Date(booking.returnDateTime).toLocaleDateString("vi-VN")
                 : "Ngày mai",
-            startTime: bookingData?.rental?.pickupDate
-                ? new Date(bookingData.rental.pickupDate).toLocaleTimeString("vi-VN", {
+            startTime: booking.pickupDateTime
+                ? new Date(booking.pickupDateTime).toLocaleTimeString("vi-VN", {
                     hour: "2-digit",
                     minute: "2-digit",
                 })
-                : "12:00",
-            endTime: bookingData?.rental?.returnDate
-                ? new Date(bookingData.rental.returnDate).toLocaleTimeString("vi-VN", {
+                : "08:00",
+            endTime: booking.returnDateTime
+                ? new Date(booking.returnDateTime).toLocaleTimeString("vi-VN", {
                     hour: "2-digit",
                     minute: "2-digit",
                 })
-                : "12:00",
+                : "18:00",
             pickupLocation:
-                bookingData?.rental?.pickupLocation || "EV Station - Bình Thạnh",
+                booking.pickupLocation || backendResponse.stationName || "EV Station",
         },
     }));
 
+    // ✅ Quản lý chữ ký và OTP
     const [renterSign, setRenterSign] = useState(null);
     const [ownerSign, setOwnerSign] = useState(null);
     const [isSignedB, setIsSignedB] = useState(false);
@@ -73,7 +82,6 @@ export default function ContractPage() {
     const [resendTimer, setResendTimer] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ✅ Chữ ký mẫu cho Bên A
     useEffect(() => {
         setOwnerSign(
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
@@ -87,7 +95,7 @@ export default function ContractPage() {
         }
     }, [resendTimer]);
 
-    const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
+    const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p || 0);
 
     const handleConfirmSign = () => {
         const sign = renterSignRef.current?.toDataURL();
@@ -109,7 +117,7 @@ export default function ContractPage() {
         setResendTimer(0);
     };
 
-    // ✅ Demo OTP
+    // ✅ Demo gửi OTP
     const handleSendOtp = () => {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         setGeneratedOtp(otpCode);
@@ -140,20 +148,19 @@ export default function ContractPage() {
             return;
         }
 
-        // ✅ Gom toàn bộ dữ liệu cần chuyển
+        // ✅ Gom toàn bộ dữ liệu hợp đồng
         const contractSummary = {
             contractId: contractData.contractId,
             contractData,
-            bookingData,
+            fullBooking,
+            response,
             renterSign,
             ownerSign,
             createdAt: new Date().toISOString(),
         };
 
-        // ✅ Lưu localStorage dự phòng
         localStorage.setItem("currentContract", JSON.stringify(contractSummary));
 
-        // ✅ Forward sang DepositPaymentPage qua state
         navigate("/deposit-payment", { state: { contractSummary } });
     };
 
@@ -167,16 +174,13 @@ export default function ContractPage() {
             <Header />
             <main className="contract-main">
                 <div className="contract-container">
-                    {/* --- Tiêu đề --- */}
                     <div className="contract-header">
-                        <h1>HỢP ĐỒNG THUÊ XE Ô TÔ</h1>
-                        <h1>#{contractData.contractId}</h1>
-                        <p>
-                            Ngày lập: <strong>{currentDateTime}</strong>
-                        </p>
+                        <h1>HỢP ĐỒNG THUÊ XE Ô TÔ #{contractData.contractId}</h1>
+                        <p>Ngày lập: <strong>{currentDateTime}</strong></p>
+                        <p>Mã đặt xe: <strong>{backendResponse.bookingId || "N/A"}</strong></p>
+                        <p>Trạng thái: <strong>{backendResponse.status || "Đang chờ xác nhận"}</strong></p>
                     </div>
 
-                    {/* --- Ô cuộn nội dung chính --- */}
                     <div className="contract-scroll-box">
                         <div className="contract-content">
                             <h2>Điều 1: Thông tin các bên</h2>
@@ -191,58 +195,44 @@ export default function ContractPage() {
                             </p>
 
                             <h2>Điều 2: Thông tin xe</h2>
-                            <p>
-                                <strong>Tên xe:</strong> {contractData.car.name}
-                            </p>
-                            <p>
-                                <strong>Màu sắc:</strong> {contractData.car.color}
-                            </p>
+                            <p><strong>Tên xe:</strong> {contractData.car.name}</p>
+                            <p><strong>Màu sắc:</strong> {contractData.car.color}</p>
+                            <p><strong>Trạm nhận xe:</strong> {contractData.car.station}</p>
 
                             <h2>Điều 3: Thời gian và chi phí</h2>
                             <p>
-                                <strong>Thời gian thuê:</strong> Từ {contractData.rental.startDate} lúc{" "}
-                                {contractData.rental.startTime} đến {contractData.rental.endDate} lúc{" "}
-                                {contractData.rental.endTime}
+                                <strong>Thời gian thuê:</strong> Từ {contractData.rental.startDate} ({contractData.rental.startTime})
+                                đến {contractData.rental.endDate} ({contractData.rental.endTime})
                             </p>
-                            <p>
-                                <strong>Địa điểm nhận xe:</strong> {contractData.rental.pickupLocation}
-                            </p>
-                            <p>
-                                <strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫
-                            </p>
-                            <p>
-                                <strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫ (30% giá trị thuê)
-                            </p>
-                            <p>
-                                <strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫
-                            </p>
+                            <p><strong>Địa điểm nhận xe:</strong> {contractData.rental.pickupLocation}</p>
+                            <p><strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫</p>
+                            <p><strong>Số ngày thuê:</strong> {contractData.car.rentalDays} ngày</p>
+                            <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
+                            <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
 
-                            {/* --- Các điều khoản khôi phục --- */}
                             <h2>Điều 4: Quy định sử dụng</h2>
-                            <p>• Bên B phải sử dụng xe đúng mục đích, không cho thuê lại, không dùng vào hoạt động trái pháp luật.</p>
-                            <p>• Xe phải được bảo quản cẩn thận, không tự ý sửa chữa khi chưa có sự đồng ý của Bên A.</p>
+                            <p>• Xe phải được sử dụng đúng mục đích và bảo quản cẩn thận.</p>
+                            <p>• Không cho thuê lại, không dùng xe vào hoạt động trái pháp luật.</p>
 
-                            <h2>Điều 5: Trách nhiệm khi vi phạm</h2>
-                            <p>• Nếu gây hư hỏng, mất mát phụ tùng, Bên B chịu chi phí sửa chữa hoặc bồi thường thực tế.</p>
-                            <p>• Nếu trả xe trễ hơn thời gian quy định: phụ thu 20% giá thuê/ngày.</p>
+                            <h2>Điều 5: Trách nhiệm và xử lý vi phạm</h2>
+                            <p>• Nếu gây hư hỏng, mất mát: Bên B chịu chi phí sửa chữa hoặc bồi thường.</p>
+                            <p>• Trả xe trễ phụ thu 20% giá thuê/ngày.</p>
 
                             <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
-                            <p>• Xe đã được đăng ký bảo hiểm bắt buộc dân sự.</p>
-                            <p>• Gói thuê bao gồm {contractData.car.includedKm} km/ngày, vượt quá sẽ tính phí 5,000₫/km.</p>
+                            <p>• Xe có bảo hiểm dân sự.</p>
+                            <p>• Bao gồm {contractData.car.includedKm} km/ngày, vượt tính 5.000₫/km.</p>
 
-                            <h2>Điều 7: Chấm dứt và hiệu lực hợp đồng</h2>
-                            <p>• Hợp đồng có hiệu lực kể từ khi hai bên ký tên và xác thực OTP.</p>
-                            <p>• Nếu một bên vi phạm nghiêm trọng điều khoản, bên còn lại có quyền chấm dứt hợp đồng.</p>
-                            <p>• Mọi tranh chấp sẽ được giải quyết tại Tòa án Nhân dân TP.HCM.</p>
+                            <h2>Điều 7: Hiệu lực hợp đồng</h2>
+                            <p>• Có hiệu lực khi hai bên ký và xác thực OTP.</p>
                         </div>
                     </div>
 
-                    {/* --- Phần chữ ký --- */}
+                    {/* --- Ký tên --- */}
                     <div className="signature-section">
                         <h2>CHỮ KÝ ĐIỆN TỬ</h2>
                         <div className="signature-grid">
                             <div className="signature-box">
-                                <h3>Bên B - Bên thuê xe</h3>
+                                <h3>Bên B - Người thuê xe</h3>
                                 {!isSignedB ? (
                                     <SignatureCanvas
                                         ref={renterSignRef}
@@ -264,18 +254,17 @@ export default function ContractPage() {
                             </div>
 
                             <div className="signature-box">
-                                <h3>Bên A - Bên cho thuê</h3>
+                                <h3>Bên A - Công ty cho thuê</h3>
                                 <img src={ownerSign} alt="Chữ ký Bên A" className="signature-image" />
                                 <p>✅ Đã ký sẵn</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* --- OTP Section mới nhất --- */}
+                    {/* --- Xác thực OTP --- */}
                     {isSignedB && (
                         <div className="otp-section">
                             <h2>XÁC THỰC OTP</h2>
-
                             {!isOtpSent ? (
                                 <button className="btn-primary" onClick={handleSendOtp}>
                                     Gửi OTP
@@ -306,7 +295,6 @@ export default function ContractPage() {
                                             />
                                         )}
                                     />
-
                                     <div className="otp-actions">
                                         <button className="btn-primary" onClick={handleVerifyOtp} disabled={otp.length !== 6}>
                                             Xác thực OTP
