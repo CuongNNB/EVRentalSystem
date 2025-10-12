@@ -1,6 +1,10 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.entity.Inspection;
+import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.repository.InspectionRepository;
+import com.evrental.evrentalsystem.repository.UserRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
 import com.evrental.evrentalsystem.entity.Booking;
@@ -11,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +27,8 @@ public class StaffService {
 
     private final BookingRepository bookingRepository;
     private final VehicleDetailRepository vehicleDetailRepository;
-
+    private final UserRepository userRepository;
+    private final InspectionRepository inspectionRepository;
     public List<BookingsInStationResponse> bookingsInStation(Integer stationId) {
         // Tìm danh sách booking theo stationId
         List<Booking> bookings = bookingRepository.findByStation_StationId(stationId);
@@ -85,8 +92,46 @@ public class StaffService {
             response.setColor(vehicleDetail.getColor());
             response.setBattery(vehicleDetail.getBatteryCapacity());
             response.setOdo(vehicleDetail.getOdo());
+            response.setImage(vehicleDetail.getPicture());
         }
         return response;
+    }
+
+    public boolean changeVehicleStatus(Integer vehicleId, String newStatus) {
+        int updated = vehicleDetailRepository.updateVehicleStatusById(vehicleId, newStatus);
+        return updated > 0;
+    }
+
+
+    public boolean createInspection(
+            Integer bookingId,
+            String partName,
+            String picture,
+            Integer staffId,
+            String status
+    ) {
+        try {
+            Booking booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+
+            User staff = userRepository.findById(staffId)
+                    .orElseThrow(() -> new IllegalArgumentException("Staff ID không tồn tại: " + staffId));
+
+            Inspection inspection = new Inspection();
+            inspection.setBooking(booking);
+            inspection.setPartName(partName);
+            inspection.setPicture(picture);
+            inspection.setStaff(staff);
+            inspection.setStatus(status);
+            inspection.setInspectedAt(LocalDateTime.now());
+
+            inspectionRepository.save(inspection);
+
+            return true; // ✅ Thành công
+        } catch (Exception e) {
+            // Có thể log lỗi ra console hoặc logger ở đây
+            return false; // ❌ Thất bại
+        }
     }
 
 }

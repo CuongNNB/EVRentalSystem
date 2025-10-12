@@ -7,6 +7,8 @@ import com.evrental.evrentalsystem.enums.VehicleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,10 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     Optional<VehicleDetail> findDetailWithModelAndStation(@Param("id") Integer id);
 
     List<VehicleDetail> findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(Integer vehicleModelId, Integer stationId, String status);
-    // VehicleDetail findById(int id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE VehicleDetail v SET v.status = :status WHERE v.id = :id")
+    int updateVehicleStatusById(@Param("id") Integer id, @Param("status") String status);
     //End code here
 }

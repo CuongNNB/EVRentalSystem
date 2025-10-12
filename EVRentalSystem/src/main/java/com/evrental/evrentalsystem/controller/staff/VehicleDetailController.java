@@ -70,4 +70,31 @@ public class VehicleDetailController {
                     .body(ApiResponse.error("Error fetching vehicle detail", null));
         }
     }
+
+    // API cập nhật status của xe
+    // PUT http://localhost:8084/EVRentalSystem/api/vehicle-details/update-status?vehicleId=1&newStatus=RENTED
+    @PutMapping("/update-status")
+    public ResponseEntity<ApiResponse<String>> updateVehicleStatus(
+            @RequestParam Integer vehicleId,
+            @RequestParam String newStatus) {
+
+        try {
+            boolean updated = staffService.changeVehicleStatus(vehicleId, newStatus);
+
+            if (!updated) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Vehicle not found or status not updated", null));
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Vehicle status updated successfully", null));
+
+        } catch (Exception e) {
+            log.error("❌ Error updating status for vehicle ID {}: {}", vehicleId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Error updating vehicle status", null));
+        }
+    }
+
+
+
 }
