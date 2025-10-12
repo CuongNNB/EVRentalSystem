@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -18,13 +19,13 @@ public class InspectionController {
 
 
     // API tạo mới inspection (truyền param trực tiếp)
-    // POST http://localhost:8084/EVRentalSystem/api/inspections/create?bookingId=1&partName=Front_Side&picture=base64&staffId=3&status=PENDING
+    // POST http://localhost:8084/EVRentalSystem/api/inspections/create?bookingId=1&partName=Front_Side&picture=...&staffId=3&status=PENDING
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Boolean>> createInspection(
             @RequestParam Integer bookingId,
             @RequestParam String partName,
-            @RequestParam String picture,
+            @RequestParam MultipartFile picture,
             @RequestParam Integer staffId,
             @RequestParam String status
     ) {

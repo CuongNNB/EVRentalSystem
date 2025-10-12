@@ -15,8 +15,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,19 @@ public class StaffService {
     private final VehicleDetailRepository vehicleDetailRepository;
     private final UserRepository userRepository;
     private final InspectionRepository inspectionRepository;
+
+    private String encodeToBase64(MultipartFile file) {
+        try {
+            if (file != null && !file.isEmpty()) {
+                return Base64.getEncoder().encodeToString(file.getBytes());
+            } else {
+                throw new RuntimeException("File upload bị trống!");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Không thể đọc file: " + file.getOriginalFilename(), e);
+        }
+    }
+
     public List<BookingsInStationResponse> bookingsInStation(Integer stationId) {
         // Tìm danh sách booking theo stationId
         List<Booking> bookings = bookingRepository.findByStation_StationId(stationId);
@@ -106,7 +122,7 @@ public class StaffService {
     public boolean createInspection(
             Integer bookingId,
             String partName,
-            String picture,
+            MultipartFile picture,
             Integer staffId,
             String status
     ) {
@@ -120,7 +136,7 @@ public class StaffService {
             Inspection inspection = new Inspection();
             inspection.setBooking(booking);
             inspection.setPartName(partName);
-            inspection.setPicture(picture);
+            inspection.setPicture(encodeToBase64(picture));
             inspection.setStaff(staff);
             inspection.setStatus(status);
             inspection.setInspectedAt(LocalDateTime.now());
