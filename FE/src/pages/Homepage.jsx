@@ -10,6 +10,7 @@ import heroBg from '../picture/nen.png';
 
 
 export default function Homepage() {
+  console.log('Homepage component is rendering...');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 

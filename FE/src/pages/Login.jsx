@@ -28,17 +28,61 @@ export default function Login() {
       return;
     }
     try {
-      const response = await api.post(
-        "/api/users/login",
-        { email, password },
-        { withCredentials: true }
-      );
+      // Kiểm tra backend có sẵn sàng không
+      let response;
+      try {
+        response = await api.post(
+          "/api/users/login",
+          { email, password },
+          { withCredentials: true }
+        );
+      } catch (backendError) {
+        console.warn("Backend not available, using mock login:", backendError.message);
+        
+        // Fallback to mock login for testing
+        if (email === "tinhpt@gmail.com" && password === "123456") {
+          const mockUser = {
+            id: 3,
+            username: "Renter01",
+            fullName: "Phạm Trí Tính",
+            email: "tinhpt@gmail.com",
+            role: "RENTER"
+          };
+          const mockToken = "mock_jwt_token_" + Date.now();
+          
+          localStorage.setItem('ev_token', mockToken);
+          localStorage.setItem('ev_user', JSON.stringify(mockUser));
+          loginWithSession(mockUser, mockToken);
+          
+          alert("Đăng nhập thành công (Mock Mode)!");
+          navigate("/dashboard");
+          return;
+        } else {
+          setError("Email hoặc mật khẩu không đúng");
+          return;
+        }
+      }
 
-      const loginData = response.data?.data || response.data;
-      const user = loginData.user || loginData;
-      const token = loginData.token || loginData.jwt || "mock-token";
+      console.log("Login response:", response.data);
 
-      if (!user) {
+      // Backend trả về: { success: true, message: "Login success", data: UserLoginResponse }
+      const apiResponse = response.data;
+      if (!apiResponse.success) {
+        setError(apiResponse.message || "Đăng nhập thất bại");
+        return;
+      }
+
+      const loginData = apiResponse.data; // UserLoginResponse
+      const user = {
+        id: loginData.userId,
+        username: loginData.username,
+        fullName: loginData.fullName,
+        email: loginData.email,
+        role: loginData.role
+      };
+      const token = loginData.token;
+
+      if (!user || !token) {
         setError("Không nhận được thông tin người dùng từ API");
         return;
       }

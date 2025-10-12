@@ -25,8 +25,12 @@ import HandoverCar from "./pages/staff/Orders/HandoverCar";
 import ReturnCar from "./pages/staff/Orders/ReturnCar";
 import ExtraFee from "./pages/staff/Orders/ExtraFee";
 import StationCarView from "./pages/StationCarView";
+import MapStationsDemo from "./pages/MapStationsDemo";
+import TestPage from "./pages/TestPage";
 
 function App() {
+  console.log('App component is rendering...');
+  
   return (
     <AuthProvider>
       <CheckoutProvider>
@@ -54,6 +58,8 @@ function App() {
             <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><ReturnCar /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
             <Route path="/station-cars" element={<StationCarView />} />
+            <Route path="/map-stations" element={<MapStationsDemo />} />
+            <Route path="/test" element={<TestPage />} />
           </Routes>
         </Router>
       </CheckoutProvider>
