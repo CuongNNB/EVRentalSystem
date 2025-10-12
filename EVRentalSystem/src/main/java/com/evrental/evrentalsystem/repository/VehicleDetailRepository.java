@@ -46,5 +46,8 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
         WHERE v.id = :id
     """)
     Optional<VehicleDetail> findDetailWithModelAndStation(@Param("id") Integer id);
+
+    List<VehicleDetail> findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(Integer vehicleModelId, Integer stationId, String status);
+    // VehicleDetail findById(int id);
     //End code here
 }

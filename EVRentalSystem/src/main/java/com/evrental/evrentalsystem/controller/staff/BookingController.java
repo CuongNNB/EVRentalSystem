@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.controller.staff;
 
 import com.evrental.evrentalsystem.response.ApiResponse;
+import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
 import com.evrental.evrentalsystem.service.StaffService;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -64,4 +65,6 @@ public class BookingController {
                     .body(ApiResponse.error("Error updating booking status", null));
         }
     }
+
+
 }
