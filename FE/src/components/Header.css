@@ -4,19 +4,19 @@
     top: 0;
     width: 100%;
     background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 10px solid #e5e7eb;
     z-index: 100;
     transition: all 0.3s ease;
 }
 
-/* ✅ Container giới hạn chiều rộng */
+/* ✅ Container giới hạn chiều rộng — tăng độ rộng */
 .header-container {
-    max-width: 1320px;
+    max-width: 1480px; /* 🔥 tăng từ 1320px lên 1480px */
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1.5rem;
+    padding: 0.85rem 2rem; /* 🔥 thêm padding cho rộng thoáng hơn */
 }
 
 /* Khi cuộn */
@@ -33,12 +33,18 @@
 
 .brand-icon {
     font-size: 1.4rem;
-    width: 40px;
-    height: 40px;
+    width: 48px; /* 🔥 tăng size logo */
+    height: 48px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .brand-copy {
@@ -49,12 +55,12 @@
 
 .brand-name {
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.2rem; /* 🔥 chữ to hơn chút */
     color: #0f172a;
 }
 
 .brand-tagline {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #64748b;
 }
 
@@ -63,13 +69,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
+    gap: 2.25rem; /* 🔥 giãn khoảng cách menu */
     flex: 1;
 }
 
 .nav-link {
     color: #475569;
-    font-size: 0.95rem;
+    font-size: 1rem;
     text-decoration: none;
     transition: all 0.25s ease;
     white-space: nowrap;
@@ -101,7 +107,7 @@
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem; /* 🔥 giãn nút user */
 }
 
 .user-menu {
@@ -128,12 +134,28 @@
 }
 
 .text-btn {
-    color: #0f172a;
+    color: #0f172a; /* Chữ đen mặc định */
     font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
 }
 
+/* Hover: chỉ đổi nền gradient, giữ chữ đen rõ ràng */
 .text-btn:hover {
-    color: #10b981;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #0f172a !important; /* 🔥 Ép màu chữ đen */
+    border: 1px solid rgba(16, 185, 129, 0.3); /* nhẹ, giúp text tách nền */
+    box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Optional: khi click */
+.text-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
 }
 
 .primary-btn {
