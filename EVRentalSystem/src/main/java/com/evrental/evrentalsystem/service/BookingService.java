@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
@@ -48,7 +49,7 @@ public class BookingService {
         long days = ChronoUnit.DAYS.between(request.getStartTime(), request.getExpectedReturnTime());
         if (days <= 0) days = 1; // Nếu thuê trong cùng ngày, tính 1 ngày
 
-        double totalAmount = model.getPrice() * days;
+        double totalAmount = model.getPrice() * days * 1000;
 
         Booking booking = new Booking();
         booking.setRenter(user);
@@ -57,20 +58,20 @@ public class BookingService {
         booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
-        booking.setStatus("PENDING");
-        booking.setDeposit(0.0);
+        booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
+        booking.setDeposit(request.getDeposit());
         booking.setRentalAmount(model.getPrice());
         booking.setTotalAmount(totalAmount);
 
         bookingRepository.save(booking);
 
-        // Cập nhật status xe
-        vehicleDetail.setStatus("RENTING");
         vehicleDetailRepository.save(vehicleDetail);
 
         // Mapping sang response
         response.setBookingId(booking.getBookingId());
-        response.setUserName(user.getFullName());
+        response.setUserId(user.getUserId());
+        response.setRenterName(user.getFullName());
+        response.setVehicleId(request.getVehicleModelId());
         response.setVehicleModel(model.getModel());
         response.setStationName(station.getStationName());
         response.setStatus(booking.getStatus());

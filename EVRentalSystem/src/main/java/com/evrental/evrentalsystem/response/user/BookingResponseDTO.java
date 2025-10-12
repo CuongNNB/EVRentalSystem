@@ -5,7 +5,9 @@ import lombok.Data;
 @Data
 public class BookingResponseDTO {
     private Integer bookingId;
-    private String userName;
+    private Integer userId;
+    private String renterName;
+    private Integer vehicleId;
     private String vehicleModel;
     private String stationName;
     private String status;
