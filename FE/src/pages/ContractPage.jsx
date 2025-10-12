@@ -12,38 +12,34 @@ export default function ContractPage() {
     const navigate = useNavigate();
     const renterSignRef = useRef(null);
 
-    // ✅ Lấy dữ liệu từ BookingPage (state hoặc localStorage)
+    // ✅ Lấy dữ liệu forward từ BookingPage
     const { fullBooking, response } = location.state || {};
     const storedBooking =
         fullBooking || JSON.parse(localStorage.getItem("currentBooking")) || {};
 
-    // ✅ Gộp dữ liệu cần thiết
     const booking = storedBooking.bookingForm || {};
     const car = storedBooking.carData || {};
     const totals = storedBooking.totals || {};
     const user = storedBooking.user || {};
     const backendResponse = response || storedBooking.response || {};
-//
+
+    const bookingId = backendResponse.bookingId;
+    const userEmail = user.email || backendResponse.renterEmail || "user@gmail.com";
+
     const [contractData] = useState(() => ({
         contractId: `EV${Date.now()}`,
         renter: {
             name: user.name || backendResponse.renterName || "Người thuê xe",
-            email: user.email || "user@gmail.com",
+            email: userEmail,
             phone: user.phone || "Chưa cập nhật",
-            address: "Chưa cập nhật",
-            birthDate: "Chưa cập nhật",
-            idNumber: "Chưa cập nhật",
-            licenseNumber: "Chưa cập nhật",
         },
         car: {
             name: backendResponse.vehicleModel || car.name || "Xe điện",
-            color: car.color || "Trắng",
             price: totals.dailyPrice || backendResponse.totalAmount || 0,
             rentalDays: totals.days || 1,
             totalAmount: backendResponse.totalAmount || totals.totalRental || 0,
-            deposit: totals.deposit || backendResponse.deposit || 0,
+            deposit: totals.deposit || 0,
             station: backendResponse.stationName || car.stationName || "EV Station",
-            includedKm: 200,
         },
         rental: {
             startDate: booking.pickupDateTime
@@ -52,18 +48,6 @@ export default function ContractPage() {
             endDate: booking.returnDateTime
                 ? new Date(booking.returnDateTime).toLocaleDateString("vi-VN")
                 : "Ngày mai",
-            startTime: booking.pickupDateTime
-                ? new Date(booking.pickupDateTime).toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })
-                : "08:00",
-            endTime: booking.returnDateTime
-                ? new Date(booking.returnDateTime).toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })
-                : "18:00",
             pickupLocation:
                 booking.pickupLocation || backendResponse.stationName || "EV Station",
         },
@@ -74,7 +58,6 @@ export default function ContractPage() {
     const [ownerSign, setOwnerSign] = useState(null);
     const [isSignedB, setIsSignedB] = useState(false);
     const [otp, setOtp] = useState("");
-    const [generatedOtp, setGeneratedOtp] = useState("");
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [otpVerified, setOtpVerified] = useState(false);
     const [otpError, setOtpError] = useState("");
@@ -82,6 +65,7 @@ export default function ContractPage() {
     const [resendTimer, setResendTimer] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // ✅ Ký mặc định bên A
     useEffect(() => {
         setOwnerSign(
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
@@ -117,28 +101,61 @@ export default function ContractPage() {
         setResendTimer(0);
     };
 
-    // ✅ Demo gửi OTP
-    const handleSendOtp = () => {
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedOtp(otpCode);
-        setIsOtpSent(true);
-        setOtpMessage(`📩 Mã OTP của bạn là: ${otpCode}`);
-        setOtpError("");
-        setResendTimer(60);
-        alert(`Mã OTP demo của bạn là: ${otpCode}`);
+    // ✅ GỬI OTP bằng API backend
+    const handleSendOtp = async () => {
+        if (!bookingId || !userEmail) {
+            setOtpError("Không tìm thấy thông tin booking hoặc email.");
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `http://localhost:8084/EVRentalSystem/api/contracts/send-otp?bookingId=${bookingId}&email=${encodeURIComponent(
+                    userEmail
+                )}`,
+                { method: "POST" }
+            );
+
+            if (!res.ok) throw new Error("Gửi OTP thất bại");
+
+            const message = await res.text();
+            setIsOtpSent(true);
+            setOtpMessage(`📩 ${message}`);
+            setOtpError("");
+            setResendTimer(60);
+        } catch (err) {
+            console.error("❌ Lỗi gửi OTP:", err);
+            setOtpError("Không thể gửi OTP. Vui lòng thử lại.");
+        }
     };
 
-    const handleVerifyOtp = () => {
+    // ✅ XÁC THỰC OTP bằng API backend
+    const handleVerifyOtp = async () => {
         if (otp.length !== 6) {
             setOtpError("Nhập đủ 6 số OTP");
             return;
         }
-        if (otp === generatedOtp) {
-            setOtpVerified(true);
-            setOtpMessage("✅ Xác thực OTP thành công!");
-            setOtpError("");
-        } else {
-            setOtpError("❌ Sai OTP, vui lòng thử lại");
+
+        try {
+            const res = await fetch(
+                `http://localhost:8084/EVRentalSystem/api/contracts/verify-otp?bookingId=${bookingId}&otp=${otp}`,
+                { method: "POST" }
+            );
+
+            if (!res.ok) throw new Error("Xác thực OTP thất bại");
+
+            const result = await res.text();
+
+            if (result.toLowerCase().includes("thành công") || result.includes("success")) {
+                setOtpVerified(true);
+                setOtpMessage("✅ Xác thực OTP thành công!");
+                setOtpError("");
+            } else {
+                setOtpError("❌ Sai OTP, vui lòng thử lại");
+            }
+        } catch (err) {
+            console.error("❌ Lỗi verify OTP:", err);
+            setOtpError("Không thể xác thực OTP. Vui lòng thử lại.");
         }
     };
 
@@ -148,7 +165,6 @@ export default function ContractPage() {
             return;
         }
 
-        // ✅ Gom toàn bộ dữ liệu hợp đồng
         const contractSummary = {
             contractId: contractData.contractId,
             contractData,
@@ -160,7 +176,6 @@ export default function ContractPage() {
         };
 
         localStorage.setItem("currentContract", JSON.stringify(contractSummary));
-
         navigate("/deposit-payment", { state: { contractSummary } });
     };
 
@@ -177,57 +192,33 @@ export default function ContractPage() {
                     <div className="contract-header">
                         <h1>HỢP ĐỒNG THUÊ XE Ô TÔ #{contractData.contractId}</h1>
                         <p>Ngày lập: <strong>{currentDateTime}</strong></p>
-                        <p>Mã đặt xe: <strong>{backendResponse.bookingId || "N/A"}</strong></p>
-                        <p>Trạng thái: <strong>{backendResponse.status || "Đang chờ xác nhận"}</strong></p>
+                        <p>Mã đặt xe: <strong>{bookingId}</strong></p>
                     </div>
 
                     <div className="contract-scroll-box">
                         <div className="contract-content">
                             <h2>Điều 1: Thông tin các bên</h2>
                             <p>
-                                <strong>Bên A:</strong> Công ty TNHH EV Car Rental — Địa chỉ:
-                                123 Nguyễn Văn Cừ, Quận 5, TP.HCM.
+                                <strong>Bên A:</strong> Công ty TNHH EV Car Rental — 123 Nguyễn Văn Cừ, Quận 5, TP.HCM.
                             </p>
                             <p>
                                 <strong>Bên B:</strong> {contractData.renter.name} — SĐT:{" "}
-                                <strong>{contractData.renter.phone}</strong> — Email:{" "}
-                                <strong>{contractData.renter.email}</strong>
+                                {contractData.renter.phone} — Email: {contractData.renter.email}
                             </p>
 
                             <h2>Điều 2: Thông tin xe</h2>
                             <p><strong>Tên xe:</strong> {contractData.car.name}</p>
-                            <p><strong>Màu sắc:</strong> {contractData.car.color}</p>
                             <p><strong>Trạm nhận xe:</strong> {contractData.car.station}</p>
 
-                            <h2>Điều 3: Thời gian và chi phí</h2>
-                            <p>
-                                <strong>Thời gian thuê:</strong> Từ {contractData.rental.startDate} ({contractData.rental.startTime})
-                                đến {contractData.rental.endDate} ({contractData.rental.endTime})
-                            </p>
-                            <p><strong>Địa điểm nhận xe:</strong> {contractData.rental.pickupLocation}</p>
+                            <h2>Điều 3: Chi phí và thời gian</h2>
                             <p><strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫</p>
                             <p><strong>Số ngày thuê:</strong> {contractData.car.rentalDays} ngày</p>
                             <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
                             <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
-
-                            <h2>Điều 4: Quy định sử dụng</h2>
-                            <p>• Xe phải được sử dụng đúng mục đích và bảo quản cẩn thận.</p>
-                            <p>• Không cho thuê lại, không dùng xe vào hoạt động trái pháp luật.</p>
-
-                            <h2>Điều 5: Trách nhiệm và xử lý vi phạm</h2>
-                            <p>• Nếu gây hư hỏng, mất mát: Bên B chịu chi phí sửa chữa hoặc bồi thường.</p>
-                            <p>• Trả xe trễ phụ thu 20% giá thuê/ngày.</p>
-
-                            <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
-                            <p>• Xe có bảo hiểm dân sự.</p>
-                            <p>• Bao gồm {contractData.car.includedKm} km/ngày, vượt tính 5.000₫/km.</p>
-
-                            <h2>Điều 7: Hiệu lực hợp đồng</h2>
-                            <p>• Có hiệu lực khi hai bên ký và xác thực OTP.</p>
                         </div>
                     </div>
 
-                    {/* --- Ký tên --- */}
+                    {/* --- Ký và OTP --- */}
                     <div className="signature-section">
                         <h2>CHỮ KÝ ĐIỆN TỬ</h2>
                         <div className="signature-grid">
@@ -261,10 +252,10 @@ export default function ContractPage() {
                         </div>
                     </div>
 
-                    {/* --- Xác thực OTP --- */}
                     {isSignedB && (
                         <div className="otp-section">
                             <h2>XÁC THỰC OTP</h2>
+
                             {!isOtpSent ? (
                                 <button className="btn-primary" onClick={handleSendOtp}>
                                     Gửi OTP
@@ -295,6 +286,7 @@ export default function ContractPage() {
                                             />
                                         )}
                                     />
+
                                     <div className="otp-actions">
                                         <button className="btn-primary" onClick={handleVerifyOtp} disabled={otp.length !== 6}>
                                             Xác thực OTP
