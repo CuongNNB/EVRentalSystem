@@ -36,7 +36,9 @@ public class StaffService {
     private String encodeToBase64(MultipartFile file) {
         try {
             if (file != null && !file.isEmpty()) {
-                return Base64.getEncoder().encodeToString(file.getBytes());
+                byte[] bytes = file.getBytes();
+                log.info("Encode file {} size {}", file.getOriginalFilename(), bytes.length);
+                return Base64.getEncoder().encodeToString(bytes);
             } else {
                 throw new RuntimeException("File upload bị trống!");
             }
@@ -136,7 +138,11 @@ public class StaffService {
             Inspection inspection = new Inspection();
             inspection.setBooking(booking);
             inspection.setPartName(partName);
-            inspection.setPicture(encodeToBase64(picture));
+
+            String base64Picture = encodeToBase64(picture);
+            log.info("Base64 picture length: {}", base64Picture.length());
+            inspection.setPicture(base64Picture);
+
             inspection.setStaff(staff);
             inspection.setStatus(status);
             inspection.setInspectedAt(LocalDateTime.now());
