@@ -3,25 +3,25 @@
 /* ===================== */
 
 .contract-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
 .contract-main {
-  padding: 2rem 0;
-  min-height: calc(100vh - 200px);
+    padding: 2rem 0;
+    min-height: calc(100vh - 200px);
 }
 
 .contract-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.15);
-  overflow: hidden;
-  animation: fadeInUp 0.6s ease-out;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.15);
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease-out;
 }
 
 /* ===================== */
@@ -29,82 +29,82 @@
 /* ===================== */
 
 .contract-header {
-  background: linear-gradient(135deg, #0bb97f, #06b6d4);
-  color: white;
-  padding: 2rem;
-  text-align: center;
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: white;
+    padding: 2rem;
+    text-align: center;
 }
 
 .contract-header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ===================== */
-/* MAIN SCROLL BOX (Điều 1–3) */
+/* MAIN SCROLL BOX */
 /* ===================== */
 
 .contract-scroll-box {
-  max-height: 420px;
-  overflow-y: auto;
-  margin: 2rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  background-color: #f9fafb;
-  padding: 1.75rem;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
-  position: relative;
+    max-height: 420px;
+    overflow-y: auto;
+    margin: 2rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    background-color: #f9fafb;
+    padding: 1.75rem;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+    position: relative;
 }
 
 .contract-scroll-box::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 .contract-scroll-box::-webkit-scrollbar-thumb {
-  background-color: #94a3b8;
-  border-radius: 4px;
+    background-color: #94a3b8;
+    border-radius: 4px;
 }
 .contract-scroll-box::-webkit-scrollbar-thumb:hover {
-  background-color: #64748b;
+    background-color: #64748b;
 }
 
-/* Fade overlay effect (optional) */
+/* Fade overlay effect */
 .contract-scroll-box::after {
-  content: "";
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  background: linear-gradient(to top, #f9fafb, transparent);
-  pointer-events: none;
+    content: "";
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(to top, #f9fafb, transparent);
+    pointer-events: none;
 }
 
 /* ===================== */
-/* CONTENT INSIDE SCROLL */
+/* CONTENT */
 /* ===================== */
 
 .contract-content h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0bb97f;
-  margin-top: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0bb97f;
+    margin-top: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
 }
 
 .contract-content p {
-  font-size: 1rem;
-  color: #1e293b;
-  line-height: 1.6;
-  margin: 0.75rem 0;
-  text-align: justify;
+    font-size: 1rem;
+    color: #1e293b;
+    line-height: 1.6;
+    margin: 0.75rem 0;
+    text-align: justify;
 }
 
 .contract-content strong {
-  font-weight: 600;
-  color: #374151;
+    font-weight: 600;
+    color: #374151;
 }
 
 /* ===================== */
@@ -112,87 +112,87 @@
 /* ===================== */
 
 .signature-section {
-  padding: 2rem;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+    padding: 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
 }
 
 .signature-section h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 2rem;
-  text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2rem;
+    text-align: center;
 }
 
 .signature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
 }
 
 .signature-box {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
-  text-align: center;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    text-align: center;
 }
 
 .signature-box h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
 }
 
 .signature-canvas {
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    background: #f9fafb;
 }
 
 .signature-image {
-  max-width: 100%;
-  max-height: 150px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  margin-bottom: 0.5rem;
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    margin-bottom: 0.5rem;
 }
 
 .signature-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
 }
 
 .btn-clear,
 .btn-confirm {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
 }
 
 .btn-clear {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
 }
 .btn-clear:hover {
-  background: #e5e7eb;
+    background: #e5e7eb;
 }
 
 .btn-confirm {
-  background: #0bb97f;
-  color: white;
+    background: #0bb97f;
+    color: white;
 }
 .btn-confirm:hover {
-  background: #089067;
+    background: #089067;
 }
 
 /* ===================== */
@@ -200,60 +200,75 @@
 /* ===================== */
 
 .otp-section {
-  padding: 2rem;
-  margin-top: 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  animation: slideInUp 0.5s ease-out;
+    padding: 2rem;
+    margin-top: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    animation: slideInUp 0.5s ease-out;
+    text-align: center;
 }
 
 .otp-section h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 1.5rem;
-  text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
 }
 
+/* 🔹 Hiển thị dọc từng phần */
 .otp-container {
-  display: flex;
-  justify-content: center;
-  margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.otp-container input {
+    display: inline-block;
+    margin-bottom: 1rem;
 }
 
 .otp-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+    display: flex;
+    flex-direction: column; /* 🔹 xếp nút theo chiều dọc */
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.otp-actions button {
+    width: 220px; /* 🔹 cùng chiều rộng, dễ nhìn */
+    text-align: center;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
 }
 
 .btn-primary {
-  background: #0bb97f;
-  color: white;
+    background: #0bb97f;
+    color: white;
 }
 .btn-primary:hover {
-  background: #089067;
+    background: #089067;
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
 }
 .btn-secondary:hover {
-  background: #e5e7eb;
+    background: #e5e7eb;
 }
 
 /* ===================== */
@@ -261,24 +276,24 @@
 /* ===================== */
 
 .otp-message {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-align: center;
-  margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 1rem;
 }
 
 .otp-message.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
 }
 
 .otp-message.error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
 }
 
 /* ===================== */
@@ -286,27 +301,31 @@
 /* ===================== */
 
 @media (max-width: 768px) {
-  .contract-container {
-    margin: 0 1rem;
-    border-radius: 16px;
-  }
+    .contract-container {
+        margin: 0 1rem;
+        border-radius: 16px;
+    }
 
-  .contract-scroll-box {
-    margin: 1rem;
-    max-height: 350px;
-  }
+    .contract-scroll-box {
+        margin: 1rem;
+        max-height: 350px;
+    }
 
-  .signature-section {
-    padding: 1.5rem;
-  }
+    .signature-section {
+        padding: 1.5rem;
+    }
 
-  .otp-section {
-    padding: 1.5rem;
-  }
+    .otp-section {
+        padding: 1.5rem;
+    }
 
-  .signature-grid {
-    grid-template-columns: 1fr;
-  }
+    .otp-actions button {
+        width: 100%; /* 🔹 full width trên mobile */
+    }
+
+    .signature-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ===================== */
@@ -314,23 +333,23 @@
 /* ===================== */
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

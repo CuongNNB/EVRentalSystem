@@ -7,333 +7,367 @@ import Footer from "../components/Footer";
 import "./ContractPage.css";
 
 export default function ContractPage() {
-  const { carId } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const renterSignRef = useRef(null);
+    const { carId } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const renterSignRef = useRef(null);
 
-  // ✅ Lấy dữ liệu booking từ state hoặc localStorage
-  const bookingData =
-    location.state || JSON.parse(localStorage.getItem("currentBooking"));
+    // ✅ Lấy dữ liệu forward từ BookingPage
+    const { fullBooking, response } = location.state || {};
+    const storedBooking =
+        fullBooking || JSON.parse(localStorage.getItem("currentBooking")) || {};
 
-  const [contractData] = useState(() => ({
-    contractId: `EV${Date.now()}`,
-    renter: {
-      name: bookingData?.renter?.name || "Họ và Tên",
-      email: bookingData?.renter?.email || "Email người thuê",
-      phone: bookingData?.renter?.phone || "Số điện thoại",
-      address: "Địa chỉ",
-      birthDate: "Ngày sinh",
-      idNumber: "Số căn cước công dân",
-      licenseNumber: "Bằng lái xe",
-    },
-    car: {
-      name: bookingData?.car?.name || "VinFast VF e34",
-      licensePlate: bookingData?.car?.licensePlate || "51A-12345",
-      color: bookingData?.car?.color || "Trắng",
-      price: bookingData?.pricing?.dailyRate || 1000000,
-      rentalDays: bookingData?.rental?.days || 1,
-      totalAmount: bookingData?.pricing?.subtotal || 1000000,
-      deposit: bookingData?.pricing?.deposit || 300000,
-      includedKm: 200,
-    },
-    rental: {
-      startDate: bookingData?.rental?.pickupDate
-        ? new Date(bookingData.rental.pickupDate).toLocaleDateString("vi-VN")
-        : "Hôm nay",
-      endDate: bookingData?.rental?.returnDate
-        ? new Date(bookingData.rental.returnDate).toLocaleDateString("vi-VN")
-        : "Ngày mai",
-      startTime: bookingData?.rental?.pickupDate
-        ? new Date(bookingData.rental.pickupDate).toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "12:00",
-      endTime: bookingData?.rental?.returnDate
-        ? new Date(bookingData.rental.returnDate).toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "12:00",
-      pickupLocation:
-        bookingData?.rental?.pickupLocation || "EV Station - Bình Thạnh",
-    },
-  }));
+    const booking = storedBooking.bookingForm || {};
+    const car = storedBooking.carData || {};
+    const totals = storedBooking.totals || {};
+    const user = storedBooking.user || {};
+    const backendResponse = response || storedBooking.response || {};
 
-  const [renterSign, setRenterSign] = useState(null);
-  const [ownerSign, setOwnerSign] = useState(null);
-  const [isSignedB, setIsSignedB] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otpError, setOtpError] = useState("");
-  const [otpMessage, setOtpMessage] = useState("");
-  const [resendTimer, setResendTimer] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const bookingId = backendResponse.bookingId;
+    const userEmail = user.email || backendResponse.renterEmail || "user@gmail.com";
 
-  // ✅ Chữ ký mẫu cho Bên A
-  useEffect(() => {
-    setOwnerSign(
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-    );
-  }, []);
+    const [contractData] = useState(() => ({
+        contractId: `EV${Date.now()}`,
+        renter: {
+            name: user.name || backendResponse.renterName || "Người thuê xe",
+            email: userEmail,
+            phone: user.phone || "Chưa cập nhật",
+        },
+        car: {
+            name: backendResponse.vehicleModel || car.name || "Xe điện",
+            price: totals.dailyPrice || backendResponse.totalAmount || 0,
+            rentalDays: totals.days || 1,
+            totalAmount: backendResponse.totalAmount || totals.totalRental || 0,
+            deposit: totals.deposit || 0,
+            station: backendResponse.stationName || car.stationName || "EV Station",
+        },
+        rental: {
+            startDate: booking.pickupDateTime
+                ? new Date(booking.pickupDateTime).toLocaleDateString("vi-VN")
+                : "Hôm nay",
+            endDate: booking.returnDateTime
+                ? new Date(booking.returnDateTime).toLocaleDateString("vi-VN")
+                : "Ngày mai",
+            pickupLocation:
+                booking.pickupLocation || backendResponse.stationName || "EV Station",
+        },
+    }));
 
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [resendTimer]);
+    // ✅ Quản lý chữ ký và OTP
+    const [renterSign, setRenterSign] = useState(null);
+    const [ownerSign, setOwnerSign] = useState(null);
+    const [isSignedB, setIsSignedB] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otpError, setOtpError] = useState("");
+    const [otpMessage, setOtpMessage] = useState("");
+    const [resendTimer, setResendTimer] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
+    // ✅ Ký mặc định bên A
+    useEffect(() => {
+        setOwnerSign(
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        );
+    }, []);
 
-  const handleConfirmSign = () => {
-    const sign = renterSignRef.current?.toDataURL();
-    if (sign) {
-      setRenterSign(sign);
-      setIsSignedB(true);
-    }
-  };
+    useEffect(() => {
+        if (resendTimer > 0) {
+            const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+            return () => clearTimeout(t);
+        }
+    }, [resendTimer]);
 
-  const handleClearSign = () => {
-    renterSignRef.current?.clear();
-    setRenterSign(null);
-    setIsSignedB(false);
-    setOtp("");
-    setOtpMessage("");
-    setOtpError("");
-    setIsOtpSent(false);
-    setOtpVerified(false);
-    setResendTimer(0);
-  };
+    const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p || 0);
 
-  // ✅ Demo OTP
-  const handleSendOtp = () => {
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(otpCode);
-    setIsOtpSent(true);
-    setOtpMessage(`📩 Mã OTP của bạn là: ${otpCode}`);
-    setOtpError("");
-    setResendTimer(60);
-    alert(`Mã OTP demo của bạn là: ${otpCode}`);
-  };
+    const handleConfirmSign = () => {
+        const sign = renterSignRef.current?.toDataURL();
+        if (sign) {
+            setRenterSign(sign);
+            setIsSignedB(true);
+        }
+    };
 
-  const handleVerifyOtp = () => {
-    if (otp.length !== 6) {
-      setOtpError("Nhập đủ 6 số OTP");
-      return;
-    }
-    if (otp === generatedOtp) {
-      setOtpVerified(true);
-      setOtpMessage("✅ Xác thực OTP thành công!");
-      setOtpError("");
-    } else {
-      setOtpError("❌ Sai OTP, vui lòng thử lại");
-    }
-  };
+    const handleClearSign = () => {
+        renterSignRef.current?.clear();
+        setRenterSign(null);
+        setIsSignedB(false);
+        setOtp("");
+        setOtpMessage("");
+        setOtpError("");
+        setIsOtpSent(false);
+        setOtpVerified(false);
+        setResendTimer(0);
+    };
 
-  const handleSubmitContract = () => {
-  if (!otpVerified) {
-    setOtpError("Cần xác thực OTP trước khi hoàn tất");
-    return;
-  }
+    // ✅ GỬI OTP bằng API backend
+    const handleSendOtp = async () => {
+        if (!bookingId || !userEmail) {
+            setOtpError("Không tìm thấy thông tin booking hoặc email.");
+            return;
+        }
 
-  // ✅ Gom toàn bộ dữ liệu cần chuyển
-  const contractSummary = {
-    contractId: contractData.contractId,
-    contractData,
-    bookingData,
-    renterSign,
-    ownerSign,
-    createdAt: new Date().toISOString(),
-  };
+        try {
+            const res = await fetch(
+                `http://localhost:8084/EVRentalSystem/api/contracts/send-otp?bookingId=${bookingId}&email=${encodeURIComponent(
+                    userEmail
+                )}`,
+                { method: "POST" }
+            );
 
-  // ✅ Lưu localStorage dự phòng
-  localStorage.setItem("currentContract", JSON.stringify(contractSummary));
+            if (!res.ok) throw new Error("Gửi OTP thất bại");
 
-  // ✅ Forward sang DepositPaymentPage qua state
-  navigate("/deposit-payment", { state: { contractSummary } });
-};
+            const message = await res.text();
+            setIsOtpSent(true);
+            setOtpMessage(`📩 ${message}`);
+            setOtpError("");
+            setResendTimer(60);
+        } catch (err) {
+            console.error("❌ Lỗi gửi OTP:", err);
+            setOtpError("Không thể gửi OTP. Vui lòng thử lại.");
+        }
+    };
 
-  const currentDateTime = new Date().toLocaleString("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+    // ✅ XÁC THỰC OTP bằng API backend
+    const handleVerifyOtp = async () => {
+        if (otp.length !== 6) {
+            setOtpError("Nhập đủ 6 số OTP");
+            return;
+        }
 
-  return (
-    <div className="contract-page">
-      <Header />
-      <main className="contract-main">
-        <div className="contract-container">
-          {/* --- Tiêu đề --- */}
-          <div className="contract-header">
-            <h1>HỢP ĐỒNG THUÊ XE Ô TÔ</h1>
-            <h1>#{contractData.contractId}</h1>
-            <p>
-              Ngày lập: <strong>{currentDateTime}</strong>
-            </p>
-          </div>
+        try {
+            const res = await fetch(
+                `http://localhost:8084/EVRentalSystem/api/contracts/verify-otp?bookingId=${bookingId}&otp=${otp}`,
+                { method: "POST" }
+            );
 
-          {/* --- Ô cuộn nội dung chính --- */}
-          <div className="contract-scroll-box">
-            <div className="contract-content">
-              <h2>Điều 1: Thông tin các bên</h2>
-              <p>
-                <strong>Bên A:</strong> Công ty TNHH EV Car Rental — Địa chỉ:
-                123 Nguyễn Văn Cừ, Quận 5, TP.HCM.
-              </p>
-              <p>
-                <strong>Bên B:</strong> {contractData.renter.name} — SĐT:{" "}
-                <strong>{contractData.renter.phone}</strong> — Email:{" "}
-                <strong>{contractData.renter.email}</strong>
-              </p>
+            if (!res.ok) throw new Error("Xác thực OTP thất bại");
 
-              <h2>Điều 2: Thông tin xe</h2>
-              <p>
-                <strong>Tên xe:</strong> {contractData.car.name}
-              </p>
-              <p>
-                <strong>Màu sắc:</strong> {contractData.car.color}
-              </p>
+            const result = await res.text();
 
-              <h2>Điều 3: Thời gian và chi phí</h2>
-              <p>
-                <strong>Thời gian thuê:</strong> Từ {contractData.rental.startDate} lúc{" "}
-                {contractData.rental.startTime} đến {contractData.rental.endDate} lúc{" "}
-                {contractData.rental.endTime}
-              </p>
-              <p>
-                <strong>Địa điểm nhận xe:</strong> {contractData.rental.pickupLocation}
-              </p>
-              <p>
-                <strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫
-              </p>
-              <p>
-                <strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫ (30% giá trị thuê)
-              </p>
-              <p>
-                <strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫
-              </p>
+            if (result.toLowerCase().includes("thành công") || result.includes("success")) {
+                setOtpVerified(true);
+                setOtpMessage("✅ Xác thực OTP thành công!");
+                setOtpError("");
 
-              {/* --- Các điều khoản khôi phục --- */}
-              <h2>Điều 4: Quy định sử dụng</h2>
-              <p>• Bên B phải sử dụng xe đúng mục đích, không cho thuê lại, không dùng vào hoạt động trái pháp luật.</p>
-              <p>• Xe phải được bảo quản cẩn thận, không tự ý sửa chữa khi chưa có sự đồng ý của Bên A.</p>
+                const contractSummary = {
+                    contractId: contractData.contractId,
+                    bookingId,
+                    user,
+                    car,
+                    totals,
+                    contractData,
+                    fullBooking,
+                    response: backendResponse,
+                    renterSign,
+                    ownerSign,
+                    createdAt: new Date().toISOString(),
+                    verifyMessage: result,
+                };
 
-              <h2>Điều 5: Trách nhiệm khi vi phạm</h2>
-              <p>• Nếu gây hư hỏng, mất mát phụ tùng, Bên B chịu chi phí sửa chữa hoặc bồi thường thực tế.</p>
-              <p>• Nếu trả xe trễ hơn thời gian quy định: phụ thu 20% giá thuê/ngày.</p>
+                // Lưu lại vào localStorage để dự phòng
+                localStorage.setItem("currentContract", JSON.stringify(contractSummary));
 
-              <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
-              <p>• Xe đã được đăng ký bảo hiểm bắt buộc dân sự.</p>
-              <p>• Gói thuê bao gồm {contractData.car.includedKm} km/ngày, vượt quá sẽ tính phí 5,000₫/km.</p>
+                // ✅ Forward qua trang tiếp theo (ví dụ deposit-payment)
+                navigate("/deposit-payment", { state: { contractSummary } });
 
-              <h2>Điều 7: Chấm dứt và hiệu lực hợp đồng</h2>
-              <p>• Hợp đồng có hiệu lực kể từ khi hai bên ký tên và xác thực OTP.</p>
-              <p>• Nếu một bên vi phạm nghiêm trọng điều khoản, bên còn lại có quyền chấm dứt hợp đồng.</p>
-              <p>• Mọi tranh chấp sẽ được giải quyết tại Tòa án Nhân dân TP.HCM.</p>
-            </div>
-          </div>
+            } else {
+                setOtpError("Sai OTP, vui lòng thử lại");
+            }
+        } catch (err) {
+            console.error("Lỗi verify OTP:", err);
+            setOtpError("Không thể xác thực OTP. Vui lòng thử lại.");
+        }
+    };
 
-          {/* --- Phần chữ ký --- */}
-          <div className="signature-section">
-            <h2>CHỮ KÝ ĐIỆN TỬ</h2>
-            <div className="signature-grid">
-              <div className="signature-box">
-                <h3>Bên B - Bên thuê xe</h3>
-                {!isSignedB ? (
-                  <SignatureCanvas
-                    ref={renterSignRef}
-                    canvasProps={{ width: 300, height: 150, className: "signature-canvas" }}
-                  />
-                ) : (
-                  <img src={renterSign} alt="Chữ ký Bên B" className="signature-image" />
-                )}
-                <div className="signature-actions">
-                  {!isSignedB ? (
-                    <>
-                      <button className="btn-clear" onClick={handleClearSign}>Xóa ký</button>
-                      <button className="btn-confirm" onClick={handleConfirmSign}>Xác nhận ký</button>
-                    </>
-                  ) : (
-                    <button className="btn-clear" onClick={handleClearSign}>Ký lại</button>
-                  )}
-                </div>
-              </div>
+    const handleSubmitContract = () => {
+        if (!otpVerified) {
+            setOtpError("Cần xác thực OTP trước khi hoàn tất");
+            return;
+        }
 
-              <div className="signature-box">
-                <h3>Bên A - Bên cho thuê</h3>
-                <img src={ownerSign} alt="Chữ ký Bên A" className="signature-image" />
-                <p>✅ Đã ký sẵn</p>
-              </div>
-            </div>
-          </div>
+        const contractSummary = {
+            contractId: contractData.contractId,
+            contractData,
+            fullBooking,
+            response,
+            renterSign,
+            ownerSign,
+            createdAt: new Date().toISOString(),
+        };
 
-          {/* --- OTP Section mới nhất --- */}
-          {isSignedB && (
-            <div className="otp-section">
-              <h2>XÁC THỰC OTP</h2>
+        localStorage.setItem("currentContract", JSON.stringify(contractSummary));
+        navigate("/deposit-payment", { state: { contractSummary } });
+    };
 
-              {!isOtpSent ? (
-                <button className="btn-primary" onClick={handleSendOtp}>
-                  Gửi OTP
-                </button>
-              ) : (
-                <div className="otp-container">
-                  <OtpInput
-                    value={otp}
-                    onChange={(val) => setOtp(val)}
-                    numInputs={6}
-                    renderSeparator={<span>-</span>}
-                    renderInput={(props) => (
-                      <input
-                        {...props}
-                        type="text"
-                        inputMode="numeric"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          margin: "0 5px",
-                          fontSize: "18px",
-                          borderRadius: "8px",
-                          border: "2px solid #ddd",
-                          textAlign: "center",
-                          fontWeight: "600",
-                          color: "#0f172a",
-                        }}
-                      />
+    const currentDateTime = new Date().toLocaleString("vi-VN", {
+        dateStyle: "short",
+        timeStyle: "short",
+    });
+
+    return (
+        <div className="contract-page">
+            <Header />
+            <main className="contract-main">
+                <div className="contract-container">
+                    <div className="contract-header">
+                        <h1>HỢP ĐỒNG THUÊ XE Ô TÔ #{contractData.contractId}</h1>
+                        <p>Ngày lập: <strong>{currentDateTime}</strong></p>
+                        <p>Mã đặt xe: <strong>{bookingId}</strong></p>
+                    </div>
+
+                    <div className="contract-scroll-box">
+                        <div className="contract-content">
+                            <h2>Điều 1: Thông tin các bên</h2>
+                            <p>
+                                <strong>Bên A:</strong> Công ty TNHH EV Car Rental — 123 Nguyễn Văn Cừ, Quận 5, TP.HCM.
+                            </p>
+                            <p>
+                                <strong>Bên B:</strong> {contractData.renter.name} — SĐT:{" "}
+                                {contractData.renter.phone} — Email: {contractData.renter.email}
+                            </p>
+
+                            <h2>Điều 2: Thông tin xe</h2>
+                            <p><strong>Tên xe:</strong> {contractData.car.name}</p>
+                            <p><strong>Trạm nhận xe:</strong> {contractData.car.station}</p>
+
+                            <h2>Điều 3: Chi phí và thời gian</h2>
+                            <p><strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫</p>
+                            <p><strong>Số ngày thuê:</strong> {contractData.car.rentalDays} ngày</p>
+                            <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
+                            <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
+
+                            <h2>Điều 5: Trách nhiệm khi vi phạm</h2>
+                            <p>• Nếu gây hư hỏng, mất mát phụ tùng, Bên B chịu chi phí sửa chữa hoặc bồi thường thực tế theo báo giá của Bên A.</p>
+                            <p>• Nếu trả xe trễ hơn thời gian quy định, Bên B phải chịu phụ thu 20% giá thuê/ngày cho mỗi ngày chậm trễ.</p>
+                            <p>• Nếu Bên B vi phạm các điều khoản sử dụng xe hoặc pháp luật Việt Nam, Bên A có quyền đơn phương chấm dứt hợp đồng mà không hoàn lại tiền đặt cọc.</p>
+
+                            <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
+                            <p>• Xe đã được đăng ký bảo hiểm bắt buộc dân sự, chi phí bồi thường sẽ tuân theo quy định của công ty bảo hiểm.</p>
+                            <p>• Mỗi gói thuê bao gồm <strong>{contractData.car.includedKm}</strong> km/ngày. Nếu vượt quá giới hạn này, phụ thu 5.000₫/km sẽ được áp dụng.</p>
+                            <p>• Trường hợp tai nạn xảy ra do lỗi của Bên B, Bên B chịu toàn bộ chi phí khắc phục và bồi thường cho Bên A.</p>
+
+                            <h2>Điều 7: Chấm dứt và hiệu lực hợp đồng</h2>
+                            <p>• Hợp đồng có hiệu lực kể từ khi hai bên ký tên và xác thực OTP.</p>
+                            <p>• Nếu một bên vi phạm nghiêm trọng các điều khoản, bên còn lại có quyền chấm dứt hợp đồng và yêu cầu bồi thường thiệt hại.</p>
+                            <p>• Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng; nếu không đạt thỏa thuận, vụ việc sẽ được đưa ra Tòa án Nhân dân TP.HCM.</p>
+
+                            <h2>Điều 8: Nghĩa vụ bảo dưỡng và nhiên liệu</h2>
+                            <p>• Bên B có trách nhiệm kiểm tra tình trạng xe trước khi nhận và báo ngay cho Bên A nếu phát hiện lỗi kỹ thuật.</p>
+                            <p>• Xe được giao trong tình trạng sạc đầy pin; Bên B cần hoàn trả xe với mức pin không thấp hơn 20%.</p>
+                            <p>• Mọi chi phí phát sinh do sử dụng sai cách hoặc không tuân thủ hướng dẫn kỹ thuật sẽ do Bên B chịu trách nhiệm.</p>
+
+                            <h2>Điều 9: Gia hạn và hủy hợp đồng</h2>
+                            <p>• Bên B có thể gia hạn thời gian thuê xe nếu thông báo trước ít nhất 12 giờ và được Bên A chấp thuận.</p>
+                            <p>• Nếu Bên B muốn hủy hợp đồng sau khi đã đặt cọc, số tiền đặt cọc sẽ không được hoàn lại.</p>
+                            <p>• Trường hợp bất khả kháng (thiên tai, dịch bệnh, tai nạn nghiêm trọng, v.v.) hai bên sẽ thương lượng giải pháp hợp lý.</p>
+
+                            <h2>Điều 10: Cam kết của các bên</h2>
+                            <p>• Bên A cam kết cung cấp xe đảm bảo chất lượng, an toàn và đúng thời gian đã thỏa thuận.</p>
+                            <p>• Bên B cam kết cung cấp thông tin cá nhân chính xác và sử dụng xe đúng mục đích thuê.</p>
+                            <p>• Hai bên cam kết tuân thủ đầy đủ các điều khoản của hợp đồng này và cùng chịu trách nhiệm trước pháp luật nếu vi phạm.</p>
+
+
+                        </div>
+                    </div>
+
+                    {/* --- Ký và OTP --- */}
+                    <div className="signature-section">
+                        <h2>CHỮ KÝ ĐIỆN TỬ</h2>
+                        <div className="signature-grid">
+                            <div className="signature-box">
+                                <h3>Bên B - Người thuê xe</h3>
+                                {!isSignedB ? (
+                                    <SignatureCanvas
+                                        ref={renterSignRef}
+                                        canvasProps={{ width: 300, height: 150, className: "signature-canvas" }}
+                                    />
+                                ) : (
+                                    <img src={renterSign} alt="Chữ ký Bên B" className="signature-image" />
+                                )}
+                                <div className="signature-actions">
+                                    {!isSignedB ? (
+                                        <>
+                                            <button className="btn-clear" onClick={handleClearSign}>Xóa ký</button>
+                                            <button className="btn-confirm" onClick={handleConfirmSign}>Xác nhận ký</button>
+                                        </>
+                                    ) : (
+                                        <button className="btn-clear" onClick={handleClearSign}>Ký lại</button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="signature-box">
+                                <h3>Bên A - Công ty cho thuê</h3>
+                                <img src={ownerSign} alt="Chữ ký Bên A" className="signature-image" />
+                                <p>✅ Đã ký sẵn</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {isSignedB && (
+                        <div className="otp-section">
+                            <h2>XÁC THỰC OTP</h2>
+
+                            {!isOtpSent ? (
+                                <button className="btn-primary" onClick={handleSendOtp}>
+                                    Gửi OTP
+                                </button>
+                            ) : (
+                                <div className="otp-container">
+                                    <OtpInput
+                                        value={otp}
+                                        onChange={(val) => setOtp(val)}
+                                        numInputs={6}
+                                        renderSeparator={<span>-</span>}
+                                        renderInput={(props) => (
+                                            <input
+                                                {...props}
+                                                type="text"
+                                                inputMode="numeric"
+                                                style={{
+                                                    width: "40px",
+                                                    height: "40px",
+                                                    margin: "0 5px",
+                                                    fontSize: "18px",
+                                                    borderRadius: "8px",
+                                                    border: "2px solid #ddd",
+                                                    textAlign: "center",
+                                                    fontWeight: "600",
+                                                    color: "#0f172a",
+                                                }}
+                                            />
+                                        )}
+                                    />
+
+                                    <div className="otp-actions">
+                                        <button className="btn-primary" onClick={handleVerifyOtp} disabled={otp.length !== 6}>
+                                            Xác thực OTP
+                                        </button>
+                                        {resendTimer > 0 ? (
+                                            <span>Gửi lại sau {resendTimer}s</span>
+                                        ) : (
+                                            <button className="btn-secondary" onClick={handleSendOtp}>
+                                                Gửi lại OTP
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {otpMessage && <p className="otp-message success">{otpMessage}</p>}
+                                    {otpError && <p className="otp-message error">{otpError}</p>}
+                                    {otpVerified && (
+                                        <button className="btn-primary" onClick={handleSubmitContract} disabled={isSubmitting}>
+                                            {isSubmitting ? "Đang xử lý..." : "Hoàn tất hợp đồng"}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
-                  />
-
-                  <div className="otp-actions">
-                    <button className="btn-primary" onClick={handleVerifyOtp} disabled={otp.length !== 6}>
-                      Xác thực OTP
-                    </button>
-                    {resendTimer > 0 ? (
-                      <span>Gửi lại sau {resendTimer}s</span>
-                    ) : (
-                      <button className="btn-secondary" onClick={handleSendOtp}>
-                        Gửi lại OTP
-                      </button>
-                    )}
-                  </div>
-
-                  {otpMessage && <p className="otp-message success">{otpMessage}</p>}
-                  {otpError && <p className="otp-message error">{otpError}</p>}
-                  {otpVerified && (
-                    <button className="btn-primary" onClick={handleSubmitContract} disabled={isSubmitting}>
-                      {isSubmitting ? "Đang xử lý..." : "Hoàn tất hợp đồng"}
-                    </button>
-                  )}
                 </div>
-              )}
-            </div>
-          )}
+            </main>
+            <Footer />
         </div>
-      </main>
-      <Footer />
-    </div>
-  );
+    );
 }

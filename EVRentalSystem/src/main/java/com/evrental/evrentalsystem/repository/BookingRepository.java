@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // Tìm booking theo renterId (User's ID)
@@ -19,6 +20,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // Tìm booking theo trạng thái (dùng String status)
     List<Booking> findByStatus(String status);
 
+    Optional<Booking> findByBookingId(Integer bookingId);
 
     @Modifying
     @Transactional

@@ -22,6 +22,7 @@ public class Inspection {
     private String partName;
 
     @Lob
+    @Column(name = "picture", columnDefinition = "nvarchar(MAX)", nullable = true)
     private String picture;
 
     @ManyToOne
