@@ -14,7 +14,7 @@ const filterOptions = [
     { label: "BMW", value: "BMW" },
 ];
 
-// 🧮 Hàm format giá (vd: 1200 → 1.200.000 VND/ngày)
+// 🧮 Hàm format giá (vd: 1200 → 1.200.000 VND/ngày) s
 const formatPrice = (price) => {
     if (!price) return "Liên hệ";
     const formatted = (price * 1000).toLocaleString("vi-VN");

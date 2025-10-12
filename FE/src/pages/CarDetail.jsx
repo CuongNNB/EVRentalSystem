@@ -8,7 +8,7 @@ export default function CarDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const carFromList = location.state; // ✅ Dữ liệu truyền từ CarPages (có stationName, stationId, picture,...)
+    const carFromList = location.state;
 
     const [carData, setCarData] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);

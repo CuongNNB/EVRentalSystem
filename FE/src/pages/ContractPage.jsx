@@ -23,7 +23,7 @@ export default function ContractPage() {
     const totals = storedBooking.totals || {};
     const user = storedBooking.user || {};
     const backendResponse = response || storedBooking.response || {};
-
+//
     const [contractData] = useState(() => ({
         contractId: `EV${Date.now()}`,
         renter: {

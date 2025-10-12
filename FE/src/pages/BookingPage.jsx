@@ -5,7 +5,6 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./BookingPage.css";
 
-// ✅ Hàm định dạng datetime cho input
 const formatDateTimeLocal = (date) => {
     const pad = (n) => (n < 10 ? "0" + n : n);
     const yyyy = date.getFullYear();
