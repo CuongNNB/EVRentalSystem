@@ -24,7 +24,7 @@ CREATE TABLE [User] (
     [address]   NVARCHAR(255),
     role        NVARCHAR(50) NOT NULL,
     [status]    NVARCHAR(50),
-    created_at  DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    created_at   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
     );
 
 -- ============================
