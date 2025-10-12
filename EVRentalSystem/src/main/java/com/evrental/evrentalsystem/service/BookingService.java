@@ -5,6 +5,7 @@ import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,13 +59,14 @@ public class BookingService {
         booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
-        booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
+        booking.setStatus(BookingStatus.WAITING_FOR_STAFF_TO_CONFIRM.toString());
         booking.setDeposit(request.getDeposit());
         booking.setRentalAmount(model.getPrice());
         booking.setTotalAmount(totalAmount);
 
         bookingRepository.save(booking);
-
+        //set status to avoid double booking
+        vehicleDetail.setStatus("RESERVED");
         vehicleDetailRepository.save(vehicleDetail);
 
         // Mapping sang response
@@ -79,5 +81,19 @@ public class BookingService {
         response.setMessage("Booking created successfully");
 
         return response;
+    }
+    @Transactional
+    public String confirmBookingByStaff(Integer bookingId) {
+        Booking booking = bookingRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new RuntimeException("Not found booking!"));
+
+        if (!booking.getStatus().equals(BookingStatus.WAITING_FOR_STAFF_TO_CONFIRM.name())) {
+            return "Booking is not in WAITING_FOR_STAFF_TO_CONFIRM status.";
+        }
+
+        booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
+        bookingRepository.save(booking);
+
+        return "Booking confirmed successfully.";
     }
 }

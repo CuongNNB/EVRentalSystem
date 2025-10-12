@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.controller.staff;
 
 import com.evrental.evrentalsystem.response.ApiResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
+import com.evrental.evrentalsystem.service.BookingService;
 import com.evrental.evrentalsystem.service.StaffService;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,6 +21,9 @@ public class BookingController {
 
     @Autowired
     private StaffService staffService;
+
+    @Autowired
+    private com.evrental.evrentalsystem.service.BookingService bookingService;
 
     // API GET để lấy danh sách bookings theo stationId
     // GET http://localhost:8084/EVRentalSystem/api/bookings/station/1
@@ -65,6 +69,10 @@ public class BookingController {
                     .body(ApiResponse.error("Error updating booking status", null));
         }
     }
-
+    @PutMapping("/confirm-by-staff")
+    public ResponseEntity<String> confirmByStaff(@RequestParam Integer bookingId) {
+        String result = bookingService.confirmBookingByStaff(bookingId);
+        return ResponseEntity.ok(result);
+    }
 
 }
