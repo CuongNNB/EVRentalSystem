@@ -11,6 +11,7 @@ public class ContractController {
 
      private final ContractService contractService;
 
+     //API: http://localhost:8084/EVRentalSystem/api/contracts/send-otp
     @PostMapping("/send-otp")
     public String sendOtp(@RequestParam Integer bookingId, @RequestParam String email) {
         return contractService.sendOtpForContract(bookingId, email);

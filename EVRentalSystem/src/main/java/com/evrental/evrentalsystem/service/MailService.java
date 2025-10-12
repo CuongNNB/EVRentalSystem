@@ -25,9 +25,9 @@ public class MailService {
 
             helper.setFrom(fromEmail);
             helper.setTo(toEmail);
-            helper.setSubject("EVRental - Mã xác nhận hợp đồng");
+            helper.setSubject("Hệ thống cho thuê xe điện EV Rental - Mã xác nhận hợp đồng");
             helper.setText("""
-                    <p>Xin chào,</p>
+                    <p>Xin chào bạn,</p>
                     <p>Mã OTP xác nhận ký hợp đồng của bạn là: <b>%s</b></p>
                     <p>Mã có hiệu lực trong 5 phút.</p>
                     <br>
