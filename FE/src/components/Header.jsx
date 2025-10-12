@@ -6,7 +6,7 @@ import "./Header.css";
 const menuItems = [
     { label: "Trang chủ", href: "/" },
     { label: "Xem xe có sẵn", href: "/cars" },
-    { label: "Tìm xe theo trạm", href: "/station-cars" },
+    { label: "Tìm xe theo trạm", href: "/map-stations" },
     { label: "Ưu đãi", href: "#promotions" },
     { label: "Demo Flow Hoàn Chỉnh", href: "/demo-flow" },
 ];
