@@ -14,7 +14,7 @@ const filterOptions = [
     { label: "BMW", value: "BMW" },
 ];
 
-// 🧮 Hàm format giá (vd: 1200 → 1.200.000 VND/ngày)
+// 🧮 Hàm format giá (vd: 1200 → 1.200.000 VND/ngày) s
 const formatPrice = (price) => {
     if (!price) return "Liên hệ";
     const formatted = (price * 1000).toLocaleString("vi-VN");
@@ -25,18 +25,26 @@ function CarCard({ car }) {
     const navigate = useNavigate();
 
     const handleViewDetails = () => {
-        navigate(`/car/${car.id}`);
+        navigate(`/car/${car.id}`, {
+            state: {
+                ...car,
+                stationId: car.stationId || 1, // fallback nếu backend chưa có id
+                stationName: car.stationName || "Không rõ trạm",
+                images: [car.picture ? `/carpic/${car.picture}` : "/anhxe/default.jpg"],
+            },
+        });
     };
+
 
     const handleBookNow = () => {
         navigate(`/booking/${car.id}`, {
             state: {
-                image: car.picture
-                    ? `/carpic/${car.picture}`
-                    : "/anhxe/default.jpg",
-                name: car.model,
-                carId: car.id,
+                id: car.id,
+                name: `${car.brand} ${car.model}`,
                 price: car.price,
+                images: [car.picture ? `/carpic/${car.picture}` : "/anhxe/default.jpg"],
+                stationId: car.stationId || 1, // fallback nếu backend chưa có
+                stationName: car.stationName || "Không rõ trạm",
             },
         });
     };
@@ -135,7 +143,7 @@ export default function CarPages() {
                     <p className="car-page__description">
                         Bộ sưu tập 100% xe điện được kiểm tra định kỳ, tích hợp bảo hiểm và hỗ trợ sạc 24/7. Lọc nhanh theo hãng xe bạn yêu thích và đặt ngay.
                     </p>
-
+                    <h4>Chọn loại xe bạn thích</h4>
                     <div
                         className="car-filters"
                         role="tablist"
@@ -160,7 +168,7 @@ export default function CarPages() {
                     </div>
                 </section>
 
-                <RentNowCard />
+                {/* <RentNowCard /> */}
 
                 <section aria-live="polite" aria-label="Danh sách xe điện sẵn sàng">
                     <div className="car-grid">

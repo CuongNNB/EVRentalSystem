@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Search, Car, Clock, Battery, Users } from 'lucide-react';
 import Header from '../components/Header';
-// import StationMap from '../components/StationMap';
-// import { carDatabase } from '../data/carData';
+import StationMap from '../components/StationMap';
+import { carDatabase } from '../data/carData';
 import './StationCarView.css';
 
 const StationCarView = () => {
