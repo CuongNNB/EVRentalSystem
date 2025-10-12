@@ -148,7 +148,7 @@
   box-shadow: 0 3px 10px rgba(16, 24, 40, 0.03);
   border: 1px solid rgba(230, 231, 236, 0.06);
 }
-
+/* Individual Filter Buttons */
 .station-filters__button {
   border: 1px solid rgba(230, 231, 236, 0.06);
   background: var(--white);

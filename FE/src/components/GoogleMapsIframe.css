@@ -1,0 +1,99 @@
+/* Google Maps Iframe Component Styles */
+.map-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.35s ease;
+  cursor: pointer;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 200, 150, 0.1);
+}
+
+.map-container:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 24px rgba(0, 200, 150, 0.15);
+  border-color: rgba(0, 200, 150, 0.2);
+}
+
+.map-container iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 12px;
+}
+
+/* Loading state */
+.map-container.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+.map-container.loading::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 200, 150, 0.2);
+  border-top: 3px solid #00C896;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.map-container.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.map-container.error::before {
+  content: '🗺️ Không thể tải bản đồ';
+  color: #dc2626;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .map-container {
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+  }
+  
+  .map-container:hover {
+    transform: scale(1.02);
+  }
+}
+
+@media (max-width: 480px) {
+  .map-container {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+  }
+}
+
+/* Focus states for accessibility */
+.map-container:focus-within {
+  outline: 2px solid #00C896;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for all interactive elements */
+.map-container,
+.map-container iframe {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* End of Google Maps Iframe Component Styles *//* Car Pages Styles */
