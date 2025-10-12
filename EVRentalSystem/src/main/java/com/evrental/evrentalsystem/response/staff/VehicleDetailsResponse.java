@@ -12,6 +12,7 @@ public class VehicleDetailsResponse {
     String modelName;
     String licensePlate;
     String color;
+    String image;
     String battery;
     int odo;
 }
