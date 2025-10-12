@@ -11,6 +11,7 @@ const StationCarView = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('Quận 1');
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Mock data for districts
   const districts = [
@@ -21,25 +22,39 @@ const StationCarView = () => {
 
   // Convert carDatabase to station format with additional station info
   const getStationCars = () => {
-    return Object.values(carDatabase).map(car => ({
-      id: car.id,
-      name: car.name,
-      image: car.images[0], // Use first image
-      price: car.price.toLocaleString('vi-VN'),
-      battery: `${Math.floor(Math.random() * 20) + 80}%`, // Random battery 80-99%
-      seats: car.specifications.seats,
-      distance: `${(Math.random() * 3 + 1).toFixed(1)}km`, // Random distance 1-4km
-      station: `Trạm ${selectedDistrict}`
-    }));
+    try {
+      return Object.values(carDatabase).map(car => ({
+        id: car.id,
+        name: car.name,
+        image: car.images[0], // Use first image
+        price: car.price.toLocaleString('vi-VN'),
+        battery: `${Math.floor(Math.random() * 20) + 80}%`, // Random battery 80-99%
+        seats: car.specifications.seats,
+        distance: `${(Math.random() * 3 + 1).toFixed(1)}km`, // Random distance 1-4km
+        station: `Trạm ${selectedDistrict}`
+      }));
+    } catch (err) {
+      console.error('Error getting station cars:', err);
+      setError('Lỗi khi tải dữ liệu xe');
+      return [];
+    }
   };
 
   useEffect(() => {
     // Simulate loading cars for selected district
     setLoading(true);
-    setTimeout(() => {
-      setCars(getStationCars());
+    setError(null);
+    try {
+      setTimeout(() => {
+        const stationCars = getStationCars();
+        setCars(stationCars);
+        setLoading(false);
+      }, 800);
+    } catch (err) {
+      console.error('Error in useEffect:', err);
+      setError('Lỗi khi tải dữ liệu');
       setLoading(false);
-    }, 800);
+    }
   }, [selectedDistrict]);
 
   const handleDistrictSelect = (district) => {
@@ -54,6 +69,28 @@ const StationCarView = () => {
   const handleViewDetails = (carId) => {
     navigate(`/car/${carId}`);
   };
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="station-page">
+        <Header />
+        <main className="station-page__main">
+          <div className="station-cars__empty">
+            <Car className="station-cars__empty-icon" />
+            <h3>Đã xảy ra lỗi</h3>
+            <p>{error}</p>
+            <button 
+              className="station-cars__empty-btn"
+              onClick={() => window.location.reload()}
+            >
+              Tải lại trang
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="station-page">
