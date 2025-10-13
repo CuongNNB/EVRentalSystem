@@ -9,12 +9,18 @@ import "./ExtraFee.css";
 
 const FEE_TYPES = [
   { value: "", label: "-- Chọn loại phí --" },
-  { value: "damage", label: "Phí hư hỏng" },
-  { value: "late", label: "Phí trả xe trễ" },
-  { value: "cleaning", label: "Phí vệ sinh" },
-  { value: "fuel", label: "Phí nhiên liệu" },
-  { value: "other", label: "Chi phí khác" },
+  { value: "damage", label: "Phí hư hỏng", enumValue: "Damage_Fee" },
+  { value: "late", label: "Phí trả xe trễ", enumValue: "Late_Return_Fee" },
+  { value: "cleaning", label: "Phí vệ sinh", enumValue: "Cleaning_Fee" },
+  { value: "fuel", label: "Phí nhiên liệu", enumValue: "Fuel_Fee" },
+  { value: "other", label: "Chi phí khác", enumValue: "Other_Fee" },
 ];
+
+// Map type to enum value
+const mapTypeToEnum = (type) => {
+  const feeType = FEE_TYPES.find(ft => ft.value === type);
+  return feeType?.enumValue || "Other_Fee";
+};
 
 const DEFAULT_ITEM = {
   type: "",
@@ -90,7 +96,21 @@ const ExtraFee = () => {
     setSubmitting(true);
 
     try {
-      // Cập nhật trạng thái đơn hàng sang "Completed"
+      // 1. Tạo các additional fee
+      const feePromises = fees.map(fee => {
+        const params = new URLSearchParams({
+          bookingId: orderId,
+          feeName: mapTypeToEnum(fee.type),
+          amount: fee.amount,
+          desc: fee.description
+        });
+        
+        return api.post(`/api/additional-fee/create?${params.toString()}`);
+      });
+
+      await Promise.all(feePromises);
+
+      // 2. Cập nhật trạng thái đơn hàng sang "Completed"
       await api.put(`/api/bookings/${orderId}/status`, null, {
         params: { status: "Completed" },
       });
@@ -105,11 +125,11 @@ const ExtraFee = () => {
         navigate("/staff/orders", { replace: true });
       }, 1600);
     } catch (error) {
-      console.error("Error updating order status:", error);
+      console.error("Error creating additional fees or updating status:", error);
       setSubmitting(false);
       setToast({
         type: "error",
-        message: "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.",
+        message: error.response?.data?.message || "Không thể lưu chi phí phát sinh. Vui lòng thử lại.",
       });
     }
   };
