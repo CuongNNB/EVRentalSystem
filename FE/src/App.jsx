@@ -22,11 +22,12 @@ import StaffLayout from "./pages/staff/StaffLayout";
 import OrdersList from "./pages/staff/Orders/OrdersList";
 import OrderDetail from "./pages/staff/Orders/OrderDetail";
 import HandoverCar from "./pages/staff/Orders/HandoverCar";
-import ReturnCar from "./pages/staff/Orders/ReturnCar";
+import ReturnCar from "./pages/staff/Orders/CheckCar";
 import ExtraFee from "./pages/staff/Orders/ExtraFee";
 import StationCarView from "./pages/StationCarView";
 import MapStationsDemo from "./pages/MapStationsDemo";
 import TestPage from "./pages/TestPage";
+import CheckCar from "./pages/staff/Orders/CheckCar";
 
 function App() {
   console.log('App component is rendering...');
@@ -55,7 +56,7 @@ function App() {
             <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
-            <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><ReturnCar /></ProtectedRoute>} />
+            <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
             <Route path="/station-cars" element={<StationCarView />} />
             <Route path="/map-stations" element={<MapStationsDemo />} />

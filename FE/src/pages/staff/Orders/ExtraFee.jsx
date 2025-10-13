@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import StaffSlideBar from "../../../components/staff/StaffSlideBar";
 import StaffHeader from "../../../components/staff/StaffHeader";
+import api from "../../../utils/api";
 import "../StaffLayout.css";
 import "./ExtraFee.css";
 
@@ -76,7 +77,7 @@ const ExtraFee = () => {
     );
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validateFees()) {
       setToast({
@@ -88,17 +89,29 @@ const ExtraFee = () => {
 
     setSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      // Cập nhật trạng thái đơn hàng sang "Completed"
+      await api.put(`/api/bookings/${orderId}/status`, null, {
+        params: { status: "Completed" },
+      });
+
       setSubmitting(false);
       setToast({
         type: "success",
-        message: "Đã gửi chi phí phát sinh cho khách hàng.",
+        message: "Đã gửi chi phí phát sinh cho khách hàng và hoàn thành đơn hàng.",
       });
 
       setTimeout(() => {
         navigate("/staff/orders", { replace: true });
       }, 1600);
-    }, 1200);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      setSubmitting(false);
+      setToast({
+        type: "error",
+        message: "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.",
+      });
+    }
   };
 
   return (
@@ -216,7 +229,7 @@ const ExtraFee = () => {
                   className="extra-fee__submit"
                   disabled={submitting}
                 >
-                  {submitting ? "Đang gửi..." : "Gửi chi phí phát sinh"}
+                  {submitting ? "Đang gửi..." : "Gửi cho khách"}
                 </button>
               </footer>
             </form>

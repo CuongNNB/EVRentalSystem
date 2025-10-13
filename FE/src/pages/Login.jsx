@@ -50,7 +50,13 @@ export default function Login() {
     loginWithSession(loginData, loginData.token);
 
     alert(`Xin chào ${loginData.fullName || loginData.username || "người dùng"}!`);
-    navigate("/dashboard");
+    
+    // Kiểm tra role và điều hướng
+    if (loginData.role === "STAFF") {
+      navigate("/staff");
+    } else {
+      navigate("/dashboard");
+    }
 
   } catch (apiError) {
     console.error("Login failed:", apiError);

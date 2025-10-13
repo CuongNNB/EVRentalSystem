@@ -98,6 +98,17 @@ public class UserService {
 
         String token = jwtService.generateToken(user.getEmail());
 
+        // Kiểm tra xem user có RenterDetail không (STAFF thì không có)
+        String cccdFront = null;
+        String cccdBack = null;
+        String driverLicense = null;
+        
+        if (user.getRenterDetail() != null) {
+            cccdFront = user.getRenterDetail().getCccdFront();
+            cccdBack = user.getRenterDetail().getCccdBack();
+            driverLicense = user.getRenterDetail().getDriverLicense();
+        }
+
         return new UserLoginResponse(
                 user.getUserId(),
                 user.getUsername(),
@@ -107,9 +118,9 @@ public class UserService {
                 user.getPhone(),
                 user.getAddress(),
                 user.getCreatedAt(),
-                user.getRenterDetail().getCccdFront(),
-                user.getRenterDetail().getCccdBack(),
-                user.getRenterDetail().getDriverLicense(),
+                cccdFront,
+                cccdBack,
+                driverLicense,
                 token
         );
     }
