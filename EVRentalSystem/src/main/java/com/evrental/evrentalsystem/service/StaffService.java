@@ -1,19 +1,14 @@
 package com.evrental.evrentalsystem.service;
 
-import com.evrental.evrentalsystem.entity.Inspection;
-import com.evrental.evrentalsystem.entity.User;
-import com.evrental.evrentalsystem.entity.VehicleDetail;
-import com.evrental.evrentalsystem.repository.InspectionRepository;
-import com.evrental.evrentalsystem.repository.UserRepository;
-import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
+import com.evrental.evrentalsystem.entity.*;
+import com.evrental.evrentalsystem.enums.AdditionalFeeEnum;
+import com.evrental.evrentalsystem.enums.PartCarName;
+import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
-import com.evrental.evrentalsystem.entity.Booking;
-import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.response.staff.VehicleDetailsResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +27,7 @@ public class StaffService {
     private final VehicleDetailRepository vehicleDetailRepository;
     private final UserRepository userRepository;
     private final InspectionRepository inspectionRepository;
+    private final AdditionalFeeRepository additionalFeeRepository;
 
     private String encodeToBase64(MultipartFile file) {
         try {
@@ -123,21 +119,24 @@ public class StaffService {
 
     public boolean createInspection(
             Integer bookingId,
-            String partName,
+            PartCarName partName,
             MultipartFile picture,
             Integer staffId,
             String status
     ) {
-        try {
-            Booking booking = bookingRepository.findById(bookingId)
-                    .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
 
-            User staff = userRepository.findById(staffId)
-                    .orElseThrow(() -> new IllegalArgumentException("Staff ID không tồn tại: " + staffId));
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new IllegalArgumentException("Staff ID không tồn tại: " + staffId));
+        try {
+
 
             Inspection inspection = new Inspection();
             inspection.setBooking(booking);
-            inspection.setPartName(partName);
+
+            // ✅ Lưu tên phần xe bằng enum
+            inspection.setPartName(partName.name()); // hoặc .toString(), cả hai đều OK
 
             String base64Picture = encodeToBase64(picture);
             log.info("Base64 picture length: {}", base64Picture.length());
@@ -148,11 +147,34 @@ public class StaffService {
             inspection.setInspectedAt(LocalDateTime.now());
 
             inspectionRepository.save(inspection);
-
-            return true; // ✅ Thành công
+            return true;
         } catch (Exception e) {
-            // Có thể log lỗi ra console hoặc logger ở đây
-            return false; // ❌ Thất bại
+            log.error("Lỗi khi tạo inspection: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public boolean createAdditionalFee(
+            Integer bookingId,
+            AdditionalFeeEnum feeName,
+            int amount,
+            String desc
+    ) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+        try {
+
+
+            AdditionalFee af = new AdditionalFee();
+            af.setBooking(booking);
+            af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+            af.setAmount((double) amount);
+            af.setDescription(desc);
+            additionalFeeRepository.save(af);
+            return true;
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
+            return false;
         }
     }
 
