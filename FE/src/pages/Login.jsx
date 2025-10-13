@@ -20,87 +20,43 @@ export default function Login() {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    if (!email || !password) {
-      setError("Vui lòng nhập đầy đủ thông tin");
+  if (!email || !password) {
+    setError("Vui lòng nhập đầy đủ thông tin");
+    return;
+  }
+
+  try {
+    const response = await api.post(
+      "/api/users/login",
+      { email, password },
+      { withCredentials: true }
+    );
+
+    // Lấy dữ liệu từ response
+    const loginData = response.data?.data;
+    if (!loginData) {
+      setError("Không nhận được thông tin người dùng từ API");
       return;
     }
-    try {
-      // Kiểm tra backend có sẵn sàng không
-      let response;
-      try {
-        response = await api.post(
-          "/api/users/login",
-          { email, password },
-          { withCredentials: true }
-        );
-      } catch (backendError) {
-        console.warn("Backend not available, using mock login:", backendError.message);
-        
-        // Fallback to mock login for testing
-        if (email === "tinhpt@gmail.com" && password === "123456") {
-          const mockUser = {
-            id: 3,
-            username: "Renter01",
-            fullName: "Phạm Trí Tính",
-            email: "tinhpt@gmail.com",
-            role: "RENTER"
-          };
-          const mockToken = "mock_jwt_token_" + Date.now();
-          
-          localStorage.setItem('ev_token', mockToken);
-          localStorage.setItem('ev_user', JSON.stringify(mockUser));
-          loginWithSession(mockUser, mockToken);
-          
-          alert("Đăng nhập thành công (Mock Mode)!");
-          navigate("/dashboard");
-          return;
-        } else {
-          setError("Email hoặc mật khẩu không đúng");
-          return;
-        }
-      }
 
-      console.log("Login response:", response.data);
+    // 👉 Lưu toàn bộ thông tin user + token vào localStorage
+    localStorage.setItem("ev_user", JSON.stringify(loginData));
+    localStorage.setItem("ev_token", loginData.token);
 
-      // Backend trả về: { success: true, message: "Login success", data: UserLoginResponse }
-      const apiResponse = response.data;
-      if (!apiResponse.success) {
-        setError(apiResponse.message || "Đăng nhập thất bại");
-        return;
-      }
+    // 👉 Cập nhật context (nếu có)
+    loginWithSession(loginData, loginData.token);
 
-      const loginData = apiResponse.data; // UserLoginResponse
-      const user = {
-        id: loginData.userId,
-        username: loginData.username,
-        fullName: loginData.fullName,
-        email: loginData.email,
-        role: loginData.role
-      };
-      const token = loginData.token;
+    alert(`Xin chào ${loginData.fullName || loginData.username || "người dùng"}!`);
+    navigate("/dashboard");
 
-      if (!user || !token) {
-        setError("Không nhận được thông tin người dùng từ API");
-        return;
-      }
-
-      // Lưu token và user
-      localStorage.setItem('ev_token', token);
-      localStorage.setItem('ev_user', JSON.stringify(user));
-
-      // Cập nhật context
-      loginWithSession(user, token);
-
-      alert("Đăng nhập thành công!");
-      navigate("/dashboard");
-    } catch (apiError) {
-      console.error("Login failed:", apiError);
-      setError("Đăng nhập thất bại, vui lòng kiểm tra lại.");
-    }
+  } catch (apiError) {
+    console.error("Login failed:", apiError);
+    setError("Đăng nhập thất bại, vui lòng kiểm tra lại.");
   }
+};
 
   return (
     <div className="login-page">
