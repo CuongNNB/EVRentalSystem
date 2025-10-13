@@ -31,23 +31,25 @@ const stations = [
 const MapStations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("all");
-  const [selectedDistrictFromTop, setSelectedDistrictFromTop] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedStation, setSelectedStation] = useState(null);
   const [showAllStations, setShowAllStations] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const mapRef = useRef(null);
 
-  // Filter stations based on search and district
+  // Filter stations based on search, district and status
   const filteredStations = stations.filter(station => {
     const matchesSearch = station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          station.address.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDistrict = selectedDistrict === "all" || station.district === selectedDistrict;
-    return matchesSearch && matchesDistrict;
+    const matchesStatus = selectedStatus === "all" || station.status === selectedStatus;
+    return matchesSearch && matchesDistrict && matchesStatus;
   });
 
-  // Get unique districts for filter
+  // Get unique districts and statuses for filter
   const districts = ["all", ...new Set(stations.map(station => station.district))];
+  const statuses = ["all", ...new Set(stations.map(station => station.status))];
 
   // Generate dynamic map URL
   const getMapUrl = () => {
@@ -57,10 +59,9 @@ const MapStations = () => {
     return DEFAULT_MAP_URL;
   };
 
-  // Handle district selection from top tabs
-  const handleDistrictClick = (district) => {
-    setSelectedDistrictFromTop(district);
-    setSelectedDistrict(district); // Sync with dropdown filter
+  // Handle district filter change
+  const handleDistrictChange = (district) => {
+    setSelectedDistrict(district);
     
     if (district === "all") {
       setSelectedStation(null);
@@ -97,7 +98,6 @@ const MapStations = () => {
     setMapKey(prev => prev + 1); // Force map reload
     
     // Sync district selection when station is selected
-    setSelectedDistrictFromTop(station.district);
     setSelectedDistrict(station.district);
     
     // Scroll to map smoothly
@@ -117,6 +117,7 @@ const MapStations = () => {
     setSelectedStation(null);
   };
 //hihi
+//code
   // Handle find nearby
   const handleFindNearby = () => {
     if (navigator.geolocation) {
@@ -179,51 +180,60 @@ const MapStations = () => {
         </p>
       </div>
 
-      {/* District Tabs */}
-      <div className="district-tabs">
-        {districts.map(district => (
-          <button
-            key={district}
-            onClick={() => handleDistrictClick(district)}
-            className={`district-tab ${selectedDistrictFromTop === district ? "active" : ""}`}
-          >
-            {district === "all" ? "Tất cả" : district}
-          </button>
-        ))}
-      </div>
-
-      {/* Search and Filter */}
-      <div className="map-controls">
-        <form className="map-search" onSubmit={handleSearch}>
-          <div className="search-input-group">
-            <Search className="search-icon" />
+      {/* Dynamic Filter Header */}
+      <div className="dynamic-filter-header">
+        <div className="filter-container">
+          {/* Search Input */}
+          <div className="filter-item search-filter">
+            <div className="filter-icon">
+              <Search className="icon" />
+            </div>
             <input
               type="text"
-              placeholder="Tìm trạm theo tên hoặc địa chỉ..."
+              placeholder="Tìm trạm xe điện..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
+              className="filter-input"
             />
           </div>
-        </form>
-        
-        <div className="filter-group">
-          <select 
-            value={selectedDistrict} 
-            onChange={(e) => {
-              setSelectedDistrict(e.target.value);
-              setSelectedDistrictFromTop(e.target.value);
-              // Trigger district click logic
-              handleDistrictClick(e.target.value);
-            }}
-            className="district-filter"
-          >
-            {districts.map(district => (
-              <option key={district} value={district}>
-                {district === "all" ? "Tất cả quận/huyện" : district}
-              </option>
-            ))}
-          </select>
+
+          {/* District Filter */}
+          <div className="filter-item district-filter">
+            <div className="filter-icon">
+              <MapPin className="icon" />
+            </div>
+            <select 
+              value={selectedDistrict} 
+              onChange={(e) => handleDistrictChange(e.target.value)}
+              className="filter-select"
+            >
+              {districts.map(district => (
+                <option key={district} value={district}>
+                  {district === "all" ? "Quận/Huyện" : district}
+                </option>
+              ))}
+            </select>
+            <div className="dropdown-arrow">▼</div>
+          </div>
+
+          {/* Status Filter */}
+          <div className="filter-item status-filter">
+            <div className="filter-icon">
+              <Car className="icon" />
+            </div>
+            <select 
+              value={selectedStatus} 
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="filter-select"
+            >
+              {statuses.map(status => (
+                <option key={status} value={status}>
+                  {status === "all" ? "Trạng thái" : status === "active" ? "Hoạt động" : "Bảo trì"}
+                </option>
+              ))}
+            </select>
+            <div className="dropdown-arrow">▼</div>
+          </div>
         </div>
       </div>
 
@@ -300,6 +310,52 @@ const MapStations = () => {
           Thuê xe gần nhất
         </button>
       </div>
+
+      {/* Feature Section */}
+      <section className="feature-section">
+        <h2 className="feature-title">🚀 Tính năng nổi bật</h2>
+        <p className="feature-subtitle">
+          EVRental giúp bạn tìm, đặt và thuê xe điện nhanh chóng, an toàn và tiện lợi.
+        </p>
+
+        <div className="feature-grid">
+          <div className="feature-card">
+            <span className="feature-icon">🚗</span>
+            <h3>17 Trạm xe điện</h3>
+            <p>Phủ sóng toàn bộ 17 quận/huyện tại TP.HCM với vị trí chiến lược</p>
+          </div>
+
+          <div className="feature-card">
+            <span className="feature-icon">🔍</span>
+            <h3>Tìm kiếm thông minh</h3>
+            <p>Tìm kiếm trạm theo tên hoặc địa chỉ với auto-zoom đến vị trí</p>
+          </div>
+
+          <div className="feature-card">
+            <span className="feature-icon">💻</span>
+            <h3>Responsive Design</h3>
+            <p>Hoạt động mượt mà trên mọi thiết bị từ desktop đến mobile</p>
+          </div>
+
+          <div className="feature-card">
+            <span className="feature-icon">⚡</span>
+            <h3>Trải nghiệm cao cấp</h3>
+            <p>Bản đồ Google Maps miễn phí, marker tùy chỉnh, popup thông tin chi tiết</p>
+          </div>
+
+          <div className="feature-card">
+            <span className="feature-icon">🎯</span>
+            <h3>Lọc thông minh</h3>
+            <p>Lọc trạm theo quận/huyện và trạng thái hoạt động một cách dễ dàng</p>
+          </div>
+
+          <div className="feature-card">
+            <span className="feature-icon">🚀</span>
+            <h3>Performance tối ưu</h3>
+            <p>Hiệu suất cao, tải nhanh và trải nghiệm mượt mà trên mọi thiết bị</p>
+          </div>
+        </div>
+      </section>
 
       {/* Station Detail Modal */}
       {showModal && selectedStation && (

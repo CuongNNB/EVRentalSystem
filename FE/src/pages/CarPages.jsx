@@ -101,7 +101,7 @@ function CarCard({ car }) {
                     className="car-card__cta car-card__cta--secondary"
                     onClick={handleViewDetails}
                 >
-                    Xem chi tiết <span aria-hidden>👁️</span>
+                    Xem chi tiết <span aria-hidden></span>
                 </button>
 
             </div>
