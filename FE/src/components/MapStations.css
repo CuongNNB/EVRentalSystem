@@ -376,7 +376,7 @@
 .station-card.selected::before {
   opacity: 1;
 }
-
+/* Card Header */
 /* Card Header */
 .station-card-header {
   display: flex;
