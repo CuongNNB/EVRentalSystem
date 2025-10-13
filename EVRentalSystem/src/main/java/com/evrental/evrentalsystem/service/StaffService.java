@@ -2,11 +2,11 @@ package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
 import com.evrental.evrentalsystem.enums.AdditionalFeeEnum;
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.PartCarName;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.*;
-import com.evrental.evrentalsystem.response.staff.BookingsInStationResponse;
-import com.evrental.evrentalsystem.response.staff.VehicleDetailsResponse;
-import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
+import com.evrental.evrentalsystem.response.staff.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -178,4 +179,49 @@ public class StaffService {
         }
     }
 
+    public RenterDetailsByBookingResponse getRenterDetailsByBooking(int bookingId){
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+        RenterDetailsByBookingResponse response = new RenterDetailsByBookingResponse();
+        response.setGplx(booking.getRenter().getRenterDetail().getDriverLicense());
+        response.setEmail(booking.getRenter().getEmail());
+        response.setBackCccd(booking.getRenter().getRenterDetail().getCccdBack());
+        response.setFrontCccd(booking.getRenter().getRenterDetail().getCccdFront());
+        response.setFullName(booking.getRenter().getFullName());
+        response.setPhoneNumber(booking.getRenter().getPhone());
+        return response;
+    }
+
+    public BookingDetailsByBookingResponse getBookingDetailsByBooking(int bookingId){
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+        int rentingDurationDay = countRentingDay(booking.getStartTime(),booking.getExpectedReturnTime());
+        int fee = rentingDurationDay*(int) Math.round(booking.getVehicleModel().getPrice());
+
+        List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
+        int additionalFee = afs.stream()
+                .filter(af -> af.getAmount() != null)
+                .mapToInt(af -> af.getAmount().intValue())
+                .sum();
+
+        BookingDetailsByBookingResponse response = new BookingDetailsByBookingResponse();
+        response.setBookingId(bookingId);
+        response.setFee(fee);
+        response.setDeposit((int) Math.round(booking.getDeposit()));
+        response.setStationName(booking.getStation().getStationName());
+        response.setTotalAmount(fee+additionalFee);
+        response.setEndDate(booking.getExpectedReturnTime());
+        response.setAdditionalFee(additionalFee);
+        response.setStartDate(booking.getStartTime());
+        response.setLicensePlate(booking.getVehicleDetail().getLicensePlate());
+        response.setModelName(booking.getVehicleModel().getModel());
+        response.setStatus(BookingStatus.valueOf(booking.getStatus()));
+        response.setRentingDurationDay(rentingDurationDay);
+        return response;
+    }
+
+    public int countRentingDay(LocalDateTime start, LocalDateTime end) {
+        int days = (int) ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate());
+        return Math.max(1,days);
+    }
 }

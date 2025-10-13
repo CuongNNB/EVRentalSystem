@@ -1,6 +1,8 @@
 package com.evrental.evrentalsystem.controller.staff;
 
 import com.evrental.evrentalsystem.response.ApiResponse;
+import com.evrental.evrentalsystem.response.staff.BookingDetailsByBookingResponse;
+import com.evrental.evrentalsystem.response.staff.RenterDetailsByBookingResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
 import com.evrental.evrentalsystem.service.BookingService;
 import com.evrental.evrentalsystem.service.StaffService;
@@ -74,5 +76,25 @@ public class BookingController {
         String result = bookingService.confirmBookingByStaff(bookingId);
         return ResponseEntity.ok(result);
     }
+
+    //API lấy thông tin người dùng theo bookingId
+    //
+    @GetMapping("/{bookingId}/renter-details")
+    public ResponseEntity<ApiResponse<RenterDetailsByBookingResponse>> getRenterDetailsByBooking(
+            @RequestParam int bookingId
+    ) {
+        RenterDetailsByBookingResponse response = staffService.getRenterDetailsByBooking(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người thuê thành công", response));
+    }
+
+    //API lấy thông tin chi tiết booking theo bookingId
+    @GetMapping("/{bookingId}/booking-details")
+    public ResponseEntity<ApiResponse<BookingDetailsByBookingResponse>> getBookingDetailsByBooking(
+            @RequestParam int bookingId
+    ) {
+        BookingDetailsByBookingResponse response = staffService.getBookingDetailsByBooking(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin chi tiết đơn thuê thành công", response));
+    }
+
 
 }
