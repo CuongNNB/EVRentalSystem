@@ -30,4 +30,5 @@ public class ContractController {
         return contractService.getContractsOfUser(userId);
     }
     //API mẫu test "list contract" GET http://localhost:8084/EVRentalSystem/api/contracts?userId=4
+    // trả về danh sách hợp đồng của userId = 4
 }

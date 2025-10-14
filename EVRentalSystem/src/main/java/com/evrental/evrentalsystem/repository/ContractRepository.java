@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface ContractRepository extends JpaRepository<Contract, Integer> {
     Optional<Contract> findByBooking_BookingId(Integer bookingId);
-
+// Query sort
     @Query("""
         SELECT c FROM Contract c
         WHERE c.booking.renter.userId = :userId

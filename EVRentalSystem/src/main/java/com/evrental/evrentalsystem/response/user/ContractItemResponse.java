@@ -1,7 +1,7 @@
 package com.evrental.evrentalsystem.response.user;
 
 import java.time.LocalDateTime;
-
+// response for /user/contracts
 public record ContractItemResponse(
         Integer contractId,
         String status,

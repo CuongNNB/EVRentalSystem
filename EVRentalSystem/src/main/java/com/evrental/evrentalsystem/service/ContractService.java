@@ -80,7 +80,7 @@ public class ContractService {
                             (st != null ? st.getStationId() : null),
                             (st != null ? st.getStationName() : null),
 
-                            // staff
+
                             (staff != null ? staff.getUserId() : null),
                             (staff != null ? staff.getFullName() : null),
                             (staff != null ? staff.getEmail() : null)
