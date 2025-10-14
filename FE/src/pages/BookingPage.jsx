@@ -294,7 +294,7 @@ export default function BookingPage() {
                             </div>
                         </div>
 
-                        {/* Bên phải: thông tin xe */}
+                        {/* Bên phải: thông tin xess */}
                         <div className="car-details-section">
                             <div className="car-details-card">
                                 <div className="car-image-container">

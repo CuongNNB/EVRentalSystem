@@ -86,7 +86,7 @@ public class BookingService {
     public String confirmDepositPayment(ConfirmDepositPaymentRequest request) {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
-
+//
         if (!booking.getStatus().equals(BookingStatus.Pending_Contract_Signing.toString())) {
             return "Booking is not in Pending_Contract_Signing status.";
         }
