@@ -1,3 +1,4 @@
+// BookingPage.jsx
 import { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -5,7 +6,6 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./BookingPage.css";
 
-// ✅ Hàm định dạng datetime cho input
 const formatDateTimeLocal = (date) => {
     const pad = (n) => (n < 10 ? "0" + n : n);
     const yyyy = date.getFullYear();
@@ -29,22 +29,21 @@ export default function BookingPage() {
     const location = useLocation();
     const { user: contextUser } = useAuth();
     const localUser = JSON.parse(localStorage.getItem("ev_user"));
-    const user = contextUser || localUser
+    const user = contextUser || localUser;
 
-    // ✅ Lấy dữ liệu xe từ CarDetail
     const passedCar = location.state;
     const bookingImage = passedCar?.images?.[0] || "/anhxe/default.jpg";
     const bookingName = passedCar?.name || "Xe điện";
     const pickupStation = passedCar?.stationName;
     const bookingPrice = passedCar?.price ? passedCar.price * 1000 : 1000000;
 
-    // ✅ Thông tin mặc định nếu không có dữ liệu truyền sang
     const carData = passedCar || {
         id: carId,
         name: bookingName,
         stationId: 1,
         stationName: "EV Station - Bình Thạnh",
         location: "Thành phố Hồ Chí Minh",
+        images: [bookingImage],
         specifications: {
             seats: 4,
             transmission: "Tự động",
@@ -55,7 +54,6 @@ export default function BookingPage() {
         },
     };
 
-    // ✅ Lấy thông tin user
     const storedUser = user && user.email
         ? {
             id: user.id || user.userId || user?.data?.id,
@@ -65,7 +63,6 @@ export default function BookingPage() {
         }
         : { id: 1, name: "Người dùng", email: "user@gmail.com", phone: "" };
 
-    // ✅ Ngày & giờ mặc định
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(now.getDate() + 1);
@@ -93,7 +90,6 @@ export default function BookingPage() {
         return Math.ceil(diff / (1000 * 60 * 60 * 24)) || 1;
     };
 
-    // ✅ Tính tiền đặt cọc = 30%
     const calculateTotal = () => {
         const days = calculateRentalDays();
         const dailyPrice = bookingPrice;
@@ -105,20 +101,75 @@ export default function BookingPage() {
     const totals = calculateTotal();
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
 
-    // ✅ Gọi API đặt xe
+    // Tạo object fullBooking (có thể dùng để gửi API hoặc forward sang Deposit)
+    const makeFullBooking = (apiResponse = null) => ({
+        bookingPayload: {
+            userId: storedUser.id,
+            vehicleModelId: passedCar?.id || parseInt(carId),
+            stationId: passedCar?.stationId || carData.stationId,
+            startTime: formData.pickupDateTime,
+            expectedReturnTime: formData.returnDateTime,
+            deposit: totals.deposit,
+        },
+        bookingForm: formData,
+        carData,
+        user: storedUser,
+        totals,
+        depositAmount: totals.deposit,
+        response: apiResponse,
+        timestamp: new Date().toISOString(),
+    });
+
+    // Hàm giúp build contractSummary phù hợp cho DepositPaymentPage
+    const buildContractSummary = (fullBooking, apiResponse = null) => {
+        const contractId = apiResponse?.contractId || `CT-${Date.now()}`;
+
+        const contractData = {
+            contractId,
+            renter: {
+                name: fullBooking.user?.name,
+                email: fullBooking.user?.email,
+                phone: fullBooking.user?.phone,
+                address: fullBooking.user?.address || '',
+            },
+            car: {
+                id: fullBooking.carData?.id,
+                name: fullBooking.carData?.name,
+                licensePlate: fullBooking.carData?.licensePlate || '---',
+                color: fullBooking.carData?.color || '',
+                price: fullBooking.totals?.dailyPrice,
+                rentalDays: fullBooking.totals?.days,
+                totalAmount: fullBooking.totals?.totalRental,
+                deposit: fullBooking.totals?.deposit,
+            },
+            rental: {
+                startDate: fullBooking.bookingForm?.pickupDateTime,
+                endDate: fullBooking.bookingForm?.returnDateTime,
+                pickupLocation: fullBooking.bookingForm?.pickupLocation || fullBooking.carData?.stationName,
+            }
+        };
+
+        return {
+            contractData,
+            bookingData: {
+                bookingForm: fullBooking.bookingForm,
+                bookingPayload: fullBooking.bookingPayload,
+                meta: { forwardedAt: new Date().toISOString() },
+            }
+        };
+    };
+
+    // Gọi API đặt xe (giữ nguyên luồng cũ) — sau khi success sẽ lưu localstorage
     const handleBooking = async () => {
         setIsBooking(true);
-
         const payload = {
             userId: storedUser.id,
             vehicleModelId: passedCar?.id || parseInt(carId),
             stationId: passedCar?.stationId || carData.stationId,
             startTime: formData.pickupDateTime,
             expectedReturnTime: formData.returnDateTime,
-            deposit: totals.deposit, // ✅ gửi tiền cọc
+            deposit: totals.deposit,
         };
-
-        console.log("📤 Payload gửi backend:", payload);
 
         try {
             const response = await fetch("http://localhost:8084/EVRentalSystem/api/user/booking", {
@@ -130,41 +181,41 @@ export default function BookingPage() {
             if (!response.ok) throw new Error("Booking failed");
 
             const data = await response.json();
-            console.log("✅ Booking success:", data);
 
-            // ✅ Tạo object fullBooking gom toàn bộ dữ liệu
-            const fullBooking = {
-                bookingPayload: payload,
-                bookingForm: formData,
-                carData,
-                user: storedUser,
-                totals,
-                depositAmount: totals.deposit,
-                timestamp: new Date().toISOString(),
-            };
+            const fullBooking = makeFullBooking(data);
 
-            // ✅ Lưu list vào localStorage
+            // Lưu list vào localStorage
             const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
-            existingBookings.push({ ...fullBooking, response: data });
+            existingBookings.push(fullBooking);
             localStorage.setItem("bookingList", JSON.stringify(existingBookings));
+            localStorage.setItem("currentBooking", JSON.stringify(fullBooking));
 
-            // ✅ Lưu booking hiện tại (cho ContractPage dự phòng)
-            localStorage.setItem("currentBooking", JSON.stringify({ ...fullBooking, response: data }));
-
-            // ✅ Forward toàn bộ sang ContractPage
-            navigate(`/contract/${carId}`, {
+            // === CHỈ SỬA Ở ĐÂY: navigate sang DepositPaymentPage và forward contractSummary ===
+            const contractSummary = buildContractSummary(fullBooking, data);
+            navigate("/deposit-payment", {
                 state: {
-                    fullBooking,
-                    response: data,
+                    contractSummary,
                 },
             });
 
         } catch (error) {
-            console.error("❌ Lỗi khi đặt xe:", error);
+            console.error("Lỗi khi đặt xe:", error);
             alert("Đặt xe thất bại! Vui lòng thử lại.");
         } finally {
             setIsBooking(false);
         }
+    };
+
+    // NEW: Nút chuyển thẳng sang DepositPaymentPage (không gọi backend)
+    const handleGoToDeposit = () => {
+        const fullBooking = makeFullBooking(null); // chưa có response backend
+        const contractSummary = buildContractSummary(fullBooking, null);
+
+        navigate("/deposit-payment", {
+            state: {
+                contractSummary,
+            },
+        });
     };
 
     return (
@@ -230,20 +281,6 @@ export default function BookingPage() {
                                     />
                                 </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Phương thức thanh toán</label>
-                                    <div className="form-select-wrapper">
-                                        <select
-                                            className="form-select"
-                                            value={formData.paymentMethod}
-                                            onChange={(e) => handleInputChange("paymentMethod", e.target.value)}
-                                        >
-                                            {paymentMethods.map((m) => (
-                                                <option key={m} value={m}>{m}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
 
                                 <div className="form-group">
                                     <label className="form-label">Địa điểm nhận xe</label>
@@ -257,7 +294,7 @@ export default function BookingPage() {
                             </div>
                         </div>
 
-                        {/* Bên phải: thông tin xe */}
+                        {/* Bên phải: thông tin xess */}
                         <div className="car-details-section">
                             <div className="car-details-card">
                                 <div className="car-image-container">
@@ -286,16 +323,21 @@ export default function BookingPage() {
                                     <div className="cost-item"><span className="cost-label">Số ngày thuê:</span><span className="cost-value">{totals.days} ngày</span></div>
                                     <div className="cost-item"><span className="cost-label">Tổng tiền thuê:</span><span className="cost-value">{formatPrice(totals.totalRental)}₫</span></div>
                                     <div className="cost-item"><span className="cost-label">Đặt cọc (30%):</span><span className="cost-value">{formatPrice(totals.deposit)}₫</span></div>
-                                    <div className="cost-item total-cost"><span className="cost-label">Tổng cần thanh toán:</span><span className="cost-value">{formatPrice(totals.totalToPay)} VNĐ</span></div>
+                                    <div className="cost-item total-cost"><span className="cost-label">Tổng tiền cọc cần thanh toán:</span><span className="cost-value">{formatPrice(totals.totalToPay)} VNĐ</span></div>
                                 </div>
 
-                                <button
-                                    className={`book-button ${isBooking ? "loading" : ""}`}
-                                    onClick={handleBooking}
-                                    disabled={isBooking}
-                                >
-                                    {isBooking ? (<><span className="spinner"></span>Đang xử lý...</>) : ("Đặt xe")}
-                                </button>
+                                <div style={{ display: 'flex', gap: 12 }}>
+                                    <button
+                                        className={`book-button ${isBooking ? "loading" : ""}`}
+                                        onClick={handleBooking}
+                                        disabled={isBooking}
+                                    >
+                                        {isBooking ? (<><span className="spinner"></span>Đang xử lý...</>) : ("Thanh toán cọc")}
+                                    </button>
+
+
+                                </div>
+
                             </div>
                         </div>
                     </div>
