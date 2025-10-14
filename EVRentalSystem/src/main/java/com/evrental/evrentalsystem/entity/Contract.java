@@ -19,7 +19,7 @@ public class Contract {
     @JoinColumn(name = "booking_id", nullable = false, unique = true)
     private Booking booking;
 
-    private LocalDateTime signedAt = LocalDateTime.now();
+    private LocalDateTime signedAt;
     private String status;
     private String otpCode;
 }

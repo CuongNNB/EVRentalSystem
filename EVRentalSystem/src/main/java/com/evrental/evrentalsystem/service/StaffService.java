@@ -143,11 +143,10 @@ public class StaffService {
             String base64Picture = encodeToBase64(picture);
             log.info("Base64 picture length: {}", base64Picture.length());
             inspection.setPicture(base64Picture);
-
+            inspection.setDescription(description);
             inspection.setStaff(staff);
             inspection.setStatus(status);
             inspection.setInspectedAt(LocalDateTime.now());
-
             inspectionRepository.save(inspection);
             return true;
         } catch (Exception e) {
@@ -224,5 +223,9 @@ public class StaffService {
     public int countRentingDay(LocalDateTime start, LocalDateTime end) {
         int days = (int) ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate());
         return Math.max(1,days);
+    }
+
+    public void createContractByBookingId(int id){
+
     }
 }
