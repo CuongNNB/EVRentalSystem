@@ -1,29 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, MapPin, Car, Clock, Navigation, X } from "lucide-react";
 import './MapStations.css';
+import { searchStationsByDistrict } from "../api/stations";
+import { getAvailableVehicles } from "../api/vehicles";
 
-// Google Maps configuration
-const DEFAULT_MAP_URL = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4829915200835!2d106.6900!3d10.7777!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f407cc41c13%3A0x26f4ef1f52c4d7d1!2zVHLhuqduIFThu7EgVGjDoG5o!5e0!3m2!1svi!2s!4v1696830402857!5m2!1svi!2s";
+// Brand color
+const BRAND = "#009B72";
 
-// Stations data with additional info
+// Google Maps configuration - Roadmap với view chi tiết như ảnh
+const DEFAULT_MAP_URL = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d125419.45765362856!2d106.56921537207647!3d10.77498653239171!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752fbf0c2c6621%3A0x3723a5a2dc31e15e!2zVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1729000000000!5m2!1svi!2s";
+
+// Stations data with VinFast locations - Updated according to provided information
 const stations = [
-  { id: 1, name: "Trạm EVRental Quận 1", lat: 10.776889, lng: 106.700806, address: "22 Lý Tự Trọng, Quận 1, TP.HCM", cars: 12, status: "active", district: "Quận 1" },
-  { id: 2, name: "Trạm EVRental Quận 3", lat: 10.786987, lng: 106.686126, address: "Nguyễn Đình Chiểu, Quận 3, TP.HCM", cars: 8, status: "active", district: "Quận 3" },
-  { id: 3, name: "Trạm EVRental Quận 4", lat: 10.762622, lng: 106.708084, address: "Hoàng Diệu, Quận 4, TP.HCM", cars: 15, status: "active", district: "Quận 4" },
-  { id: 4, name: "Trạm EVRental Quận 5", lat: 10.754566, lng: 106.663874, address: "85 Hùng Vương, Quận 5, TP.HCM", cars: 6, status: "maintenance", district: "Quận 5" },
-  { id: 5, name: "Trạm EVRental Quận 6", lat: 10.749119, lng: 106.635689, address: "Nguyễn Văn Luông, Quận 6, TP.HCM", cars: 10, status: "active", district: "Quận 6" },
-  { id: 6, name: "Trạm EVRental Quận 7", lat: 10.737018, lng: 106.719530, address: "Nguyễn Văn Linh, Quận 7, TP.HCM", cars: 18, status: "active", district: "Quận 7" },
-  { id: 7, name: "Trạm EVRental Quận 8", lat: 10.724007, lng: 106.628937, address: "Tạ Quang Bửu, Quận 8, TP.HCM", cars: 7, status: "active", district: "Quận 8" },
-  { id: 8, name: "Trạm EVRental Quận 9", lat: 10.841050, lng: 106.828308, address: "Đỗ Xuân Hợp, Quận 9, TP.HCM", cars: 14, status: "active", district: "Quận 9" },
-  { id: 9, name: "Trạm EVRental Quận 10", lat: 10.774949, lng: 106.667084, address: "3 Tháng 2, Quận 10, TP.HCM", cars: 9, status: "active", district: "Quận 10" },
-  { id: 10, name: "Trạm EVRental Quận 11", lat: 10.762045, lng: 106.641639, address: "Lạc Long Quân, Quận 11, TP.HCM", cars: 11, status: "active", district: "Quận 11" },
-  { id: 11, name: "Trạm EVRental Quận 12", lat: 10.869784, lng: 106.641250, address: "Trường Chinh, Quận 12, TP.HCM", cars: 13, status: "active", district: "Quận 12" },
-  { id: 12, name: "Trạm EVRental Bình Thạnh", lat: 10.804056, lng: 106.708687, address: "Điện Biên Phủ, Bình Thạnh, TP.HCM", cars: 16, status: "active", district: "Bình Thạnh" },
-  { id: 13, name: "Trạm EVRental Tân Bình", lat: 10.801180, lng: 106.652064, address: "Cộng Hòa, Tân Bình, TP.HCM", cars: 5, status: "active", district: "Tân Bình" },
-  { id: 14, name: "Trạm EVRental Gò Vấp", lat: 10.838992, lng: 106.676636, address: "Nguyễn Oanh, Gò Vấp, TP.HCM", cars: 12, status: "active", district: "Gò Vấp" },
-  { id: 15, name: "Trạm EVRental Phú Nhuận", lat: 10.797365, lng: 106.680977, address: "Phan Đăng Lưu, Phú Nhuận, TP.HCM", cars: 8, status: "active", district: "Phú Nhuận" },
-  { id: 16, name: "Trạm EVRental Bình Tân", lat: 10.767925, lng: 106.594871, address: "Kinh Dương Vương, Bình Tân, TP.HCM", cars: 10, status: "active", district: "Bình Tân" },
-  { id: 17, name: "Trạm EVRental Thủ Đức", lat: 10.851977, lng: 106.758785, address: "Võ Văn Ngân, Thủ Đức, TP.HCM", cars: 20, status: "active", district: "Thủ Đức" },
+  { id: 1, name: "Cho thuê Xe điện VinFast - Thảo Điền", lat: 10.8000, lng: 106.7300, address: "Hầm gửi xe B3 - Vincom Mega Mall, 161 Võ Nguyên Giáp, Thảo Điền, Thủ Đức, Hồ Chí Minh", cars: 15, status: "active", district: "Thủ Đức" },
+  { id: 2, name: "Cho thuê Xe điện VinFast - Tân Cảng", lat: 10.8100, lng: 106.7200, address: "208 Nguyễn Hữu Cảnh, Vinhomes Tân Cảng, Bình Thạnh, Hồ Chí Minh", cars: 12, status: "active", district: "Bình Thạnh" },
+  { id: 3, name: "Cho thuê Xe điện VinFast - Quận 1", lat: 10.7769, lng: 106.7008, address: "Tầng hầm B2 - Vincom Đồng Khởi, 70 Lê Thánh Tôn, Quận 1, TP. Hồ Chí Minh", cars: 20, status: "active", district: "Quận 1" },
+  { id: 4, name: "Cho thuê Xe điện VinFast - Quận 7", lat: 10.7370, lng: 106.7195, address: "Crescent Mall, 101 Tôn Dật Tiên, Tân Phú, Quận 7, TP. Hồ Chí Minh", cars: 18, status: "active", district: "Quận 7" },
+  { id: 5, name: "Cho thuê Xe điện VinFast - Gò Vấp", lat: 10.8390, lng: 106.6766, address: "Trung tâm thương mại Emart, 366 Phan Văn Trị, Gò Vấp, TP. Hồ Chí Minh", cars: 14, status: "active", district: "Gò Vấp" },
+  { id: 6, name: "Cho thuê Xe điện VinFast - Bình Tân", lat: 10.7679, lng: 106.5949, address: "AEON Mall Bình Tân, 1 Đường số 17A, Bình Trị Đông B, Bình Tân, TP. Hồ Chí Minh", cars: 16, status: "active", district: "Bình Tân" },
+  { id: 7, name: "Cho thuê Xe điện VinFast - Phú Nhuận", lat: 10.7974, lng: 106.6810, address: "Co.opmart Nguyễn Kiệm, 571 Nguyễn Kiệm, Phú Nhuận, TP. Hồ Chí Minh", cars: 10, status: "active", district: "Phú Nhuận" },
+ 
 ];
 
 
@@ -38,6 +34,110 @@ const MapStations = () => {
   const [mapKey, setMapKey] = useState(0);
   const mapRef = useRef(null);
 
+  // API data states
+  const [loading, setLoading] = useState(false);
+  const [stationsReal, setStationsReal] = useState([]);  // danh sách station theo quận
+  const [vehiclesFlat, setVehiclesFlat] = useState([]);  // danh sách xe hiển thị (flatten)
+
+  // Parse location string "lat,lng" to object
+  const parseLocation = (loc) => {
+    if (!loc) return { lat: null, lng: null };
+    const [lat, lng] = loc.split(",").map(Number);
+    return { lat, lng };
+  };
+
+  // Map nhãn tab -> district cho BE
+  const DISTRICT_VALUE = {
+    "all": null,
+    "Tất cả": null,
+    "Tất cả khu vực": null,
+    "Thủ Đức": "Thủ Đức",
+    "Bình Thạnh": "Bình Thạnh",
+    "Quận 1": "Quận 1",
+    "Quận 2": "Quận 2",
+    "Quận 3": "Quận 3",
+    "Quận 4": "Quận 4",
+    "Quận 5": "Quận 5",
+    "Quận 6": "Quận 6",
+    "Quận 7": "Quận 7",
+    "Quận 8": "Quận 8",
+    "Quận 9": "Quận 9",
+    "Quận 10": "Quận 10",
+    "Quận 11": "Quận 11",
+    "Quận 12": "Quận 12",
+    "Gò Vấp": "Gò Vấp",
+    "Bình Tân": "Bình Tân",
+    "Phú Nhuận": "Phú Nhuận",
+    "Thảo Điền": "Thủ Đức",
+    "Tân Cảng": "Bình Thạnh"
+  };
+
+  // Load data by district
+  const loadByDistrict = async (tabLabel) => {
+    const districtParam = DISTRICT_VALUE[tabLabel] ?? tabLabel;
+
+    console.log("🔍 LoadByDistrict called with:", tabLabel, "→", districtParam);
+    setLoading(true);
+    
+    // 1) TẤT CẢ KHU VỰC → lấy mọi xe AVAILABLE
+    if (!districtParam) {
+      console.log("📍 Loading ALL vehicles...");
+      const allVehicles = await getAvailableVehicles();
+      console.log("📊 Received vehicles count:", allVehicles?.length || 0);
+      setStationsReal([]);
+      setVehiclesFlat(allVehicles || []);
+      setSelectedStation(null);   // giữ map mặc định
+      setMapKey((k) => k + 1);
+      setLoading(false);
+      return;
+    }
+
+    // 2) QUẬN CỤ THỂ → lấy station + vehicles
+    console.log("📍 Loading stations for district:", districtParam);
+    const list = await searchStationsByDistrict(districtParam);
+    console.log("📊 Received stations:", list?.length || 0);
+    
+    const flatVehicles = (list || []).flatMap(s => s.vehicles || []);
+    console.log("📊 Total vehicles in stations:", flatVehicles.length);
+    
+    setStationsReal(list || []);
+    setVehiclesFlat(flatVehicles);
+
+    // Auto-zoom map tới station đầu tiên
+    if (list && list.length > 0) {
+      // Có data từ API
+      const s = list[0];
+      const { lat, lng } = parseLocation(s.location);
+      if (lat && lng) {
+        console.log("🗺️ Auto-zooming to API station:", s.stationName, "at", lat, lng);
+        setSelectedStation({
+          id: s.stationId,
+          name: s.stationName,
+          lat,
+          lng,
+          address: s.address,
+          cars: (s.vehicles || []).length,
+          status: "active",
+          district: districtParam,
+        });
+      }
+      setMapKey((k) => k + 1);
+    } else {
+      // Không có data từ API → fallback sang mock data để zoom map
+      console.log("⚠️ No API data, using mock station for map zoom");
+      const mockStation = stations.find(s => s.district === districtParam);
+      if (mockStation) {
+        console.log("🗺️ Auto-zooming to mock station:", mockStation.name, "at", mockStation.lat, mockStation.lng);
+        setSelectedStation(mockStation);
+      } else {
+        setSelectedStation(null);
+      }
+      setMapKey((k) => k + 1);
+    }
+    
+    setLoading(false);
+  };
+
   // Filter stations based on search, district and status
   const filteredStations = stations.filter(station => {
     const matchesSearch = station.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,10 +151,16 @@ const MapStations = () => {
   const districts = ["all", ...new Set(stations.map(station => station.district))];
   const statuses = ["all", ...new Set(stations.map(station => station.status))];
 
-  // Generate dynamic map URL
+  // Generate dynamic map URL with roadmap view và marker tại vị trí cụ thể
   const getMapUrl = () => {
     if (selectedStation) {
-      return `https://www.google.com/maps?q=${selectedStation.lat},${selectedStation.lng}&z=15&output=embed`;
+      const lat = selectedStation.lat;
+      const lng = selectedStation.lng;
+      const address = encodeURIComponent(selectedStation.address || selectedStation.name);
+      
+      // Sử dụng format q= để hiển thị marker và info window với địa chỉ cụ thể
+      // Tham số: q=lat,lng với label là địa chỉ, z=zoom level, t=m (roadmap)
+      return `https://maps.google.com/maps?q=${lat},${lng}+(${address})&t=m&z=16&output=embed&iwloc=near`;
     }
     return DEFAULT_MAP_URL;
   };
@@ -63,16 +169,8 @@ const MapStations = () => {
   const handleDistrictChange = (district) => {
     setSelectedDistrict(district);
     
-    if (district === "all") {
-      setSelectedStation(null);
-      setMapKey(prev => prev + 1); // Force map reload
-    } else {
-      const firstStation = stations.find(st => st.district === district);
-      if (firstStation) {
-        setSelectedStation(firstStation);
-        setMapKey(prev => prev + 1); // Force map reload
-      }
-    }
+    // Call API to load data
+    loadByDistrict(district);
     
     // Scroll to map smoothly
     setTimeout(() => {
@@ -167,195 +265,163 @@ const MapStations = () => {
     alert(`Chức năng thuê xe tại ${station.name} sẽ được triển khai sớm!`);
   };
 
+  // Load default data on mount
+  useEffect(() => {
+    // Mặc định hiển thị "Tất cả khu vực"
+    loadByDistrict("all");
+  }, []);
+
   return (
-    <div className="map-section">
-      {/* Header */}
-      <div className="map-header">
-        <h2>
-          <MapPin className="header-icon" />
-          TP.HCM – {filteredStations.length} trạm EVRental đang hoạt động
-        </h2>
-        <p className="map-subtitle">
-          Khám phá các trạm thuê xe điện gần bạn với bản đồ tương tác
-        </p>
-      </div>
+    <div className="map-stations-wrapper">
+      <div className="map-stations-container">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Xem xe theo trạm</h1>
+        </div>
 
-      {/* Dynamic Filter Header */}
-      <div className="dynamic-filter-header">
-        <div className="filter-container">
-          {/* Search Input */}
-          <div className="filter-item search-filter">
-            <div className="filter-icon">
-              <Search className="icon" />
+        {/* District Filter Tabs */}
+        <div className="district-filter-section">
+          <div className="district-tabs-wrapper">
+            <div className="district-tabs">
+              {districts.map((district) => {
+                const isActive = district === selectedDistrict;
+                return (
+                  <button
+                    key={district}
+                    onClick={() => handleDistrictChange(district)}
+                    className={`district-tab ${isActive ? 'active' : ''}`}
+                  >
+                    <span className="tab-text">
+                      {district === "all" ? "Tất cả" : district}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <input
-              type="text"
-              placeholder="Tìm trạm xe điện..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="filter-input"
-            />
-          </div>
-
-          {/* District Filter */}
-          <div className="filter-item district-filter">
-            <div className="filter-icon">
-              <MapPin className="icon" />
-            </div>
-            <select 
-              value={selectedDistrict} 
-              onChange={(e) => handleDistrictChange(e.target.value)}
-              className="filter-select"
-            >
-              {districts.map(district => (
-                <option key={district} value={district}>
-                  {district === "all" ? "Quận/Huyện" : district}
-                </option>
-              ))}
-            </select>
-            <div className="dropdown-arrow">▼</div>
-          </div>
-
-          {/* Status Filter */}
-          <div className="filter-item status-filter">
-            <div className="filter-icon">
-              <Car className="icon" />
-            </div>
-            <select 
-              value={selectedStatus} 
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="filter-select"
-            >
-              {statuses.map(status => (
-                <option key={status} value={status}>
-                  {status === "all" ? "Trạng thái" : status === "active" ? "Hoạt động" : "Bảo trì"}
-                </option>
-              ))}
-            </select>
-            <div className="dropdown-arrow">▼</div>
           </div>
         </div>
-      </div>
 
-      {/* Google Maps Embed */}
-      <div className="map-frame" ref={mapRef}>
-        <iframe
-          key={selectedStation ? selectedStation.id : "default"}
-          src={getMapUrl()}
-          width="100%"
-          height="420"
-          allowFullScreen
-          loading="lazy"
-          title="Bản đồ trạm EVRental TP.HCM"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="map-iframe"
-        ></iframe>
-      </div>
-
-      {/* Station Cards Grid */}
-      <div className="station-cards-section">
-        <div className="station-cards-header">
-          <h3>Danh sách trạm ({filteredStations.length})</h3>
-          <button 
-            className="toggle-btn"
-            onClick={() => setShowAllStations(!showAllStations)}
-          >
-            {showAllStations ? "Thu gọn" : "Xem tất cả"}
-          </button>
+        {/* Map Section - Full Width */}
+        <div className="map-section-full" ref={mapRef}>
+          <div className="map-card-full">
+            <div className="map-frame-full">
+              <iframe
+                key={`map-${mapKey}-${selectedStation ? selectedStation.id : 'default'}`}
+                src={getMapUrl()}
+                width="100%"
+                height="100%"
+                allowFullScreen
+                loading="lazy"
+                title="Bản đồ trạm VinFast TP.HCM"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="map-iframe-element"
+              ></iframe>
+            </div>
+          </div>
         </div>
-        
-        <div className={`station-cards-grid ${showAllStations ? 'expanded' : ''}`}>
-          {filteredStations.slice(0, showAllStations ? filteredStations.length : 6).map((station) => (
-            <div 
-              key={station.id} 
-              className={`station-card ${selectedStation?.id === station.id ? 'selected' : ''}`}
-              onClick={() => handleStationSelect(station)}
-            >
-              <div className="station-card-header">
-                <div className="station-card-icon">
-                  <Car className="card-icon" />
-                </div>
-                <div className={`station-status-badge ${station.status}`}>
-                  {station.status === 'active' ? '🟢 Hoạt động' : '🔧 Bảo trì'}
-                </div>
-              </div>
-              
-              <div className="station-card-content">
-                <h4 className="station-card-name">{station.name}</h4>
-                <p className="station-card-address">{station.address}</p>
-                
-                <div className="station-card-footer">
-                  <div className="station-cars-info">
-                    <Car className="cars-icon" />
-                    <span><strong>{station.cars}</strong> xe có sẵn</span>
+
+        {/* Vehicles List Section - Full Width */}
+        <div className="vehicles-list-section">
+          {/* Loading State */}
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Đang tải dữ liệu...</p>
+            </div>
+          )}
+
+          {/* Vehicles Grid */}
+          {!loading && vehiclesFlat.length > 0 && (
+            <div className="vehicles-grid">
+              {vehiclesFlat.map((vehicle) => (
+                <div 
+                  key={vehicle.licensePlate} 
+                  className="car-card-compact"
+                >
+                  {/* Car Image Placeholder */}
+                  <div className="car-image-placeholder">
+                    <Car size={64} className="car-placeholder-icon" />
+                    {/* Status Badge */}
+                    <span className={`vehicle-status-badge ${
+                      vehicle.status === "AVAILABLE" ? "status-available" :
+                      vehicle.status === "RENTED" ? "status-rented" :
+                      "status-inactive"
+                    }`}>
+                      {vehicle.status === "AVAILABLE" ? "Có sẵn" :
+                       vehicle.status === "RENTED" ? "Đã thuê" :
+                       vehicle.status}
+                    </span>
                   </div>
-                  <div className="station-district">
-                    {station.district}
+
+                  {/* Car Info */}
+                  <div className="car-info-compact">
+                    <h3 className="car-model-name">{vehicle.brand} {vehicle.model}</h3>
+                    <p className="car-station-name">
+                      {vehicle.color || 'Sedan'}
+                    </p>
+                    <p className="car-license">Biển số: {vehicle.licensePlate}</p>
+                    
+                    <div className="car-price-large">
+                      <span className="price-amount">XXX.XXX.XXX</span>
+                      <span className="price-currency">VND</span>
+                    </div>
+                    <p className="price-period">/mỗi ngày</p>
+
+                    {/* Car Features Icons */}
+                    <div className="car-features-icons">
+                      <div className="feature-icon-item" title="Transmission">
+                        <span className="icon-symbol">⚙️</span>
+                      </div>
+                      <div className="feature-icon-item" title="Fuel Type">
+                        <span className="icon-symbol">⚡</span>
+                      </div>
+                      <div className="feature-icon-item" title="Electric">
+                        <span className="icon-symbol">🔋</span>
+                      </div>
+                      <div className="feature-icon-item" title="Air Conditioning">
+                        <span className="icon-symbol">❄️</span>
+                      </div>
+                    </div>
+
+                    {/* Rent Button */}
+                    <button 
+                      className="rent-btn-compact"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`Chi tiết xe: ${vehicle.brand} ${vehicle.model}\nBiển số: ${vehicle.licensePlate}`);
+                      }}
+                      disabled={vehicle.status !== "AVAILABLE"}
+                    >
+                      {vehicle.status === "AVAILABLE" ? "Xem chi tiết" : "Không khả dụng"}
+                    </button>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Empty State */}
+          {!loading && vehiclesFlat.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <h3 className="empty-title">Không có xe khả dụng</h3>
+              <p className="empty-text">
+                Hiện tại không có xe nào {selectedDistrict !== 'all' ? `tại ${selectedDistrict}` : 'trong hệ thống'}
+              </p>
+              <button 
+                className="empty-btn"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedDistrict("all");
+                  loadByDistrict("all");
+                }}
+              >
+                Xem tất cả khu vực
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Action Buttons */}
-      <div className="map-actions">
-        <button className="action primary" onClick={() => setShowAllStations(true)}>
-          <MapPin className="action-icon" />
-          Xem tất cả trạm
-        </button>
-        <button className="action secondary" onClick={handleFindNearby}>
-          <Navigation className="action-icon" />
-          Thuê xe gần nhất
-        </button>
-      </div>
-
-      {/* Feature Section */}
-      <section className="feature-section">
-        <h2 className="feature-title">🚀 Tính năng nổi bật</h2>
-        <p className="feature-subtitle">
-          EVRental giúp bạn tìm, đặt và thuê xe điện nhanh chóng, an toàn và tiện lợi.
-        </p>
-
-        <div className="feature-grid">
-          <div className="feature-card">
-            <span className="feature-icon">🚗</span>
-            <h3>17 Trạm xe điện</h3>
-            <p>Phủ sóng toàn bộ 17 quận/huyện tại TP.HCM với vị trí chiến lược</p>
-          </div>
-
-          <div className="feature-card">
-            <span className="feature-icon">🔍</span>
-            <h3>Tìm kiếm thông minh</h3>
-            <p>Tìm kiếm trạm theo tên hoặc địa chỉ với auto-zoom đến vị trí</p>
-          </div>
-
-          <div className="feature-card">
-            <span className="feature-icon">💻</span>
-            <h3>Responsive Design</h3>
-            <p>Hoạt động mượt mà trên mọi thiết bị từ desktop đến mobile</p>
-          </div>
-
-          <div className="feature-card">
-            <span className="feature-icon">⚡</span>
-            <h3>Trải nghiệm cao cấp</h3>
-            <p>Bản đồ Google Maps miễn phí, marker tùy chỉnh, popup thông tin chi tiết</p>
-          </div>
-
-          <div className="feature-card">
-            <span className="feature-icon">🎯</span>
-            <h3>Lọc thông minh</h3>
-            <p>Lọc trạm theo quận/huyện và trạng thái hoạt động một cách dễ dàng</p>
-          </div>
-
-          <div className="feature-card">
-            <span className="feature-icon">🚀</span>
-            <h3>Performance tối ưu</h3>
-            <p>Hiệu suất cao, tải nhanh và trải nghiệm mượt mà trên mọi thiết bị</p>
-          </div>
-        </div>
-      </section>
 
       {/* Station Detail Modal */}
       {showModal && selectedStation && (
