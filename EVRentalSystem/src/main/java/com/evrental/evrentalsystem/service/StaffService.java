@@ -1,10 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
-import com.evrental.evrentalsystem.enums.AdditionalFeeEnum;
-import com.evrental.evrentalsystem.enums.BookingStatus;
-import com.evrental.evrentalsystem.enums.PartCarName;
-import com.evrental.evrentalsystem.enums.VehicleStatus;
+import com.evrental.evrentalsystem.enums.*;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.staff.*;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +26,7 @@ public class StaffService {
     private final UserRepository userRepository;
     private final InspectionRepository inspectionRepository;
     private final AdditionalFeeRepository additionalFeeRepository;
+    private final ContractRepository contractRepository;
 
     private String encodeToBase64(MultipartFile file) {
         try {
@@ -164,8 +162,6 @@ public class StaffService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         try {
-
-
             AdditionalFee af = new AdditionalFee();
             af.setBooking(booking);
             af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
@@ -226,6 +222,12 @@ public class StaffService {
     }
 
     public void createContractByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
 
+        Contract c = new Contract();
+        c.setBooking(booking);
+        c.setStatus(ContractStatusEnum.PENDING.name());
+        contractRepository.save(c);
     }
 }
