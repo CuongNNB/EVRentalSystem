@@ -11,6 +11,10 @@ import java.time.LocalDateTime;
 @Table(name = "Contract")
 public class Contract {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "staff_id")
+    private User staffManager;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer contractId;

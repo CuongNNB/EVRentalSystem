@@ -5,11 +5,13 @@ import com.evrental.evrentalsystem.entity.Contract;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.repository.ContractRepository;
+import com.evrental.evrentalsystem.response.user.ContractItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,5 +56,36 @@ public class ContractService {
         } else {
             return "OTP không hợp lệ hoặc đã hết hạn.";
         }
+    }
+
+    public List<ContractItemResponse> getContractsOfUser(Integer userId) {
+        return contractRepository.findAllOrderedForUser(userId).stream()
+                .map(c -> {
+                    var b = c.getBooking();
+                    var vm = (b != null) ? b.getVehicleModel() : null;
+                    var st = (b != null) ? b.getStation() : null;
+                    var staff = c.getStaffManager();
+
+                    return new ContractItemResponse(
+                            c.getContractId(),
+                            c.getStatus(),
+
+                            // booking
+                            (b != null ? b.getBookingId() : null),
+                            (vm != null ? vm.getModel() : null),
+                            (b != null ? b.getStartTime() : null),
+                            (b != null ? b.getExpectedReturnTime() : null),
+                            (b != null ? b.getStatus() : null),
+                            (b != null ? b.getVehicleDetail().getLicensePlate() : null),
+                            (st != null ? st.getStationId() : null),
+                            (st != null ? st.getStationName() : null),
+
+                            // staff
+                            (staff != null ? staff.getUserId() : null),
+                            (staff != null ? staff.getFullName() : null),
+                            (staff != null ? staff.getEmail() : null)
+                    );
+                })
+                .toList();
     }
 }
