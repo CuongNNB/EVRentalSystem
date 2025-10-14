@@ -85,4 +85,5 @@ public class Booking {
         calculateRentalAmount();
         calculateTotalAmount();
     }
+
 }

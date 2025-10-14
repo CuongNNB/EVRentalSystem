@@ -74,7 +74,7 @@ public class BookingController {
     }
 
     @PostMapping("{bookingId}/confirm-payment/")
-    public ResponseEntity<String> confirmByStaff(@RequestParam ConfirmDepositPaymentRequest request) {
+    public ResponseEntity<String> confirmByStaff(@RequestBody ConfirmDepositPaymentRequest request) {
         String result = bookingService.confirmDepositPayment(request);
         return ResponseEntity.ok(result);
     }
