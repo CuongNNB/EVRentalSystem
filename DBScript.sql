@@ -102,7 +102,7 @@ CREATE TABLE Promotion
 (
     promotion_id     INT IDENTITY (1,1) PRIMARY KEY,
     promo_name       NVARCHAR(100) NOT NULL UNIQUE,
-    [description]    NVARCHAR(MAX),
+    [code]    NVARCHAR(MAX),
     discount_percent FLOAT,
     start_time       DATETIME2     NOT NULL,
     end_time         DATETIME2     NOT NULL,

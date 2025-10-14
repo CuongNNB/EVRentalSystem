@@ -19,7 +19,7 @@ public class Promotion {
     private String promoName;
 
     @Lob
-    private String description;
+    private String code;
 
     private Double discountPercent;
     private LocalDateTime startTime;
