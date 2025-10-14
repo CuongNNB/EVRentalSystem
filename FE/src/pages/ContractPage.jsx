@@ -65,6 +65,11 @@ export default function ContractPage() {
     const [resendTimer, setResendTimer] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Overlay state for success message after signing
+    const [successOverlay, setSuccessOverlay] = useState({ visible: false, message: "" });
+    // store last contract summary to forward on confirm
+    const [lastContractSummary, setLastContractSummary] = useState(null);
+
     // ✅ Ký mặc định bên A
     useEffect(() => {
         setOwnerSign(
@@ -169,8 +174,12 @@ export default function ContractPage() {
                 // Lưu lại vào localStorage để dự phòng
                 localStorage.setItem("currentContract", JSON.stringify(contractSummary));
 
-                // ✅ Forward qua trang tiếp theo (ví dụ deposit-payment)
-                navigate("/deposit-payment", { state: { contractSummary } });
+                // Show success overlay instead of navigate immediately
+                setLastContractSummary(contractSummary);
+                setSuccessOverlay({
+                    visible: true,
+                    message: "Đã ký hợp đồng thành công, vui lòng đến đúng trạm để nhận xe",
+                });
 
             } else {
                 setOtpError("Sai OTP, vui lòng thử lại");
@@ -198,7 +207,27 @@ export default function ContractPage() {
         };
 
         localStorage.setItem("currentContract", JSON.stringify(contractSummary));
-        navigate("/deposit-payment", { state: { contractSummary } });
+
+        // Show overlay and wait user confirmation to navigate
+        setLastContractSummary(contractSummary);
+        setSuccessOverlay({
+            visible: true,
+            message: "Đã ký hợp đồng thành công, vui lòng đến đúng trạm để nhận xe",
+        });
+    };
+
+    const handleConfirmOverlay = () => {
+        // close overlay and navigate to home with contractSummary in state
+        setSuccessOverlay({ visible: false, message: "" });
+        if (lastContractSummary) {
+            navigate("/", { state: { contractSummary: lastContractSummary } });
+        } else {
+            navigate("/");
+        }
+    };
+
+    const handleCloseOverlay = () => {
+        setSuccessOverlay({ visible: false, message: "" });
     };
 
     const currentDateTime = new Date().toLocaleString("vi-VN", {
@@ -366,6 +395,45 @@ export default function ContractPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Success overlay shown after signing */}
+                {successOverlay.visible && (
+                    <div style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.45)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999
+                    }}>
+                        <div style={{
+                            background: '#fff',
+                            padding: 20,
+                            borderRadius: 10,
+                            width: 'min(520px, 95%)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                        }}>
+                            <h3 style={{ marginTop: 0 }}>Ký hợp đồng thành công</h3>
+                            <p style={{ marginBottom: 18 }}>{successOverlay.message}</p>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                <button onClick={handleCloseOverlay} style={{
+                                    padding: '8px 12px',
+                                    borderRadius: 8,
+                                    border: '1px solid #e2e8f0',
+                                    background: '#fff'
+                                }}>Đóng</button>
+                                <button onClick={handleConfirmOverlay} style={{
+                                    padding: '8px 12px',
+                                    borderRadius: 8,
+                                    border: 'none',
+                                    background: 'linear-gradient(135deg,#0bb97f,#06b6d4)',
+                                    color: '#fff'
+                                }}>Xác nhận</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
             <Footer />
         </div>

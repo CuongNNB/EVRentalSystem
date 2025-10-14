@@ -1,10 +1,10 @@
 ﻿USE master;
 GO
 IF DB_ID('EVRentalSystem') IS NOT NULL
-    BEGIN
+BEGIN
         ALTER DATABASE EVRentalSystem SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
         DROP DATABASE EVRentalSystem;
-    END
+END
 GO
 CREATE DATABASE EVRentalSystem;
 GO
@@ -26,7 +26,7 @@ CREATE TABLE [User]
     role       NVARCHAR(50)  NOT NULL,
     [status]   NVARCHAR(50),
     created_at DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME()
-);
+    );
 
 -- ============================
 -- (2) Renter_Detail
@@ -93,7 +93,7 @@ CREATE TABLE Vehicle_Detail
     [status]         NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station (station_id)
-);
+    );
 
 -- ============================
 -- (7) Promotion
@@ -131,7 +131,7 @@ CREATE TABLE Booking
     CONSTRAINT FK_Booking_License FOREIGN KEY (license_plate) REFERENCES Vehicle_Detail (license_plate),
     CONSTRAINT FK_Booking_Vehicle FOREIGN KEY (vehicle_model_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion (promotion_id)
-);
+    );
 
 -- ============================
 -- (9) Payment_Method
@@ -174,7 +174,7 @@ CREATE TABLE Inspection
     [status]      NVARCHAR(50),
     CONSTRAINT FK_Inspection_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
     CONSTRAINT FK_Inspection_Staff FOREIGN KEY (staff_id) REFERENCES [User] (user_id)
-);
+    );
 
 -- ============================
 -- (12) Additional_Fee
@@ -197,11 +197,13 @@ CREATE TABLE Contract
 (
     contract_id INT IDENTITY (1,1) PRIMARY KEY,
     booking_id  INT          NOT NULL UNIQUE,
+    staff_id    INT          ,
     signed_at   DATETIME2    NOT NULL DEFAULT SYSUTCDATETIME(),
     [status]    NVARCHAR(50),
     otp_code    NVARCHAR(10) NULL,
-    CONSTRAINT FK_Contract_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id)
-);
+    CONSTRAINT FK_Contract_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
+    CONSTRAINT FK_Contract_Staff FOREIGN KEY (staff_id) REFERENCES EMPLOYEE_DETAIL (employee_id)
+    );
 
 -- ============================
 -- (14) Review
@@ -228,7 +230,7 @@ CREATE TABLE Holiday_Fee
     value      FLOAT         NOT NULL,
     [status]   NVARCHAR(50),
     created_at DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME()
-);
+    );
 
 -- ============================
 -- (16) Report
@@ -245,7 +247,7 @@ CREATE TABLE Report
     CONSTRAINT FK_Report_Staff FOREIGN KEY (staff_id) REFERENCES [User] (user_id),
     CONSTRAINT FK_Report_Admin FOREIGN KEY (admin_id) REFERENCES [User] (user_id),
     CONSTRAINT FK_Report_VDetail FOREIGN KEY (vehicle_detail_id) REFERENCES Vehicle_Detail (id)
-);
+    );
 
 
 -- ========================
@@ -253,11 +255,11 @@ CREATE TABLE Report
 -- ========================
 INSERT INTO [User] (username, [password], full_name, phone, email, [address], role, [status], created_at)
 VALUES ('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'baocuongg@gmail.com', N'Hồ Chí Minh', 'ADMIN',
-        'ACTIVE', GETDATE()), -- user_id = 1
-       ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
-        'ACTIVE', GETDATE()), -- user_id = 2
-       ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
-        GETDATE()); -- user_id = 3
+    'ACTIVE', GETDATE()), -- user_id = 1
+    ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
+    'ACTIVE', GETDATE()), -- user_id = 2
+    ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
+    GETDATE()); -- user_id = 3
 GO
 
 -- ========================
@@ -358,7 +360,7 @@ VALUES ('SALE10', N'Giảm 10% cho tất cả đơn trong tháng này', 10, GETD
 GO
 
 -- ========================
--- 8. Booking (ĐÃ SỬA HOÀN CHỈNH)
+-- 8. Booking
 -- ========================
 INSERT INTO Booking (renter_id, vehicle_model_id, station_id, license_plate,
                      promotion_id, created_at, start_time, expected_return_time,
@@ -403,8 +405,8 @@ GO
 -- ========================
 -- 13. Contract
 -- ========================
-INSERT INTO Contract (booking_id, [status], otp_code)
-VALUES (2, 'COMPLETED', '123456');
+INSERT INTO Contract (booking_id, staff_id ,[status], otp_code)
+VALUES (2, 2,'COMPLETED', '123456');
 GO
 
 -- ========================

@@ -29,43 +29,46 @@ import MapStationsDemo from "./pages/MapStationsDemo";
 import TestPage from "./pages/TestPage";
 import CheckCar from "./pages/staff/Orders/CheckCar";
 
+import UserContract from "./pages/renter/UserContract";
+
 function App() {
-  console.log('App component is rendering...');
-  
-  return (
-    <AuthProvider>
-      <CheckoutProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Homepage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
-            <Route path="/cars" element={<CarPages />} />
-              <Route path="/car/:id" element={<CarDetail />} />
-              <Route path="/booking/:carId" element={<BookingPage />} />
-              <Route path="/contract/:carId" element={<ContractPage />} />
-            <Route path="/contract-success" element={<ProtectedRoute><ContractSuccessPage /></ProtectedRoute>} />
-            <Route path="/deposit-payment" element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} />
-            <Route path="/customer-info" element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/checkout/success" element={<PaymentSuccessPage />} />
-            <Route path="/contract-demo" element={<ContractDemoPage />} />
-            <Route path="/demo-flow" element={<DemoFlowPage />} />
-            <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
-            <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
-            <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
-            <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
-            <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
-            <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
-            <Route path="/station-cars" element={<StationCarView />} />
-            <Route path="/map-stations" element={<MapStationsDemo />} />
-            <Route path="/test" element={<TestPage />} />
-          </Routes>
-        </Router>
-      </CheckoutProvider>
-    </AuthProvider>
-  );
+    console.log('App component is rendering...');
+
+    return (
+        <AuthProvider>
+            <CheckoutProvider>
+                <Router>
+                    <Routes>
+                        <Route path="/user-contract" element={<UserContract/>} />
+                        <Route path="/" element={<Homepage />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/dashboard" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
+                        <Route path="/cars" element={<CarPages />} />
+                        <Route path="/car/:id" element={<CarDetail />} />
+                        <Route path="/booking/:carId" element={<BookingPage />} />
+                        <Route path="/contract/:carId" element={<ContractPage />} />
+                        <Route path="/contract-success" element={<ProtectedRoute><ContractSuccessPage /></ProtectedRoute>} />
+                        <Route path="/deposit-payment" element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} />
+                        <Route path="/customer-info" element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} />
+                        <Route path="/checkout" element={<CheckoutPage />} />
+                        <Route path="/checkout/success" element={<PaymentSuccessPage />} />
+                        <Route path="/contract-demo" element={<ContractDemoPage />} />
+                        <Route path="/demo-flow" element={<DemoFlowPage />} />
+                        <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
+                        <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
+                        <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+                        <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
+                        <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
+                        <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
+                        <Route path="/station-cars" element={<StationCarView />} />
+                        <Route path="/map-stations" element={<MapStationsDemo />} />
+                        <Route path="/test" element={<TestPage />} />
+                    </Routes>
+                </Router>
+            </CheckoutProvider>
+        </AuthProvider>
+    );
 }
 
 export default App;

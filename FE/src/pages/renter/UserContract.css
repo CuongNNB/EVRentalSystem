@@ -1,0 +1,151 @@
+.user-contract-page {
+    background: #f8fafc;
+    min-height: 100vh;
+    font-family: "Inter", sans-serif;
+}
+
+.user-contract-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 1.5rem;
+}
+
+/* ===== TABLE ===== */
+.contract-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.contract-table th,
+.contract-table td {
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.contract-table thead {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    user-select: none;
+}
+
+.contract-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* ===== STATUS BADGE ===== */
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.status-badge.pending {
+    background: rgba(250, 204, 21, 0.15);
+    color: #b45309;
+    border: 1px solid #facc15;
+}
+
+.status-badge.signed {
+    background: rgba(11, 185, 127, 0.15);
+    color: #0bb97f;
+    border: 1px solid #0bb97f;
+}
+
+/* ===== BUTTON ===== */
+.btn-view {
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-view:hover {
+    background: #fff;
+    color: #0bb97f;
+    border: 2px solid #0bb97f;
+    transform: translateY(-2px);
+}
+
+.empty-message {
+    text-align: center;
+    color: #64748b;
+    padding: 3rem 0;
+    font-size: 1.1rem;
+}
+
+/* ===== FILTER BUTTON ===== */
+.contract-filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.filter-btn {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #475569;
+    transition: all 0.25s ease;
+}
+
+.filter-btn:hover {
+    border-color: #0bb97f;
+    color: #0bb97f;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* ===== SORT ICON ===== */
+.sort-btn {
+    border: none;
+    background: transparent;
+    color: #0f172a;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+}
+
+.sort-btn:hover {
+    color: #0bb97f;
+}
+
+.sort-arrow {
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+}
+
+.sort-btn.asc .sort-arrow {
+    transform: rotate(180deg);
+}
