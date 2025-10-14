@@ -122,6 +122,7 @@ public class StaffService {
             Integer bookingId,
             PartCarName partName,
             MultipartFile picture,
+            String description,
             Integer staffId,
             String status
     ) {

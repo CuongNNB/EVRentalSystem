@@ -33,7 +33,6 @@ public class InspectionController {
         // Nếu có lỗi (ID không tồn tại, enum sai, lỗi hệ thống...),
         // GlobalExceptionHandler sẽ tự động bắt và trả phản hồi JSON lỗi cho FE.
         staffService.createInspection(bookingId, partName, picture, staffId, status);
-
         // Nếu chạy đến đây tức là mọi thứ OK
         return ResponseEntity.ok(ApiResponse.success("Inspection created successfully", true));
     }

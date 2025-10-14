@@ -352,7 +352,7 @@ GO
 -- ========================
 -- 7. Promotion
 -- ========================
-INSERT INTO Promotion (promo_name, [description], discount_percent, start_time, end_time, [status])
+INSERT INTO Promotion (promo_name, [code], discount_percent, start_time, end_time, [status])
 VALUES ('SALE10', N'Giảm 10% cho tất cả đơn trong tháng này', 10, GETDATE(), DATEADD(DAY, 30, GETDATE()), 'ACTIVE'),
        ('NEWUSER20', N'Ưu đãi 20% cho khách hàng mới', 20, GETDATE(), DATEADD(DAY, 60, GETDATE()), 'ACTIVE');
 GO
