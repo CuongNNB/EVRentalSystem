@@ -47,7 +47,7 @@ public class ContractService {
             contractRepository.save(contract);
             Booking booking = bookingRepository.findByBookingId(bookingId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bookingId: " + bookingId));
-            booking.setStatus(BookingStatus.PENDING_PAYMENT.toString()); // hoặc "APPROVED" / "ACTIVE" tùy theo business
+            booking.setStatus(BookingStatus.Pending_Vehicle_Pickup.toString()); // hoặc "APPROVED" / "ACTIVE" tùy theo business
             bookingRepository.save(booking);
 
             return "Hợp đồng đã được xác nhận thành công.";

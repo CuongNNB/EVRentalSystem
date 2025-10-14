@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.controller.staff;
 
+import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
 import com.evrental.evrentalsystem.response.ApiResponse;
 import com.evrental.evrentalsystem.response.staff.BookingDetailsByBookingResponse;
 import com.evrental.evrentalsystem.response.staff.RenterDetailsByBookingResponse;
@@ -71,9 +72,10 @@ public class BookingController {
                     .body(ApiResponse.error("Error updating booking status", null));
         }
     }
-    @PutMapping("/confirm-by-staff")
-    public ResponseEntity<String> confirmByStaff(@RequestParam Integer bookingId) {
-        String result = bookingService.confirmBookingByStaff(bookingId);
+
+    @PostMapping("{bookingId}/confirm-payment/")
+    public ResponseEntity<String> confirmByStaff(@RequestParam ConfirmDepositPaymentRequest request) {
+        String result = bookingService.confirmDepositPayment(request);
         return ResponseEntity.ok(result);
     }
 

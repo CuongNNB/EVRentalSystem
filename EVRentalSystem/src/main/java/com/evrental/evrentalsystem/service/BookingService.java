@@ -4,6 +4,7 @@ import com.evrental.evrentalsystem.entity.*;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
+import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class BookingService {
         booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
-        booking.setStatus(BookingStatus.WAITING_FOR_STAFF_TO_CONFIRM.toString());
+        booking.setStatus(BookingStatus.Pending_Deposit_Confirmation.toString());
         booking.setDeposit(request.getDeposit());
         booking.setRentalAmount(model.getPrice());
         booking.setTotalAmount(totalAmount);
@@ -83,11 +84,11 @@ public class BookingService {
         return response;
     }
     @Transactional
-    public String confirmBookingByStaff(Integer bookingId) {
-        Booking booking = bookingRepository.findByBookingId(bookingId)
+    public String confirmDepositPayment(ConfirmDepositPaymentRequest request) {
+        Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
 
-        if (!booking.getStatus().equals(BookingStatus.WAITING_FOR_STAFF_TO_CONFIRM.name())) {
+        if (!booking.getStatus().equals(BookingStatus.Pending_Contract_Signing.toString())) {
             return "Booking is not in WAITING_FOR_STAFF_TO_CONFIRM status.";
         }
 

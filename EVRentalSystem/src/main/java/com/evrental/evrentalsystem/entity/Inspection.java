@@ -26,7 +26,7 @@ public class Inspection {
     private String picture;
 
     @Lob
-    @Column(name = "picture", columnDefinition = "nvarchar(MAX)", nullable = true)
+    @Column(name = "description", columnDefinition = "nvarchar(MAX)", nullable = true)
     private String description;
 
 
