@@ -1,7 +1,6 @@
 package com.evrental.evrentalsystem.response.staff;
 
 import com.evrental.evrentalsystem.enums.BookingStatus;
-import com.evrental.evrentalsystem.enums.VehicleStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
