@@ -88,7 +88,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
 
         if (!booking.getStatus().equals(BookingStatus.Pending_Contract_Signing.toString())) {
-            return "Booking is not in WAITING_FOR_STAFF_TO_CONFIRM status.";
+            return "Booking is not in Pending_Contract_Signing status.";
         }
 
         booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
