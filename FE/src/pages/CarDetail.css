@@ -778,3 +778,122 @@
 .thumbnail img {
     transition: all 0.3s ease-in-out;
 }
+
+/* ============================= */
+/* Overlay thông báo đăng nhập  */
+/* ============================= */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55); /* overlay nền mờ tối */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.login-overlay-content {
+    background: #ffffff;
+    border-radius: 16px;
+    width: min(480px, 90%);
+    padding: 2rem;
+    box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.25);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    animation: slideUp 0.4s ease-out;
+}
+
+.login-overlay-content h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    color: #1e293b;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.login-overlay-content p {
+    color: #475569;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.login-overlay-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.login-btn {
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(11, 185, 127, 0.3);
+}
+
+.close-btn {
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* Hiệu ứng xuất hiện */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ============================= */
+/* Fix override: Nút Xem chi tiết ưu tiên cao hơn */
+/* ============================= */
+.car-card__actions .car-card__cta.car-card__cta--secondary {
+    background: linear-gradient(135deg, #0bb97f, #06b6d4) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.7rem 1.6rem;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(11, 185, 127, 0.25) !important;
+}
+
+.car-card__actions .car-card__cta.car-card__cta--secondary:hover,
+.car-card__actions .car-card__cta.car-card__cta--secondary:focus-visible {
+    background: #ffffff !important;
+    color: #0bb97f !important;
+    border: 2px solid #0bb97f !important;
+    box-shadow: 0 6px 18px rgba(11, 185, 127, 0.25) !important;
+    transform: translateY(-2px);
+    outline: none;
+}
+

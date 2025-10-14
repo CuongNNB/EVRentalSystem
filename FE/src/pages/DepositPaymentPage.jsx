@@ -70,6 +70,8 @@ const DepositPaymentPage = () => {
             totalPrice: contractData?.car?.totalAmount,
             depositAmount: contractData?.car?.deposit,
             contractCode: contractData?.contractId,
+            // giữ nguyên raw để tìm bookingId nếu cần
+            _raw: { contractData, bookingData }
         };
 
         setSummary(summaryData);
@@ -85,7 +87,7 @@ const DepositPaymentPage = () => {
     const formatPrice = (price) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
 
-    // ✅ Xử lý thanh toán
+    // ✅ Xử lý thanh toán (mở modal QR)
     const handlePayment = async () => {
         if (!selectedMethod) {
             showToast('Vui lòng chọn phương thức thanh toán', 'error');
@@ -94,14 +96,90 @@ const DepositPaymentPage = () => {
         setShowQRModal(true); // ✅ Hiển thị modal QR
     };
 
+    // Hỗ trợ tìm bookingId trong contractSummary (nhiều chỗ khả dĩ)
+    const extractBookingId = () => {
+        if (!contractSummary) return null;
+        const { contractData, bookingData } = contractSummary;
+
+        // thử nhiều chỗ khả dĩ
+        const candidates = [
+            bookingData?.bookingPayload?.bookingId,
+            bookingData?.bookingPayload?.id,
+            bookingData?.bookingId,
+            bookingData?.response?.bookingId,
+            bookingData?.response?.id,
+            contractData?.contractId, // fallback nếu backend dùng contractId tương ứng
+            contractData?.bookingId,
+            contractData?.renter?.bookingId
+        ];
+
+        for (const c of candidates) {
+            if (c !== undefined && c !== null && c !== '') return c;
+        }
+        return null;
+    };
+
     // ✅ Khi user nhấn “Tôi đã thanh toán”
     const handleBankTransferConfirm = async () => {
+        // đóng modal QR
         setShowQRModal(false);
-        setShowConfirmOverlay(true);
 
-        setTimeout(() => {
-            navigate('/');
-        }, 3000);
+        // tìm bookingId
+        const bookingId = extractBookingId();
+
+        // nếu ko tìm thấy bookingId -> notify and show overlay but don't call api
+        if (!bookingId) {
+            showToast('Không tìm thấy bookingId để xác nhận đặt cọc. Vui lòng thử lại hoặc liên hệ hỗ trợ.', 'error');
+            // vẫn show overlay thông báo (không gọi API)
+            setShowConfirmOverlay(true);
+            // sau 3s quay về home (giữ hành vi cũ)
+            setTimeout(() => {
+                navigate('/');
+            }, 3000);
+            return;
+        }
+
+        // Gọi API confirm deposit
+        setPaying(true);
+        try {
+            const payload = { bookingId }; // gửi theo yêu cầu: truyền về bookingId
+            const resp = await fetch('http://localhost:8084/EVRentalSystem/api/bookings/confirm-deposit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // nếu cần auth token, thêm: 'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) {
+                const text = await resp.text().catch(() => null);
+                throw new Error(text || `HTTP ${resp.status}`);
+            }
+
+            const respText = await resp.text().catch(() => 'Xác nhận thành công');
+
+            // Hiện overlay xác nhận và toast thành công
+            showToast('Xác nhận đặt cọc thành công', 'success');
+            setShowConfirmOverlay(true);
+
+            // Sau 2.5s quay về trang chủ (như hành vi cũ)
+            setTimeout(() => {
+                navigate('/');
+            }, 2500);
+        } catch (error) {
+            console.error('Lỗi khi gọi confirm-deposit:', error);
+            showToast('Xác nhận đặt cọc thất bại. Vui lòng thử lại hoặc liên hệ hỗ trợ.', 'error');
+            // hiển thị overlay lỗi để user biết
+            setShowConfirmOverlay(true);
+
+            // bạn có thể giữ user lại trang này hoặc chuyển về home sau 3s — mình giữ 3s như cũ
+            setTimeout(() => {
+                navigate('/');
+            }, 3000);
+        } finally {
+            setPaying(false);
+        }
     };
 
     if (!summary) {
@@ -199,7 +277,6 @@ const DepositPaymentPage = () => {
                                 <div className="price-breakdown">
                                     <div className="price-row"><span>Giá thuê/ngày</span><span>{formatPrice(summary.pricePerDay)}</span></div>
                                     <div className="price-row"><span>Số ngày thuê</span><span>{summary.days} ngày</span></div>
-                                    <div className="price-row"><span>Tổng tiền thuê</span><span>{formatPrice(summary.totalPrice)}</span></div>
                                     <div className="price-row"><span>Đặt cọc (30%)</span><span>{formatPrice(summary.depositAmount)}</span></div>
                                     <div className="divider"></div>
                                     <div className="price-row total"><span>Tổng thanh toán</span><span>{formatPrice(summary.depositAmount)}</span></div>
@@ -213,7 +290,6 @@ const DepositPaymentPage = () => {
                                     >
                                         {paying ? 'Đang xử lý...' : 'Thanh toán'}
                                     </button>
-                                    {!selectedMethod && <p className="payment-hint">Chọn phương thức thanh toán</p>}
                                 </div>
                             </div>
                         </div>
@@ -226,7 +302,7 @@ const DepositPaymentPage = () => {
                 <div className="qr-modal-overlay">
                     <div className="qr-modal">
                         {/* ✅ Nút Close */}
-                        <button className="close-btn" onClick={() => setShowQRModal(false)}> X
+                        <button className="close-btn" onClick={() => setShowQRModal(false)}>
                             <X className="w-5 h-5" />
                         </button>
 
@@ -239,14 +315,18 @@ const DepositPaymentPage = () => {
                             className="qr-image"
                         />
 
-                        <button className="modal-button primary" onClick={handleBankTransferConfirm}>
-                            Tôi đã thanh toán
+                        <button
+                            className="modal-button primary"
+                            onClick={handleBankTransferConfirm}
+                            disabled={paying}
+                        >
+                            {paying ? 'Đang xác nhận...' : 'Tôi đã thanh toán'}
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* === Overlay xác nhận === */}
+            {/* === Overlay xác nhận ss=== */}
             {showConfirmOverlay && (
                 <div className="confirm-overlay">
                     <div className="confirm-message-box">

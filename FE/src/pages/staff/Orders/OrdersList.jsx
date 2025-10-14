@@ -917,6 +917,38 @@ const OrdersList = () => {
       case "view":
         navigate(`/staff/orders/${order.id}`);
         break;
+      case "confirm":
+        // Xác nhận đặt cọc: chuyển trạng thái và tạo hợp đồng
+        {
+          let contractCreated = false;
+          try {
+            await api.post('/api/contract/create', null, {
+              params: { bookingId: order.id }
+            });
+            contractCreated = true;
+          } catch (contractError) {
+            console.error("Unable to create contract", contractError);
+          }
+
+          const statusMessage = updateSucceeded
+            ? "Đã xác nhận đặt cọc thành công."
+            : "Đã xác nhận đặt cọc (tạm thời do lỗi kết nối trạng thái).";
+          
+          const contractMessage = contractCreated
+            ? "Hợp đồng đã được tạo."
+            : "Không thể tạo hợp đồng, vui lòng thử lại sau.";
+
+          const statusType = 
+            updateSucceeded && contractCreated ? "success"
+            : updateSucceeded || contractCreated ? "warning"
+            : "error";
+
+          setConnectionState({
+            status: statusType,
+            message: `${statusMessage} ${contractMessage}`,
+          });
+        }
+        break;
       case "vehicle":
         try {
           const payload = {
