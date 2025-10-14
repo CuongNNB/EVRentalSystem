@@ -20,6 +20,7 @@ public class Contract {
     private Booking booking;
 
     private LocalDateTime signedAt;
+    @Enumerated(EnumType.STRING)
     private String status;
     private String otpCode;
 }
