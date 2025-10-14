@@ -1,19 +1,24 @@
-// BookingPage.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./BookingPage.css";
 
+const pad = (n) => (n < 10 ? "0" + n : n);
 const formatDateTimeLocal = (date) => {
-    const pad = (n) => (n < 10 ? "0" + n : n);
     const yyyy = date.getFullYear();
     const mm = pad(date.getMonth() + 1);
     const dd = pad(date.getDate());
     const hh = pad(date.getHours());
     const min = pad(date.getMinutes());
     return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+};
+
+const addDays = (date, days) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
 };
 
 const paymentMethods = [
@@ -63,31 +68,133 @@ export default function BookingPage() {
         }
         : { id: 1, name: "Người dùng", email: "user@gmail.com", phone: "" };
 
+    // now at component mount
     const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
+    // Round now to nearest minute to avoid seconds issues
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    const defaultPickup = formatDateTimeLocal(now);
+    const defaultReturn = formatDateTimeLocal(addDays(now, 1));
 
     const [formData, setFormData] = useState({
         renterName: storedUser.name,
         phoneNumber: storedUser.phone,
         email: storedUser.email,
-        pickupDateTime: formatDateTimeLocal(now),
-        returnDateTime: formatDateTimeLocal(tomorrow),
+        pickupDateTime: defaultPickup,
+        returnDateTime: defaultReturn,
         paymentMethod: "Thanh toán qua điện thoại",
         pickupLocation: carData.stationName,
     });
 
     const [isBooking, setIsBooking] = useState(false);
 
+    // overlay error state
+    const [errorOverlay, setErrorOverlay] = useState({ visible: false, message: "" });
+
+    useEffect(() => {
+        let t;
+        if (errorOverlay.visible) {
+            t = setTimeout(() => setErrorOverlay({ visible: false, message: "" }), 5000);
+        }
+        return () => clearTimeout(t);
+    }, [errorOverlay.visible]);
+
+    const showError = (message) => {
+        setErrorOverlay({ visible: true, message });
+    };
+
     const handleInputChange = (field, value) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    // Validations + constraints
+    const getNow = () => {
+        const d = new Date();
+        d.setSeconds(0);
+        d.setMilliseconds(0);
+        return d;
+    };
+
+    const handlePickupChange = (e) => {
+        const val = e.target.value;
+        const selected = new Date(val);
+        const nowDate = getNow();
+        const maxPickup = addDays(nowDate, 5);
+
+        if (selected < nowDate) {
+            showError("Thời gian nhận xe không được chọn trong quá khứ. Đã đặt lại về thời gian hiện tại.");
+            handleInputChange("pickupDateTime", formatDateTimeLocal(nowDate));
+
+            // ensure return is not before pickup
+            const returnDate = new Date(formData.returnDateTime);
+            if (returnDate <= nowDate) {
+                const newReturn = addDays(nowDate, 1);
+                handleInputChange("returnDateTime", formatDateTimeLocal(newReturn));
+            }
+            return;
+        }
+
+        if (selected > maxPickup) {
+            showError("Thời gian nhận xe chỉ được phép trong vòng 5 ngày kể từ lúc đặt.");
+            handleInputChange("pickupDateTime", formatDateTimeLocal(maxPickup));
+
+            // adjust return if needed
+            const returnDate = new Date(formData.returnDateTime);
+            if (returnDate <= maxPickup) {
+                const newReturn = addDays(maxPickup, 1);
+                handleInputChange("returnDateTime", formatDateTimeLocal(newReturn));
+            }
+            return;
+        }
+
+        // valid
+        handleInputChange("pickupDateTime", val);
+
+        // If return is earlier than pickup, push return to pickup + 1 hour
+        const returnDate = new Date(formData.returnDateTime);
+        if (returnDate <= selected) {
+            const minReturn = new Date(selected.getTime() + 60 * 60 * 1000); // +1 hour
+            handleInputChange("returnDateTime", formatDateTimeLocal(minReturn));
+        }
+    };
+
+    const handleReturnChange = (e) => {
+        const val = e.target.value;
+        const selected = new Date(val);
+        const pickup = new Date(formData.pickupDateTime);
+        const nowDate = getNow();
+        const maxReturn = addDays(pickup, 30);
+
+        if (selected < pickup) {
+            showError("Thời gian trả xe phải sau thời gian nhận xe. Đã đặt lại về tối thiểu 1 giờ sau khi nhận xe.");
+            const minReturn = new Date(pickup.getTime() + 60 * 60 * 1000);
+            handleInputChange("returnDateTime", formatDateTimeLocal(minReturn));
+            return;
+        }
+
+        if (selected > maxReturn) {
+            showError("Thời gian trả xe chỉ được phép trong vòng 30 ngày kể từ lúc nhận xe.");
+            handleInputChange("returnDateTime", formatDateTimeLocal(maxReturn));
+            return;
+        }
+
+        // also prevent selecting return in the past
+        if (selected < nowDate) {
+            showError("Thời gian trả xe không thể ở quá khứ. Đã đặt lại về tối thiểu 1 giờ sau khi nhận xe hoặc thời gian hiện tại.");
+            const minReturn = new Date(Math.max(pickup.getTime() + 60 * 60 * 1000, nowDate.getTime()));
+            handleInputChange("returnDateTime", formatDateTimeLocal(minReturn));
+            return;
+        }
+
+        handleInputChange("returnDateTime", val);
     };
 
     const calculateRentalDays = () => {
         const start = new Date(formData.pickupDateTime);
         const end = new Date(formData.returnDateTime);
         const diff = Math.abs(end - start);
-        return Math.ceil(diff / (1000 * 60 * 60 * 24)) || 1;
+        return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 1);
     };
 
     const calculateTotal = () => {
@@ -101,7 +208,7 @@ export default function BookingPage() {
     const totals = calculateTotal();
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
 
-    // Tạo object fullBooking (có thể dùng để gửi API hoặc forward sang Deposit)
+    // Booking / navigation logic unchanged from original
     const makeFullBooking = (apiResponse = null) => ({
         bookingPayload: {
             userId: storedUser.id,
@@ -120,7 +227,6 @@ export default function BookingPage() {
         timestamp: new Date().toISOString(),
     });
 
-    // Hàm giúp build contractSummary phù hợp cho DepositPaymentPage
     const buildContractSummary = (fullBooking, apiResponse = null) => {
         const contractId = apiResponse?.contractId || `CT-${Date.now()}`;
 
@@ -159,7 +265,6 @@ export default function BookingPage() {
         };
     };
 
-    // Gọi API đặt xe (giữ nguyên luồng cũ) — sau khi success sẽ lưu localstorage
     const handleBooking = async () => {
         setIsBooking(true);
         const payload = {
@@ -184,13 +289,11 @@ export default function BookingPage() {
 
             const fullBooking = makeFullBooking(data);
 
-            // Lưu list vào localStorage
             const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
             existingBookings.push(fullBooking);
             localStorage.setItem("bookingList", JSON.stringify(existingBookings));
             localStorage.setItem("currentBooking", JSON.stringify(fullBooking));
 
-            // === CHỈ SỬA Ở ĐÂY: navigate sang DepositPaymentPage và forward contractSummary ===
             const contractSummary = buildContractSummary(fullBooking, data);
             navigate("/deposit-payment", {
                 state: {
@@ -200,15 +303,14 @@ export default function BookingPage() {
 
         } catch (error) {
             console.error("Lỗi khi đặt xe:", error);
-            alert("Đặt xe thất bại! Vui lòng thử lại.");
+            showError("Đặt xe thất bại! Vui lòng thử lại.");
         } finally {
             setIsBooking(false);
         }
     };
 
-    // NEW: Nút chuyển thẳng sang DepositPaymentPage (không gọi backend)
     const handleGoToDeposit = () => {
-        const fullBooking = makeFullBooking(null); // chưa có response backend
+        const fullBooking = makeFullBooking(null);
         const contractSummary = buildContractSummary(fullBooking, null);
 
         navigate("/deposit-payment", {
@@ -218,6 +320,12 @@ export default function BookingPage() {
         });
     };
 
+    // min / max attributes for inputs
+    const minPickup = formatDateTimeLocal(getNow());
+    const maxPickup = formatDateTimeLocal(addDays(getNow(), 5));
+    const minReturnAttr = formData.pickupDateTime; // return must be >= pickup
+    const maxReturnAttr = formatDateTimeLocal(addDays(new Date(formData.pickupDateTime), 30));
+
     return (
         <div className="booking-page">
             <Header />
@@ -226,7 +334,6 @@ export default function BookingPage() {
                     <h1 className="booking-title">Đặt xe</h1>
 
                     <div className="booking-content">
-                        {/* Form bên trái */}
                         <div className="booking-form-section">
                             <div className="form-card">
                                 <h2 className="form-title">Thông tin người thuê</h2>
@@ -267,7 +374,9 @@ export default function BookingPage() {
                                         type="datetime-local"
                                         className="form-input"
                                         value={formData.pickupDateTime}
-                                        onChange={(e) => handleInputChange("pickupDateTime", e.target.value)}
+                                        onChange={handlePickupChange}
+                                        min={minPickup}
+                                        max={maxPickup}
                                     />
                                 </div>
 
@@ -277,10 +386,11 @@ export default function BookingPage() {
                                         type="datetime-local"
                                         className="form-input"
                                         value={formData.returnDateTime}
-                                        onChange={(e) => handleInputChange("returnDateTime", e.target.value)}
+                                        onChange={handleReturnChange}
+                                        min={minReturnAttr}
+                                        max={maxReturnAttr}
                                     />
                                 </div>
-
 
                                 <div className="form-group">
                                     <label className="form-label">Địa điểm nhận xe</label>
@@ -294,7 +404,6 @@ export default function BookingPage() {
                             </div>
                         </div>
 
-                        {/* Bên phải: thông tin xess */}
                         <div className="car-details-section">
                             <div className="car-details-card">
                                 <div className="car-image-container">
@@ -335,13 +444,26 @@ export default function BookingPage() {
                                         {isBooking ? (<><span className="spinner"></span>Đang xử lý...</>) : ("Thanh toán cọc")}
                                     </button>
 
-
                                 </div>
 
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Error overlay */}
+                {errorOverlay.visible && (
+                    <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999}}>
+                        <div style={{background: '#fff', padding: 20, borderRadius: 8, width: 'min(420px, 90%)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'}}>
+                            <h3 style={{marginTop: 0, marginBottom: 8}}>Lỗi</h3>
+                            <p style={{marginTop: 0, marginBottom: 16}}>{errorOverlay.message}</p>
+                            <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
+                                <button onClick={() => setErrorOverlay({ visible: false, message: "" })} style={{padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', background: '#fff'}}>Đóng</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </main>
             <Footer />
         </div>

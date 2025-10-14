@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useAuth } from "../contexts/AuthContext";
 import "./CarDetail.css";
 
 export default function CarDetail() {
@@ -10,9 +11,23 @@ export default function CarDetail() {
     const location = useLocation();
     const carFromList = location.state;
 
+    const { user: contextUser } = useAuth();
+    const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ev_user")) : null;
+    const currentUser = contextUser || localUser;
+
     const [carData, setCarData] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFading, setIsFading] = useState(false);
+
+    // overlay for not-logged-in error
+    const [loginOverlay, setLoginOverlay] = useState({ visible: false, message: "Bạn cần đăng nhập để đặt xe." });
+
+    useEffect(() => {
+        if (loginOverlay.visible) {
+            const t = setTimeout(() => setLoginOverlay({ visible: false, message: "" }), 6000);
+            return () => clearTimeout(t);
+        }
+    }, [loginOverlay.visible]);
 
     // 🖼️ Tự động đổi ảnh mỗi 5s
     useEffect(() => {
@@ -102,6 +117,13 @@ export default function CarDetail() {
     // ✅ Khi bấm "Đặt xe ngay"
     const handleBookCar = () => {
         if (!carData) return;
+
+        // Kiểm tra login: ưu tiên context, fallback localStorage (ev_user)
+        if (!currentUser) {
+            setLoginOverlay({ visible: true, message: "Bạn cần đăng nhập để đặt xe. Vui lòng đăng nhập hoặc đăng ký." });
+            return;
+        }
+
         navigate(`/booking/${carData.id}`, { state: carData });
     };
 
@@ -218,6 +240,25 @@ export default function CarDetail() {
                         </div>
                     </div>
                 </div>
+
+                {/* Login required overlay */}
+                {loginOverlay.visible && (
+                    <div className="login-overlay">
+                        <div className="login-overlay-content">
+                            <h3>Bạn chưa đăng nhập</h3>
+                            <p>{loginOverlay.message}</p>
+                            <div className="login-overlay-actions">
+                                <button className="login-btn" onClick={() => navigate('/login')}>
+                                    Đăng nhập
+                                </button>
+                                <button className="close-btn" onClick={() => setLoginOverlay({ visible: false, message: '' })}>
+                                    Đóng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </main>
             <Footer />
         </div>
