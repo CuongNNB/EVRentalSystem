@@ -8,7 +8,6 @@ public enum PartCarName {
     Front_Row,
     Second_Row,
     Third_Row,
-    Charging_Port,
     Odometer,
     Battery
 }

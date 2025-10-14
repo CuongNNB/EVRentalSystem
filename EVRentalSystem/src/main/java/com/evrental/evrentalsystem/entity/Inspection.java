@@ -25,6 +25,11 @@ public class Inspection {
     @Column(name = "picture", columnDefinition = "nvarchar(MAX)", nullable = true)
     private String picture;
 
+    @Lob
+    @Column(name = "picture", columnDefinition = "nvarchar(MAX)", nullable = true)
+    private String description;
+
+
     @ManyToOne
     @JoinColumn(name = "staff_id", nullable = false)
     private User staff;

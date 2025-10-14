@@ -168,6 +168,7 @@ CREATE TABLE Inspection
     booking_id    INT           NOT NULL,
     part_name     NVARCHAR(100) NOT NULL,
     picture       NVARCHAR(MAX) NULL,
+    [description] NVARCHAR(MAX) NULL,
     staff_id      INT           NOT NULL,
     inspected_at  DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME(),
     [status]      NVARCHAR(50),
