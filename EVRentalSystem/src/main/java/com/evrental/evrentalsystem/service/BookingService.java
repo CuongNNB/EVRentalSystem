@@ -83,7 +83,6 @@ public class BookingService {
 
         return response;
     }
-    @Transactional
     public String confirmDepositPayment(ConfirmDepositPaymentRequest request) {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
