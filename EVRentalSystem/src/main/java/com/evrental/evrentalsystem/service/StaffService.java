@@ -53,6 +53,18 @@ public class StaffService {
                     // Tạo đối tượng BookingsInStationResponse từ đối tượng Booking
                     BookingsInStationResponse response = new BookingsInStationResponse();
 
+                    int rentingDurationDay = countRentingDay(booking.getStartTime(),booking.getExpectedReturnTime());
+                    double discountRate = booking.getPromotion() == null
+                            ? 1.0
+                            : (100 - booking.getPromotion().getDiscountPercent()) / 100.0;
+
+                    int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate);
+                    List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
+                    int additionalFee = afs.stream()
+                            .filter(af -> af.getAmount() != null)
+                            .mapToInt(af -> af.getAmount().intValue())
+                            .sum();
+
                     // Gán các giá trị cho response từ booking
                     response.id = booking.getBookingId();
                     response.customerName = booking.getRenter() != null ? booking.getRenter().getFullName() : "Unknown";
@@ -61,7 +73,7 @@ public class StaffService {
                     response.vehicleModel = booking.getVehicleModel() != null ? booking.getVehicleModel().getModel() : "Unknown"; // Giả sử có trường modelName trong VehicleModel
                     response.startDate = booking.getStartTime();
                     response.endDate = booking.getExpectedReturnTime();
-                    response.totalAmount = booking.getTotalAmount();
+                    response.totalAmount = fee+additionalFee;
                     response.status = booking.getStatus();
                     return response;
                 })
@@ -193,7 +205,12 @@ public class StaffService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         int rentingDurationDay = countRentingDay(booking.getStartTime(),booking.getExpectedReturnTime());
-        int fee = rentingDurationDay*(int) Math.round(booking.getVehicleModel().getPrice());
+
+        double discountRate = booking.getPromotion() == null
+                ? 1.0
+                : (100 - booking.getPromotion().getDiscountPercent()) / 100.0;
+
+        int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate);
 
         List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
         int additionalFee = afs.stream()
@@ -222,13 +239,16 @@ public class StaffService {
         return Math.max(1,days);
     }
 
-    public void createContractByBookingId(int id){
+    public void createContractByBookingId(int id,int staffId){
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
 
         Contract c = new Contract();
         c.setBooking(booking);
         c.setStatus(ContractStatusEnum.PENDING.name());
+        c.setStaffManager(staff);
         contractRepository.save(c);
     }
 

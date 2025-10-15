@@ -18,10 +18,11 @@ public class StaffContractController {
     private StaffService staffService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Boolean>> createInspection(
-            @RequestParam Integer bookingId
+    public ResponseEntity<ApiResponse<Boolean>> createContract(
+            @RequestParam Integer bookingId,
+            @RequestParam Integer staffId
     ) {
-        staffService.createContractByBookingId(bookingId);
+        staffService.createContractByBookingId(bookingId,staffId);
         return ResponseEntity.ok(ApiResponse.success("Contract created successfully", true));
     }
 }
