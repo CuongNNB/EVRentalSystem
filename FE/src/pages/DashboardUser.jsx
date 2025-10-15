@@ -61,7 +61,7 @@ const DashboardUser = () => {
             color: 'from-gray-500 to-gray-600',
             bgColor: 'bg-gray-50',
             borderColor: 'border-gray-200',
-            href: '/profile'
+            href: '/account'
         }
     ];
 

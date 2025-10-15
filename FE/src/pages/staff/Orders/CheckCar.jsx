@@ -10,7 +10,7 @@ import {
   getInspectionPart,
 } from "../../../utils/inspectionParts";
 import "../StaffLayout.css";
-import "./ReturnCar.css";
+import "./CheckCar.css";
 
 const CheckCar = () => {
   const navigate = useNavigate();
