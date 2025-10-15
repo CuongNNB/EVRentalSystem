@@ -41,17 +41,7 @@ const DashboardUser = () => {
             color: 'from-blue-500 to-blue-600',
             bgColor: 'bg-blue-50',
             borderColor: 'border-blue-200',
-            href: '/bookings'
-        },
-        {
-            id: 'payments',
-            title: 'Thanh toán & đặt cọc',
-            description: 'Theo dõi thanh toán và cọc tạm giữ',
-            icon: '💳',
-            color: 'from-green-500 to-green-600',
-            bgColor: 'bg-green-50',
-            borderColor: 'border-green-200',
-            href: '/payments'
+            href: '/my-bookings'
         },
         {
             id: 'contracts',

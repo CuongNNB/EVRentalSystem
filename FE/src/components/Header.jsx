@@ -1,14 +1,13 @@
 ﻿import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import "./Header.css";
 
-const menuItems = [
+const baseMenuItems = [
     { label: "Trang chủ", href: "/" },
     { label: "Xem xe có sẵn", href: "/cars" },
     { label: "Tìm xe theo trạm", href: "/map-stations" },
     { label: "Ưu đãi", href: "#promotions" },
-    { label: "Tài khoản", href: "/dashboard" },
 ];
 
 export default function Header() {
@@ -16,6 +15,15 @@ export default function Header() {
     const [localUser, setLocalUser] = useState(null);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+
+    // Conditionally add "Tài khoản" menu item only when user is logged in
+    const menuItems = useMemo(() => {
+        const items = [...baseMenuItems];
+        if (user || localUser) {
+            items.push({ label: "Tài khoản", href: "/dashboard" });
+        }
+        return items;
+    }, [user, localUser]);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
