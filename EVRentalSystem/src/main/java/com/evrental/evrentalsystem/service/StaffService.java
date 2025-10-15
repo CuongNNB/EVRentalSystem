@@ -58,12 +58,12 @@ public class StaffService {
                             ? 1.0
                             : (100 - booking.getPromotion().getDiscountPercent()) / 100.0;
 
-                    int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate);
-                    List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
+                    int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate) *1000;
+                    List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking) ;
                     int additionalFee = afs.stream()
                             .filter(af -> af.getAmount() != null)
                             .mapToInt(af -> af.getAmount().intValue())
-                            .sum();
+                            .sum() * 1000;
 
                     // Gán các giá trị cho response từ booking
                     response.id = booking.getBookingId();
@@ -210,18 +210,19 @@ public class StaffService {
                 ? 1.0
                 : (100 - booking.getPromotion().getDiscountPercent()) / 100.0;
 
-        int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate);
+        int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate) * 1000;
 
         List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
         int additionalFee = afs.stream()
                 .filter(af -> af.getAmount() != null)
                 .mapToInt(af -> af.getAmount().intValue())
-                .sum();
+                .sum() * 1000;
+
 
         BookingDetailsByBookingResponse response = new BookingDetailsByBookingResponse();
         response.setBookingId(bookingId);
         response.setFee(fee);
-        response.setDeposit((int) Math.round(booking.getDeposit()));
+        response.setDeposit(((int) Math.round(booking.getDeposit())) * 1000);
         response.setStationName(booking.getStation().getStationName());
         response.setTotalAmount(fee+additionalFee);
         response.setEndDate(booking.getExpectedReturnTime());
@@ -244,7 +245,6 @@ public class StaffService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         User staff = userRepository.findById(staffId)
                 .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
-
         Contract c = new Contract();
         c.setBooking(booking);
         c.setStatus(ContractStatusEnum.PENDING.name());
@@ -285,10 +285,7 @@ public class StaffService {
         List<Inspection> inspections = inspectionRepository.findAllByBooking(booking);
         return inspections.stream()
                 .map(inspection -> {
-                    // Tạo đối tượng BookingsInStationResponse từ đối tượng Booking
                     InspectionDetailsByBookingResponse response = new InspectionDetailsByBookingResponse();
-
-                    // Gán các giá trị cho response từ booking
                     response.setPartName(PartCarName.valueOf(inspection.getPartName()));
                     response.setPic(inspection.getPicture());
                     response.setDesc(inspection.getDescription());
