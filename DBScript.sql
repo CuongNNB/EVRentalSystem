@@ -259,7 +259,8 @@ VALUES ('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'ba
     ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
     'ACTIVE', GETDATE()), -- user_id = 2
     ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
-    GETDATE()); -- user_id = 3
+    GETDATE()),
+    ('Jang Won-young', '123456', N'Jang Won-young', '0123456789', 'jangwonyoung@gmail.com', N'69', 'STAFF', 'ACTIVE', GETDATE()); -- user_id = 3
 GO
 
 -- ========================
@@ -300,7 +301,7 @@ GO
 -- 4. Employee_Detail
 -- ========================
 INSERT INTO Employee_Detail (employee_id, station_id)
-VALUES (2, 1); -- Staff01 làm việc tại Station 1
+VALUES (2, 1), (4, 1); -- Staff01 làm việc tại Station 1
 GO
 
 -- ========================
