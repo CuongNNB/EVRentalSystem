@@ -923,7 +923,10 @@ const OrdersList = () => {
           let contractCreated = false;
           try {
             await api.post('/api/contract/create', null, {
-              params: { bookingId: order.id }
+              params: { 
+                bookingId: order.id,
+                staffId: user?.id || user?.userId || user?.staffId
+              }
             });
             contractCreated = true;
           } catch (contractError) {
@@ -1064,7 +1067,7 @@ const OrdersList = () => {
           {order.status.label}
         </span>
       </td>
-      <td className="orders-table__money">{order.total}</td>
+      <td className="orders-table__money">{order.total} </td>
       <td>
         <div className="orders-table__actions">
           {order.actions.map((action) => {

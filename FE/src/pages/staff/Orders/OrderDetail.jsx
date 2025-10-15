@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import StaffSlideBar from "../../../components/staff/StaffSlideBar";
 import StaffHeader from "../../../components/staff/StaffHeader";
+import api from "../../../utils/api";
 import "../StaffLayout.css";
 import "./OrderDetail.css";
 
@@ -61,9 +62,94 @@ const StatusBadge = ({ variant, children }) => (
 
 const OrderDetail = () => {
   const navigate = useNavigate();
-  const { orderId = "EV0205010" } = useParams();
-  const detail = ORDER_DETAILS[orderId] || ORDER_DETAILS.EV0205010;
-  const [isConfirmed, setConfirmed] = React.useState(false);
+  const { orderId } = useParams();
+  const [isConfirmed, setConfirmed] = useState(false);
+  
+  // State cho dữ liệu từ API
+  const [renterDetails, setRenterDetails] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Gọi API khi component mount
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (!orderId) {
+        setError("Không tìm thấy mã đơn hàng");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+
+        // Gọi song song 2 API
+        const [renterResponse, bookingResponse] = await Promise.all([
+          api.get(`/api/bookings/${orderId}/renter-details`, {
+            params: { bookingId: orderId }
+          }),
+          api.get(`/api/bookings/${orderId}/booking-details`, {
+            params: { bookingId: orderId }
+          })
+        ]);
+
+        // Lấy dữ liệu từ response
+        const renterData = renterResponse.data?.data || renterResponse.data;
+        const bookingData = bookingResponse.data?.data || bookingResponse.data;
+
+        setRenterDetails(renterData);
+        setBookingDetails(bookingData);
+      } catch (err) {
+        console.error("Error fetching order details:", err);
+        setError(
+          err.response?.data?.message || 
+          err.message || 
+          "Không thể tải thông tin đơn hàng"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [orderId]);
+
+  // Helper functions để format dữ liệu
+  const formatCurrency = (value) => {
+    if (!value && value !== 0) return "—";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return "—";
+    const date = new Date(dateTime);
+    return date.toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusConfig = (status) => {
+    const statusMap = {
+      Pending_Deposit_Confirmation: { label: "Chờ xác nhận đặt cọc", variant: "warning" },
+      Pending_Contract_Signing: { label: "Chờ ký hợp đồng", variant: "warning" },
+      Pending_Vehicle_Pickup: { label: "Chờ nhận xe", variant: "warning" },
+      Vehicle_Inspected_Before_Pickup: { label: "Đã kiểm tra xe", variant: "info" },
+      Currently_Renting: { label: "Đang thuê", variant: "success" },
+      Vehicle_Returned: { label: "Đã trả xe", variant: "success" },
+      Total_Fees_Charged: { label: "Tính phí bổ sung", variant: "warning" },
+      Completed: { label: "Hoàn thành", variant: "success" },
+    };
+    return statusMap[status] || { label: status, variant: "default" };
+  };
 
   return (
     <div className="staff-shell staff-shell--orders">
@@ -78,21 +164,53 @@ const OrderDetail = () => {
                 type="button"
                 className="order-detail__back"
                 onClick={() => navigate(-1)}
-            >
-              ← Quay lại
-            </button>
-            <h1>
-              Chi tiết đơn hàng{" "}
-              <span className="order-detail__code">#{detail.code}</span>
-            </h1>
-          </header>
+              >
+                ← Quay lại
+              </button>
+              <h1>
+                Chi tiết đơn hàng{" "}
+                <span className="order-detail__code">#{orderId || "N/A"}</span>
+              </h1>
+            </header>
 
-          <div className="order-detail__grid">
+            {/* Loading State */}
+            {loading && (
+              <div style={{
+                padding: "40px",
+                textAlign: "center",
+                backgroundColor: "#f0f9ff",
+                borderRadius: "12px",
+                margin: "20px 0",
+              }}>
+                <p style={{ fontSize: "16px", color: "#0369a1" }}>
+                  Đang tải thông tin đơn hàng...
+                </p>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+              <div style={{
+                padding: "20px",
+                backgroundColor: "#fee2e2",
+                border: "1px solid #fca5a5",
+                borderRadius: "12px",
+                margin: "20px 0",
+                color: "#b91c1c",
+              }}>
+                <strong>Lỗi:</strong> {error}
+              </div>
+            )}
+
+            {/* Content - chỉ hiển thị khi có dữ liệu */}
+            {!loading && !error && renterDetails && bookingDetails && (
+              <>
+                <div className="order-detail__grid">
             <section className="order-card">
               <header className="order-card__header">
                 <h2>Thông tin người thuê</h2>
-                <StatusBadge variant={detail.renter.verifyStatus.variant}>
-                  {detail.renter.verifyStatus.label}
+                <StatusBadge variant="info">
+                  Đã xác minh
                 </StatusBadge>
               </header>
 
@@ -100,36 +218,65 @@ const OrderDetail = () => {
                 <dl className="order-detail__info order-detail__info--columns">
                   <div>
                     <dt>Họ và tên</dt>
-                    <dd>{detail.renter.name}</dd>
+                    <dd>{renterDetails.fullName || "—"}</dd>
                   </div>
                   <div>
                     <dt>Số điện thoại</dt>
-                    <dd>{detail.renter.phone}</dd>
+                    <dd>{renterDetails.phoneNumber || "—"}</dd>
                   </div>
                 </dl>
 
                 <div className="order-detail__email">
                   <dt>Email</dt>
-                  <dd>{detail.renter.email}</dd>
+                  <dd>{renterDetails.email || "—"}</dd>
                 </div>
 
                 <div className="order-detail__docs">
-                  {detail.renter.documents.map((doc) => (
-                    <div key={doc.label} className="order-detail__doc-group">
-                      <p>{doc.label}</p>
+                  {/* Giấy phép lái xe */}
+                  {renterDetails.gplx && (
+                    <div className="order-detail__doc-group">
+                      <p>Giấy phép lái xe</p>
                       <div className="order-detail__doc-sides">
-                        {doc.sides.map((side) => (
-                          <button
-                            key={side}
-                            type="button"
-                            className="order-detail__doc-btn"
-                          >
-                            {side}
-                          </button>
-                        ))}
+                        <a
+                          href={renterDetails.gplx}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="order-detail__doc-btn"
+                        >
+                          Xem ảnh
+                        </a>
                       </div>
                     </div>
-                  ))}
+                  )}
+                  
+                  {/* Căn cước công dân */}
+                  {(renterDetails.frontCccd || renterDetails.backCccd) && (
+                    <div className="order-detail__doc-group">
+                      <p>Căn cước công dân</p>
+                      <div className="order-detail__doc-sides">
+                        {renterDetails.frontCccd && (
+                          <a
+                            href={renterDetails.frontCccd}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="order-detail__doc-btn"
+                          >
+                            Mặt trước
+                          </a>
+                        )}
+                        {renterDetails.backCccd && (
+                          <a
+                            href={renterDetails.backCccd}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="order-detail__doc-btn"
+                          >
+                            Mặt sau
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -156,29 +303,31 @@ const OrderDetail = () => {
                 <dl className="order-detail__info">
                   <div>
                     <dt>Tên/Mẫu xe</dt>
-                    <dd>{detail.order.carName}</dd>
+                    <dd>{bookingDetails.modelName || "—"}</dd>
                   </div>
                   <div>
                     <dt>Biển số xe</dt>
-                    <dd>{detail.order.plate}</dd>
+                    <dd>{bookingDetails.licensePlate || "—"}</dd>
                   </div>
                   <div>
                     <dt>Mã đơn thuê xe</dt>
-                    <dd>{detail.order.chassis}</dd>
+                    <dd>{bookingDetails.bookingId || "—"}</dd>
                   </div>
                   <div>
                     <dt>Thời gian thuê</dt>
-                    <dd>{detail.order.bookingTime}</dd>
+                    <dd>
+                      {formatDateTime(bookingDetails.startDate)} → {formatDateTime(bookingDetails.endDate)}
+                    </dd>
                   </div>
                   <div>
                     <dt>Trạm đón trả</dt>
-                    <dd>{detail.order.pickupStation}</dd>
+                    <dd>{bookingDetails.stationName || "—"}</dd>
                   </div>
                   <div>
                     <dt>Trạng thái thuê</dt>
                     <dd>
-                      <StatusBadge variant={detail.order.rentStatus.variant}>
-                        {detail.order.rentStatus.label}
+                      <StatusBadge variant={getStatusConfig(bookingDetails.status).variant}>
+                        {getStatusConfig(bookingDetails.status).label}
                       </StatusBadge>
                     </dd>
                   </div>
@@ -188,21 +337,24 @@ const OrderDetail = () => {
               <footer className="order-card__footer order-detail__summary">
                 <div>
                   <p>Thời gian thuê</p>
-                  <h3>{detail.order.summary.rentDuration}</h3>
+                  <h3>{bookingDetails.rentingDurationDay} ngày</h3>
                 </div>
                 <div>
                   <p>Phí thuê xe</p>
-                  <h3>{detail.order.summary.rentFee}</h3>
+                  <h3>{formatCurrency(bookingDetails.fee)}</h3>
                 </div>
                 <div>
                   <p>Tiền cọc</p>
-                  <h3>{detail.order.summary.extraFee}</h3>
+                  <h3>{formatCurrency(bookingDetails.deposit)}</h3>
+                </div>
+                <div>
+                  <p>Phí phát sinh</p>
+                  <h3>{formatCurrency(bookingDetails.additionalFee)}</h3>
                 </div>
                 <div className="order-detail__grand">
                   <p>Tổng cộng</p>
-                  <h2>{detail.order.summary.total}</h2>
+                  <h2>{formatCurrency(bookingDetails.totalAmount)}</h2>
                 </div>
-               
               </footer>
             </section>
           </div>
@@ -215,52 +367,42 @@ const OrderDetail = () => {
             <div className="order-card__body order-detail__inspection">
               <dl className="order-detail__info order-detail__info--grid">
                 <div>
-                  <dt>Số khung</dt>
-                  <dd>{detail.inspection.vin}</dd>
+                  <dt>Biển số xe</dt>
+                  <dd>{bookingDetails.licensePlate || "—"}</dd>
                 </div>
                 <div>
-                  <dt>Màu xe</dt>
-                  <dd>{detail.inspection.color}</dd>
+                  <dt>Mã đơn</dt>
+                  <dd>{bookingDetails.bookingId || "—"}</dd>
                 </div>
                 <div>
-                  <dt>Ngày thuê</dt>
-                  <dd>{detail.inspection.rentDate}</dd>
+                  <dt>Ngày bắt đầu thuê</dt>
+                  <dd>{formatDateTime(bookingDetails.startDate)}</dd>
                 </div>
                 <div>
-                  <dt>Số kilô mét</dt>
-                  <dd>{detail.inspection.mileage}</dd>
+                  <dt>Ngày dự kiến trả</dt>
+                  <dd>{formatDateTime(bookingDetails.endDate)}</dd>
                 </div>
                 <div>
-                  <dt>Tình trạng pin</dt>
-                  <dd>{detail.inspection.fuel}</dd>
+                  <dt>Thời gian thuê</dt>
+                  <dd>{bookingDetails.rentingDurationDay} ngày</dd>
                 </div>
               </dl>
 
-              <div className="order-detail__gallery">
-                {detail.inspection.exterior.map((item) => (
-                  <figure key={item.label}>
-                    <div className="order-detail__gallery-thumb">
-                      <span aria-hidden="true">{item.image}</span>
-                    </div>
-                    <figcaption>{item.label}</figcaption>
-                  </figure>
-                ))}
-              </div>
-
               <div className="order-detail__notes">
-                {detail.inspection.notes.map((note) => (
-                  <label key={note.label}>
-                    <span>{note.label}</span>
-                    <textarea
-                      rows={2}
-                      placeholder={note.placeholder}
-                      defaultValue=""
-                    />
-                  </label>
-                ))}
+                <p style={{ 
+                  padding: "16px", 
+                  backgroundColor: "#f0f9ff", 
+                  borderRadius: "8px",
+                  color: "#0369a1",
+                  textAlign: "center"
+                }}>
+                  Thông tin chi tiết về tình trạng xe sẽ được cập nhật khi kiểm tra xe.
+                </p>
               </div>
             </div>
-          </section>
+                </section>
+              </>
+            )}
           </section>
         </main>
       </div>

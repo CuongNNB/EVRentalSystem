@@ -99,6 +99,7 @@ const HandoverCar = () => {
       setListLoading(true);
       setListError("");
       try {
+        console.log("Fetching vehicles with params:", { modelId: vehicleModelId, stationId });
         const response = await api.get("/api/vehicle-details/available", {
           params: { modelId: vehicleModelId, stationId },
         });

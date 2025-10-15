@@ -80,22 +80,117 @@
 
 .return-check__photos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
 }
 
+/* ===================================
+   PHOTO SLOT WRAPPER - Container cho ảnh + description
+   =================================== */
+.return-check__photo-slot-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+/* Active state khi đã upload ảnh */
+.return-check__photo-slot-wrapper--active {
+  background: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+/* ===================================
+   PHOTO SLOT - Phần upload ảnh
+   =================================== */
 .return-check__photo-slot {
   display: grid;
   gap: 10px;
   justify-items: center;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.return-check__photo-slot p {
+.return-check__photo-slot:hover {
+  transform: scale(1.02);
+}
+
+.return-check__photo-label {
   margin: 0;
   font-weight: 600;
+  font-size: 0.9rem;
   color: #1f2937;
   text-align: center;
+}
+
+/* ===================================
+   DESCRIPTION WRAPPER - Container cho description
+   =================================== */
+.return-check__photo-description-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+}
+
+.return-check__photo-description-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===================================
+   DESCRIPTION TEXTAREA
+   =================================== */
+.return-check__photo-description {
+  width: 100%;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  color: #1f2937;
+  font-family: inherit;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 50px;
+  transition: all 0.2s ease;
+}
+
+.return-check__photo-description:hover {
+  border-color: #10b981;
+}
+
+.return-check__photo-description:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+  background: #ffffff;
+}
+
+.return-check__photo-description::placeholder {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Character count hint */
+.return-check__photo-description-hint {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: right;
+  font-style: italic;
 }
 
 .return-check__photo-slot input[type="file"] {
