@@ -11,4 +11,5 @@ public class VehicleDetailsByBookingResponse {
     String licensePlate;
     String color;
     String batteryCapacity;
+    int odo;
 }

@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.controller.staff;
 import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.response.ApiResponse;
+import com.evrental.evrentalsystem.response.staff.VehicleDetailsByBookingResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleDetailsResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleIdAndLicensePlateResponse;
 import com.evrental.evrentalsystem.service.StaffService;
@@ -93,6 +94,13 @@ public class VehicleDetailController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Error updating vehicle status", null));
         }
+    }
+
+    //API lấy chi tiết xe theo bookingId
+    @GetMapping("/booking-id/{id}")
+    public ResponseEntity<ApiResponse<VehicleDetailsByBookingResponse>> getVehicleDetailsByBookingId(@PathVariable int id) {
+        VehicleDetailsByBookingResponse response = staffService.getVehicleDetailsByBookingId(id);
+        return ResponseEntity.ok(ApiResponse.success("Get vehicle details successfully", response));
     }
 
 

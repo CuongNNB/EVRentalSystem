@@ -27,6 +27,7 @@ public class StaffService {
     private final InspectionRepository inspectionRepository;
     private final AdditionalFeeRepository additionalFeeRepository;
     private final ContractRepository contractRepository;
+    private final RenterDetailRepository renterDetailRepository;
 
     private String encodeToBase64(MultipartFile file) {
         try {
@@ -230,4 +231,50 @@ public class StaffService {
         c.setStatus(ContractStatusEnum.PENDING.name());
         contractRepository.save(c);
     }
+
+    public void verifyRenterDetailStatusByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        RenterDetail rd = new RenterDetail();
+        rd = booking.getRenter().getRenterDetail();
+        rd.setVerificationStatus(RenterDetailVerificationStatusEnum.VERIFIED.name());
+        renterDetailRepository.save(rd);
+    }
+
+    public RenterDetailVerificationStatusEnum getVerificationStatusByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        String status = booking.getRenter().getRenterDetail().getVerificationStatus();
+        return RenterDetailVerificationStatusEnum.valueOf(status);
+    }
+
+    public VehicleDetailsByBookingResponse getVehicleDetailsByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        VehicleDetailsByBookingResponse response = new VehicleDetailsByBookingResponse();
+        response.setLicensePlate(booking.getVehicleDetail().getLicensePlate());
+        response.setOdo(booking.getVehicleDetail().getOdo());
+        response.setColor(booking.getVehicleDetail().getColor());
+        response.setBatteryCapacity(booking.getVehicleDetail().getBatteryCapacity());
+        return response;
+    }
+
+    public List<InspectionDetailsByBookingResponse> getInspectionDetailsByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        List<Inspection> inspections = inspectionRepository.findAllByBooking(booking);
+        return inspections.stream()
+                .map(inspection -> {
+                    // Tạo đối tượng BookingsInStationResponse từ đối tượng Booking
+                    InspectionDetailsByBookingResponse response = new InspectionDetailsByBookingResponse();
+
+                    // Gán các giá trị cho response từ booking
+                    response.setPartName(PartCarName.valueOf(inspection.getPartName()));
+                    response.setPic(inspection.getPicture());
+                    response.setDesc(inspection.getDescription());
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
 }
+

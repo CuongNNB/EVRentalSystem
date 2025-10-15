@@ -2,6 +2,8 @@ package com.evrental.evrentalsystem.controller.staff;
 
 import com.evrental.evrentalsystem.enums.PartCarName;
 import com.evrental.evrentalsystem.response.ApiResponse;
+import com.evrental.evrentalsystem.response.staff.InspectionDetailsByBookingResponse;
+import com.evrental.evrentalsystem.response.staff.VehicleDetailsByBookingResponse;
 import com.evrental.evrentalsystem.service.StaffService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -37,4 +41,12 @@ public class InspectionController {
         // Nếu chạy đến đây tức là mọi thứ OK
         return ResponseEntity.ok(ApiResponse.success("Inspection created successfully", true));
     }
+
+    //API này lấy tất cả các inspections theo bookingId
+    @GetMapping("/booking-id/{id}")
+    public ResponseEntity<ApiResponse<List<InspectionDetailsByBookingResponse>>> getVehicleDetailsByBookingId(@PathVariable int id) {
+        List<InspectionDetailsByBookingResponse> response = staffService.getInspectionDetailsByBookingId(id);
+        return ResponseEntity.ok(ApiResponse.success("Get inspection details successfully", response));
+    }
+
 }
