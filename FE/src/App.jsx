@@ -32,6 +32,7 @@ import CheckCar from "./pages/staff/Orders/CheckCar";
 import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetail from "./pages/BookingDetail";
+import UserProfilePage from "./pages/UserProfilePage";
 
 function App() {
     console.log('App component is rendering...');
@@ -48,6 +49,7 @@ function App() {
                         <Route path="/dashboard" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
                         <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
                         <Route path="/my-bookings/:id" element={<ProtectedRoute><BookingDetail /></ProtectedRoute>} />
+                        <Route path="/account" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
                         <Route path="/cars" element={<CarPages />} />
                         <Route path="/car/:id" element={<CarDetail />} />
                         <Route path="/booking/:carId" element={<BookingPage />} />
