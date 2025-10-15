@@ -55,5 +55,18 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     @Transactional
     @Query("UPDATE VehicleDetail v SET v.status = :status WHERE v.id = :id")
     int updateVehicleStatusById(@Param("id") Integer id, @Param("status") String status);
+
+
+
+    // VehicleDetailRepository.java (thêm phương thức)
+    @Query("""
+    SELECT v FROM VehicleDetail v
+    LEFT JOIN FETCH v.vehicleModel
+    WHERE v.station.stationId = :stationId
+      AND v.status = :status
+""")
+    List<VehicleDetail> findByStationIdAndStatus(@Param("stationId") Integer stationId,
+                                                 @Param("status") String status);
+
     //End code here
 }

@@ -10,4 +10,5 @@ import java.util.List;
 public interface StationRepository extends JpaRepository<Station, Integer> {
     @Query("SELECT s FROM Station s WHERE s.address LIKE %:district%")
     List<Station> findByDistrict(@Param("district") String district);
+
 }

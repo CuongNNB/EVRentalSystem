@@ -1,18 +1,21 @@
 package com.evrental.evrentalsystem.response.vehicle;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class VehicleAtStationResponse {
-    private Integer stationId;
-    private String stationName;
-    private String address;
-    private String location;
-    private List<VehicleDetailDTO> vehicles;
+    private Integer vehicleId;          // ID của vehicleDetail
+    private Integer modelId;
+    private String brand;
+    private String model;
+    private Double price;               // giá thuê cơ bản
+    private Integer seats;
+    private String color;
+    private String batteryCapacity;
+    private Integer odo;
+    private String picture;
+    private String status;
 }

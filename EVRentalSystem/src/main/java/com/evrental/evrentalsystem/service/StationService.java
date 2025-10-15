@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,28 +20,33 @@ public class StationService {
     private final VehicleDetailRepository vehicleDetailRepository;
 
     //Hàm tìm trạm theo quận
-    public List<VehicleAtStationResponse> findStationsByDistrict(String district) {
-        List<Station> stations = stationRepository.findByDistrict(district);
-        return stations.stream().map(station -> {
-            List<VehicleDetail> vehicles = vehicleDetailRepository.findByStation(station);
-            List<VehicleDetailDTO> vehicleDTOs = vehicles.stream().map(v -> new VehicleDetailDTO(
-                    v.getLicensePlate(),
-                    v.getVehicleModel().getBrand(),
-                    v.getVehicleModel().getModel(),
-                    v.getColor(),
-                    v.getBatteryCapacity(),
-                    v.getStatus(),
-                    v.getOdo()
-            )).collect(Collectors.toList());
+    public List<VehicleAtStationResponse> findStationsByDistrict(Integer stationId) {
+        Optional<Station> stationOpt = stationRepository.findById(stationId);
+        if (stationOpt.isEmpty()) {
+            throw new IllegalArgumentException("Station with id " + stationId + " not found");
+        }
 
-            return new VehicleAtStationResponse(
-                    station.getStationId(),
-                    station.getStationName(),
-                    station.getAddress(),
-                    station.getLocation(),
-                    vehicleDTOs
-            );
-        }).collect(Collectors.toList());
+        List<VehicleDetail> list = vehicleDetailRepository.findByStationIdAndStatus(stationId, "AVAILABLE");
+
+        return list.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private VehicleAtStationResponse toResponse(VehicleDetail v) {
+        return VehicleAtStationResponse.builder()
+                .vehicleId(v.getId())
+                .modelId(v.getVehicleModel().getVehicleId())
+                .brand(v.getVehicleModel().getBrand())
+                .model(v.getVehicleModel().getModel())
+                .price(v.getVehicleModel().getPrice())
+                .seats(v.getVehicleModel().getSeats())
+                .color(v.getColor())
+                .batteryCapacity(v.getBatteryCapacity())
+                .odo(v.getOdo())
+                .picture(v.getPicture())
+                .status(v.getStatus())
+                .build();
     }
     //End code here
 }
