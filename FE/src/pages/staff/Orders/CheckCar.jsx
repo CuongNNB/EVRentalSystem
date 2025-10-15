@@ -10,13 +10,14 @@ import {
   getInspectionPart,
 } from "../../../utils/inspectionParts";
 import "../StaffLayout.css";
-import "./ReturnCar.css";
+import "./CheckCar.css";
 
 const CheckCar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orderId = "EV0205010" } = useParams();
   const [photos, setPhotos] = useState({});
+  const [descriptions, setDescriptions] = useState({}); // Thêm state cho descriptions
   const [notification, setNotification] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -61,7 +62,7 @@ const CheckCar = () => {
   );
   const allowedSlotIds = useMemo(() => new Set(photoSlots.map((slot) => slot.id)), [photoSlots]);
   const optionalRowSlots = useMemo(
-    () => ROW_INSPECTION_SLOTS.filter((slot) => slot.id !== "row1"),
+    () => ROW_INSPECTION_SLOTS.filter((slot) => slot.id !== "row1" && slot.id !== "row2"),
     []
   );
   const handleAddRow = (rowId) => {
@@ -71,7 +72,6 @@ const CheckCar = () => {
     () => optionalRowSlots.filter((slot) => !additionalRows.includes(slot.id)),
     [optionalRowSlots, additionalRows]
   );
-
   const bookingId = useMemo(() => {
     const state = location.state || {};
     const candidates = [
@@ -130,38 +130,77 @@ const CheckCar = () => {
     ([slotId, value]) => allowedSlotIds.has(slotId) && value?.file
   );
 
+  // Validation: Kiểm tra có ít nhất 1 ảnh
+  if (photoEntries.length === 0) {
+    setErrorMessage("Vui lòng tải lên ít nhất một ảnh kiểm tra xe.");
+    return;
+  }
+
+
   setIsSending(true);
 
   try {
+    let successCount = 0;
+    let failCount = 0;
+
     for (const [slotId, data] of photoEntries) {
       const partName = getInspectionPart(slotId);
       if (!partName) continue;
 
-      // 🔹 Dùng FormData thay vì JSON
-      const formData = new FormData();
-      formData.append("bookingId", bookingId);
-      formData.append("partName", partName);
-      formData.append("picture", data.file); // <--- Gửi file thật
-      formData.append("staffId", staffId);
-      formData.append("status", DEFAULT_INSPECTION_STATUS);
+      try {
+        // 🔹 Dùng FormData để gửi file
+        const formData = new FormData();
+        formData.append("bookingId", bookingId);
+        formData.append("partName", partName);
+        formData.append("picture", data.file);
+        formData.append("description", descriptions[slotId] || ""); // Thêm description
+        formData.append("staffId", staffId);
+        formData.append("status", DEFAULT_INSPECTION_STATUS);
 
-      await api.post("/api/inspections/create", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+        await api.post("/api/inspections/create", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        
+        successCount++;
+      } catch (inspectionError) {
+        console.error(`Failed to create inspection for ${partName}:`, inspectionError);
+        failCount++;
+      }
     }
 
-    // Gọi API cập nhật trạng thái booking
-    await api.put(`/api/bookings/${encodeURIComponent(bookingId)}/status`, null, {
-      params: { status: "Vehicle_Inspected_Before_Pickup" },
-    });
+    // Nếu không có inspection nào thành công, dừng lại
+    if (successCount === 0) {
+      setErrorMessage("Không thể tạo biên bản kiểm tra. Vui lòng thử lại.");
+      setIsSending(false);
+      return;
+    }
 
-    setNotification("Đã gửi biên bản kiểm tra cho khách hàng.");
+
+    // Gọi API cập nhật trạng thái booking
+    try {
+      await api.put(`/api/bookings/${encodeURIComponent(bookingId)}/status`, null, {
+        params: { status: "Vehicle_Inspected_Before_Pickup" },
+      });
+    } catch (statusError) {
+      console.warn("Unable to update booking status", statusError);
+      // Vẫn cho phép tiếp tục vì inspections đã được tạo
+    }
+
+    const message = failCount > 0
+      ? `Đã gửi ${successCount}/${photoEntries.length} ảnh kiểm tra. ${failCount} ảnh thất bại.`
+      : `Đã gửi biên bản kiểm tra với ${successCount} ảnh cho khách hàng.`;
+    
+    setNotification(message);
+    
     setTimeout(() => {
       navigate("/staff/orders", { replace: true });
-    }, 1500);
+    }, 2000);
   } catch (error) {
-    console.warn("Unable to send inspections or update booking status", error);
-    setErrorMessage("Không thể tạo biên bản kiểm tra hoặc cập nhật trạng thái. Vui lòng thử lại.");
+    console.error("Error during inspection submission:", error);
+    setErrorMessage(
+      error.response?.data?.message || 
+      "Không thể tạo biên bản kiểm tra hoặc cập nhật trạng thái. Vui lòng thử lại."
+    );
     setIsSending(false);
   }
 };
@@ -209,32 +248,6 @@ const CheckCar = () => {
             )}
 
             <div className="return-check__layout">
-              <section className="return-check__panel">
-                <header className="return-check__panel-header">
-                  <h2>Thông tin kiểm tra</h2>
-                  <p>Ghi nhận tình trạng xe trước khi bàn giao cho khách.</p>
-                </header>
-
-                <div className="return-check__grid">
-                  <label>
-                    <span>Tình trạng pin</span>
-                    <textarea rows={2} placeholder="Ghi chú..." />
-                  </label>
-                  <label>
-                    <span>Tình trạng động cơ</span>
-                    <textarea rows={2} placeholder="Ghi chú..." />
-                  </label>
-                  <label className="return-check__full">
-                    <span>Tình trạng ngoại thất</span>
-                    <textarea rows={3} placeholder="Ghi chú..." />
-                  </label>
-                  <label className="return-check__full">
-                    <span>Tình trạng nội thất</span>
-                    <textarea rows={3} placeholder="Ghi chú..." />
-                  </label>
-                </div>
-              </section>
-
               <section className="return-check__panel return-check__panel--gallery">
                 <header className="return-check__panel-header">
                   <h2>Ảnh kiểm tra</h2>
@@ -243,46 +256,76 @@ const CheckCar = () => {
 
                 <div className="return-check__photos">
                   {photoSlots.map((slot) => (
-                    <label key={slot.id} className="return-check__photo-slot">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => handleUpload(event, slot.id)}
-                      />
-                      <div className="return-check__photo-frame">
-                        {photos[slot.id]?.preview ? (
-                          <img
-                            src={photos[slot.id].preview}
-                            alt={slot.label}
-                            className="return-check__photo-img"
+                    <div 
+                      key={slot.id} 
+                      className={`return-check__photo-slot-wrapper ${
+                        photos[slot.id]?.preview ? 'return-check__photo-slot-wrapper--active' : ''
+                      }`}
+                    >
+                      {/* Photo Upload */}
+                      <label className="return-check__photo-slot">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(event) => handleUpload(event, slot.id)}
+                        />
+                        <div className="return-check__photo-frame">
+                          {photos[slot.id]?.preview ? (
+                            <img
+                              src={photos[slot.id].preview}
+                              alt={slot.label}
+                              className="return-check__photo-img"
+                            />
+                          ) : (
+                            <span className="return-check__photo-placeholder" aria-hidden="true">
+                              📷
+                            </span>
+                          )}
+                        </div>
+                        <p className="return-check__photo-label">{slot.label}</p>
+                      </label>
+                      
+                      {/* Description - chỉ hiện khi đã có ảnh */}
+                      {photos[slot.id]?.preview && (
+                        <div className="return-check__photo-description-wrapper">
+                          <label htmlFor={`desc-${slot.id}`} className="return-check__photo-description-label">
+                            💬 Mô tả cho ảnh này:
+                          </label>
+                          <textarea
+                            id={`desc-${slot.id}`}
+                            className="return-check__photo-description"
+                            placeholder={`Ví dụ: "Không có vết xước", "Đèn hoạt động tốt"...`}
+                            value={descriptions[slot.id] || ""}
+                            onChange={(e) => setDescriptions(prev => ({
+                              ...prev,
+                              [slot.id]: e.target.value
+                            }))}
+                            rows={2}
                           />
-                        ) : (
-                          <span className="return-check__photo-placeholder" aria-hidden="true">
-                            📷
+                          <span className="return-check__photo-description-hint">
+                            {descriptions[slot.id]?.length || 0} ký tự
                           </span>
-                        )}
-                      </div>
-                      <p>{slot.label}</p>
-                    </label>
+                        </div>
+                      )}
+                    </div>
                   ))}
                   {remainingRowSlots.map((slot) => (
-                    <button
-                      key={`add-${slot.id}`}
-                      type="button"
-                      className="return-check__photo-slot return-check__photo-slot--adder"
-                      onClick={() => handleAddRow(slot.id)}
-                      aria-label={`Thêm ${slot.label}`}
-                    >
-                      <div className="return-check__photo-frame return-check__photo-frame--adder">
-                        <span className="return-check__photo-add" aria-hidden="true">
-                          +
-                        </span>
-                      </div>
-                      <p>Thêm {slot.label}</p>
-                    </button>
+                    <div key={slot.id} className="return-check__add-row-wrapper">
+                      <button
+                        type="button"
+                        className="return-check__add-row-button"
+                        onClick={() => handleAddRow(slot.id)}
+                      >
+                        <div className="return-check__add-row-icon">
+                          <span className="return-check__add-row-plus">+</span>
+                        </div>
+                        <span className="return-check__add-row-label">Thêm {slot.label}</span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               </section>
+
             </div>
 
             <footer className="return-check__actions">

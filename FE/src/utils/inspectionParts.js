@@ -11,9 +11,14 @@ export const ROW_INSPECTION_SLOTS = [
   { id: "row3", label: "Hàng ghế thứ 3", part: "Third_Row" },
 ];
 
-const DEFAULT_ROW_IDS = ["row1"];
+export const VEHICLE_STATUS_SLOTS = [
+  { id: "odometer", label: "Đồng hồ km", part: "Odometer" },
+  { id: "battery", label: "Tình trạng pin", part: "Battery" },
+];
 
-const SLOT_PART_LOOKUP = [...BASE_INSPECTION_SLOTS, ...ROW_INSPECTION_SLOTS].reduce(
+const DEFAULT_ROW_IDS = ["row1", "row2"];
+
+const SLOT_PART_LOOKUP = [...BASE_INSPECTION_SLOTS, ...ROW_INSPECTION_SLOTS, ...VEHICLE_STATUS_SLOTS].reduce(
   (acc, slot) => {
     acc[slot.id] = slot.part;
     return acc;
@@ -26,7 +31,7 @@ export const buildInspectionSlots = (additionalRowIds = []) => {
   const rowSlots = uniqueRowIds
     .map((rowId) => ROW_INSPECTION_SLOTS.find((slot) => slot.id === rowId))
     .filter(Boolean);
-  return [...BASE_INSPECTION_SLOTS, ...rowSlots];
+  return [...BASE_INSPECTION_SLOTS, ...rowSlots, ...VEHICLE_STATUS_SLOTS];
 };
 
 export const getInspectionPart = (slotId) => SLOT_PART_LOOKUP[slotId] || null;

@@ -95,12 +95,13 @@ const HandoverCar = () => {
       return;
     }
 
-    const fetchAvailableVehicles = async () => {
+    const fetchReservedVehicles = async () => {
       setListLoading(true);
       setListError("");
       try {
-        console.log("Fetching vehicles with params:", { modelId: vehicleModelId, stationId });
-        const response = await api.get("/api/vehicle-details/available", {
+        console.log("Fetching reserved vehicles with params:", { modelId: vehicleModelId, stationId });
+        // Gọi API lấy xe có status Reserved
+        const response = await api.get("/api/vehicle-details/reserved", {
           params: { modelId: vehicleModelId, stationId },
         });
         const data = response.data?.data ?? response.data ?? [];
@@ -108,13 +109,24 @@ const HandoverCar = () => {
         if (data.length) {
           setSelectedId(String(data[0].id));
         } else {
-          setSelectedId("");
-          setVehicle(null);
-          setListError("Không có xe khả dụng trong trạm cho mẫu xe này.");
+          // Fallback: nếu không có xe Reserved, thử lấy xe Available
+          console.log("No reserved vehicles found, trying available vehicles...");
+          const fallbackResponse = await api.get("/api/vehicle-details/available", {
+            params: { modelId: vehicleModelId, stationId },
+          });
+          const fallbackData = fallbackResponse.data?.data ?? fallbackResponse.data ?? [];
+          if (fallbackData.length) {
+            setVehicles(fallbackData);
+            setSelectedId(String(fallbackData[0].id));
+          } else {
+            setSelectedId("");
+            setVehicle(null);
+            setListError("Không có xe khả dụng trong trạm cho mẫu xe này.");
+          }
         }
       } catch (error) {
-        console.warn("Unable to fetch available vehicles", error);
-        setListError("Không thể tải danh sách xe khả dụng.");
+        console.warn("Unable to fetch reserved vehicles", error);
+        setListError("Không thể tải danh sách xe đã đặt.");
         setVehicles([]);
         setSelectedId("");
         setVehicle(null);
@@ -123,7 +135,7 @@ const HandoverCar = () => {
       }
     };
 
-    fetchAvailableVehicles();
+    fetchReservedVehicles();
   }, [vehicleModelId, stationId]);
 
   useEffect(() => {
@@ -362,7 +374,7 @@ const HandoverCar = () => {
                   disabled={!vehicle}
                   onClick={handleProceed}
                 >
-                  Tiếp tục bàn giao
+                  Chuẩn bị xe
                 </button>
               </footer>
             </section>
