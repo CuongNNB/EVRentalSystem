@@ -17,7 +17,7 @@ public class StationController {
 
 
     //API này cho phép người dùng tìm kiếm các trạm theo quận/huyện
-    //Gọi API này dùng: http://localhost:8084/EVRentalSystem/api/stations/{stationId}/vehicles/availabl
+    //Gọi API này dùng: http://localhost:8084/EVRentalSystem/api/stations/{stationId}/vehicles/available
     //Ví dụ: http://localhost:8084/EVRentalSystem/api/stations/3/vehicles/available
     @GetMapping("/{stationId}/vehicles/available")
     public ResponseEntity<List<VehicleAtStationResponse>> getAvailableVehicles(@PathVariable Integer stationId) {
