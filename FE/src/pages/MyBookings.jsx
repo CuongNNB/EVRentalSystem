@@ -3,22 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { MOCK_BOOKINGS, getStatusLabel, getStatusBadgeClass } from '../mocks/bookings';
+import api from '../api';
 import './MyBookings.css';
 
-// Helper functions
+// Helper functions (null-safe)
 const fmtVND = (amount) => {
-  return amount.toLocaleString("vi-VN") + " ₫";
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '0 ₫';
+  return n.toLocaleString('vi-VN') + ' ₫';
 };
 
 const fmtDateTime = (isoString) => {
-  return new Date(isoString).toLocaleString("vi-VN", {
+  if (!isoString) return '—';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
   });
+};
+
+const getUserId = () => {
+  try {
+    const raw = localStorage.getItem('ev_user');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u?.id ?? u?.userId ?? u?.data?.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const STATUS_LABEL = {
+  RENTING: 'Đang thuê',
+  IN_PROGRESS: 'Đang thuê',
+  RENTED: 'Đang thuê',
+  UPCOMING: 'Chờ nhận xe',
+  PENDING: 'Chờ nhận xe',
+  COMPLETED: 'Đã hoàn tất',
+  DONE: 'Đã hoàn tất',
+  RETURNED: 'Đã hoàn tất',
+  CANCELED: 'Đã hủy',
+  CANCELLED: 'Đã hủy',
+};
+
+const normalizeStatus = (s = '') => String(s || '').toString().trim().toUpperCase();
+
+const getStatusLabel = (s) => {
+  return STATUS_LABEL[normalizeStatus(s)] || (s || 'Không xác định');
 };
 
 // Skeleton component
@@ -33,51 +68,100 @@ const BookingCardSkeleton = () => {
   );
 };
 
+const normalizeBookingData = (bookings) => {
+  return (bookings || []).map((b, idx) => ({
+    ...b,
+    // ensure stable id and string fallbacks for fields used with string ops
+    bookingId: b?.bookingId ?? b?.id ?? `bk_${idx}`,
+  // map backend fields: prefer bookingStatus, then legacy status
+  bookingStatus: b?.bookingStatus ?? b?.status ?? 'UNKNOWN',
+    vehicleBrand: b?.vehicleBrand ?? '',
+    vehicleModel: b?.vehicleModel ?? 'Không rõ',
+    licensePlate: b?.licensePlate ?? 'Không rõ',
+    stationName: b?.stationName ?? 'Không rõ',
+    startTime: b?.startTime ?? b?.startAt ?? null,
+    expectedReturnTime: b?.expectedReturnTime ?? b?.endAt ?? null,
+    deposit: b?.deposit ?? b?.totalPrice ?? 0,
+  }));
+};
+
 const MyBookings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [items, setItems] = useState([]);
   const pageSize = 6;
 
   const tabs = [
     { key: 'ALL', label: 'Tất cả' },
-    { key: 'RENTED', label: 'Đang thuê' },
-    { key: 'PENDING', label: 'Sắp thuê' },
-    { key: 'RETURNED', label: 'Đã hoàn tất' },
-    { key: 'CANCELLED', label: 'Đã hủy' }
+    { key: 'RENTING', label: 'Đang thuê' },
+    { key: 'UPCOMING', label: 'Chờ nhận xe' },
+    { key: 'COMPLETED', label: 'Đã hoàn tất' },
+    { key: 'CANCELED', label: 'Đã hủy' }
   ];
-//hehe
-  // Simulate loading hehe
-  //hide loading after 700ms
+
+  const userId = getUserId();
+
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 700);
-    return () => clearTimeout(timer);
-  }, [activeTab]);
+    const fetchData = async () => {
+      if (!userId) {
+        setError('Vui lòng đăng nhập để xem lịch sử đặt xe.');
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError('');
+      try {
+        const url = `/user/booking-history/${userId}`;
+        const res = await api.get(url);
+        const safeBookings = normalizeBookingData(res.data);
+        setItems(safeBookings);
+      } catch (err) {
+        setError('Không thể tải danh sách đặt xe. Vui lòng thử lại sau.');
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   // Filter bookings
-  const filteredBookings = MOCK_BOOKINGS.filter(booking => {
-    // Filter by status
-    if (activeTab !== 'ALL' && booking.status !== activeTab) {
-      return false;
+  const filteredBookings = items.filter((booking) => {
+    // status filter
+    if (activeTab !== 'ALL') {
+      const s = normalizeStatus(booking.bookingStatus || "");
+      switch (activeTab) {
+        case 'RENTING':
+          if (s !== 'RENTING' && s !== 'IN_PROGRESS' && s !== 'RENTED') return false;
+          break;
+        case 'UPCOMING':
+          if (s !== 'UPCOMING' && s !== 'PENDING') return false;
+          break;
+        case 'COMPLETED':
+          if (s !== 'COMPLETED' && s !== 'DONE' && s !== 'RETURNED') return false;
+          break;
+        case 'CANCELED':
+          if (s !== 'CANCELED' && s !== 'CANCELLED') return false;
+          break;
+        default:
+          break;
+      }
     }
-    // Filter by search query
+    // search
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        booking.vehicleModel.toLowerCase().includes(query) ||
-        booking.licensePlate.toLowerCase().includes(query) ||
-        booking.vehicleBrand.toLowerCase().includes(query)
-      );
+      const q = (searchQuery || '').toString().toLowerCase();
+      const model = String(booking?.vehicleModel ?? '').toLowerCase();
+      const plate = String(booking?.licensePlate ?? '').toLowerCase();
+      return model.includes(q) || plate.includes(q);
     }
     return true;
   });
-//....
   // Pagination
   const totalPages = Math.ceil(filteredBookings.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
@@ -211,10 +295,10 @@ const MyBookings = () => {
               className="bookings-grid"
             >
               {paginatedBookings.map((booking, index) => {
-                const statusClass = booking.status.toLowerCase().replace('_', '-');
+                const statusClass = String(booking?.bookingStatus ?? booking?.status ?? '').toLowerCase().replace(/_/g, '-');
                 return (
                   <motion.div
-                    key={booking.bookingId}
+                    key={booking.bookingId ?? booking.id ?? index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
@@ -230,7 +314,7 @@ const MyBookings = () => {
                         <p>{booking.licensePlate}</p>
                       </div>
                       <span className={`status-badge status-${statusClass}`}>
-                        {getStatusLabel(booking.status)}
+                        {getStatusLabel(booking.bookingStatus ?? booking.status)}
                       </span>
                     </div>
 
@@ -249,14 +333,14 @@ const MyBookings = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="time-label">Từ:</span>
-                        <span className="time-value">{fmtDateTime(booking.startAt)}</span>
+                        <span className="time-value">{fmtDateTime(booking.startTime)}</span>
                       </div>
                       <div className="time-row">
                         <svg className="time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="time-label">Đến:</span>
-                        <span className="time-value">{fmtDateTime(booking.endAt)}</span>
+                        <span className="time-value">{fmtDateTime(booking.expectedReturnTime)}</span>
                       </div>
                     </div>
 
@@ -264,7 +348,7 @@ const MyBookings = () => {
                     <div className="card-price">
                       <span className="price-label">Tổng tiền:</span>
                       <span className="price-amount">
-                        {fmtVND(booking.totalPrice)}
+                        {fmtVND(booking.deposit)}
                       </span>
                     </div>
 

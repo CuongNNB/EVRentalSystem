@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import api from "../api";
 import "./BookingPage.css";
 
 const pad = (n) => (n < 10 ? "0" + n : n);
@@ -265,45 +266,110 @@ export default function BookingPage() {
         };
     };
 
+    const getUserId = () => {
+        try {
+            const raw = localStorage.getItem('ev_user');
+            if (!raw) return null;
+            const u = JSON.parse(raw);
+            return u?.id ?? u?.userId ?? u?.data?.id ?? null;
+        } catch {
+            return null;
+        }
+    };
+
     const handleBooking = async () => {
         setIsBooking(true);
-        const payload = {
-            userId: storedUser.id,
-            vehicleModelId: passedCar?.id || parseInt(carId),
-            stationId: passedCar?.stationId || carData.stationId,
-            startTime: formData.pickupDateTime,
-            expectedReturnTime: formData.returnDateTime,
-            deposit: totals.deposit,
+        const userId = getUserId() || storedUser.id;
+        if (!userId) {
+            showError('Vui lòng đăng nhập để đặt xe.');
+            setIsBooking(false);
+            return;
+        }
+
+        // Validate start/end times before sending to backend
+        if (!formData.pickupDateTime || !formData.returnDateTime) {
+            showError('Vui lòng chọn thời gian nhận và trả xe hợp lệ.');
+            setIsBooking(false);
+            return;
+        }
+
+        // Ensure ISO datetime includes seconds (backend expects LocalDateTime format)
+        const ensureSeconds = (dt) => {
+            if (!dt) return dt;
+            // if already has seconds component (YYYY-MM-DDTHH:mm:ss), keep it
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(dt)) return dt;
+            // if has YYYY-MM-DDTHH:mm, append :00
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dt)) return `${dt}:00`;
+            // otherwise try to parse and reformat
+            const d = new Date(dt);
+            if (isNaN(d.getTime())) return dt;
+            const pad = (n) => (n < 10 ? '0' + n : n);
+            const yyyy = d.getFullYear();
+            const mm = pad(d.getMonth() + 1);
+            const dd = pad(d.getDate());
+            const hh = pad(d.getHours());
+            const min = pad(d.getMinutes());
+            const ss = pad(d.getSeconds());
+            return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
         };
 
+    const resolvedVehicleId = Number(passedCar?.id ?? (carId ? parseInt(carId, 10) : null)) || null;
+    const resolvedStationId = Number(passedCar?.stationId ?? carData?.stationId ?? null) || null;
+    const resolvedRenterId = Number(userId ?? storedUser?.id ?? null) || null;
+
+        // Validate essential IDs to prevent server errors
+        if (!resolvedRenterId) {
+            showError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập.');
+            setIsBooking(false);
+            return;
+        }
+        if (!resolvedVehicleId) {
+            showError('Không tìm thấy xe để đặt. Vui lòng chọn lại xe.');
+            setIsBooking(false);
+            return;
+        }
+        if (!resolvedStationId) {
+            showError('Không tìm thấy trạm nhận xe. Vui lòng chọn lại trạm.');
+            setIsBooking(false);
+            return;
+        }
+
+        const payload = {
+            renterId: resolvedRenterId,
+            vehicleDetailId: resolvedVehicleId,
+            // include alias fields to maximize backend compatibility
+            userId: resolvedRenterId,
+            vehicleId: resolvedVehicleId,
+            vehicleModelId: resolvedVehicleId,
+            stationId: resolvedStationId,
+            startTime: ensureSeconds(formData.pickupDateTime),
+            expectedReturnTime: ensureSeconds(formData.returnDateTime),
+            deposit: Number(totals.deposit) || 0,
+            totalPrice: Number(totals.totalRental) || 0,
+            note: formData.note || ''
+        };
+
+        // Debug: log payload before sending to help trace null/id issues
+        console.debug('Booking payload:', payload);
+
         try {
-            const response = await fetch("http://localhost:8084/EVRentalSystem/api/user/booking", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) throw new Error("Booking failed");
-
-            const data = await response.json();
+            const { data } = await api.post('/user/booking', payload);
 
             const fullBooking = makeFullBooking(data);
 
-            const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
+            const existingBookings = JSON.parse(localStorage.getItem('bookingList')) || [];
             existingBookings.push(fullBooking);
-            localStorage.setItem("bookingList", JSON.stringify(existingBookings));
-            localStorage.setItem("currentBooking", JSON.stringify(fullBooking));
+            localStorage.setItem('bookingList', JSON.stringify(existingBookings));
+            localStorage.setItem('currentBooking', JSON.stringify(fullBooking));
 
             const contractSummary = buildContractSummary(fullBooking, data);
-            navigate("/deposit-payment", {
-                state: {
-                    contractSummary,
-                },
+            navigate('/deposit-payment', {
+                state: { contractSummary }
             });
-
-        } catch (error) {
-            console.error("Lỗi khi đặt xe:", error);
-            showError("Đặt xe thất bại! Vui lòng thử lại.");
+        } catch (err) {
+            console.error('Lỗi khi đặt xe:', err);
+            const msg = err?.response?.data?.message || 'Không thể tạo đơn. Vui lòng thử lại sau.';
+            showError(msg);
         } finally {
             setIsBooking(false);
         }
