@@ -231,6 +231,7 @@ const MapStations = () => {
 
     return (
         <div className="map-stations-wrapper">
+            <Header />
             <div className="map-stations-container">
                 {/* Page Header */}
                 <div className="page-header">
