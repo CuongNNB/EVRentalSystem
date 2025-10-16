@@ -6,10 +6,13 @@ import com.evrental.evrentalsystem.repository.UserRepository;
 import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.*;
+import com.evrental.evrentalsystem.response.user.RenterDetailResponse;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.security.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,11 +21,14 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     @Autowired
@@ -32,6 +38,9 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private RenterDetailRepository renterDetailRepository;
+
+    private final ObjectMapper objectMapper; // inject Jackson's ObjectMapper
+
 
     @Transactional
     public UserResponse register(UserRegisterRequest request, MultipartFile gplx, MultipartFile cccdFront, MultipartFile cccdBack) {
@@ -147,6 +156,42 @@ public class UserService {
         userRepository.save(user);
 
         return new ApiResponse<>(true, "Password updated successfully", toUserResponse(user));
+    }
+
+    public RenterDetailResponse getRenterDetailByUserId(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        RenterDetailResponse response = RenterDetailResponse.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .address(user.getAddress())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .createdAt(user.getCreatedAt())
+                .verificationStatus(user.getRenterDetail().getVerificationStatus())
+                .isRisky(user.getRenterDetail().getIsRisky())
+                // image URLs (client can call these endpoints)
+                .cccdFrontUrl("http://localhost:8084/EVRentalSystem/api/users/" + userId + "/renter-detail/cccd-front")
+                .cccdBackUrl("http://localhost:8084/EVRentalSystem/api/users/" + userId + "/renter-detail/cccd-back")
+                .driverLicenseUrl("http://localhost:8084/EVRentalSystem/api/users/" + userId + "/renter-detail/driver-license")
+                .build();
+
+        return response;
+    }
+
+    // helper to get raw base64 strings (used by controller image endpoints)
+    public Optional<String> getCccdFrontBase64(Integer userId) {
+        return renterDetailRepository.findById(userId).map(RenterDetail::getCccdFront);
+    }
+    public Optional<String> getCccdBackBase64(Integer userId) {
+        return renterDetailRepository.findById(userId).map(RenterDetail::getCccdBack);
+    }
+    public Optional<String> getDriverLicenseBase64(Integer userId) {
+        return renterDetailRepository.findById(userId).map(RenterDetail::getDriverLicense);
     }
 
     private UserResponse toUserResponse(User user) {
