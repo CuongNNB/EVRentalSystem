@@ -216,7 +216,7 @@ public class StaffService {
         int additionalFee = afs.stream()
                 .filter(af -> af.getAmount() != null)
                 .mapToInt(af -> af.getAmount().intValue())
-                .sum() * 1000;
+                .sum();
 
 
         BookingDetailsByBookingResponse response = new BookingDetailsByBookingResponse();
