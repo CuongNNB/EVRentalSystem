@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './MapStations.css';
+import '../pages/MapStations.css';
 
 // Simple MapStations component without react-leaflet
 const SimpleMapStations = () => {

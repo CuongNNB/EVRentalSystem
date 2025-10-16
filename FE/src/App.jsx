@@ -25,7 +25,7 @@ import HandoverCar from "./pages/staff/Orders/HandoverCar";
 import ReturnCar from "./pages/staff/Orders/CheckCar";
 import ExtraFee from "./pages/staff/Orders/ExtraFee";
 import StationCarView from "./pages/StationCarView";
-import MapStationsDemo from "./pages/MapStationsDemo";
+import MapStationsDemo from "./pages/MapStations";
 import TestPage from "./pages/TestPage";
 import CheckCar from "./pages/staff/Orders/CheckCar";
 

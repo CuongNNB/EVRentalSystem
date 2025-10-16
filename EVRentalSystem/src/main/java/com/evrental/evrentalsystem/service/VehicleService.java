@@ -30,6 +30,7 @@ public class VehicleService {
                 v.getOdo(),
                 v.getPicture(),
                 v.getStation().getStationName(),
+                v.getStation().getAddress(),
                 v.getVehicleModel().getPrice()
         )).collect(Collectors.toList());
     }
