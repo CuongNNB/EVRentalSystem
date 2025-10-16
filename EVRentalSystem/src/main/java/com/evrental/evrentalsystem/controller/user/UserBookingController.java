@@ -2,6 +2,7 @@
 
 
     import com.evrental.evrentalsystem.request.BookingRequest;
+    import com.evrental.evrentalsystem.response.user.BookingDetailResponse;
     import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
 
     import com.evrental.evrentalsystem.service.BookingService;
@@ -22,22 +23,11 @@
         public BookingResponseDTO createBooking(@RequestBody BookingRequest request) {
             return bookingService.createBooking(request);
         }
-
-        @GetMapping("/bookings")
-        public ResponseEntity<List<BookingResponseDTO>> getUserBookings(
-                @RequestParam Integer userId,
-                @RequestParam(required = false) String status,
-                @RequestParam(required = false) String search
-        ) {
-            List<BookingResponseDTO> bookings = bookingService.getUserBookings(userId, status, search);
-            return ResponseEntity.ok(bookings);
+        //API: http://localhost:8084/EVRentalSystem/api/user/booking-history/{userId}
+        @GetMapping("/booking-history/{userId}")
+        public ResponseEntity<List<BookingDetailResponse>> getUserBookings(@PathVariable Integer userId) {
+            List<BookingDetailResponse> result = bookingService.getUserBookings(userId);
+            return ResponseEntity.ok(result);
         }
 
-        @GetMapping("/bookings/{bookingId}")
-        public ResponseEntity<BookingResponseDTO> getBookingDetail(
-                @PathVariable Integer bookingId
-        ) {
-            BookingResponseDTO booking = bookingService.getBookingDetail(bookingId);
-            return ResponseEntity.ok(booking);
-        }
     }

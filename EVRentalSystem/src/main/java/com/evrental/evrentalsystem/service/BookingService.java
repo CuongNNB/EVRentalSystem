@@ -5,6 +5,7 @@ import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
 import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
+import com.evrental.evrentalsystem.response.user.BookingDetailResponse;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -94,29 +95,60 @@ public class    BookingService {
         return "Booking confirmed successfully.";
     }
     //API get user Booking
-    public List<BookingResponseDTO> getUserBookings(Integer userId, String status, String search) {
+    public List<BookingDetailResponse> getUserBookings(Integer userId) {
         if (userId == null) throw new IllegalArgumentException("User ID is required");
 
-        List<Booking> bookings;
-        if (status != null && !status.isEmpty() && search != null && !search.isEmpty()) {
-            bookings = bookingRepository.filterBookings(userId, status, search);
-        } else if (status != null && !status.isEmpty()) {
-            bookings = bookingRepository.findByRenter_UserIdAndStatusIgnoreCase(userId, status);
-        } else if (search != null && !search.isEmpty()) {
-            bookings = bookingRepository.searchByUserAndModel(userId, search);
-        } else {
-            bookings = bookingRepository.findByRenter_UserId(userId);
-        }
+        // đảm bảo user tồn tại
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Booking> bookings = bookingRepository.findAllByRenter_UserId(userId);
 
         return bookings.stream()
-                .map(BookingResponseDTO::fromListItem)
-                .toList();
+                .map(this::toBookingDetailResponse)
+                .collect(Collectors.toList());
     }
 
-    public BookingResponseDTO getBookingDetail(Integer bookingId) {
-        Booking booking = bookingRepository.findByBookingId(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
-        return BookingResponseDTO.fromDetail(booking);
-    }
+    // Mapper Booking -> BookingDetailResponse
+    private BookingDetailResponse toBookingDetailResponse(Booking booking) {
+        BookingDetailResponse dto = new BookingDetailResponse();
 
+        VehicleModel model = booking.getVehicleModel();
+        VehicleDetail detail = booking.getVehicleDetail();
+        Station station = booking.getStation();
+        Promotion promo = null;
+        try { promo = booking.getPromotion(); } catch (Exception ignored) {}
+
+        dto.setBookingId(booking.getBookingId());
+        dto.setCreatedAt(booking.getCreatedAt());
+        dto.setStartTime(booking.getStartTime());
+        dto.setExpectedReturnTime(booking.getExpectedReturnTime());
+        dto.setActualReturnTime(booking.getActualReturnTime());
+        dto.setDeposit(booking.getDeposit() == null ? 0.0 : booking.getDeposit());
+        dto.setBookingStatus(booking.getStatus());
+
+        if (model != null) {
+            dto.setVehicleModel(model.getModel());
+            dto.setBrand(model.getBrand());
+            dto.setSeats(model.getSeats());
+        }
+
+        if (detail != null) {
+            dto.setColor(detail.getColor());
+            dto.setBatteryCapacity(detail.getBatteryCapacity());
+            dto.setOdo(detail.getOdo());
+            dto.setLicensePlate(detail.getLicensePlate());
+        }
+
+        if (station != null) {
+            dto.setStationName(station.getStationName());
+            dto.setStationAddress(station.getAddress());
+        }
+
+        if (promo != null) {
+            dto.setPromotionId(String.valueOf(promo.getPromotionId()));
+        }
+
+        return dto;
+    }
 }
