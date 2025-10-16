@@ -5,6 +5,7 @@ import com.evrental.evrentalsystem.entity.Inspection;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface InspectionRepository extends JpaRepository<Inspection, Integer> {
     List<Inspection> findByBooking_BookingId(Integer bookingId);
