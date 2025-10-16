@@ -28,7 +28,7 @@ public class StaffService {
     private final AdditionalFeeRepository additionalFeeRepository;
     private final ContractRepository contractRepository;
     private final RenterDetailRepository renterDetailRepository;
-
+    private final MailService mailService;
     private String encodeToBase64(MultipartFile file) {
         try {
             if (file != null && !file.isEmpty()) {
@@ -240,7 +240,7 @@ public class StaffService {
         return Math.max(1,days);
     }
 
-    public void createContractByBookingId(int id,int staffId){
+    public void createContractByBookingId(int id, int staffId){
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         User staff = userRepository.findById(staffId)
@@ -250,6 +250,9 @@ public class StaffService {
         c.setStatus(ContractStatusEnum.PENDING.name());
         c.setStaffManager(staff);
         contractRepository.save(c);
+
+        String renterEmail = booking.getRenter().getEmail();
+        mailService.sendContractCreatedMail(renterEmail);
     }
 
     public void verifyRenterDetailStatusByBookingId(int id){
