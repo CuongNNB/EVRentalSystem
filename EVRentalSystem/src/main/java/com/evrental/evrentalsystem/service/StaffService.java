@@ -222,7 +222,7 @@ public class StaffService {
         BookingDetailsByBookingResponse response = new BookingDetailsByBookingResponse();
         response.setBookingId(bookingId);
         response.setFee(fee);
-        response.setDeposit(((int) Math.round(booking.getDeposit())) * 1000);
+        response.setDeposit(((int) Math.round(booking.getDeposit())));
         response.setStationName(booking.getStation().getStationName());
         response.setTotalAmount(fee+additionalFee);
         response.setEndDate(booking.getExpectedReturnTime());
