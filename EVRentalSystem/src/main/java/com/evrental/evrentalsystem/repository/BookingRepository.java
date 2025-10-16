@@ -27,5 +27,17 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("UPDATE Booking u SET u.status = :status WHERE u.bookingId = :id")
     int updateBookingStatus(@Param("id") int id, @Param("status") String status);
 
+    //User bookings
+    List<Booking> findByRenter_UserIdAndStatusIgnoreCase(Integer userId, String status);
+
+    @Query("SELECT b FROM Booking b WHERE b.renter.userId = :userId AND LOWER(b.vehicleModel.model) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Booking> searchByUserAndModel(@Param("userId") Integer userId, @Param("keyword") String keyword);
+
+    @Query("SELECT b FROM Booking b WHERE b.renter.userId = :userId " +
+            "AND LOWER(b.status) LIKE LOWER(CONCAT('%', :status, '%')) " +
+            "AND LOWER(b.vehicleModel.model) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Booking> filterBookings(@Param("userId") Integer userId,
+                                 @Param("status") String status,
+                                 @Param("keyword") String keyword);
 
 }

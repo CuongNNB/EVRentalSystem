@@ -6,7 +6,10 @@
 
     import com.evrental.evrentalsystem.service.BookingService;
     import lombok.RequiredArgsConstructor;
+    import org.springframework.http.ResponseEntity;
     import org.springframework.web.bind.annotation.*;
+
+    import java.util.List;
 
     @RestController
     @RequestMapping("/api/user")
@@ -18,5 +21,23 @@
         @PostMapping("/booking")
         public BookingResponseDTO createBooking(@RequestBody BookingRequest request) {
             return bookingService.createBooking(request);
+        }
+
+        @GetMapping("/bookings")
+        public ResponseEntity<List<BookingResponseDTO>> getUserBookings(
+                @RequestParam Integer userId,
+                @RequestParam(required = false) String status,
+                @RequestParam(required = false) String search
+        ) {
+            List<BookingResponseDTO> bookings = bookingService.getUserBookings(userId, status, search);
+            return ResponseEntity.ok(bookings);
+        }
+
+        @GetMapping("/bookings/{bookingId}")
+        public ResponseEntity<BookingResponseDTO> getBookingDetail(
+                @PathVariable Integer bookingId
+        ) {
+            BookingResponseDTO booking = bookingService.getBookingDetail(bookingId);
+            return ResponseEntity.ok(booking);
         }
     }

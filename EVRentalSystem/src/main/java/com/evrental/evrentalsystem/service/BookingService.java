@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -92,5 +94,29 @@ public class    BookingService {
         return "Booking confirmed successfully.";
     }
     //API get user Booking
+    public List<BookingResponseDTO> getUserBookings(Integer userId, String status, String search) {
+        if (userId == null) throw new IllegalArgumentException("User ID is required");
+
+        List<Booking> bookings;
+        if (status != null && !status.isEmpty() && search != null && !search.isEmpty()) {
+            bookings = bookingRepository.filterBookings(userId, status, search);
+        } else if (status != null && !status.isEmpty()) {
+            bookings = bookingRepository.findByRenter_UserIdAndStatusIgnoreCase(userId, status);
+        } else if (search != null && !search.isEmpty()) {
+            bookings = bookingRepository.searchByUserAndModel(userId, search);
+        } else {
+            bookings = bookingRepository.findByRenter_UserId(userId);
+        }
+
+        return bookings.stream()
+                .map(BookingResponseDTO::fromListItem)
+                .toList();
+    }
+
+    public BookingResponseDTO getBookingDetail(Integer bookingId) {
+        Booking booking = bookingRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        return BookingResponseDTO.fromDetail(booking);
+    }
 
 }
