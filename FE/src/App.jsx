@@ -31,7 +31,7 @@ import CheckCar from "./pages/staff/Orders/CheckCar";
 
 import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
-import BookingDetail from "./pages/BookingDetail";
+import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 
 function App() {
@@ -48,7 +48,7 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/dashboard" element={<ProtectedRoute><DashboardUser /></ProtectedRoute>} />
                         <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
-                        <Route path="/my-bookings/:id" element={<ProtectedRoute><BookingDetail /></ProtectedRoute>} />
+                        <Route path="/my-bookings/:id" element={<ProtectedRoute><BookingDetailHistory /></ProtectedRoute>} />
                         <Route path="/account" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
                         <Route path="/cars" element={<CarPages />} />
                         <Route path="/car/:id" element={<CarDetail />} />
