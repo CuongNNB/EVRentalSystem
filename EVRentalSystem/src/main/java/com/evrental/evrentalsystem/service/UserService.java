@@ -7,6 +7,7 @@ import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.*;
 import com.evrental.evrentalsystem.response.user.RenterDetailResponse;
+import com.evrental.evrentalsystem.response.user.UpdateUserProfile;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.security.JwtService;
@@ -107,7 +108,6 @@ public class UserService {
 
         String token = jwtService.generateToken(user.getEmail());
 
-        // Kiểm tra xem user có RenterDetail không (STAFF thì không có)
         String cccdFront = null;
         String cccdBack = null;
         String driverLicense = null;
@@ -205,5 +205,33 @@ public class UserService {
         dto.setRole(user.getRole());
         dto.setStatus(user.getStatus());
         return dto;
+    }
+
+    public User updateUserProfile(Integer userId, UpdateUserProfile req) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (req.getFullName() != null && req.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Full name must not be empty");
+        }
+
+        if (req.getPhone() != null && (req.getPhone().length() < 8 || req.getPhone().length() > 20)) {
+            throw new IllegalArgumentException("Phone number must be between 8 and 20 digits");
+        }
+
+        if (req.getEmail() != null && !req.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+
+        if (req.getAddress() != null && req.getAddress().length() > 255) {
+            throw new IllegalArgumentException("Address too long (max 255 chars)");
+        }
+
+        if (req.getFullName() != null) user.setFullName(req.getFullName().trim());
+        if (req.getPhone() != null) user.setPhone(req.getPhone().trim());
+        if (req.getEmail() != null) user.setEmail(req.getEmail().trim().toLowerCase());
+        if (req.getAddress() != null) user.setAddress(req.getAddress().trim());
+
+        return userRepository.save(user);
     }
 }

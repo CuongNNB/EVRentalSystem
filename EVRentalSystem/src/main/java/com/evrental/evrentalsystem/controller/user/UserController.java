@@ -1,8 +1,10 @@
 package com.evrental.evrentalsystem.controller.user;
 
+import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.*;
 import com.evrental.evrentalsystem.response.user.RenterDetailResponse;
+import com.evrental.evrentalsystem.response.user.UpdateUserProfile;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.service.UserService;
@@ -179,4 +181,20 @@ public class UserController {
         } catch (IOException ignored) {}
         return null;
     }
+//API http://localhost:8084/EVRentalSystem/api/users/{userId}/profile
+@PutMapping("/{userId}/profile")
+public ResponseEntity<UpdateUserProfile> updateProfile(
+        @PathVariable Integer userId,
+        @RequestBody UpdateUserProfile request) {
+
+    User updated = userService.updateUserProfile(userId, request);
+
+    UpdateUserProfile response = new UpdateUserProfile();
+    response.setFullName(updated.getFullName());
+    response.setPhone(updated.getPhone());
+    response.setEmail(updated.getEmail());
+    response.setAddress(updated.getAddress());
+
+    return ResponseEntity.ok(response);
+}
 }
