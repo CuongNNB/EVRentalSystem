@@ -6,15 +6,10 @@ import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
 import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -87,8 +82,8 @@ public class    BookingService {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
 //
-        if (!booking.getStatus().equals(BookingStatus.Pending_Contract_Signing.toString())) {
-            return "Booking is not in Pending_Contract_Signing status.";
+        if (!booking.getStatus().equals(BookingStatus.Pending_Deposit_Confirmation.toString())) {
+            return "Booking is not in Pending_Deposit_Confirmation status.";
         }
 
         booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
@@ -96,4 +91,6 @@ public class    BookingService {
 
         return "Booking confirmed successfully.";
     }
+    //API get user Booking
+
 }
