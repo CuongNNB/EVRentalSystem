@@ -23,6 +23,7 @@ public class UserInspectionController {
         private Integer bookingId;
     }
 
+    //API: http://localhost:8084/EVRentalSystem/api/inspections/by-booking
     @PostMapping("/by-booking")
     public ResponseEntity<?> getInspectionsByBooking(@RequestBody BookingIdRequest request) {
         if (request == null || request.getBookingId() == null) {
