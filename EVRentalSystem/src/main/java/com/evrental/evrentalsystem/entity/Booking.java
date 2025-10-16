@@ -44,7 +44,6 @@ public class Booking {
 
     private Double deposit;
 
-    // Trạng thái lưu dưới dạng String thay vì Enum
     private String status;
 
     @Transient
@@ -54,7 +53,6 @@ public class Booking {
     @Transient
     private Double totalAmount;
 
-    // Tính tiền thuê xe theo ngày
     public void calculateRentalAmount() {
         if (startTime != null && expectedReturnTime != null) {
             long days = ChronoUnit.DAYS.between(startTime, expectedReturnTime);
