@@ -118,7 +118,7 @@ CREATE TABLE Booking
     renter_id            INT            NOT NULL,
     vehicle_model_id     INT            NOT NULL,
     station_id           INT            NOT NULL,
-    license_plate        NVARCHAR(50)   NOT NULL,
+    license_plate        NVARCHAR(50),
     promotion_id         INT            NULL,
     created_at           DATETIME2      NOT NULL DEFAULT SYSUTCDATETIME(),
     start_time           DATETIME2      NOT NULL,
