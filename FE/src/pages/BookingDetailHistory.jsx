@@ -1,335 +1,340 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import api from '../api';
-import './BookingHistory.css';
+import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
+import './BookingDetailHistory.css';
 
-const normalizeStatus = (s = '') => String(s || '').toString().trim().toUpperCase();
+const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
-const STATUS_LABEL = {
-  RENTING: 'Đang thuê',
-  IN_PROGRESS: 'Đang thuê',
-  RENTED: 'Đang thuê',
-  UPCOMING: 'Chờ nhận xe',
-  PENDING: 'Chờ nhận xe',
-  COMPLETED: 'Đã hoàn tất',
-  DONE: 'Đã hoàn tất',
-  RETURNED: 'Đã hoàn tất',
-  CANCELED: 'Đã hủy',
-  CANCELLED: 'Đã hủy',
+// Map bookingStatus enum → Vietnamese text
+const getStatusText = (status) => {
+    if (!status) return 'Không xác định';
+    switch (status) {
+        case 'Pending_Deposit_Confirmation':
+            return 'Chờ thanh toán cọc';
+        case 'Pending_Contract_Signing':
+            return 'Chờ ký hợp đồng';
+        case 'Pending_Vehicle_Pickup':
+            return 'Chờ nhận xe';
+        case 'Vehicle_Inspected_Before_Pickup':
+            return 'Xe đang kiểm tra trước khi giao';
+        case 'Vehicle_Pickup_Overdue':
+            return 'Quá hạn nhận xe';
+        case 'Currently_Renting':
+            return 'Đang thuê xe';
+        case 'Vehicle_Returned':
+            return 'Xe đã trả';
+        case 'Total_Fees_Charged':
+            return 'Đã tính tổng chi phí';
+        case 'Completed':
+            return 'Hoàn tất';
+        case 'Vehicle_Return_Overdue':
+            return 'Quá hạn trả xe';
+        default:
+            return 'Không xác định';
+    }
 };
 
-const getStatusLabel = (s) => STATUS_LABEL[normalizeStatus(s)] || (s || 'Không xác định');
 
-const getUserId = () => {
-  try {
-    const raw = localStorage.getItem('ev_user');
-    if (!raw) return null;
-    const u = JSON.parse(raw);
-    return u?.id ?? u?.userId ?? u?.data?.id ?? null;
-  } catch {
-    return null;
-  }
-};
-
-// Helper functions (null-safe)
-const fmtVND = (amount) => {
-  const n = Number(amount);
-  if (!Number.isFinite(n)) return '0 ₫';
-  return n.toLocaleString('vi-VN') + ' ₫';
-};
+const fmtVND = (amount) => (amount ?? 0).toLocaleString("vi-VN") + " ₫";
 
 const fmtDateTime = (isoString) => {
-  if (!isoString) return '—';
-  const d = new Date(isoString);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+    if (!isoString) return '---';
+    return new Date(isoString).toLocaleString("vi-VN", {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 
-
 const BookingDetailHistory = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const [booking, setBooking] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+    const [booking, setBooking] = useState(null);
+    const [inspections, setInspections] = useState([]);
+    const [loadingInsp, setLoadingInsp] = useState(true);
+    const [errorInsp, setErrorInsp] = useState(null);
 
-  useEffect(() => {
-    const fetchDetail = async () => {
-      const userId = getUserId();
-      if (!userId) {
-        setError('Vui lòng đăng nhập để xem chi tiết đơn.');
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError('');
-  try {
-  const res = await api.get(`/api/user/booking-history/${userId}`);
-        const list = Array.isArray(res.data) ? res.data : [];
-        const found = list.find((b) => String(b.bookingId) === String(id) || String(b.id) === String(id));
-        if (found) {
-          // normalize booking fields to avoid crashes in rendering
-          setBooking({
-            ...found,
-            bookingId: found?.bookingId ?? found?.id ?? null,
-            bookingStatus: found?.bookingStatus ?? found?.status ?? 'UNKNOWN',
-            vehicleBrand: found?.vehicleBrand ?? '',
-            vehicleModel: found?.vehicleModel ?? 'Không rõ',
-            licensePlate: found?.licensePlate ?? 'Không rõ',
-            stationName: found?.stationName ?? 'Không rõ',
-            stationAddress: found?.stationAddress ?? '',
-            startTime: found?.startTime ?? found?.startAt ?? null,
-            expectedReturnTime: found?.expectedReturnTime ?? found?.endAt ?? null,
-            deposit: found?.deposit ?? found?.totalPrice ?? 0,
-          });
-        } else setBooking(null);
-      } catch (err) {
-        setError('Không thể tải chi tiết đơn. Vui lòng thử lại sau.');
-      } finally {
-        setLoading(false);
-      }
+    // Prefer booking from navigation state (forwarded from MyBookings)
+    useEffect(() => {
+        const bookingFromState = location?.state?.booking;
+        if (bookingFromState) {
+            setBooking(bookingFromState);
+            return;
+        }
+
+        // fallback: try to find in MOCK_BOOKINGS by id
+        const found = MOCK_BOOKINGS.find(b => b.bookingId === parseInt(id));
+        setBooking(found || null);
+    }, [id, location]);
+
+    // Fetch inspection details by bookingId (use booking.bookingId if available, otherwise URL param id)
+    useEffect(() => {
+        const bookingIdToUse = booking?.bookingId ? booking.bookingId : (id ? parseInt(id) : null);
+        if (!bookingIdToUse) return;
+
+        const fetchInspections = async () => {
+            try {
+                setLoadingInsp(true);
+                setErrorInsp(null);
+
+                const resp = await fetch(`${API_BASE}/inspections/by-booking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId: bookingIdToUse }),
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.message || `HTTP ${resp.status}`);
+                }
+                const data = await resp.json();
+                setInspections(Array.isArray(data) ? data : []);
+            } catch (err) {
+                setErrorInsp(err.message);
+            } finally {
+                setLoadingInsp(false);
+            }
+        };
+
+        fetchInspections();
+    }, [booking, id]);
+
+    if (!booking) {
+        return (
+            <div className="detail-page">
+                <Header />
+                <div className="detail-container">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="detail-not-found">
+                        <div className="not-found-icon">❌</div>
+                        <h2 className="not-found-title">Không tìm thấy đơn #{id}</h2>
+                        <p className="not-found-text">Vui lòng mở trang <strong>Lịch sử đặt xe</strong> và bấm "Xem chi tiết" để chuyển dữ liệu, hoặc thử lại bằng cách truy cập đúng URL.</p>
+                        <button onClick={() => navigate('/my-bookings')} className="not-found-button">
+                            ← Về lịch sử đặt xe
+                        </button>
+                    </motion.div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    // Normalize some fields for display (booking may come from API raw object or mapped object)
+    const normalized = {
+        bookingId: booking.bookingId,
+        vehicleBrand: booking.brand ?? booking.vehicleBrand,
+        vehicleModel: booking.vehicleModel ?? booking.model ?? '',
+        licensePlate: booking.licensePlate ?? booking.plate ?? 'Đang cập nhật',
+        odo: booking.odo ?? 'Đang cập nhật',
+        status: booking.bookingStatus ?? booking.status,
+        stationName: booking.stationName ?? booking.station,
+        stationAddress: booking.stationAddress ?? booking.stationAddress,
+        startAt: booking.startTime ?? booking.startAt ?? booking.createdAt ?? null,
+        endAt: booking.expectedReturnTime ?? booking.endAt ?? null,
+        actualReturnTime: booking.actualReturnTime ?? booking.actualReturnTime ?? null,
+        deposit: booking.deposit ?? booking.deposit ?? 0,
+        extrasFee: booking.extrasFee ?? booking.extrasFee ?? 0,
+        pricePerHour: booking.pricePerHour ?? booking.pricePerHour ?? 0,
+        totalPrice: booking.totalPrice ?? booking.totalPrice ?? 0,
+        color: booking.color ?? 'Đang cập nhật',
+        batteryCapacity: booking.batteryCapacity ?? 'Đang cập nhật',
+        contractUrl: booking.contractUrl ?? null,
+        invoiceUrl: booking.invoiceUrl ?? null,
+        raw: booking,
     };
 
-    fetchDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    // compute days, estimated and total for display
+    const computePriceData = () => {
+        const start = normalized.startAt ? new Date(normalized.startAt) : null;
+        const end = normalized.endAt ? new Date(normalized.endAt) : null;
+        let days = 0;
+        if (start && end) {
+            const diffMs = end.getTime() - start.getTime();
+            days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+        }
+        const deposit = normalized.deposit ?? 0;
+        const extrasFee = normalized.extrasFee ?? 0;
+        const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
+        const total = estimated + extrasFee;
+        return { days, deposit, extrasFee, estimated, total };
+    };
 
-  return (
-    <div className="detail-page">
-      <Header />
+    const { days, deposit, extrasFee, estimated, total } = computePriceData();
 
-      <div className="detail-container">
-        {/* Loading / Error / Not found states */}
-        {loading && (
-          <div className="loading" style={{padding:40,textAlign:'center'}}>
-            <div className="spinner" />
-            <p>Đang tải chi tiết đơn…</p>
-          </div>
-        )}
+    return (
+        <div className="detail-page">
+            <Header />
+            <div className="detail-container">
 
-        {error && !loading && (
-          <div className="alert error" style={{padding:20}}>
-            <div>{error}</div>
-            <div style={{marginTop:10}}>
-              <button onClick={() => window.location.reload()}>Thử lại</button>
-            </div>
-          </div>
-        )}
+                {/* Back Button */}
+                <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => navigate(-1)}
+                    className="back-button"
+                >
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Quay lại</span>
+                </motion.button>
 
-        {!loading && !error && !booking && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="detail-not-found"
-            style={{padding:40,textAlign:'center'}}
-          >
-            <div className="not-found-icon">❌</div>
-            <h2 className="not-found-title">Không tìm thấy đơn</h2>
-            <p className="not-found-text">Đơn đặt xe #{id} không tồn tại hoặc đã bị xóa</p>
-            <button
-              onClick={() => navigate('/my-bookings')}
-              className="not-found-button"
-            >
-              ← Về lịch sử đặt xe
-            </button>
-          </motion.div>
-        )}
-
-        {/* If booking present, render details */}
-        {(!loading && !error && booking) && (
-          <>
-        {/* Back Button */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate(-1)}
-          className="back-button"
-        >
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Quay lại</span>
-        </motion.button>
-
-        {/* Page Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="detail-header"
-        >
-          <div className="detail-header-top">
-            <h1 className="detail-title">Chi tiết đơn #{booking.bookingId}</h1>
-            <span className={`detail-status-badge status-${String(booking?.bookingStatus ?? booking?.status ?? '').toLowerCase().replace(/_/g, '-')}`}>
-              {getStatusLabel(booking.bookingStatus ?? booking.status)}
+                {/* Header */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="detail-header">
+                    <div className="detail-header-top">
+                        <h1 className="detail-title">Chi tiết đơn #{normalized.bookingId}</h1>
+                        <span className={`detail-status-badge status-${(normalized.status || 'unknown').toLowerCase()}`}>
+              {getStatusText(normalized.status)}
             </span>
-          </div>
-          <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe của bạn</p>
-        </motion.div>
+                    </div>
+                    <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe</p>
+                </motion.div>
 
-        {/* Main Content */}
-        <div className="detail-sections">
-          {/* Vehicle Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="detail-card"
-          >
-            <h2 className="section-header">
-              <svg className="section-icon" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
-              </svg>
-              <span className="section-title">Thông tin xe</span>
-            </h2>
-            <div className="vehicle-info-grid">
-              <div className="info-column">
-                <div className="info-row">
-                  <span className="info-label">Hãng xe:</span>
-                  <span className="info-value">{booking.vehicleBrand}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Model:</span>
-                  <span className="info-value">{booking.vehicleModel}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Biển số:</span>
-                  <span className="info-value">{booking.licensePlate}</span>
-                </div>
-              </div>
-              <div className="info-column">
-                <div className="info-row">
-                  <span className="info-label">Màu sắc:</span>
-                  <span className="info-value">{booking.color}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Dung lượng pin:</span>
-                  <span className="info-value">{booking.batteryCapacity}</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+                {/* Sections */}
+                <div className="detail-sections">
 
-          {/* Station Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="detail-card"
-          >
-            <h2 className="section-header">
-              <svg className="section-icon" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
-              <span className="section-title">Địa điểm nhận xe</span>
-            </h2>
-            <div className="station-info">
-              <div className="station-name">{booking.stationName}</div>
-              <div className="station-address">{booking.stationAddress}</div>
-            </div>
-          </motion.div>
+                    {/* Vehicle */}
+                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Thông tin xe</span></h2>
+                        <div className="vehicle-info-grid">
+                            <div className="info-column">
+                                <div className="info-row"><span className="info-label">Hãng:</span><span className="info-value">{normalized.vehicleBrand}</span></div>
+                                <div className="info-row"><span className="info-label">Model:</span><span className="info-value">{normalized.vehicleModel}</span></div>
+                                <div className="info-row"><span className="info-label">Biển số:</span><span className="info-value">{normalized.licensePlate}</span></div>
+                            </div>
+                            <div className="info-column">
+                                <div className="info-row"><span className="info-label">Màu:</span><span className="info-value">{normalized.color}</span></div>
+                                <div className="info-row"><span className="info-label">Pin:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
+                                <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
+                            </div>
+                        </div>
+                    </motion.div>
 
-          {/* Time Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="detail-card"
-          >
-            <h2 className="section-header">
-              <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="section-title">Thời gian thuê</span>
-            </h2>
-            <div className="time-grid">
-              <div className="time-box time-box-start">
-                <div className="time-label">Thời gian nhận xe</div>
-                <div className="time-value">{fmtDateTime(booking.startTime)}</div>
-              </div>
-              <div className="time-box time-box-end">
-                <div className="time-label">Thời gian trả xe</div>
-                <div className="time-value">{fmtDateTime(booking.expectedReturnTime)}</div>
-              </div>
-            </div>
-          </motion.div>
+                    {/* Station */}
+                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Địa điểm nhận xe</span></h2>
+                        <div className="station-info">
+                            <div className="station-name">{normalized.stationName}</div>
+                            <div className="station-address">{normalized.stationAddress}</div>
+                        </div>
+                    </motion.div>
 
-          {/* Price Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="detail-card"
-          >
-            <h2 className="section-header">
-              <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="section-title">Chi phí</span>
-            </h2>
-            <div className="price-list">
-              <div className="price-row">
-                <span className="price-label">Giá thuê theo giờ:</span>
-                <span className="price-value">{fmtVND(booking.pricePerHour)}/giờ</span>
-              </div>
-              <div className="price-row">
-                <span className="price-label">Phụ phí:</span>
-                <span className="price-value">{fmtVND(booking.extrasFee)}</span>
-              </div>
-              <div className="price-row">
-                <span className="price-label">Đặt cọc:</span>
-                <span className="price-value">{fmtVND(booking.deposit)}</span>
-              </div>
-              <div className="price-total">
-                <span className="price-total-label">Tổng thanh toán:</span>
-                <span className="price-total-value">{fmtVND(booking.deposit)}</span>
-              </div>
-            </div>
-          </motion.div>
+                    {/* Time (vertical rows) */}
+                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Thời gian thuê</span></h2>
+                        <div className="time-vertical">
+                            <div className="time-row">
+                                <span className="time-label">Bắt đầu:</span>
+                                <span className="time-value">{fmtDateTime(normalized.startAt)}</span>
+                            </div>
+                            <div className="time-row">
+                                <span className="time-label">Kết thúc (dự kiến):</span>
+                                <span className="time-value">{fmtDateTime(normalized.endAt)}</span>
+                            </div>
+                            <div className="time-row">
+                                <span className="time-label">Ngày trả thực tế:</span>
+                                <span className="time-value">{normalized.actualReturnTime ? fmtDateTime(normalized.actualReturnTime) : 'Đang cập nhật'}</span>
+                            </div>
+                        </div>
+                    </motion.div>
 
-          {/* Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="detail-card"
-          >
-            <h2 className="section-header">
-              <span className="section-title">Thao tác</span>
-            </h2>
-            <div className="action-buttons">
-              <a
-                href={booking.contractUrl}
-                className="action-btn action-btn-primary"
-              >
-                <span>📄 Xem hợp đồng</span>
-              </a>
-              <a
-                href={booking.invoiceUrl}
-                className="action-btn action-btn-secondary"
-              >
-                <span>💰 Tải hóa đơn</span>
-              </a>
+                    {/* Price */}
+                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Chi phí</span></h2>
+
+                        <div className="price-list">
+                            <div className="price-row">
+                                <span className="price-label">Số ngày thuê:</span>
+                                <span className="price-value">{days} ngày</span>
+                            </div>
+                            <div className="price-row">
+                                <span className="price-label">Tiền dự tính:</span>
+                                <span className="price-value">{fmtVND(estimated)}</span>
+                            </div>
+                            <div className="price-row">
+                                <span className="price-label">Đặt cọc:</span>
+                                <span className="price-value">{fmtVND(deposit)}</span>
+                            </div>
+                            <div className="price-row">
+                                <span className="price-label">Phụ phí:</span>
+                                <span className="price-value">{fmtVND(extrasFee)}</span>
+                            </div>
+                            <div className="price-total">
+                                <span className="price-total-label">Tổng thanh toán:</span>
+                                <span className="price-total-value">{fmtVND(total)}</span>
+                            </div>
+
+                            <div className="price-actions">
+                                <button
+                                    className="btn-pay"
+                                    onClick={() => {
+                                        alert(`Thanh toán đơn #${normalized.bookingId} thành công!`);
+                                        console.log("Thanh toán booking:", normalized.bookingId);
+                                    }}
+                                >
+                                    Thanh toán
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Inspection */}
+                    <motion.div className="detail-card inspection-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Kiểm tra tình trạng xe</span></h2>
+
+                        {loadingInsp && <p>🔄 Đang tải thông tin kiểm tra...</p>}
+                        {errorInsp && <p className="text-error">Đang cập nhật tình trạng kiểm tra xe...</p>}
+
+                        {!loadingInsp && !errorInsp && inspections.length === 0 && (
+                            <p>Không có dữ liệu kiểm tra nào cho đơn này.</p>
+                        )}
+
+                        <div className="inspection-list">
+                            {inspections.map((insp) => (
+                                <div key={insp.inspectionId} className="inspection-item">
+                                    <div className="inspection-info">
+                                        <div><strong>Phần:</strong> {insp.partName}</div>
+                                        <div><strong>Trạng thái:</strong> {insp.status}</div>
+                                        <div><strong>Nhân viên:</strong> {insp.staffName}</div>
+                                        <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
+                                        <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
+                                    </div>
+                                    {insp.pictureUrl && (
+                                        <div className="inspection-image-box">
+                                            <img src={insp.pictureUrl} alt={insp.partName} className="inspection-image" />
+                                            <a href={insp.pictureUrl} target="_blank" rel="noreferrer" className="document-view-link">Xem ảnh lớn</a>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {inspections.length > 0 && (
+                                <div className="inspection-actions">
+                                    <button
+                                        className="btn-accept"
+                                        onClick={() => {
+                                            console.log("User accepted all inspection results for bookingId:", normalized.bookingId);
+                                            alert("Đã chấp nhận kết quả kiểm tra xe!");
+                                        }}
+                                    >
+                                        Chấp nhận
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                </div>
             </div>
-          </motion.div>
+
+            <Footer />
         </div>
-        </>
-        )}
-      </div>
-
-      <Footer />
-    </div>
-  );
+    );
 };
 
 export default BookingDetailHistory;

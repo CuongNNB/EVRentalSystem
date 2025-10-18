@@ -48,7 +48,7 @@ export default function Header() {
                 {/* === CỘT TRÁI: LOGO === */}
                 <div className="header-brand">
                     <div className="brand-icon" aria-hidden>
-                        <img src="./carpic/logo.png" alt="" />
+                        <img src="/carpic/logo.png" alt="" />
                     </div>
                     <div className="brand-copy">
                         <span className="brand-name">EV Car Rental</span>
