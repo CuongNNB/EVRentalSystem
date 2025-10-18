@@ -86,13 +86,9 @@ function CarCard({ car }) {
 
             <ul className="car-card__features">
                 <li className="car-card__feature">
-                    <span className="car-card__feature-icon">📍</span>
                     <span>{car.stationName}</span>
                 </li>
-                <li className="car-card__feature">
-                    <span className="car-card__feature-icon">🧭</span>
-                    <span>Odo: {car.odo} km</span>
-                </li>
+
             </ul>
 
             <div className="car-card__actions">

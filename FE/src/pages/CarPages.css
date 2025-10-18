@@ -337,3 +337,69 @@ img {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== Station-only feature style ===== */
+.car-card__features {
+    grid-template-columns: 1fr; /* chỉ 1 cột vì chỉ còn 1 dòng trạm */
+}
+
+.car-card__feature--station {
+    justify-content: flex-start;
+    font-weight: 600;
+    color: var(--slate-700);
+    background: rgba(16, 185, 129, 0.06); /* xanh nhạt hơn để nổi bật */
+}
+
+.car-card__feature--station .car-card__feature-icon {
+    color: var(--emerald-500);
+    font-size: 1.1rem;
+}
+
+/* ===== CAR FILTER BUTTONS - OVAL STYLE ===== */
+.car-filters__button {
+    background: #ffffff !important;
+    color: #0bb97f !important;
+    border: 2px solid #0bb97f !important;
+    border-radius: 9999px !important; /* <-- hình oval (pill shape) */
+    font-weight: 600;
+    padding: 8px 22px !important;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hover khi chưa chọn */
+.car-filters__button:hover {
+    background: rgba(11, 185, 127, 0.08) !important;
+    color: #0bb97f !important;
+    transform: translateY(-2px);
+}
+
+/* Khi đang chọn (active) */
+.car-filters__button.is-active {
+    background: linear-gradient(135deg, #0bb97f, #06b6d4) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 8px 20px -10px rgba(6, 182, 212, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Hover trên nút active -> làm sáng gradient nhẹ */
+.car-filters__button.is-active:hover {
+    background: linear-gradient(135deg, #0ed497, #0bb7d8) !important;
+}
+
+/* Hiệu ứng nhấn */
+.car-filters__button:active {
+    transform: scale(0.97);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .car-filters__button {
+        padding: 6px 16px !important;
+        font-size: 0.9rem !important;
+    }
+}
