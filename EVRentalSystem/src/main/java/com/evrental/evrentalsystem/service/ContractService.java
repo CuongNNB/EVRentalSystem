@@ -76,7 +76,6 @@ public class ContractService {
                             (b != null ? b.getStartTime() : null),
                             (b != null ? b.getExpectedReturnTime() : null),
                             (b != null ? b.getStatus() : null),
-                            (b != null ? b.getVehicleDetail().getLicensePlate() : null),
                             (st != null ? st.getStationId() : null),
                             (st != null ? st.getStationName() : null),
 
