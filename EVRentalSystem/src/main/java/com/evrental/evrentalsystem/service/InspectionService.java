@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
 import com.evrental.evrentalsystem.response.vehicle.UserInspectionDetailResponse;
 import com.evrental.evrentalsystem.entity.Inspection;
 import com.evrental.evrentalsystem.repository.InspectionRepository;
@@ -46,4 +47,24 @@ public class InspectionService {
 
         return dto;
     }
+
+    //API: http://localhost:8084/EVRentalSystem/api/inspections/update-status
+
+    /// RequestBody:
+    ///  "bookingId": Integer,
+    ///   "status": String (PENDING, CONFIRMED, REJECTED)
+    public List<Inspection> updateInspectionStatus(Integer bookingId, String status) {
+        List<Inspection> inspections = inspectionRepository.findByBooking_BookingId(bookingId);
+
+        if (inspections.isEmpty()) {
+            return inspections;
+        }
+
+        for (Inspection inspection : inspections) {
+            inspection.setStatus(status);
+        }
+
+        return inspectionRepository.saveAll(inspections);
+    }
+    //End code here
 }

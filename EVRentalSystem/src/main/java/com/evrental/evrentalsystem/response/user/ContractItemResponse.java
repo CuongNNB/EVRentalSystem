@@ -12,7 +12,6 @@ public record ContractItemResponse(
         LocalDateTime startTime,
         LocalDateTime expectedReturnTime,
         String bookingStatus,
-        String licensePlate,
         Integer stationId,
         String stationName,
 

@@ -1,9 +1,12 @@
 package com.evrental.evrentalsystem.controller.user;
 import com.evrental.evrentalsystem.entity.Inspection;
+import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
 import com.evrental.evrentalsystem.repository.InspectionRepository;
+import com.evrental.evrentalsystem.request.UserUpdateInspectionStatusRequest;
 import com.evrental.evrentalsystem.service.InspectionService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -83,5 +86,38 @@ public class UserInspectionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", ex.getMessage()));
         }
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/inspections/confirm/{bookingId}
+    @PutMapping("/update-status")
+    public ResponseEntity<UpdateStatusResponse> updateInspectionStatus(
+            @RequestBody UserUpdateInspectionStatusRequest request) {
+
+        // Chuyển String -> Enum (nếu status là enum)
+        InspectionStatusEnum status;
+        try {
+            status = InspectionStatusEnum.valueOf(request.getStatus().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new UpdateStatusResponse(request.getBookingId(), 0, "Invalid status value"));
+        }
+
+        List<Inspection> updated = inspectionService.updateInspectionStatus(request.getBookingId(), status.toString());
+
+        if (updated.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new UpdateStatusResponse(request.getBookingId(), 0, "No inspections found for bookingId"));
+        }
+
+        return ResponseEntity.ok(
+                new UpdateStatusResponse(request.getBookingId(), updated.size(), "Status updated successfully")
+        );
+    }
+
+    @Value
+    static class UpdateStatusResponse {
+        Integer bookingId;
+        int updatedCount;
+        String message;
     }
 }

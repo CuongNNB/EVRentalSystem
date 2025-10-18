@@ -5,7 +5,6 @@ import OtpInput from "react-otp-input";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./ContractPage.css";
-
 export default function ContractPage() {
     const { carId } = useParams();
     const location = useLocation();
@@ -53,6 +52,49 @@ export default function ContractPage() {
         },
     }));
 
+    // Helper: format number as VND
+    const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p || 0);
+
+    // NEW: function to format rental duration as "X ngày Y giờ"
+    const formatRentalDuration = () => {
+        // Prefer using totals.days and totals.hours if present
+        const dFromTotals = typeof totals.days === "number" ? totals.days : null;
+        const hFromTotals = typeof totals.hours === "number" ? totals.hours : null;
+
+        if (dFromTotals !== null && hFromTotals !== null) {
+            const daysLabel = dFromTotals > 0 ? `${dFromTotals} ngày` : "";
+            const hoursLabel = hFromTotals > 0 ? `${hFromTotals} giờ` : "";
+            if (!daysLabel && !hoursLabel) return "Dưới 1 giờ";
+            return `${daysLabel}${daysLabel && hoursLabel ? " " : ""}${hoursLabel}`.trim();
+        }
+
+        // Fallback: compute from booking.pickupDateTime and booking.returnDateTime
+        const start = booking.pickupDateTime ? new Date(booking.pickupDateTime) : null;
+        const end = booking.returnDateTime ? new Date(booking.returnDateTime) : null;
+
+        if (start && end) {
+            let diffMs = end.getTime() - start.getTime();
+            if (diffMs <= 0) return "Dưới 1 giờ";
+            const totalHoursFloat = diffMs / (1000 * 60 * 60);
+            // We'll floor hours for display (so 1.9h -> 1 giờ); if you prefer round up, change to Math.ceil
+            const totalHours = Math.floor(totalHoursFloat);
+            if (totalHours <= 0) return "Dưới 1 giờ";
+            const days = Math.floor(totalHours / 24);
+            const hours = totalHours % 24;
+            const daysLabel = days > 0 ? `${days} ngày` : "";
+            const hoursLabel = hours > 0 ? `${hours} giờ` : "";
+            if (!daysLabel && !hoursLabel) return "Dưới 1 giờ";
+            return `${daysLabel}${daysLabel && hoursLabel ? " " : ""}${hoursLabel}`.trim();
+        }
+
+        // Fallback to contractData.car.rentalDays if available
+        if (contractData.car && typeof contractData.car.rentalDays === "number") {
+            return `${contractData.car.rentalDays} ngày`;
+        }
+
+        return "---";
+    };
+
     // ✅ Quản lý chữ ký và OTP
     const [renterSign, setRenterSign] = useState(null);
     const [ownerSign, setOwnerSign] = useState(null);
@@ -83,8 +125,6 @@ export default function ContractPage() {
             return () => clearTimeout(t);
         }
     }, [resendTimer]);
-
-    const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p || 0);
 
     const handleConfirmSign = () => {
         const sign = renterSignRef.current?.toDataURL();
@@ -263,7 +303,8 @@ export default function ContractPage() {
 
                             <h2>Điều 3: Chi phí và thời gian</h2>
                             <p><strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫</p>
-                            <p><strong>Số ngày thuê:</strong> {contractData.car.rentalDays} ngày</p>
+                            {/* UPDATED: show rental duration as "X ngày Y giờ" */}
+                            <p><strong>Thời gian thuê:</strong> {formatRentalDuration()}</p>
                             <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
                             <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
 
