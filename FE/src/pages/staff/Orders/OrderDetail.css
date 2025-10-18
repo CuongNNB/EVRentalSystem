@@ -112,6 +112,16 @@
   color: #1d4ed8;
 }
 
+.order-detail__status--success {
+  background: rgba(34, 197, 94, 0.18);
+  color: #047857;
+}
+
+.order-detail__status--error {
+  background: rgba(239, 68, 68, 0.18);
+  color: #dc2626;
+}
+
 .order-detail__info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -249,12 +259,24 @@
   letter-spacing: 0.04em;
 }
 
-.order-detail__summary h3 {
-  margin: 6px 0 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0f172a;
+.order-detail__summary {
+  display: flex;
+  flex-wrap: wrap; /* cho phép các dòng dài ra */
+  background: rgba(241, 245, 249, 0.75);
+  border-radius: 18px;
+  padding: 16px 20px;
+  justify-content: flex-start; /* căn đều sang trái */
+  gap: 24px; /* khoảng cách giữa các mục */
+  align-items: flex-start;
+  position: relative;
 }
+
+.order-detail__grand {
+  width: 100%; /* đẩy tổng tiền xuống dòng mới */
+  text-align: right; /* căn phải cho đẹp */
+  margin-top: 12px;
+}
+
 
 .order-detail__grand h2 {
   margin: 6px 0 0;
@@ -357,5 +379,41 @@
   .order-detail__top {
     flex-direction: column-reverse;
     align-items: flex-start;
+  }
+}
+
+/* Document image styling */
+.order-detail__doc-image {
+  position: relative;
+  display: inline-block;
+}
+
+.order-detail__doc-img {
+  max-width: 200px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.order-detail__doc-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.order-detail__doc-fallback {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-detail__doc-img {
+    max-width: 150px;
+    max-height: 120px;
   }
 }

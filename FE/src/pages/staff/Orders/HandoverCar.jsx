@@ -101,7 +101,7 @@ const HandoverCar = () => {
       try {
         console.log("Fetching reserved vehicles with params:", { modelId: vehicleModelId, stationId });
         // Gọi API lấy xe có status Reserved
-        const response = await api.get("/api/vehicle-details/reserved", {
+        const response = await api.get("/api/vehicle-details/available", {
           params: { modelId: vehicleModelId, stationId },
         });
         const data = response.data?.data ?? response.data ?? [];
@@ -374,7 +374,7 @@ const HandoverCar = () => {
                   disabled={!vehicle}
                   onClick={handleProceed}
                 >
-                  Chuẩn bị xe
+                  Kiểm tra xe
                 </button>
               </footer>
             </section>

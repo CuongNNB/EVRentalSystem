@@ -64,6 +64,8 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const [isConfirmed, setConfirmed] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
   
   // State cho dữ liệu từ API
   const [renterDetails, setRenterDetails] = useState(null);
@@ -84,22 +86,32 @@ const OrderDetail = () => {
         setLoading(true);
         setError("");
 
-        // Gọi song song 2 API
-        const [renterResponse, bookingResponse] = await Promise.all([
+        // Gọi song song 3 API
+        const [renterResponse, bookingResponse, verificationResponse] = await Promise.all([
           api.get(`/api/bookings/${orderId}/renter-details`, {
             params: { bookingId: orderId }
           }),
           api.get(`/api/bookings/${orderId}/booking-details`, {
             params: { bookingId: orderId }
+          }),
+          api.get(`/api/staff/verification-status`, {
+            params: { bookingId: parseInt(orderId) }
           })
         ]);
 
         // Lấy dữ liệu từ response
         const renterData = renterResponse.data?.data || renterResponse.data;
         const bookingData = bookingResponse.data?.data || bookingResponse.data;
+        const verificationData = verificationResponse.data?.data || verificationResponse.data;
 
         setRenterDetails(renterData);
         setBookingDetails(bookingData);
+        setVerificationStatus(verificationData);
+        
+        // Cập nhật trạng thái xác nhận dựa trên verification status
+        if (verificationData === 'VERIFIED') {
+          setConfirmed(true);
+        }
       } catch (err) {
         console.error("Error fetching order details:", err);
         setError(
@@ -149,6 +161,48 @@ const OrderDetail = () => {
       Completed: { label: "Hoàn thành", variant: "success" },
     };
     return statusMap[status] || { label: status, variant: "default" };
+  };
+
+  const getVerificationStatusConfig = (status) => {
+    const statusMap = {
+      VERIFIED: { label: "Đã xác minh", variant: "success" },
+      PENDING: { label: "Chờ xác minh", variant: "warning" },
+      REJECTED: { label: "Từ chối", variant: "error" },
+    };
+    return statusMap[status] || { label: "Chờ xác minh", variant: "warning" };
+  };
+
+  // Hàm gọi API xác minh người thuê
+  const handleVerifyRenter = async () => {
+    if (!orderId) {
+      setError("Không tìm thấy mã đơn hàng");
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      setError("");
+
+      const response = await api.post("/api/staff/verify-renter", null, {
+        params: { bookingId: parseInt(orderId) }
+      });
+
+      if (response.data.success) {
+        setConfirmed(true);
+        setVerificationStatus('VERIFIED');
+        // Có thể thêm thông báo thành công ở đây
+        console.log("Verify successfully:", response.data.message);
+      }
+    } catch (err) {
+      console.error("Error verifying renter:", err);
+      setError(
+        err.response?.data?.message || 
+        err.message || 
+        "Không thể xác minh thông tin người thuê"
+      );
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -209,8 +263,8 @@ const OrderDetail = () => {
             <section className="order-card">
               <header className="order-card__header">
                 <h2>Thông tin người thuê</h2>
-                <StatusBadge variant="info">
-                  Đã xác minh
+                <StatusBadge variant={getVerificationStatusConfig(verificationStatus).variant}>
+                  {getVerificationStatusConfig(verificationStatus).label}
                 </StatusBadge>
               </header>
 
@@ -286,9 +340,10 @@ const OrderDetail = () => {
                   className={`order-detail__confirm${
                     isConfirmed ? " order-detail__confirm--done" : ""
                   }`}
-                  onClick={() => setConfirmed(true)}
+                  onClick={handleVerifyRenter}
+                  disabled={isConfirmed || isVerifying}
                 >
-                  {isConfirmed ? "Đã xác nhận" : "✓ Xác nhận"}
+                  {isVerifying ? "Đang xác minh..." : isConfirmed ? "Đã xác nhận" : "✓ Xác nhận"}
                 </button>
               </footer>
             </section>
@@ -345,7 +400,7 @@ const OrderDetail = () => {
                 </div>
                 <div>
                   <p>Tiền cọc</p>
-                  <h3>{formatCurrency(bookingDetails.deposit)}</h3>
+                  <h3>{formatCurrency(bookingDetails.deposit/1000)}</h3>
                 </div>
                 <div>
                   <p>Phí phát sinh</p>

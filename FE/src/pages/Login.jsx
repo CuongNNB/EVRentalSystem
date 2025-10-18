@@ -53,7 +53,8 @@ export default function Login() {
     
     // Kiểm tra role và điều hướng
     if (loginData.role === "STAFF") {
-      navigate("/staff");
+      // Tự động chuyển đến trang orders với stationId từ user data
+      navigate("/staff/orders");
     } else {
       navigate("/dashboard");
     }

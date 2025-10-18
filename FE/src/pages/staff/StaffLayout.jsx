@@ -69,6 +69,8 @@ const RECENT_ORDERS = [
 const StaffLayout = () => {
   return (
     <div className="staff-shell">
+      <ApiModeSwitcher />
+      <StationIdTester />
       <StaffHeader />
       <div className="staff-layout">
         <StaffSlideBar activeKey="overview" />

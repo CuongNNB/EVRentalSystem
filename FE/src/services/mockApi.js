@@ -1,4 +1,6 @@
 // Mock API service for testing when backend is not available
+import { MOCK_BOOKINGS } from '../mocks/bookings';
+
 const MOCK_DELAY = 1000; // 1 second delay to simulate network
 
 const mockUsers = [
@@ -15,6 +17,16 @@ const mockUsers = [
 const mockTokens = {
   "test@example.com": "mock_jwt_token_12345",
   "tinhpham@gmail.com": "mock_jwt_token_67890"
+};
+
+// Mock bookings data grouped by station
+const mockBookingsByStation = {
+  1: MOCK_BOOKINGS.slice(0, 5), // First 5 bookings for station 1
+  2: MOCK_BOOKINGS.slice(5, 10), // Next 5 bookings for station 2  
+  3: MOCK_BOOKINGS.slice(10, 15), // Next 5 bookings for station 3
+  4: MOCK_BOOKINGS.slice(15, 20), // Next 5 bookings for station 4
+  // Default fallback - show all bookings if station not found
+  default: MOCK_BOOKINGS.slice(0, 10)
 };
 
 // Simulate network delay
@@ -146,10 +158,41 @@ export const mockUserApi = {
   }
 };
 
+// Mock Staff API
+export const mockStaffApi = {
+  // Mock get bookings by station
+  getBookingsByStation: async (stationId) => {
+    await delay(MOCK_DELAY);
+    
+    const stationBookings = mockBookingsByStation[stationId] || mockBookingsByStation.default;
+    
+    // Transform to match backend response format
+    const transformedBookings = stationBookings.map(booking => ({
+      id: booking.bookingId,
+      customerName: `Customer ${booking.bookingId}`,
+      customerNumber: `090${booking.bookingId.toString().padStart(7, '0')}`,
+      vehicleModelId: booking.bookingId,
+      vehicleModel: booking.vehicleModel,
+      startDate: booking.startAt,
+      endDate: booking.endAt,
+      totalAmount: booking.totalPrice,
+      status: booking.status
+    }));
+    
+    console.log(`🎭 Mock API: Returning ${transformedBookings.length} bookings for station ${stationId}`);
+    
+    return {
+      success: true,
+      message: "Bookings fetched successfully",
+      data: transformedBookings
+    };
+  }
+};
+
 // Check if backend is available
 export const checkBackendHealth = async () => {
   try {
-    const response = await fetch('http://localhost:8080/actuator/health', {
+    const response = await fetch('http://localhost:8084/EVRentalSystem/actuator/health', {
       method: 'GET',
       timeout: 3000
     });

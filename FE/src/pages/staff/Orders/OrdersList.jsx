@@ -964,10 +964,10 @@ const OrdersList = () => {
               null,
           };
           sessionStorage.setItem("handover-order", JSON.stringify(payload));
-          navigate(`/staff/orders/${order.id}/handover/check`, { state: payload });
+          navigate(`/staff/orders/${order.id}/handover`, { state: payload });
         } catch (storageError) {
           console.warn("Unable to persist handover order payload", storageError);
-          navigate(`/staff/orders/${order.id}/handover/check`);
+          navigate(`/staff/orders/${order.id}/handover`);
         }
         break;
       case "handover":

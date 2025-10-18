@@ -23,6 +23,12 @@ const CheckCar = () => {
   const [isSending, setIsSending] = useState(false);
   const [additionalRows, setAdditionalRows] = useState([]);
 
+  // Lấy thông tin xe từ HandoverCar
+  const vehicleInfo = useMemo(() => {
+    const state = location.state || {};
+    return state.vehicle || null;
+  }, [location.state]);
+
   const staffId = useMemo(() => {
     const state = location.state || {};
     const candidates = [
@@ -127,10 +133,10 @@ const CheckCar = () => {
   }
 
   const photoEntries = Object.entries(photos).filter(
-    ([slotId, value]) => allowedSlotIds.has(slotId) && value?.file
+    ([slotId, value]) => allowedSlotIds.has(slotId) && value?.file && slotId !== 'odometer' && slotId !== 'battery'
   );
 
-  // Validation: Kiểm tra có ít nhất 1 ảnh
+  // Validation: Kiểm tra có ít nhất 1 ảnh (không tính odometer và battery)
   if (photoEntries.length === 0) {
     setErrorMessage("Vui lòng tải lên ít nhất một ảnh kiểm tra xe.");
     return;
@@ -143,6 +149,7 @@ const CheckCar = () => {
     let successCount = 0;
     let failCount = 0;
 
+    // Xử lý các ảnh kiểm tra (không bao gồm odometer và battery)
     for (const [slotId, data] of photoEntries) {
       const partName = getInspectionPart(slotId);
       if (!partName) continue;
@@ -165,6 +172,58 @@ const CheckCar = () => {
       } catch (inspectionError) {
         console.error(`Failed to create inspection for ${partName}:`, inspectionError);
         failCount++;
+      }
+    }
+
+    // Xử lý odometer và battery (chỉ gửi text, không có ảnh)
+    const textOnlySlots = ['odometer', 'battery'];
+    console.log('Processing text-only slots:', textOnlySlots);
+    console.log('Current descriptions:', descriptions);
+    
+    for (const slotId of textOnlySlots) {
+      if (descriptions[slotId] && descriptions[slotId].trim()) {
+        const partName = getInspectionPart(slotId);
+        console.log(`Processing ${slotId}: partName=${partName}, description=${descriptions[slotId]}`);
+        if (!partName) continue;
+
+        try {
+          // Tạo một file ảnh giả (1x1 pixel PNG) cho API yêu cầu
+          const canvas = document.createElement('canvas');
+          canvas.width = 1;
+          canvas.height = 1;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, 1, 1);
+          
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          
+          const formData = new FormData();
+          formData.append("bookingId", bookingId);
+          formData.append("partName", partName);
+          formData.append("picture", blob, "placeholder.png");
+          
+          // Thêm đơn vị vào description
+          let description = descriptions[slotId].trim();
+          if (slotId === 'odometer') {
+            description = description ? `${description} km` : '';
+          } else if (slotId === 'battery') {
+            description = description ? `${description}%` : '';
+          }
+          
+          formData.append("description", description);
+          formData.append("staffId", staffId);
+          formData.append("status", DEFAULT_INSPECTION_STATUS);
+
+          const response = await api.post("/api/inspections/create", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+          
+          console.log(`Successfully created inspection for ${slotId}:`, response.data);
+          successCount++;
+        } catch (inspectionError) {
+          console.error(`Failed to create inspection for ${partName}:`, inspectionError);
+          failCount++;
+        }
       }
     }
 
@@ -247,6 +306,41 @@ const CheckCar = () => {
               </div>
             )}
 
+            {/* Thông tin xe đã chọn */}
+            {vehicleInfo && (
+              <section className="return-check__vehicle-info">
+                <header className="return-check__vehicle-header">
+                  <h2>Thông tin xe kiểm tra</h2>
+                </header>
+                <div className="return-check__vehicle-details">
+                  <div className="return-check__vehicle-card">
+                    <div className="return-check__vehicle-preview">
+                      <span className="return-check__vehicle-icon" aria-hidden="true">🚗</span>
+                      <strong>{vehicleInfo.plate || "—"}</strong>
+                    </div>
+                    <dl className="return-check__vehicle-specs">
+                      <div>
+                        <dt>Tên xe</dt>
+                        <dd>{vehicleInfo.name || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Màu sắc</dt>
+                        <dd>{vehicleInfo.color || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Dung lượng pin</dt>
+                        <dd>{vehicleInfo.battery || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Quãng đường</dt>
+                        <dd>{vehicleInfo.mileage || "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </section>
+            )}
+
             <div className="return-check__layout">
               <section className="return-check__panel return-check__panel--gallery">
                 <header className="return-check__panel-header">
@@ -255,60 +349,105 @@ const CheckCar = () => {
                 </header>
 
                 <div className="return-check__photos">
-                  {photoSlots.map((slot) => (
-                    <div 
-                      key={slot.id} 
-                      className={`return-check__photo-slot-wrapper ${
-                        photos[slot.id]?.preview ? 'return-check__photo-slot-wrapper--active' : ''
-                      }`}
-                    >
-                      {/* Photo Upload */}
-                      <label className="return-check__photo-slot">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(event) => handleUpload(event, slot.id)}
-                        />
-                        <div className="return-check__photo-frame">
-                          {photos[slot.id]?.preview ? (
-                            <img
-                              src={photos[slot.id].preview}
-                              alt={slot.label}
-                              className="return-check__photo-img"
-                            />
-                          ) : (
-                            <span className="return-check__photo-placeholder" aria-hidden="true">
-                              📷
+                  {photoSlots.map((slot) => {
+                    // Đối với odometer và battery, chỉ hiển thị input text
+                    if (slot.id === 'odometer' || slot.id === 'battery') {
+                      return (
+                        <div key={slot.id} className="return-check__text-input-wrapper">
+                          <label className="return-check__text-input-label">
+                            <span className="return-check__text-input-icon">
+                              {slot.id === 'odometer' ? '📊' : '🔋'}
                             </span>
-                          )}
-                        </div>
-                        <p className="return-check__photo-label">{slot.label}</p>
-                      </label>
-                      
-                      {/* Description - chỉ hiện khi đã có ảnh */}
-                      {photos[slot.id]?.preview && (
-                        <div className="return-check__photo-description-wrapper">
-                          <label htmlFor={`desc-${slot.id}`} className="return-check__photo-description-label">
-                            💬 Mô tả cho ảnh này:
+                            <span className="return-check__text-input-title">{slot.label}</span>
                           </label>
-                          <textarea
-                            id={`desc-${slot.id}`}
-                            className="return-check__photo-description"
-                            placeholder={`Ví dụ: "Không có vết xước", "Đèn hoạt động tốt"...`}
-                            value={descriptions[slot.id] || ""}
-                            onChange={(e) => setDescriptions(prev => ({
-                              ...prev,
-                              [slot.id]: e.target.value
-                            }))}
-                            rows={2}
-                          />
-                          <span className="return-check__photo-description-hint">
-                            {descriptions[slot.id]?.length || 0} ký tự
-                          </span>
+                          <div className="return-check__input-group">
+                            <input
+                              type="number"
+                              min={slot.id === 'battery' ? "0" : "0"}
+                              max={slot.id === 'battery' ? "100" : undefined}
+                              className="return-check__text-input"
+                              placeholder={`Nhập ${slot.id === 'odometer' ? 'số km hiện tại' : 'mức pin (0-100)'}`}
+                              value={descriptions[slot.id] || ""}
+                              onChange={(e) => {
+                                let value = e.target.value;
+                                // Giới hạn battery từ 0-100
+                                if (slot.id === 'battery') {
+                                  const numValue = parseInt(value);
+                                  if (!isNaN(numValue)) {
+                                    if (numValue > 100) value = '100';
+                                    if (numValue < 0) value = '0';
+                                  }
+                                }
+                                setDescriptions(prev => ({
+                                  ...prev,
+                                  [slot.id]: value
+                                }));
+                              }}
+                            />
+                            <span className="return-check__suffix">
+                              {slot.id === 'odometer' ? 'km' : '%'}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      );
+                    }
+                    
+                    // Đối với các slot khác, hiển thị upload ảnh như cũ
+                    return (
+                      <div 
+                        key={slot.id} 
+                        className={`return-check__photo-slot-wrapper ${
+                          photos[slot.id]?.preview ? 'return-check__photo-slot-wrapper--active' : ''
+                        }`}
+                      >
+                        {/* Photo Upload */}
+                        <label className="return-check__photo-slot">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => handleUpload(event, slot.id)}
+                          />
+                          <div className="return-check__photo-frame">
+                            {photos[slot.id]?.preview ? (
+                              <img
+                                src={photos[slot.id].preview}
+                                alt={slot.label}
+                                className="return-check__photo-img"
+                              />
+                            ) : (
+                              <span className="return-check__photo-placeholder" aria-hidden="true">
+                                📷
+                              </span>
+                            )}
+                          </div>
+                          <p className="return-check__photo-label">{slot.label}</p>
+                        </label>
+                        
+                        {/* Description - chỉ hiện khi đã có ảnh */}
+                        {photos[slot.id]?.preview && (
+                          <div className="return-check__photo-description-wrapper">
+                            <label htmlFor={`desc-${slot.id}`} className="return-check__photo-description-label">
+                              💬 Mô tả cho ảnh này:
+                            </label>
+                            <textarea
+                              id={`desc-${slot.id}`}
+                              className="return-check__photo-description"
+                              placeholder={`Ví dụ: "Không có vết xước", "Đèn hoạt động tốt"...`}
+                              value={descriptions[slot.id] || ""}
+                              onChange={(e) => setDescriptions(prev => ({
+                                ...prev,
+                                [slot.id]: e.target.value
+                              }))}
+                              rows={2}
+                            />
+                            <span className="return-check__photo-description-hint">
+                              {descriptions[slot.id]?.length || 0} ký tự
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {remainingRowSlots.map((slot) => (
                     <div key={slot.id} className="return-check__add-row-wrapper">
                       <button
