@@ -54,18 +54,15 @@ public class    BookingService {
         Booking booking = new Booking();
         booking.setRenter(user);
         booking.setVehicleModel(model);
-        booking.setVehicleDetail(vehicleDetail);
+        booking.setVehicleDetail(null);
         booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
         booking.setStatus(BookingStatus.Pending_Deposit_Confirmation.toString());
         booking.setDeposit(request.getDeposit());
-        booking.setRentalAmount(model.getPrice());
-        booking.setTotalAmount(totalAmount);
 
         bookingRepository.save(booking);
-        //set status to avoid double booking
-        vehicleDetail.setStatus("RESERVED");
+
         vehicleDetailRepository.save(vehicleDetail);
 
         // Mapping sang response
@@ -76,7 +73,6 @@ public class    BookingService {
         response.setVehicleModel(model.getModel());
         response.setStationName(station.getStationName());
         response.setStatus(booking.getStatus());
-        response.setTotalAmount(totalAmount);
         response.setMessage("Booking created successfully");
 
         return response;

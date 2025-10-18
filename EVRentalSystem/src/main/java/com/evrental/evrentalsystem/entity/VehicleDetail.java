@@ -14,7 +14,7 @@ public class VehicleDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = true)
     private String licensePlate;
 
     @ManyToOne
@@ -31,11 +31,5 @@ public class VehicleDetail {
     private String picture;
     private String status;
 
-    // Thêm phương thức này để lấy giá thuê xe mỗi ngày
-    public double getRentalPricePerDay() {
-        if (vehicleModel != null && vehicleModel.getPrice() != null) {
-            return vehicleModel.getPrice() / 30;  // Hoặc theo cách tính khác
-        }
-        return 0.0;  // Trả về 0 nếu không có thông tin giá
-    }
+
 }

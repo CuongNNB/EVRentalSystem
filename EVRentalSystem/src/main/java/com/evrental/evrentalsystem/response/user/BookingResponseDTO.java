@@ -12,7 +12,6 @@ public class BookingResponseDTO {
     private String vehicleModel;
     private String stationName;
     private String status;
-    private double totalAmount;
     private String message;
 
 }

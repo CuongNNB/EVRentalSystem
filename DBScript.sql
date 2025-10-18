@@ -118,7 +118,7 @@ CREATE TABLE Booking
     renter_id            INT            NOT NULL,
     vehicle_model_id     INT            NOT NULL,
     station_id           INT            NOT NULL,
-    license_plate        NVARCHAR(50)   NOT NULL,
+    license_plate        NVARCHAR(50)   NULL,
     promotion_id         INT            NULL,
     created_at           DATETIME2      NOT NULL DEFAULT SYSUTCDATETIME(),
     start_time           DATETIME2      NOT NULL,
@@ -128,7 +128,6 @@ CREATE TABLE Booking
     [status]             NVARCHAR(50),
     CONSTRAINT FK_Booking_Station FOREIGN KEY (station_id) REFERENCES Station (station_id),
     CONSTRAINT FK_Booking_Renter FOREIGN KEY (renter_id) REFERENCES [User] (user_id),
-    CONSTRAINT FK_Booking_License FOREIGN KEY (license_plate) REFERENCES Vehicle_Detail (license_plate),
     CONSTRAINT FK_Booking_Vehicle FOREIGN KEY (vehicle_model_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion (promotion_id)
     );
@@ -308,19 +307,19 @@ GO
 -- 5. Vehicle_Model
 -- ========================
 INSERT INTO Vehicle_Model (brand, model, price, seats)
-VALUES (N'VinFast', N'VF e34', 1200, 5), -- vehicle_id = 1
-       (N'VinFast', N'VF 8', 2000, 5),   -- vehicle_id = 2
-       (N'Tesla', N'Model 3', 2500, 5),  -- vehicle_id = 3
-       (N'VinFast', N'VF 5 Plus', 1500, 5),
-       (N'VinFast', N'VF 9', 1600, 7),
-       (N'Tesla', N'Model Y', 1700, 5),
-       (N'Tesla', N'Model X', 1700, 7),
-       (N'Hyundai', N'IONIQ 5', 1700, 5),
-       (N'Kia', N'EV6', 1700, 5),
-       (N'Nissan', N'Leaf', 1700, 5),
-       (N'BMW', N'i4 eDrive40', 1320, 5),
-       (N'Mercedes-Benz', N'EQE 300', 1340, 5),
-       (N'Porsche', N'Taycan 4S', 1450, 4);
+VALUES (N'VinFast', N'VF e34', 700, 5),
+    (N'VinFast', N'VF 8', 950, 5),
+    (N'Tesla', N'Model 3', 1100, 5),
+    (N'VinFast', N'VF 5 Plus', 600, 4),
+    (N'VinFast', N'VF 9', 1200, 7),
+    (N'Tesla', N'Model Y', 1000, 5),
+    (N'Tesla', N'Model X', 1200, 7),
+    (N'Hyundai', N'IONIQ 5', 950, 5),
+    (N'Kia', N'EV6', 900, 5),
+    (N'Nissan', N'Leaf', 750, 5),
+    (N'BMW', N'i4 eDrive40', 1150, 5),
+    (N'Mercedes-Benz', N'EQE 300', 1200, 5),
+    (N'Porsche', N'Taycan 4S', 1200, 4);
 GO
 
 -- ========================

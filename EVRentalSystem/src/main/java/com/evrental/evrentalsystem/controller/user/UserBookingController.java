@@ -29,6 +29,4 @@
             List<BookingDetailResponse> result = bookingService.getUserBookings(userId);
             return ResponseEntity.ok(result);
         }
-
-
     }

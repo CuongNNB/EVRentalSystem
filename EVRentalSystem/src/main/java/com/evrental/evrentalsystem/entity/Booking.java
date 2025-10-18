@@ -22,7 +22,7 @@ public class Booking {
     private User renter;
 
     @ManyToOne
-    @JoinColumn(name = "license_plate", referencedColumnName = "licensePlate", nullable = false)
+    @JoinColumn(name = "license_plate", referencedColumnName = "licensePlate", nullable = true)
     private VehicleDetail vehicleDetail;
 
     @ManyToOne
@@ -45,43 +45,5 @@ public class Booking {
     private Double deposit;
 
     private String status;
-
-    @Transient
-    private Double rentalAmount;
-    @Transient
-    private Double additionalFees = 0.0;
-    @Transient
-    private Double totalAmount;
-
-    public void calculateRentalAmount() {
-        if (startTime != null && expectedReturnTime != null) {
-            long days = ChronoUnit.DAYS.between(startTime, expectedReturnTime);
-            double dailyRate = vehicleDetail.getRentalPricePerDay();
-            this.rentalAmount = dailyRate * days;
-        } else {
-            // Xử lý trường hợp không có thời gian bắt đầu hoặc trả xe hợp lệ
-            this.rentalAmount = 0.0;
-        }
-    }
-
-    // Tính tổng số tiền (tiền thuê + phụ phí)
-    public void calculateTotalAmount() {
-        if (this.rentalAmount == null) {
-            calculateRentalAmount();  // Đảm bảo rằng tiền thuê đã được tính trước khi tính tổng
-        }
-        this.totalAmount = this.rentalAmount + (this.additionalFees != null ? this.additionalFees : 0);
-    }
-
-    @PrePersist
-    public void prePersist() {
-        calculateRentalAmount();
-        calculateTotalAmount();
-    }
-
-    @PostLoad
-    public void postLoad() {
-        calculateRentalAmount();
-        calculateTotalAmount();
-    }
 
 }
