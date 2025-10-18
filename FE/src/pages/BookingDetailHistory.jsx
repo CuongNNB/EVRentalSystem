@@ -73,8 +73,8 @@ const BookingDetailHistory = () => {
       }
       setLoading(true);
       setError('');
-      try {
-        const res = await api.get(`/user/booking-history/${userId}`);
+  try {
+  const res = await api.get(`/api/user/booking-history/${userId}`);
         const list = Array.isArray(res.data) ? res.data : [];
         const found = list.find((b) => String(b.bookingId) === String(id) || String(b.id) === String(id));
         if (found) {

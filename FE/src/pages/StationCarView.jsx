@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MapPin, Search, Car, Clock, Battery, Users } from 'lucide-react';
+import DISTRICTS from '../data/districts';
 import './StationCarView.css';
 
 const StationCarView = () => {
-    const [selectedDistrict, setSelectedDistrict] = useState('Tất cả');
+    // default selected district set to Thủ Đức to match screenshot
+    const [selectedDistrict, setSelectedDistrict] = useState('Thủ Đức');
+    const location = useLocation();
     const [cars, setCars] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showCarList, setShowCarList] = useState(false); // Ẩn danh sách xe cho đến khi kết nối backend
 
-    // 7 quận theo yêu cầu từ hình ảnh
-    const districts = [
-        'Tất cả', 'Quận 1', 'Bình Thạnh', 'Thủ Đức', 'Quận 7', 
-        'Gò Vấp', 'Bình Tân', 'Phú Nhuận'
-    ];
+    // use shared district list
+    const districts = DISTRICTS;
 
     // Mock data for cars
     const mockCars = [
@@ -79,6 +80,17 @@ const StationCarView = () => {
     ];
 
     useEffect(() => {
+        // If navigated with a selected district (from Hero), preselect it and open list
+        if (location?.state?.district) {
+            const incoming = location.state.district;
+            // try to map incoming label to one of our districts (use includes)
+            const matched = districts.find(d => incoming.includes(d) || d.includes(incoming));
+            if (matched) {
+                setSelectedDistrict(matched);
+                setShowCarList(true);
+            }
+        }
+
         // Chỉ load cars khi showCarList = true (khi đã kết nối backend)
         if (showCarList) {
             setLoading(true);
@@ -113,7 +125,7 @@ const StationCarView = () => {
                     <nav className="station-header__nav">
                         <a href="/" className="station-header__nav-link">Trang chủ</a>
                         <a href="/cars" className="station-header__nav-link">Xem xe có sẵn</a>
-                        <a href="/stations" className="station-header__nav-link active">Tìm xe theo trạm</a>
+                        <a href="/station-cars" className="station-header__nav-link active">Tìm xe theo trạm</a>
                         <a href="/promotions" className="station-header__nav-link">Ưu đãi</a>
                         <a href="/account" className="station-header__nav-link">Tài khoản</a>
                     </nav>
