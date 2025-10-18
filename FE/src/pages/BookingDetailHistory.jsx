@@ -1,18 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
+import api from '../api';
 import './BookingHistory.css';
 
-// Helper functions
+const normalizeStatus = (s = '') => String(s || '').toString().trim().toUpperCase();
+
+const STATUS_LABEL = {
+  RENTING: 'Đang thuê',
+  IN_PROGRESS: 'Đang thuê',
+  RENTED: 'Đang thuê',
+  UPCOMING: 'Chờ nhận xe',
+  PENDING: 'Chờ nhận xe',
+  COMPLETED: 'Đã hoàn tất',
+  DONE: 'Đã hoàn tất',
+  RETURNED: 'Đã hoàn tất',
+  CANCELED: 'Đã hủy',
+  CANCELLED: 'Đã hủy',
+};
+
+const getStatusLabel = (s) => STATUS_LABEL[normalizeStatus(s)] || (s || 'Không xác định');
+
+const getUserId = () => {
+  try {
+    const raw = localStorage.getItem('ev_user');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u?.id ?? u?.userId ?? u?.data?.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+// Helper functions (null-safe)
 const fmtVND = (amount) => {
-  return amount.toLocaleString("vi-VN") + " ₫";
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '0 ₫';
+  return n.toLocaleString('vi-VN') + ' ₫';
 };
 
 const fmtDateTime = (isoString) => {
-  return new Date(isoString).toLocaleString("vi-VN", {
+  if (!isoString) return '—';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -21,23 +54,84 @@ const fmtDateTime = (isoString) => {
   });
 };
 
+
 const BookingDetailHistory = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Find booking by ID
-  const booking = MOCK_BOOKINGS.find(b => b.bookingId === parseInt(id));
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Not found
-  if (!booking) {
-    return (
-      <div className="detail-page">
-        <Header />
-        <div className="detail-container">
+  useEffect(() => {
+    const fetchDetail = async () => {
+      const userId = getUserId();
+      if (!userId) {
+        setError('Vui lòng đăng nhập để xem chi tiết đơn.');
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError('');
+      try {
+        const res = await api.get(`/user/booking-history/${userId}`);
+        const list = Array.isArray(res.data) ? res.data : [];
+        const found = list.find((b) => String(b.bookingId) === String(id) || String(b.id) === String(id));
+        if (found) {
+          // normalize booking fields to avoid crashes in rendering
+          setBooking({
+            ...found,
+            bookingId: found?.bookingId ?? found?.id ?? null,
+            bookingStatus: found?.bookingStatus ?? found?.status ?? 'UNKNOWN',
+            vehicleBrand: found?.vehicleBrand ?? '',
+            vehicleModel: found?.vehicleModel ?? 'Không rõ',
+            licensePlate: found?.licensePlate ?? 'Không rõ',
+            stationName: found?.stationName ?? 'Không rõ',
+            stationAddress: found?.stationAddress ?? '',
+            startTime: found?.startTime ?? found?.startAt ?? null,
+            expectedReturnTime: found?.expectedReturnTime ?? found?.endAt ?? null,
+            deposit: found?.deposit ?? found?.totalPrice ?? 0,
+          });
+        } else setBooking(null);
+      } catch (err) {
+        setError('Không thể tải chi tiết đơn. Vui lòng thử lại sau.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  return (
+    <div className="detail-page">
+      <Header />
+
+      <div className="detail-container">
+        {/* Loading / Error / Not found states */}
+        {loading && (
+          <div className="loading" style={{padding:40,textAlign:'center'}}>
+            <div className="spinner" />
+            <p>Đang tải chi tiết đơn…</p>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="alert error" style={{padding:20}}>
+            <div>{error}</div>
+            <div style={{marginTop:10}}>
+              <button onClick={() => window.location.reload()}>Thử lại</button>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && !booking && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="detail-not-found"
+            style={{padding:40,textAlign:'center'}}
           >
             <div className="not-found-icon">❌</div>
             <h2 className="not-found-title">Không tìm thấy đơn</h2>
@@ -49,17 +143,11 @@ const BookingDetailHistory = () => {
               ← Về lịch sử đặt xe
             </button>
           </motion.div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+        )}
 
-  return (
-    <div className="detail-page">
-      <Header />
-
-      <div className="detail-container">
+        {/* If booking present, render details */}
+        {(!loading && !error && booking) && (
+          <>
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
@@ -81,8 +169,8 @@ const BookingDetailHistory = () => {
         >
           <div className="detail-header-top">
             <h1 className="detail-title">Chi tiết đơn #{booking.bookingId}</h1>
-            <span className={`detail-status-badge status-${booking.status.toLowerCase().replace('_', '-')}`}>
-              {getStatusLabel(booking.status)}
+            <span className={`detail-status-badge status-${String(booking?.bookingStatus ?? booking?.status ?? '').toLowerCase().replace(/_/g, '-')}`}>
+              {getStatusLabel(booking.bookingStatus ?? booking.status)}
             </span>
           </div>
           <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe của bạn</p>
@@ -167,11 +255,11 @@ const BookingDetailHistory = () => {
             <div className="time-grid">
               <div className="time-box time-box-start">
                 <div className="time-label">Thời gian nhận xe</div>
-                <div className="time-value">{fmtDateTime(booking.startAt)}</div>
+                <div className="time-value">{fmtDateTime(booking.startTime)}</div>
               </div>
               <div className="time-box time-box-end">
                 <div className="time-label">Thời gian trả xe</div>
-                <div className="time-value">{fmtDateTime(booking.endAt)}</div>
+                <div className="time-value">{fmtDateTime(booking.expectedReturnTime)}</div>
               </div>
             </div>
           </motion.div>
@@ -204,7 +292,7 @@ const BookingDetailHistory = () => {
               </div>
               <div className="price-total">
                 <span className="price-total-label">Tổng thanh toán:</span>
-                <span className="price-total-value">{fmtVND(booking.totalPrice)}</span>
+                <span className="price-total-value">{fmtVND(booking.deposit)}</span>
               </div>
             </div>
           </motion.div>
@@ -235,6 +323,8 @@ const BookingDetailHistory = () => {
             </div>
           </motion.div>
         </div>
+        </>
+        )}
       </div>
 
       <Footer />
