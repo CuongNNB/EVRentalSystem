@@ -909,3 +909,98 @@
 .status-vehicle_returned { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; }
 .status-completed { background: linear-gradient(135deg, #d1fae5, #6ee7b7); color: #065f46; }
 .status-vehicle_return_overdue { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; }
+
+
+/* ===== Modal overlay for Accept/Reject messages ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 520px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 18px 50px rgba(2,6,23,0.4);
+    border: 1px solid #e6eef2;
+    text-align: left;
+}
+
+.modal-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.125rem;
+    color: #111827;
+    font-weight: 700;
+}
+
+.modal-card p {
+    margin: 0 0 12px 0;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-btn {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+}
+
+.modal-confirm {
+    background: #0ea5a4;
+    color: white;
+    border: 2px solid #0ea5a4;
+}
+
+.modal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.text-error {
+    color: #b91c1c;
+    margin-top: 8px;
+}
+/* ===== Reject button style ===== */
+.btn-reject {
+    background-color: #ef4444;
+    color: white;
+    border: 2px solid #ef4444;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-reject:hover {
+    background: white;
+    color: #ef4444;
+    transform: scale(1.02);
+}
+
+/* ===== Cancel button style inside modal ===== */
+.modal-cancel {
+    background: white;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+.modal-cancel:hover {
+    background: #f3f4f6;
+}

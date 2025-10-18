@@ -61,6 +61,11 @@ const BookingDetailHistory = () => {
     const [loadingInsp, setLoadingInsp] = useState(true);
     const [errorInsp, setErrorInsp] = useState(null);
 
+    const [updating, setUpdating] = useState(false);
+    const [updateError, setUpdateError] = useState(null);
+    const [acceptModalOpen, setAcceptModalOpen] = useState(false);
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+
     // Prefer booking from navigation state (forwarded from MyBookings)
     useEffect(() => {
         const bookingFromState = location?.state?.booking;
@@ -166,6 +171,70 @@ const BookingDetailHistory = () => {
     };
 
     const { days, deposit, extrasFee, estimated, total } = computePriceData();
+
+    // 🔹 ADD: call API to update inspections' status for a bookingId
+    const callUpdateStatusApi = async (bookingId, status) => {
+        setUpdating(true);
+        setUpdateError(null);
+        try {
+            const resp = await fetch(`${API_BASE}/inspections/update-status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId, status }),
+            });
+
+            if (!resp.ok) {
+                const errBody = await resp.json().catch(() => ({}));
+                throw new Error(errBody.message || `HTTP ${resp.status}`);
+            }
+
+            // backend returns List<Inspection>
+            const data = await resp.json();
+            if (Array.isArray(data) && data.length > 0) {
+                setInspections(data);
+            } else {
+                // fallback: mark local inspections with new status
+                setInspections(prev => prev.map(i => ({ ...i, status })));
+            }
+
+            return { success: true };
+        } catch (err) {
+            setUpdateError(err.message);
+            return { success: false, message: err.message };
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    // 🔹 ADD: handlers for Accept modal
+    const handleAcceptAll = async () => {
+        if (!normalized.bookingId) return;
+        // mở modal trước để người dùng thấy thông báo
+        setAcceptModalOpen(true);
+        // gọi API cập nhật status -> CONFIRMED
+        await callUpdateStatusApi(normalized.bookingId, 'CONFIRMED');
+    };
+
+    const handleAcceptClose = () => {
+        setAcceptModalOpen(false);
+    };
+    // 🔹 Mở modal hỏi xác nhận khi nhấn Từ chối
+    const handleOpenRejectModal = () => {
+        setRejectModalOpen(true);
+    };
+
+    // 🔹 Hủy đóng modal (khi nhấn "Huỷ")
+    const handleRejectCancel = () => {
+        setRejectModalOpen(false);
+    };
+
+    // 🔹 Xác nhận từ chối: gọi API cập nhật status -> REJECTED
+    const handleRejectConfirm = async () => {
+        setRejectModalOpen(false);
+        if (!normalized.bookingId) return;
+        await callUpdateStatusApi(normalized.bookingId, "REJECTED");
+    };
+
 
     return (
         <div className="detail-page">
@@ -318,12 +387,21 @@ const BookingDetailHistory = () => {
                                 <div className="inspection-actions">
                                     <button
                                         className="btn-accept"
-                                        onClick={() => {
-                                            console.log("User accepted all inspection results for bookingId:", normalized.bookingId);
-                                            alert("Đã chấp nhận kết quả kiểm tra xe!");
-                                        }}
+                                        onClick={handleAcceptAll}
+                                        disabled={updating}
+                                        title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
                                     >
-                                        Chấp nhận
+                                        {updating ? 'Đang xử lý...' : 'Chấp nhận'}
+                                    </button>
+
+                                    <button
+                                        className="btn-reject"
+                                        onClick={handleOpenRejectModal}
+                                        disabled={updating}
+                                        style={{ marginLeft: 12 }}
+                                        title={updating ? "Đang xử lý..." : "Từ chối"}
+                                    >
+                                        Từ chối
                                     </button>
                                 </div>
                             )}
@@ -331,6 +409,61 @@ const BookingDetailHistory = () => {
                     </motion.div>
                 </div>
             </div>
+            {/* 🔹 ACCEPT MODAL */}
+            {acceptModalOpen && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-card">
+                        <h3>Xe bạn đặt sẽ sớm được chuẩn bị</h3>
+                        <p>Đội ngũ của chúng tôi sẽ chuẩn bị xe cho bạn trong thời gian sớm nhất. Cảm ơn bạn đã đặt xe!</p>
+
+                        {updating && <p style={{ marginTop: 8 }}>Đang gửi yêu cầu...</p>}
+                        {updateError && <p className="text-error" style={{ marginTop: 8 }}>{updateError}</p>}
+
+                        <div className="modal-actions" style={{ marginTop: 12 }}>
+                            <button
+                                className="modal-btn modal-confirm"
+                                onClick={handleAcceptClose}
+                                disabled={updating}
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* 🔹 REJECT CONFIRMATION MODAL */}
+            {rejectModalOpen && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-card">
+                        <h3>Bạn có chắc không?</h3>
+                        <p>
+                            Bạn đang từ chối kết quả kiểm tra xe cho đơn #{normalized.bookingId}.<br />
+                            Hành động này sẽ cập nhật trạng thái tất cả mục kiểm tra thành{" "}
+                            <strong>REJECTED</strong>.
+                        </p>
+
+                        {updating && <p style={{ marginTop: 8 }}>Đang gửi yêu cầu...</p>}
+                        {updateError && <p className="text-error" style={{ marginTop: 8 }}>{updateError}</p>}
+
+                        <div className="modal-actions" style={{ marginTop: 12 }}>
+                            <button
+                                className="modal-btn modal-cancel"
+                                onClick={handleRejectCancel}
+                                disabled={updating}
+                            >
+                                Huỷ
+                            </button>
+                            <button
+                                className="modal-btn modal-confirm"
+                                onClick={handleRejectConfirm}
+                                disabled={updating}
+                            >
+                                {updating ? "Đang xử lý..." : "Xác nhận từ chối"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>
