@@ -276,7 +276,7 @@ const DepositPaymentPage = () => {
 
                                 <div className="price-breakdown">
                                     <div className="price-row"><span>Giá thuê/ngày</span><span>{formatPrice(summary.pricePerDay)}</span></div>
-                                    <div className="price-row"><span>Số ngày thuê</span><span>{summary.days} ngày</span></div>
+                                    <div className="price-row"><span>Thời gian thuê</span><span>{summary.days}</span></div>
                                     <div className="price-row"><span>Đặt cọc (30%)</span><span>{formatPrice(summary.depositAmount)}</span></div>
                                     <div className="divider"></div>
                                     <div className="price-row total"><span>Tổng thanh toán</span><span>{formatPrice(summary.depositAmount)}</span></div>

@@ -172,6 +172,21 @@ export default function CarDetail() {
                                     </button>
                                 ))}
                             </div>
+
+                            <div className="car-description">
+                                <h3 className="section-title">Mô tả</h3>
+                                <p
+                                    className="description-text"
+                                    dangerouslySetInnerHTML={{ __html: carData.description }}
+                                ></p>
+                            </div>
+
+                            {/* ✅ Nút đặt xe */}
+                            <div className="booking-section">
+                                <button className="book-button" onClick={handleBookCar}>
+                                    Đặt xe ngay
+                                </button>
+                            </div>
                         </div>
 
                         {/* 📋 Cột phải - thông tin xe */}
@@ -222,21 +237,6 @@ export default function CarDetail() {
                                 </ul>
                             </div>
 
-                            <div className="car-description">
-                                <h3 className="section-title">Mô tả</h3>
-                                <p
-                                    className="description-text"
-                                    dangerouslySetInnerHTML={{ __html: carData.description }}
-                                ></p>
-                            </div>
-
-                            {/* ✅ Nút đặt xe */}
-                            <div className="booking-section">
-                                <p className="station-info">📍 {carData.stationName}</p>
-                                <button className="book-button" onClick={handleBookCar}>
-                                    Đặt xe ngay
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>

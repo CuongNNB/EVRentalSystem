@@ -1,4 +1,8 @@
-/* Car Detail Page Styles */
+/* =========================
+   Car Detail Page Styles
+   (Cleaned & consolidated)
+   ========================= */
+
 .car-detail-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -40,15 +44,6 @@
     text-decoration: underline;
 }
 
-.breadcrumb-separator {
-    color: #cbd5e1;
-}
-
-.breadcrumb-current {
-    color: #475569;
-    font-weight: 500;
-}
-
 /* Main Content Layout */
 .car-detail-content {
     display: grid;
@@ -80,51 +75,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.5s ease;
 }
 
 .main-image:hover {
     transform: scale(1.05);
-}
-
-.image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 1rem;
-}
-
-.main-image-container:hover .image-overlay {
-    opacity: 1;
-}
-
-.image-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.image-action-btn {
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 8px;
-    padding: 0.75rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #475569;
-}
-
-.image-action-btn:hover {
-    background: white;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .thumbnail-gallery {
@@ -147,6 +102,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: all 0.3s ease-in-out;
 }
 
 .thumbnail:hover {
@@ -188,57 +144,35 @@
     line-height: 1.2;
 }
 
-.car-rating {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.stars {
-    display: flex;
-    gap: 0.25rem;
-}
-
-.star {
-    font-size: 1.2rem;
-    color: #e5e7eb;
-    transition: color 0.3s ease;
-}
-
-.star.filled {
-    color: #fbbf24;
-}
-
-.rating-text {
-    color: #64748b;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
+/* Price (no background, prominent but not huge) */
 .car-price {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 0.35rem !important;
+    padding: 8px 0 !important;
+    width: fit-content !important;
+    transition: all 0.3s ease !important;
 }
 
 .price-amount {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #0bb97f;
-    line-height: 1;
+    font-size: 2.8rem !important;
+    font-weight: 900 !important;
+    color: #0bb97f !important;
+    line-height: 1.1 !important;
 }
 
 .price-currency {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #0bb97f;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    color: #0bb97f !important;
+    margin-top: 4px !important;
 }
 
 .price-period {
-    font-size: 1.2rem;
-    color: #64748b;
-    font-weight: 500;
+    font-size: 0.95rem !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    margin-left: 6px !important;
 }
 
 /* Section Titles */
@@ -255,10 +189,10 @@
 /* Specifications */
 .car-specifications {
     background: #ffffff;
-    border-radius: 1.5rem;
-    padding: 2.5rem;
+    border-radius: 1rem;
+    padding: 2rem;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: hidden;
 }
@@ -277,26 +211,24 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
 }
 
 .spec-item {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.25rem 1.5rem;
+    gap: 1rem;
+    padding: 1rem;
     background: #ffffff;
     border-radius: 0.75rem;
     border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .spec-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     border-color: #0bb97f;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
@@ -312,32 +244,20 @@
     border-radius: 0.75rem;
     color: white;
     box-shadow: 0 4px 8px rgba(11, 185, 127, 0.2);
-    position: relative;
-    z-index: 1;
     flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.spec-item:hover .spec-icon {
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(11, 185, 127, 0.3);
 }
 
 .spec-content {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    position: relative;
-    z-index: 1;
     flex: 1;
 }
 
 .spec-value {
     font-weight: 700;
     color: #1e293b;
-    font-size: 1.125rem;
-    line-height: 1.3;
-    letter-spacing: -0.025em;
+    font-size: 1.05rem;
 }
 
 .spec-label {
@@ -345,85 +265,14 @@
     color: #64748b;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    line-height: 1.2;
-}
-
-/* Responsive Design for Specifications */
-@media (max-width: 1024px) {
-    .car-specifications {
-        padding: 2rem;
-    }
-
-    .spec-item {
-        padding: 1.125rem 1.25rem;
-    }
-}
-
-@media (max-width: 900px) {
-    .specs-grid {
-        grid-template-columns: 1fr;
-        gap: 0.875rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .specs-grid {
-        grid-template-columns: 1fr;
-        gap: 0.875rem;
-    }
-
-    .car-specifications {
-        padding: 1.5rem;
-        border-radius: 1rem;
-    }
-
-    .spec-item {
-        padding: 1rem 1.125rem;
-        gap: 1rem;
-    }
-
-    .spec-icon {
-        width: 2.75rem;
-        height: 2.75rem;
-        font-size: 1.125rem;
-    }
-
-    .spec-value {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .car-specifications {
-        padding: 1rem;
-    }
-
-    .spec-item {
-        padding: 0.875rem 1rem;
-        gap: 0.875rem;
-    }
-
-    .spec-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        font-size: 1rem;
-    }
-
-    .spec-value {
-        font-size: 0.9rem;
-    }
-
-    .spec-label {
-        font-size: 0.7rem;
-    }
+    letter-spacing: 0.08em;
 }
 
 /* Equipment */
 .car-equipment {
     background: #f8fafc;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     border: 1px solid #e2e8f0;
 }
 
@@ -441,7 +290,7 @@
     background: white;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
 }
 
 .equipment-item:hover {
@@ -449,23 +298,11 @@
     transform: translateX(4px);
 }
 
-.equipment-icon {
-    color: #0bb97f;
-    font-weight: 700;
-    font-size: 1.1rem;
-}
-
-.equipment-text {
-    color: #475569;
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-/* Features */
+/* Features (list of highlighted features) */
 .car-features {
     background: #f8fafc;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     border: 1px solid #e2e8f0;
 }
 
@@ -473,25 +310,32 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.9rem;
 }
 
 .feature-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+    padding: 0.9rem 1.1rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #d1fae5;
+    transition: all 0.25s ease;
+    font-size: 0.95rem;
+    color: #064e3b;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .feature-item:hover {
-    border-color: #0bb97f;
-    transform: translateX(4px);
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(6, 182, 212, 0.18);
 }
 
 .feature-icon {
@@ -499,70 +343,76 @@
     font-size: 1.2rem;
 }
 
-.feature-text {
-    color: #475569;
-    font-weight: 500;
-}
-
 /* Description */
 .car-description {
     background: #f8fafc;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1.25rem;
     border: 1px solid #e2e8f0;
 }
 
 .description-text {
     color: #475569;
-    line-height: 1.7;
+    line-height: 1.6;
     margin: 0;
     font-size: 1rem;
 }
 
-/* Booking Section */
+/* Booking Section - button only styling (oval, compact) */
 .booking-section {
-    background: linear-gradient(135deg, #0bb97f, #06b6d4);
-    border-radius: 20px;
-    padding: 2rem;
-    color: white;
-    text-align: center;
+    /* keep container natural; button styled specifically below */
     position: sticky;
     top: 2rem;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    text-align: center;
 }
 
-.book-button {
-    background: white;
-    color: #0bb97f;
-    border: none;
-    border-radius: 12px;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.booking-section button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #0bb97f, #06b6d4) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    padding: 10px 26px !important;
+    border-radius: 9999px !important; /* oval */
+    border: 2px solid transparent !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px -4px rgba(6, 182, 212, 0.35) !important;
+    transition: all 0.25s ease !important;
+    width: auto !important;
+    min-width: 140px !important;
+    max-width: fit-content !important;
+    text-align: center !important;
+    white-space: nowrap !important;
 }
 
-.book-button:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+.booking-section button:hover {
+    background: #ffffff !important;
+    color: #0bb97f !important;
+    border-color: #0bb97f !important;
+    box-shadow: 0 6px 16px -8px rgba(6, 182, 212, 0.25) !important;
+    transform: translateY(-2px) !important;
 }
 
-.book-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.booking-section button:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 3px 8px rgba(11, 185, 127, 0.2) !important;
 }
 
-.book-button.loading {
-    background: #f8fafc;
-    color: #64748b;
+/* Accessibility focus */
+.book-button:focus,
+.thumbnail:focus,
+.image-action-btn:focus,
+.booking-section button:focus {
+    outline: 2px solid #0bb97f;
+    outline-offset: 2px;
 }
 
+/* Loading spinner */
 .spinner {
     width: 20px;
     height: 20px;
@@ -577,323 +427,104 @@
     100% { transform: rotate(360deg); }
 }
 
-.booking-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.info-icon {
-    font-size: 1.1rem;
-}
-
-.info-text {
-    font-weight: 500;
-}
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 1024px) {
     .car-detail-content {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-
-    .car-name {
-        font-size: 2rem;
-    }
-
-    .price-amount {
-        font-size: 2.5rem;
-    }
-
-    .specs-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .equipment-grid {
-        grid-template-columns: 1fr;
-    }
+    .car-name { font-size: 2rem; }
+    .price-amount { font-size: 2.5rem; }
+    .specs-grid { grid-template-columns: 1fr; }
+    .equipment-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-    .car-detail-container {
-        padding: 0 1rem;
-    }
-
-    .car-detail-content {
-        padding: 1.5rem;
-        border-radius: 16px;
-    }
-
-    .car-name {
-        font-size: 1.8rem;
-    }
-
-    .price-amount {
-        font-size: 2rem;
-    }
-
-    .thumbnail-gallery {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .booking-section {
-        padding: 1.5rem;
-        border-radius: 16px;
-    }
-
-    .book-button {
-        padding: 0.875rem 1.5rem;
-        font-size: 1.1rem;
-    }
+    .car-detail-container { padding: 0 1rem; }
+    .car-detail-content { padding: 1.5rem; border-radius: 16px; }
+    .car-name { font-size: 1.8rem; }
+    .price-amount { font-size: 2.2rem; }
+    .thumbnail-gallery { grid-template-columns: repeat(3, 1fr); }
+    .features-list { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }
+    .feature-item { padding: 0.8rem 1rem; font-size: 0.9rem; }
+    .booking-section button { padding: 8px 22px !important; min-width: 130px !important; }
 }
 
 @media (max-width: 640px) {
-    .car-detail-main {
-        padding: 1rem 0;
-    }
-
-    .breadcrumb {
-        font-size: 0.8rem;
-        margin-bottom: 1rem;
-    }
-
-    .car-detail-content {
-        padding: 1rem;
-        border-radius: 12px;
-    }
-
-    .car-name {
-        font-size: 1.6rem;
-    }
-
-    .price-amount {
-        font-size: 1.8rem;
-    }
-
-    .thumbnail-gallery {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .booking-section {
-        padding: 1rem;
-        border-radius: 12px;
-    }
-
-    .booking-info {
-        gap: 0.5rem;
-    }
-
-    .info-item {
-        font-size: 0.8rem;
-    }
+    .car-detail-main { padding: 1rem 0; }
+    .breadcrumb { font-size: 0.8rem; margin-bottom: 1rem; }
+    .car-detail-content { padding: 1rem; border-radius: 12px; }
+    .car-name { font-size: 1.6rem; }
+    .price-amount { font-size: 1.8rem; }
+    .thumbnail-gallery { grid-template-columns: repeat(2, 1fr); }
+    .booking-section { padding: 0; border-radius: 12px; }
 }
 
-/* Animation for page load */
-.car-detail-content {
-    animation: fadeInUp 0.6s ease-out;
-}
-
+/* Page load animation */
+.car-detail-content { animation: fadeInUp 0.6s ease-out; }
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hover effects for interactive elements */
-.spec-item:hover .spec-icon {
-    transform: scale(1.1);
-}
-
-.equipment-item:hover .equipment-icon {
-    transform: scale(1.2);
-}
-
-.feature-item:hover .feature-icon {
-    transform: scale(1.2);
-}
-
-/* Focus states for accessibility */
-.book-button:focus,
-.thumbnail:focus,
-.image-action-btn:focus {
-    outline: 2px solid #0bb97f;
-    outline-offset: 2px;
-}
-
-/* Loading state for images */
-.main-image {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* ========================= */
-/* Hiệu ứng chuyển ảnh mượt s */
-/* ========================= */
-
-/* Ảnh chính chuyển mượt khi thay đổi */
-/* Hiệu ứng mờ dần khi chuyển ảnh */
-.main-image {
-    opacity: 1;
-    transform: scale(1);
-    transition: opacity 0.5s ease, transform 0.6s ease;
-}
-
-.main-image.fade-out {
-    opacity: 0;
-    transform: scale(1.02);
-}
-
-/* Khi thumbnail đang active thì sáng hơn nhẹ */
-.thumbnail.active img {
-    filter: brightness(1.05);
-    transform: scale(1.05);
-    transition: all 0.4s ease;
-}
-
-/* Thêm hiệu ứng mượt khi hover thumbnail */
-.thumbnail img {
-    transition: all 0.3s ease-in-out;
-}
-
-/* ============================= */
-/* Overlay thông báo đăng nhập  */
-/* ============================= */
-.login-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.55); /* overlay nền mờ tối */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.login-overlay-content {
-    background: #ffffff;
-    border-radius: 16px;
-    width: min(480px, 90%);
-    padding: 2rem;
-    box-shadow: 0 20px 60px -20px rgba(15, 23, 42, 0.25);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    animation: slideUp 0.4s ease-out;
-}
-
-.login-overlay-content h3 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    color: #1e293b;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.login-overlay-content p {
-    color: #475569;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-.login-overlay-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.login-btn {
-    background: linear-gradient(135deg, #0bb97f, #06b6d4);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(11, 185, 127, 0.3);
-}
-
-.close-btn {
-    background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-}
-
-/* Hiệu ứng xuất hiện */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(40px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* ============================= */
-/* Fix override: Nút Xem chi tiết ưu tiên cao hơn */
-/* ============================= */
-.car-card__actions .car-card__cta.car-card__cta--secondary {
-    background: linear-gradient(135deg, #0bb97f, #06b6d4) !important;
-    color: #ffffff !important;
-    border: none !important;
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding: 0.7rem 1.6rem;
-    border-radius: 999px;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(11, 185, 127, 0.25) !important;
-}
-
-.car-card__actions .car-card__cta.car-card__cta--secondary:hover,
-.car-card__actions .car-card__cta.car-card__cta--secondary:focus-visible {
+/* =============================== */
+/* 🔹 Refined car-features section */
+/* =============================== */
+.car-features {
     background: #ffffff !important;
-    color: #0bb97f !important;
-    border: 2px solid #0bb97f !important;
-    box-shadow: 0 6px 18px rgba(11, 185, 127, 0.25) !important;
-    transform: translateY(-2px);
-    outline: none;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.5rem !important;
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.features-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 0.75rem !important;
+}
+
+.feature-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    padding: 0.8rem 1rem !important;
+    background: #f9fafb !important; /* nền sáng dịu */
+    border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 0.9rem !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.feature-item:hover {
+    background: #f0fdfa !important; /* xanh nhạt rất dịu */
+    border-color: #99f6e4 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px -4px rgba(6, 182, 212, 0.2) !important;
+}
+
+.feature-icon {
+    font-size: 1.1rem !important;
+    color: #fbbf24 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Responsive - mobile */
+@media (max-width: 768px) {
+    .features-list {
+        grid-template-columns: 1fr !important;
+        gap: 0.6rem !important;
+    }
+
+    .feature-item {
+        padding: 0.75rem 0.9rem !important;
+        font-size: 0.88rem !important;
+    }
 }
 

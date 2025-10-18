@@ -3,7 +3,6 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import api from "../api";
 import "./BookingPage.css";
 
 const pad = (n) => (n < 10 ? "0" + n : n);
@@ -191,22 +190,42 @@ export default function BookingPage() {
         handleInputChange("returnDateTime", val);
     };
 
-    const calculateRentalDays = () => {
+    // NEW: calculate days/hours/minutes between pickup and return
+    const calculateDaysHours = () => {
         const start = new Date(formData.pickupDateTime);
         const end = new Date(formData.returnDateTime);
-        const diff = Math.abs(end - start);
-        return Math.max(Math.ceil(diff / (1000 * 60 * 60 * 24)), 1);
+        let diffMs = end - start;
+        if (diffMs <= 0) {
+            return { days: 0, hours: 0, totalHours: 0 };
+        }
+        const totalHoursFloat = diffMs / (1000 * 60 * 60);
+        // Ensure at least 1 hour
+        const totalHours = Math.max(1, totalHoursFloat);
+        let days = Math.floor(totalHours / 24);
+        let hours = Math.floor(totalHours - days * 24);
+        // handle case hours === 24 (rare due rounding) -> increment day
+        if (hours >= 24) {
+            days += Math.floor(hours / 24);
+            hours = hours % 24;
+        }
+        const roundedTotalHours = days * 24 + hours;
+        return { days, hours, totalHours: roundedTotalHours };
     };
 
-    const calculateTotal = () => {
-        const days = calculateRentalDays();
+    // NEW: calculate totals by hourly conversion
+    const calculateTotalsByHours = () => {
+        const { days, hours, totalHours } = calculateDaysHours();
         const dailyPrice = bookingPrice;
-        const totalRental = dailyPrice * days;
+        const hourlyRate = dailyPrice / 24;
+        // Compute total rental by multiplying hourlyRate * totalHours
+        const totalRental = Math.round(hourlyRate * totalHours);
         const deposit = Math.round(totalRental * 0.3);
-        return { dailyPrice, days, totalRental, deposit, totalToPay: deposit };
+        const totalToPay = deposit; // same as previous behavior (pay deposit)
+        return { dailyPrice, days, hours, totalHours, hourlyRate, totalRental, deposit, totalToPay };
     };
 
-    const totals = calculateTotal();
+    const totals = calculateTotalsByHours();
+
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
 
     // Booking / navigation logic unchanged from original
@@ -245,7 +264,7 @@ export default function BookingPage() {
                 licensePlate: fullBooking.carData?.licensePlate || '---',
                 color: fullBooking.carData?.color || '',
                 price: fullBooking.totals?.dailyPrice,
-                rentalDays: fullBooking.totals?.days,
+                rentalDays: `${fullBooking.totals?.days} ngày ${fullBooking.totals?.hours} giờ`,
                 totalAmount: fullBooking.totals?.totalRental,
                 deposit: fullBooking.totals?.deposit,
             },
@@ -266,110 +285,45 @@ export default function BookingPage() {
         };
     };
 
-    const getUserId = () => {
-        try {
-            const raw = localStorage.getItem('ev_user');
-            if (!raw) return null;
-            const u = JSON.parse(raw);
-            return u?.id ?? u?.userId ?? u?.data?.id ?? null;
-        } catch {
-            return null;
-        }
-    };
-
     const handleBooking = async () => {
         setIsBooking(true);
-        const userId = getUserId() || storedUser.id;
-        if (!userId) {
-            showError('Vui lòng đăng nhập để đặt xe.');
-            setIsBooking(false);
-            return;
-        }
-
-        // Validate start/end times before sending to backend
-        if (!formData.pickupDateTime || !formData.returnDateTime) {
-            showError('Vui lòng chọn thời gian nhận và trả xe hợp lệ.');
-            setIsBooking(false);
-            return;
-        }
-
-        // Ensure ISO datetime includes seconds (backend expects LocalDateTime format)
-        const ensureSeconds = (dt) => {
-            if (!dt) return dt;
-            // if already has seconds component (YYYY-MM-DDTHH:mm:ss), keep it
-            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(dt)) return dt;
-            // if has YYYY-MM-DDTHH:mm, append :00
-            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dt)) return `${dt}:00`;
-            // otherwise try to parse and reformat
-            const d = new Date(dt);
-            if (isNaN(d.getTime())) return dt;
-            const pad = (n) => (n < 10 ? '0' + n : n);
-            const yyyy = d.getFullYear();
-            const mm = pad(d.getMonth() + 1);
-            const dd = pad(d.getDate());
-            const hh = pad(d.getHours());
-            const min = pad(d.getMinutes());
-            const ss = pad(d.getSeconds());
-            return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
-        };
-
-    const resolvedVehicleId = Number(passedCar?.id ?? (carId ? parseInt(carId, 10) : null)) || null;
-    const resolvedStationId = Number(passedCar?.stationId ?? carData?.stationId ?? null) || null;
-    const resolvedRenterId = Number(userId ?? storedUser?.id ?? null) || null;
-
-        // Validate essential IDs to prevent server errors
-        if (!resolvedRenterId) {
-            showError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập.');
-            setIsBooking(false);
-            return;
-        }
-        if (!resolvedVehicleId) {
-            showError('Không tìm thấy xe để đặt. Vui lòng chọn lại xe.');
-            setIsBooking(false);
-            return;
-        }
-        if (!resolvedStationId) {
-            showError('Không tìm thấy trạm nhận xe. Vui lòng chọn lại trạm.');
-            setIsBooking(false);
-            return;
-        }
-
         const payload = {
-            renterId: resolvedRenterId,
-            vehicleDetailId: resolvedVehicleId,
-            // include alias fields to maximize backend compatibility
-            userId: resolvedRenterId,
-            vehicleId: resolvedVehicleId,
-            vehicleModelId: resolvedVehicleId,
-            stationId: resolvedStationId,
-            startTime: ensureSeconds(formData.pickupDateTime),
-            expectedReturnTime: ensureSeconds(formData.returnDateTime),
-            deposit: Number(totals.deposit) || 0,
-            totalPrice: Number(totals.totalRental) || 0,
-            note: formData.note || ''
+            userId: storedUser.id,
+            vehicleModelId: passedCar?.id || parseInt(carId),
+            stationId: passedCar?.stationId || carData.stationId,
+            startTime: formData.pickupDateTime,
+            expectedReturnTime: formData.returnDateTime,
+            deposit: totals.deposit,
         };
-
-        // Debug: log payload before sending to help trace null/id issues
-        console.debug('Booking payload:', payload);
 
         try {
-            const { data } = await api.post('/user/booking', payload);
+            const response = await fetch("http://localhost:8084/EVRentalSystem/api/user/booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) throw new Error("Booking failed");
+
+            const data = await response.json();
 
             const fullBooking = makeFullBooking(data);
 
-            const existingBookings = JSON.parse(localStorage.getItem('bookingList')) || [];
+            const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
             existingBookings.push(fullBooking);
-            localStorage.setItem('bookingList', JSON.stringify(existingBookings));
-            localStorage.setItem('currentBooking', JSON.stringify(fullBooking));
+            localStorage.setItem("bookingList", JSON.stringify(existingBookings));
+            localStorage.setItem("currentBooking", JSON.stringify(fullBooking));
 
             const contractSummary = buildContractSummary(fullBooking, data);
-            navigate('/deposit-payment', {
-                state: { contractSummary }
+            navigate("/deposit-payment", {
+                state: {
+                    contractSummary,
+                },
             });
-        } catch (err) {
-            console.error('Lỗi khi đặt xe:', err);
-            const msg = err?.response?.data?.message || 'Không thể tạo đơn. Vui lòng thử lại sau.';
-            showError(msg);
+
+        } catch (error) {
+            console.error("Lỗi khi đặt xe:", error);
+            showError("Đặt xe thất bại! Vui lòng thử lại.");
         } finally {
             setIsBooking(false);
         }
@@ -481,21 +435,10 @@ export default function BookingPage() {
                                     <p className="car-location">{pickupStation}</p>
                                 </div>
 
-                                <div className="car-specifications">
-                                    <h4 className="specs-title">Thông số kỹ thuật</h4>
-                                    <div className="specs-grid">
-                                        <div className="spec-item"><span className="spec-icon">👥</span><span className="spec-value">{carData.specifications.seats}</span><span className="spec-label">Chỗ ngồi</span></div>
-                                        <div className="spec-item"><span className="spec-icon">⚙️</span><span className="spec-value">{carData.specifications.transmission}</span><span className="spec-label">Hộp số</span></div>
-                                        <div className="spec-item"><span className="spec-icon">⚡</span><span className="spec-value">{carData.specifications.power}</span><span className="spec-label">Công suất</span></div>
-                                        <div className="spec-item"><span className="spec-icon">🔋</span><span className="spec-value">{carData.specifications.range}</span><span className="spec-label">Tầm hoạt động</span></div>
-                                        <div className="spec-item"><span className="spec-icon">💸</span><span className="spec-value">{carData.specifications.costPerKm}</span><span className="spec-label">Chi phí/km</span></div>
-                                        <div className="spec-item"><span className="spec-icon">⏱️</span><span className="spec-value">{carData.specifications.chargeTime}</span><span className="spec-label">Thời gian sạc</span></div>
-                                    </div>
-                                </div>
 
                                 <div className="cost-summary">
                                     <div className="cost-item"><span className="cost-label">Giá thuê/ngày:</span><span className="cost-value">{formatPrice(totals.dailyPrice)}₫</span></div>
-                                    <div className="cost-item"><span className="cost-label">Số ngày thuê:</span><span className="cost-value">{totals.days} ngày</span></div>
+                                    <div className="cost-item"><span className="cost-label">Số ngày thuê:</span><span className="cost-value">{totals.days} ngày {totals.hours} giờ</span></div>
                                     <div className="cost-item"><span className="cost-label">Tổng tiền thuê:</span><span className="cost-value">{formatPrice(totals.totalRental)}₫</span></div>
                                     <div className="cost-item"><span className="cost-label">Đặt cọc (30%):</span><span className="cost-value">{formatPrice(totals.deposit)}₫</span></div>
                                     <div className="cost-item total-cost"><span className="cost-label">Tổng tiền cọc cần thanh toán:</span><span className="cost-value">{formatPrice(totals.totalToPay)} VNĐ</span></div>

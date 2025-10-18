@@ -164,9 +164,12 @@
 }
 
 @keyframes gradientShift {
-    0%, 100% {
+
+    0%,
+    100% {
         background: linear-gradient(135deg, #0bb97f 0%, #06b6d4 50%, #3b82f6 100%);
     }
+
     50% {
         background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
     }
@@ -258,8 +261,15 @@
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 0.4; }
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
 }
 
 /* (duplicate .car-image block removed to avoid conflicts) */
@@ -509,8 +519,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Animation for specifications */
@@ -523,18 +538,36 @@
     animation-fill-mode: both;
 }
 
-.spec-item:nth-child(1) { animation-delay: 0.1s; }
-.spec-item:nth-child(2) { animation-delay: 0.2s; }
-.spec-item:nth-child(3) { animation-delay: 0.3s; }
-.spec-item:nth-child(4) { animation-delay: 0.4s; }
-.spec-item:nth-child(5) { animation-delay: 0.5s; }
-.spec-item:nth-child(6) { animation-delay: 0.6s; }
+.spec-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.spec-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.spec-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.spec-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.spec-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.spec-item:nth-child(6) {
+    animation-delay: 0.6s;
+}
 
 @keyframes slideInUp {
     from {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -656,6 +689,7 @@
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -690,6 +724,7 @@
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }
@@ -712,4 +747,68 @@
 
 .form-select::-webkit-scrollbar-thumb:hover {
     background: #089067;
+}
+
+/* === Adjust Car Image Size and Fit (with !important) === */
+.car-image-container {
+    height: 380px !important;
+    /* giảm chiều cao khung ảnh */
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0 !important;
+    transition: all 0.3s ease !important;
+}
+
+.car-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    /* fit vào khung, không bị cắt */
+    object-position: center !important;
+    border-radius: 16px !important;
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.15)) !important;
+    transition: transform 0.4s ease !important, filter 0.3s ease !important;
+
+}
+
+/* Hover effect nhẹ để hình ảnh nổi hơn */
+.car-image:hover {
+    transform: scale(1.05) !important;
+    filter: brightness(1.05) drop-shadow(0 10px 25px rgba(0, 0, 0, 0.2)) !important;
+}
+
+/* === Car Info Section: Mỗi dòng một mục === */
+.car-info {
+    display: flex !important;
+    flex-direction: column !important; /* xếp dọc */
+    align-items: flex-start !important;
+    gap: 6px !important; /* khoảng cách giữa các dòng */
+    margin-top: 10px !important;
+    text-align: left !important;
+}
+
+.car-info .car-name {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    line-height: 1.3 !important;
+}
+
+.car-info .car-location {
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    color: #047857 !important; /* xanh ngọc đậm */
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.car-info .car-location::before {
+    content: "📍";
+    font-size: 1rem;
+    color: #0bb97f;
 }
