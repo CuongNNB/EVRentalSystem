@@ -1,6 +1,4 @@
 import {useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
-import DISTRICTS from "../data/districts";
 
 const stats = [
     {value: "50+", label: "trạm thuê xe toàn quốc"},
@@ -24,8 +22,6 @@ export default function Hero({backgroundImage}) {
     const [isLoading, setIsLoading] = useState(false);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
-    const [selectedStation, setSelectedStation] = useState("");
-    const navigate = useNavigate();
 
     // ✅ Khởi tạo giá trị mặc định: bây giờ & +1 ngày
     useEffect(() => {
@@ -50,23 +46,19 @@ export default function Hero({backgroundImage}) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // If user picked a station and is logged in, navigate to station page
-        const userRaw = localStorage.getItem('ev_user') || localStorage.getItem('user') || null;
-        const token = localStorage.getItem('token') || localStorage.getItem('ev_token') || null;
-
-        if ((userRaw || token) && selectedStation) {
-            // navigate to station-cars route and pass the selected label so StationCarView can preselect
-            navigate('/station-cars', { state: { district: selectedStation } });
-            return;
-        }
-
-        // fallback behaviour: simulate booking (for anonymous or no station selected)
         setIsLoading(true);
+
+        // Giả lập API
         setTimeout(() => {
             setIsLoading(false);
-            alert(`✅ Đặt xe thành công!\n\nThời gian thuê:\n- Bắt đầu: ${new Date(startTime).toLocaleString('vi-VN')}\n- Kết thúc: ${new Date(endTime).toLocaleString('vi-VN')}`);
-        }, 900);
+            alert(
+                `✅ Đặt xe thành công!\n\nThời gian thuê:\n- Bắt đầu: ${new Date(
+                    startTime
+                ).toLocaleString("vi-VN")}\n- Kết thúc: ${new Date(
+                    endTime
+                ).toLocaleString("vi-VN")}`
+            );
+        }, 1500);
     };
 
     return (
@@ -123,16 +115,18 @@ export default function Hero({backgroundImage}) {
                 <span className="field-icon">📍</span>
                 Địa điểm nhận xe
               </span>
-                            <select
-                                className="form-select"
-                                required
-                                value={selectedStation}
-                                onChange={(e) => setSelectedStation(e.target.value)}
-                            >
+                            <select className="form-select" required>
                                 <option value="">Chọn trạm thuê xe</option>
-                                {DISTRICTS.map(d => (
-                                    <option key={d} value={d}>{d}</option>
-                                ))}
+                                <option value="binh-thanh">EV Station - Bình Thạnh</option>
+                                <option value="thu-duc">EV Station - Thủ Đức</option>
+                                <option value="bien-hoa">EV Station - Biên Hòa</option>
+                                <option value="my-tho">EV Station - TP Mỹ Tho</option>
+                                <option value="ben-tre">EV Station - TP Bến Tre</option>
+                                <option value="tan-binh">EV Station - Tân Bình</option>
+                                <option value="long-an">EV Station - Long An</option>
+                                <option value="can-tho">EV Station - Cần Thơ</option>
+                                <option value="binh-duong">EV Station - Bình Dương</option>
+                                <option value="vung-tau">EV Station - Vũng Tàu</option>
                             </select>
                         </label>
 
