@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
 import com.evrental.evrentalsystem.enums.*;
+import com.evrental.evrentalsystem.enums.Enum;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.staff.*;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -174,6 +176,54 @@ public class StaffService {
     ) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+        if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
+            int odoBefore = booking.getVehicleDetail().getOdo();
+            int odoAfter = amount;
+            long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
+            int rentingHours = (int) Math.ceil(minutes / 60.0);
+            int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
+            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
+            if(totalAllowedOdo < odoAfter){
+                try {
+                    AdditionalFee af = new AdditionalFee();
+                    af.setBooking(booking);
+                    af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+                    double cost = (odoAfter - totalAllowedOdo) * (pricePerHour/Enum.Cost_per_kWh.getValue());
+                    af.setAmount(cost);
+                    af.setDescription(desc);
+                    additionalFeeRepository.save(af);
+                    booking.getVehicleDetail().setOdo(odoAfter);
+                    bookingRepository.save(booking);
+                    return true;
+                } catch (Exception e) {
+                    log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        }
+        if(feeName == AdditionalFeeEnum.Fuel_Fee){
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Battery.toString());
+            if(amount < Integer.parseInt(i.getDescription())){
+                try {
+                    AdditionalFee af = new AdditionalFee();
+                    af.setBooking(booking);
+                    af.setFeeName(feeName.name());
+                    int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
+                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue();
+                    af.setAmount(cost);
+                    af.setDescription(desc);
+                    additionalFeeRepository.save(af);
+                    return true;
+                } catch (Exception e) {
+                    log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        }
         try {
             AdditionalFee af = new AdditionalFee();
             af.setBooking(booking);
