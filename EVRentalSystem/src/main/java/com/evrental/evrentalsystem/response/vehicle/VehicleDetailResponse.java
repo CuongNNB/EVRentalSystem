@@ -13,5 +13,6 @@ public class VehicleDetailResponse {
     private String model;
     private Double price;
     private Integer seats;
+    private String modelPicture;
     private Long availableCount;
 }

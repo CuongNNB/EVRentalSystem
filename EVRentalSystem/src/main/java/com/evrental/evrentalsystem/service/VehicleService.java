@@ -32,6 +32,7 @@ public class VehicleService {
                     m.getModel(),
                     m.getPrice(),
                     m.getSeats(),
+                    m.getPicture(),
                     count
             );
         }).collect(Collectors.toList());

@@ -74,7 +74,7 @@ CREATE TABLE Vehicle_Model
     model      NVARCHAR(100)  NOT NULL,
     price      DECIMAL(10, 2) NOT NULL,
     seats      INT            NOT NULL,
-
+    picture    NVARCHAR(50),
 );
 
 -- ============================
@@ -306,26 +306,26 @@ GO
 -- ========================
 -- 5. Vehicle_Model
 -- ========================
-INSERT INTO Vehicle_Model (brand, model, price, seats)
-VALUES (N'VinFast', N'VF e34', 700, 5),
-    (N'VinFast', N'VF 8', 950, 5),
-    (N'Tesla', N'Model 3', 1100, 5),
-    (N'VinFast', N'VF 5 Plus', 600, 4),
-    (N'VinFast', N'VF 9', 1200, 7),
-    (N'Tesla', N'Model Y', 1000, 5),
-    (N'Tesla', N'Model X', 1200, 7),
-    (N'Hyundai', N'IONIQ 5', 950, 5),
-    (N'Kia', N'EV6', 900, 5),
-    (N'Nissan', N'Leaf', 750, 5),
-    (N'BMW', N'i4 eDrive40', 1150, 5),
-    (N'Mercedes-Benz', N'EQE 300', 1200, 5),
-    (N'Porsche', N'Taycan 4S', 1200, 4);
+INSERT INTO Vehicle_Model (brand, model, price, seats, picture)
+VALUES (N'VinFast', N'VF e34', 700, 5, 'M1.jpg'),
+    (N'VinFast', N'VF 8', 950, 5, 'M2.jpg'),
+    (N'Tesla', N'Model 3', 1100, 5, 'M3.jpg'),
+    (N'VinFast', N'VF 5 Plus', 600, 4, 'M4.jpg'),
+    (N'VinFast', N'VF 9', 1200, 7, 'M5.jpg'),
+    (N'Tesla', N'Model Y', 1000, 5, 'M6.jpg'),
+    (N'Tesla', N'Model X', 1200, 7, 'M7.jpg'),
+    (N'Hyundai', N'IONIQ 5', 950, 5, 'M8.jpg'),
+    (N'Kia', N'EV6', 900, 5, 'M9.jpg'),
+    (N'Nissan', N'Leaf', 750, 5, 'M10.jpg'),
+    (N'BMW', N'i4 eDrive40', 1150, 5, 'M11.jpg'),
+    (N'Mercedes-Benz', N'EQE 300', 1200, 5, 'M12.jpg'),
+    (N'Porsche', N'Taycan 4S', 1200, 4, 'M13.jpg');
 GO
 
 -- ========================
 -- 6. Vehicle_Detail
 -- ========================
-INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color], battery_capacity, odo, picture, [status])
+INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color],battery_capacity, odo, picture,[status])
 VALUES ('51A-12345', 1, 1, N'Trắng', N'42 kWh', 1000, '1.jpg', 'AVAILABLE'),
        ('51B-67890', 2, 1, N'Đen', N'82 kWh', 2500, '2.jpg', 'AVAILABLE'),
        ('51C-11111', 3, 2, N'Xám', N'60 kWh', 5000, '3.jpg', 'AVAILABLE'),
