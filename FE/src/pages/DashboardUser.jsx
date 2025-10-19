@@ -116,37 +116,10 @@ const DashboardUser = () => {
                     </button>
                 </motion.div>
 
-                {/* Quick Stats */}
-                <motion.div
-                    className="quick-stats"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                    <div className="stat-card">
-                        <div className="stat-icon">📊</div>
-                        <div className="stat-content">
-                            <h3>0</h3>
-                            <p>Tổng đặt xe</p>
-                        </div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon">🚗</div>
-                        <div className="stat-content">
-                            <h3>0</h3>
-                            <p>Xe đang thuê</p>
-                        </div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-icon">💰</div>
-                        <div className="stat-content">
-                            <h3>0 ₫</h3>
-                            <p>Tổng chi tiêu</p>
-                        </div>
-                    </div>
-                </motion.div>
+                {/* Quick Stats removed per request */}
 
                 {/* Dashboard Cards */}
+                <div className="dashboard-cards-wrapper">
                 <motion.div
                     className="dashboard-cards"
                     initial={{ opacity: 0, y: 20 }}
@@ -189,29 +162,9 @@ const DashboardUser = () => {
                         ))}
                     </div>
                 </motion.div>
+                </div>
 
-                {/* Recent Activity */}
-                <motion.div
-                    className="recent-activity"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                >
-                    <h2 className="activity-title">Hoạt động gần đây</h2>
-                    <div className="activity-content">
-                        <div className="empty-state">
-                            <div className="empty-icon">📋</div>
-                            <h3>Chưa có hoạt động nào</h3>
-                            <p>Bắt đầu đặt xe để xem lịch sử hoạt động của bạn</p>
-                            <button
-                                onClick={() => navigate('/cars')}
-                                className="cta-button"
-                            >
-                                Đặt xe ngay
-                            </button>
-                        </div>
-                    </div>
-                </motion.div>
+                {/* Recent Activity removed per request */}
             </div>
 
             <Footer />

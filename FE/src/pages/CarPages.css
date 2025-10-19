@@ -96,7 +96,35 @@
     margin-top: 3rem;
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    /* Use fixed column width so cards don't expand when there are fewer items. */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 280px));
+    justify-content: center; /* center grid when there are fewer items */
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsive: fewer columns on smaller viewports */
+@media (max-width: 1100px) {
+    .car-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 260px));
+        max-width: 820px; /* 3 cols */
+    }
+}
+
+@media (max-width: 820px) {
+    .car-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 320px));
+        max-width: 640px; /* 2 cols */
+    }
+}
+
+@media (max-width: 640px) {
+    .car-grid {
+        grid-template-columns: 1fr; /* single column on small screens */
+        max-width: 480px;
+        padding: 0 1rem;
+    }
 }
 
 .car-card {

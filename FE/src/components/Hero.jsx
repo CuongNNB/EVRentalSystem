@@ -1,4 +1,5 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
+import './Hero.css';
 
 const stats = [
     {value: "50+", label: "trạm thuê xe toàn quốc"},
@@ -61,6 +62,73 @@ export default function Hero({backgroundImage}) {
         }, 1500);
     };
 
+    // Stations list (keep in sync with select options previously)
+    const stations = [
+        { id: 'thu-duc', label: 'Thủ Đức' },
+        { id: 'binh-thanh', label: 'Bình Thạnh' },
+        { id: 'quan-7', label: 'Quận 7' },
+        { id: 'quan-1', label: 'Quận 1' },
+        { id: 'go-vap', label: 'Gò Vấp' },
+        { id: 'binh-tan', label: 'Bình Tân' },
+        { id: 'phu-nhuan', label: 'Phú Nhuận' }
+    ];
+
+    const [selectedStation, setSelectedStation] = useState('');
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+    const buttonRef = useRef(null);
+    const [focusedIndex, setFocusedIndex] = useState(-1);
+    const itemRefs = useRef([]);
+
+    // Close dropdown on outside click or Escape
+    useEffect(() => {
+        function handleDocClick(e) {
+            if (!dropdownRef.current) return;
+            if (!dropdownRef.current.contains(e.target)) {
+                setDropdownOpen(false);
+            }
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Escape') {
+                setDropdownOpen(false);
+                return;
+            }
+            if (!dropdownOpen) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setFocusedIndex(i => Math.min(i + 1, stations.length - 1));
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setFocusedIndex(i => Math.max(i - 1, 0));
+            }
+            if (e.key === 'Enter' && focusedIndex >= 0) {
+                const s = stations[focusedIndex];
+                if (s) {
+                    setSelectedStation(s.id);
+                    setDropdownOpen(false);
+                    if (buttonRef.current) buttonRef.current.focus();
+                }
+            }
+        }
+
+        document.addEventListener('click', handleDocClick);
+        document.addEventListener('keydown', handleKey);
+
+        return () => {
+            document.removeEventListener('click', handleDocClick);
+            document.removeEventListener('keydown', handleKey);
+        };
+    }, []);
+
+    // When focusedIndex changes, move DOM focus to that item
+    useEffect(() => {
+        if (focusedIndex >= 0 && itemRefs.current[focusedIndex]) {
+            itemRefs.current[focusedIndex].focus();
+        }
+    }, [focusedIndex]);
+
     return (
         <section
             className="hero-section"
@@ -115,19 +183,46 @@ export default function Hero({backgroundImage}) {
                 <span className="field-icon">📍</span>
                 Địa điểm nhận xe
               </span>
-                            <select className="form-select" required>
-                                <option value="">Chọn trạm thuê xe</option>
-                                <option value="binh-thanh">EV Station - Bình Thạnh</option>
-                                <option value="thu-duc">EV Station - Thủ Đức</option>
-                                <option value="bien-hoa">EV Station - Biên Hòa</option>
-                                <option value="my-tho">EV Station - TP Mỹ Tho</option>
-                                <option value="ben-tre">EV Station - TP Bến Tre</option>
-                                <option value="tan-binh">EV Station - Tân Bình</option>
-                                <option value="long-an">EV Station - Long An</option>
-                                <option value="can-tho">EV Station - Cần Thơ</option>
-                                <option value="binh-duong">EV Station - Bình Dương</option>
-                                <option value="vung-tau">EV Station - Vũng Tàu</option>
-                            </select>
+                                <div className="station-dropdown" ref={dropdownRef}>
+                                    <button
+                                        type="button"
+                                        className="station-dropdown__button"
+                                        aria-haspopup="listbox"
+                                        aria-expanded={dropdownOpen}
+                                        onClick={() => setDropdownOpen((v) => !v)}
+                                        ref={buttonRef}
+                                    >
+                                        {selectedStation ? (stations.find(s => s.id === selectedStation) || {}).label : 'Chọn trạm thuê xe'}
+                                        <span className="station-dropdown__chev">▾</span>
+                                    </button>
+
+                                    {dropdownOpen && (
+                                        <ul className="station-dropdown__menu" role="listbox">
+                                            {stations.map((s, idx) => (
+                                                <li
+                                                    key={s.id}
+                                                    role="option"
+                                                    tabIndex={0}
+                                                    ref={el => itemRefs.current[idx] = el}
+                                                    aria-selected={selectedStation === s.id}
+                                                    className={`station-dropdown__item ${selectedStation === s.id ? 'is-active' : ''}`}
+                                                    onClick={() => { setSelectedStation(s.id); setDropdownOpen(false); if (buttonRef.current) buttonRef.current.focus(); }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            setSelectedStation(s.id);
+                                                            setDropdownOpen(false);
+                                                            if (buttonRef.current) buttonRef.current.focus();
+                                                        }
+                                                    }}
+                                                >
+                                                    {s.label}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+
+                                    <input type="hidden" name="station" value={selectedStation} />
+                                </div>
                         </label>
 
                         {/* === Thời gian bắt đầu === */}

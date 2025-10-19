@@ -59,53 +59,23 @@
 }
 
 /* Quick Stats */
-.quick-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+/* Quick stats removed - center the next section */
+.dashboard-cards-wrapper {
+    display: flex;
+    justify-content: center;
     margin-bottom: 3rem;
 }
 
-.stat-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transition: all 0.2s ease;
+.dashboard-cards {
+    width: 100%;
+    max-width: 980px; /* constrain width to look balanced */
+    margin: 0 auto;
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-    font-size: 2rem;
-    width: 3rem;
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0bb97f, #06b6d4);
-    border-radius: 0.75rem;
-    color: white;
-}
-
-.stat-content h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0 0 0.25rem 0;
-}
-
-.stat-content p {
-    color: #64748b;
-    font-size: 0.875rem;
-    margin: 0;
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
 }
 
 /* Dashboard Cards */
@@ -347,8 +317,8 @@
 
     .stat-icon {
         font-size: 1.5rem;
-        width: 2.5rem;
-        height: 2.5rem;
+        width: auto;
+        height: auto;
     }
 
     .dashboard-card {
