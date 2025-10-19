@@ -12,19 +12,28 @@ export default function CarDetail() {
     const carFromList = location.state;
 
     const { user: contextUser } = useAuth();
-    const localUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("ev_user")) : null;
+    const localUser =
+        typeof window !== "undefined"
+            ? JSON.parse(localStorage.getItem("ev_user"))
+            : null;
     const currentUser = contextUser || localUser;
 
     const [carData, setCarData] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFading, setIsFading] = useState(false);
 
-    // overlay for not-logged-in error
-    const [loginOverlay, setLoginOverlay] = useState({ visible: false, message: "Bạn cần đăng nhập để đặt xe." });
+    const [loginOverlay, setLoginOverlay] = useState({
+        visible: false,
+        message: "Bạn cần đăng nhập để đặt xe.",
+    });
 
+    // Ẩn overlay sau vài giây
     useEffect(() => {
         if (loginOverlay.visible) {
-            const t = setTimeout(() => setLoginOverlay({ visible: false, message: "" }), 6000);
+            const t = setTimeout(
+                () => setLoginOverlay({ visible: false, message: "" }),
+                6000
+            );
             return () => clearTimeout(t);
         }
     }, [loginOverlay.visible]);
@@ -44,83 +53,116 @@ export default function CarDetail() {
         return () => clearInterval(interval);
     }, [carData, currentImageIndex]);
 
-    // 🚗 Fetch chi tiết xe từ backend
+    // 🚗 Ưu tiên dữ liệu từ CarPages (location.state), fallback gọi API nếu vào link trực tiếp
     useEffect(() => {
-        const fetchCarDetail = async () => {
-            try {
-                const res = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicles/${id}`);
-                if (!res.ok) throw new Error("Không thể tải dữ liệu xe");
-                const data = await res.json();
+        if (carFromList) {
+            const images = carFromList.images || [
+                carFromList.modelPicture
+                    ? `/carpic/${carFromList.modelPicture}`
+                    : "/anhxe/default.jpg",
+            ];
 
-                // ✅ Dùng ảnh từ CarPages nếu có, hoặc ảnh từ API
-                const imagePath =
-                    carFromList?.images?.[0] ||
-                    (data.picture ? `/carpic/${data.picture}` : "/anhxe/default.jpg");
+            const mappedCar = {
+                id: carFromList.id || carFromList.vehicleModelId,
+                name: `${carFromList.brand} ${carFromList.model}`,
+                brand: carFromList.brand,
+                price: carFromList.price,
+                seats: carFromList.seats,
+                availableCount: carFromList.availableCount,
+                images: Array(4).fill(images[0]),
+                stationId: carFromList.stationId || 1,
+                stationName: carFromList.stationName || "Không rõ trạm",
+                description: `
+          <strong>${carFromList.brand} ${carFromList.model}</strong> là dòng xe điện hiện đại, 
+          tiết kiệm năng lượng và thân thiện với môi trường. 
+          Giá thuê chỉ <strong>${new Intl.NumberFormat("vi-VN").format(
+                    carFromList.price * 1000
+                )} VND/ngày</strong>.
+        `,
+                specifications: {
+                    seats: carFromList.seats ?? 5,
+                    transmission: "Tự động",
+                    power: "Pin lithium 85kWh",
+                    range: "210 km (ước lượng)",
+                    chargeTime: "Khoảng 45 phút (sạc nhanh)",
+                    costPerKm: "Khoảng 400₫/km",
+                },
+                equipment: [
+                    "Camera 360",
+                    "Phanh ABS",
+                    "Cảm biến va chạm",
+                    "Bluetooth",
+                    "Cruise Control",
+                ],
+                features: [
+                    "Thiết kế hiện đại",
+                    "Vận hành êm ái",
+                    "Công nghệ an toàn",
+                    "Sạc nhanh",
+                    "Tiết kiệm năng lượng",
+                ],
+            };
+            setCarData(mappedCar);
+        } else {
+            // fallback nếu người dùng truy cập trực tiếp link
+            const fetchCarDetail = async () => {
+                try {
+                    const res = await fetch(
+                        `http://localhost:8084/EVRentalSystem/api/vehicles/${id}`
+                    );
+                    if (!res.ok) throw new Error("Không thể tải dữ liệu xe");
+                    const data = await res.json();
 
-                // ✅ Tạo 4 ảnh giống nhau
-                const imagesArray = Array(4).fill(imagePath);
+                    const imagePath =
+                        data.picture && `/carpic/${data.picture}` || "/anhxe/default.jpg";
 
-                const mappedCar = {
-                    id: data.id,
-                    name: data.model ? `${data.brand} ${data.model}` : data.brand,
-                    brand: data.brand,
-                    color: data.color,
-                    price: data.price || 0,
-                    currency: "VND",
-                    period: "1 ngày",
-                    images: imagesArray,
-                    stationName: data.stationName || carFromList?.stationName || "Không rõ trạm",
-                    stationId: data.stationId || carFromList?.stationId || 1,
-                    description: `
-            <strong>${data.brand} ${data.model}</strong> là dòng xe điện hiện đại, 
-            thân thiện với môi trường và tiết kiệm chi phí vận hành. 
-            Xe hiện đang có mặt tại <strong>${data.stationName || carFromList?.stationName || "trạm EV gần bạn"}</strong>, 
-            mang màu sắc <strong>${data.color}</strong> cùng tình trạng 
-            <strong>${data.status === "AVAILABLE" ? "sẵn sàng cho thuê" : data.status}</strong>. 
-            Giá thuê chỉ <strong>${new Intl.NumberFormat("vi-VN").format(data.price * 1000)} VND/ngày</strong>.
-          `,
-                    specifications: {
-                        seats: data.seats ?? 5,
-                        transmission: "Tự động",
-                        power: data.batteryCapacity ?? "Không xác định",
-                        range: "210 km (ước lượng)",
-                        airbags: 2,
-                        type: data.status ?? "Đang hoạt động",
-                        chargeTime: "Khoảng 45 phút (sạc nhanh)",
-                        costPerKm: "Khoảng 400₫/km",
-                    },
-                    equipment: ["ABS", "Cruise Control", "Camera lùi", "Bluetooth", "Cảm biến va chạm"],
-                    features: ["Thiết kế hiện đại", "Công nghệ tiên tiến", "An toàn tối đa", "Tiết kiệm năng lượng", "Trải nghiệm lái êm ái"],
-                };
+                    const fallbackCar = {
+                        id: data.id,
+                        name: `${data.brand} ${data.model}`,
+                        brand: data.brand,
+                        price: data.price,
+                        seats: data.seats,
+                        images: Array(4).fill(imagePath),
+                        description: `
+              <strong>${data.brand} ${data.model}</strong> là dòng xe điện hiện đại,
+              thân thiện môi trường và tiết kiệm chi phí vận hành.
+              Giá thuê chỉ <strong>${new Intl.NumberFormat("vi-VN").format(
+                            data.price * 1000
+                        )} VND/ngày</strong>.
+            `,
+                        specifications: {
+                            seats: data.seats,
+                            transmission: "Tự động",
+                            power: "Pin lithium 85kWh",
+                            range: "210 km (ước lượng)",
+                            chargeTime: "Khoảng 45 phút (sạc nhanh)",
+                            costPerKm: "Khoảng 400₫/km",
+                        },
+                        equipment: ["Camera 360", "Bluetooth", "Cảm biến va chạm"],
+                        features: ["Thiết kế hiện đại", "An toàn", "Tiết kiệm năng lượng"],
+                    };
+                    setCarData(fallbackCar);
+                } catch (err) {
+                    console.error("Lỗi khi tải dữ liệu xe:", err);
+                }
+            };
+            fetchCarDetail();
+        }
+    }, [carFromList, id]);
 
-                // ✅ Merge dữ liệu từ CarPages (nếu có)
-                const mergedCar = {
-                    ...mappedCar,
-                    stationName: carFromList?.stationName || mappedCar.stationName,
-                    stationId: carFromList?.stationId || mappedCar.stationId,
-                    images: Array(4).fill(
-                        carFromList?.images?.[0] || mappedCar.images?.[0] || "/anhxe/default.jpg"
-                    ),
-                };
-
-                setCarData(mergedCar);
-            } catch (err) {
-                console.error("Lỗi khi tải dữ liệu xe:", err);
-            }
-        };
-
-        fetchCarDetail();
-    }, [id]);
-
-    const formatPrice = (price) => new Intl.NumberFormat("vi-VN").format(price * 1000);
+    const formatPrice = (price) =>
+        new Intl.NumberFormat("vi-VN").format(price * 1000);
 
     // ✅ Khi bấm "Đặt xe ngay"
     const handleBookCar = () => {
         if (!carData) return;
 
-        // Kiểm tra login: ưu tiên context, fallback localStorage (ev_user)
         if (!currentUser) {
-            setLoginOverlay({ visible: true, message: "Bạn cần đăng nhập để đặt xe. Vui lòng đăng nhập hoặc đăng ký." });
+            setLoginOverlay({
+                visible: true,
+                message:
+                    "Bạn cần đăng nhập để đặt xe. Vui lòng đăng nhập hoặc đăng ký.",
+            });
             return;
         }
 
@@ -165,7 +207,9 @@ export default function CarDetail() {
                                 {carData.images.map((image, i) => (
                                     <button
                                         key={i}
-                                        className={`thumbnail ${currentImageIndex === i ? "active" : ""}`}
+                                        className={`thumbnail ${
+                                            currentImageIndex === i ? "active" : ""
+                                        }`}
                                         onClick={() => setCurrentImageIndex(i)}
                                     >
                                         <img src={image} alt={`${carData.name} ${i + 1}`} />
@@ -195,21 +239,71 @@ export default function CarDetail() {
                                 <div className="car-brand">{carData.brand}</div>
                                 <h1 className="car-name">{carData.name}</h1>
                                 <div className="car-price">
-                                    <span className="price-amount">{formatPrice(carData.price)}</span>
+                  <span className="price-amount">
+                    {formatPrice(carData.price)}
+                  </span>
                                     <span className="price-currency">VND</span>
-                                    <span className="price-period">/ {carData.period}</span>
+                                    <span className="price-period">/ 1 ngày</span>
                                 </div>
                             </div>
 
                             <div className="car-specifications">
                                 <h3 className="section-title">Thông số kỹ thuật</h3>
                                 <div className="specs-grid">
-                                    <div className="spec-item"><div className="spec-icon">👥</div><div className="spec-content"><span className="spec-value">{carData.specifications.seats}</span><span className="spec-label">Chỗ ngồi</span></div></div>
-                                    <div className="spec-item"><div className="spec-icon">⚙️</div><div className="spec-content"><span className="spec-value">{carData.specifications.transmission}</span><span className="spec-label">Hộp số</span></div></div>
-                                    <div className="spec-item"><div className="spec-icon">⚡</div><div className="spec-content"><span className="spec-value">{carData.specifications.power}</span><span className="spec-label">Công suất pin</span></div></div>
-                                    <div className="spec-item"><div className="spec-icon">🔋</div><div className="spec-content"><span className="spec-value">{carData.specifications.range}</span><span className="spec-label">Tầm hoạt động</span></div></div>
-                                    <div className="spec-item"><div className="spec-icon">💸</div><div className="spec-content"><span className="spec-value">{carData.specifications.costPerKm}</span><span className="spec-label">Chi phí / km</span></div></div>
-                                    <div className="spec-item"><div className="spec-icon">⏱️</div><div className="spec-content"><span className="spec-value">{carData.specifications.chargeTime}</span><span className="spec-label">Thời gian sạc</span></div></div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">👥</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.seats}
+                      </span>
+                                            <span className="spec-label">Chỗ ngồi</span>
+                                        </div>
+                                    </div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">⚙️</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.transmission}
+                      </span>
+                                            <span className="spec-label">Hộp số</span>
+                                        </div>
+                                    </div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">⚡</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.power}
+                      </span>
+                                            <span className="spec-label">Công suất pin</span>
+                                        </div>
+                                    </div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">🔋</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.range}
+                      </span>
+                                            <span className="spec-label">Tầm hoạt động</span>
+                                        </div>
+                                    </div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">💸</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.costPerKm}
+                      </span>
+                                            <span className="spec-label">Chi phí / km</span>
+                                        </div>
+                                    </div>
+                                    <div className="spec-item">
+                                        <div className="spec-icon">⏱️</div>
+                                        <div className="spec-content">
+                      <span className="spec-value">
+                        {carData.specifications.chargeTime}
+                      </span>
+                                            <span className="spec-label">Thời gian sạc</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -236,29 +330,32 @@ export default function CarDetail() {
                                     ))}
                                 </ul>
                             </div>
-
                         </div>
                     </div>
                 </div>
 
-                {/* Login required overlay */}
+                {/* Overlay yêu cầu đăng nhập */}
                 {loginOverlay.visible && (
                     <div className="login-overlay">
                         <div className="login-overlay-content">
                             <h3>Bạn chưa đăng nhập</h3>
                             <p>{loginOverlay.message}</p>
                             <div className="login-overlay-actions">
-                                <button className="login-btn" onClick={() => navigate('/login')}>
+                                <button className="login-btn" onClick={() => navigate("/login")}>
                                     Đăng nhập
                                 </button>
-                                <button className="close-btn" onClick={() => setLoginOverlay({ visible: false, message: '' })}>
+                                <button
+                                    className="close-btn"
+                                    onClick={() =>
+                                        setLoginOverlay({ visible: false, message: "" })
+                                    }
+                                >
                                     Đóng
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
-
             </main>
             <Footer />
         </div>

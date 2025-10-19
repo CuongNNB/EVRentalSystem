@@ -7,9 +7,12 @@ import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
 import com.evrental.evrentalsystem.response.vehicle.VehicleWithIdResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 //ửa
@@ -19,6 +22,8 @@ public class VehicleService {
     private final VehicleDetailRepository vehicleDetailRepository;
     private final VehicleModelRepository vehicleModelRepository;
     private final StationRepository stationRepository;
+    private final ObjectMapper objectMapper; // Spring Boot cung cấp ObjectMapper bean
+
 
     //Hàm này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
     public List<VehicleDetailResponse> getAvailableVehicles() {
@@ -37,39 +42,17 @@ public class VehicleService {
             );
         }).collect(Collectors.toList());
     }
-//
-    public VehicleWithIdResponse getVehicleFullDetail(Integer id) {
-        VehicleDetail v = vehicleDetailRepository.findDetailWithModelAndStation(id)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found with id=" + id));
+    public List<VehicleWithIdResponse> getDetailsByVehicleModelId(Integer vehicleModelId) {
+        List<VehicleDetail> details = vehicleDetailRepository.findByVehicleModelId(vehicleModelId);
 
-        VehicleWithIdResponse res = new VehicleWithIdResponse();
-        // VehicleDetail
-        res.setId(v.getId());
-        res.setLicensePlate(v.getLicensePlate());
-        res.setColor(v.getColor());
-        res.setBatteryCapacity(v.getBatteryCapacity());
-        res.setStatus(v.getStatus());
-        res.setOdo(v.getOdo());
-        res.setPicture(v.getPicture());
-
-        // VehicleModel
-        if (v.getVehicleModel() != null) {
-            res.setVehicleModelId(v.getVehicleModel().getVehicleId());
-            res.setBrand(v.getVehicleModel().getBrand());
-            res.setModel(v.getVehicleModel().getModel());
-            res.setSeats(v.getVehicleModel().getSeats());
-            res.setPrice(v.getVehicleModel().getPrice());
-        }
-
-        // Station
-        if (v.getStation() != null) {
-            res.setStationId(v.getStation().getStationId());
-            res.setStationName(v.getStation().getStationName());
-            res.setStationAddress(v.getStation().getAddress());
-            res.setStationLocation(v.getStation().getLocation());
-        }
-
-        return res;
+        return details.stream()
+                .map(vd -> new VehicleWithIdResponse(
+                        vd.getId(),
+                        vd.getStation().getStationId(),
+                        vd.getStation().getStationName(),
+                        vd.getStation().getAddress()
+                ))
+                .collect(Collectors.toList());
     }
     //End code here
 }

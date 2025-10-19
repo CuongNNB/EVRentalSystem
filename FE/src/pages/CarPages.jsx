@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import RentNowCard from "../components/RentNowCard";
 import "./CarPages.css";
 
 const filterOptions = [
@@ -12,9 +11,9 @@ const filterOptions = [
     { label: "Tesla", value: "Tesla" },
     { label: "Kia", value: "Kia" },
     { label: "BMW", value: "BMW" },
+    { label: "Nissan", value: "Nissan" }
 ];
 
-// 🧮 Hàm format giá (vd: 1200 → 1.200.000 VND/ngày) s
 const formatPrice = (price) => {
     if (!price) return "Liên hệ";
     const formatted = (price * 1000).toLocaleString("vi-VN");
@@ -25,26 +24,28 @@ function CarCard({ car }) {
     const navigate = useNavigate();
 
     const handleViewDetails = () => {
-        navigate(`/car/${car.id}`, {
+        navigate(`/car/${car.vehicleModelId}`, {
             state: {
-                ...car,
-                stationId: car.stationId || 1, // fallback nếu backend chưa có id
-                stationName: car.stationName || "Không rõ trạm",
-                images: [car.picture ? `/carpic/${car.picture}` : "/anhxe/default.jpg"],
+                id: car.vehicleModelId,
+                brand: car.brand,
+                model: car.model,
+                price: car.price,
+                seats: car.seats,
+                availableCount: car.availableCount,
+                modelPicture: car.modelPicture,
+                images: [car.modelPicture ? `/carpic/${car.modelPicture}` : "/anhxe/default.jpg"],
             },
         });
     };
 
 
     const handleBookNow = () => {
-        navigate(`/booking/${car.id}`, {
+        navigate(`/booking/${car.vehicleModelId}`, {
             state: {
-                id: car.id,
+                id: car.vehicleModelId,
                 name: `${car.brand} ${car.model}`,
                 price: car.price,
-                images: [car.picture ? `/carpic/${car.picture}` : "/anhxe/default.jpg"],
-                stationId: car.stationId || 1, // fallback nếu backend chưa có
-                stationName: car.stationName || "Không rõ trạm",
+                images: [car.modelPicture ? `/carpic/${car.modelPicture}` : "/anhxe/default.jpg"],
             },
         });
     };
@@ -52,9 +53,9 @@ function CarCard({ car }) {
     return (
         <article className="car-card">
             <div className="car-card__media">
-                {car.picture ? (
+                {car.modelPicture ? (
                     <img
-                        src={`/carpic/${car.picture}`}
+                        src={`/carpic/${car.modelPicture}`}
                         alt={car.model}
                         className="car-card__image"
                         loading="lazy"
@@ -69,9 +70,7 @@ function CarCard({ car }) {
             <div className="car-card__header">
                 <div>
                     <h3 className="car-card__name">{car.model}</h3>
-                    <p className="car-card__subtitle">
-                        {car.brand} – {car.color}
-                    </p>
+                    <p className="car-card__subtitle">{car.brand}</p>
                 </div>
                 <div className="car-card__price-wrapper">
                     <span className="car-card__price-label">Giá thuê</span>
@@ -79,16 +78,9 @@ function CarCard({ car }) {
                 </div>
             </div>
 
-            <div className="car-card__tags">
-                <span className="car-card__tag">⚡ {car.batteryCapacity}</span>
-                <span className="car-card__tag">{car.status}</span>
-            </div>
-
             <ul className="car-card__features">
-                <li className="car-card__feature">
-                    <span>{car.stationName}</span>
-                </li>
-
+                <li className="car-card__feature">Số ghế: {car.seats}</li>
+                <li className="car-card__feature">Xe có sẵn: {car.availableCount}</li>
             </ul>
 
             <div className="car-card__actions">
@@ -97,9 +89,15 @@ function CarCard({ car }) {
                     className="car-card__cta car-card__cta--secondary"
                     onClick={handleViewDetails}
                 >
-                    Xem chi tiết <span aria-hidden></span>
+                    Xem chi tiết
                 </button>
-
+                <button
+                    type="button"
+                    className="car-card__cta car-card__cta--primary"
+                    onClick={handleBookNow}
+                >
+                    Đặt ngay
+                </button>
             </div>
         </article>
     );
@@ -109,7 +107,6 @@ export default function CarPages() {
     const [activeFilter, setActiveFilter] = useState("all");
     const [cars, setCars] = useState([]);
 
-    // 🔄 Gọi API BE
     useEffect(() => {
         fetch("http://localhost:8084/EVRentalSystem/api/vehicles/available")
             .then((res) => res.json())
@@ -117,14 +114,19 @@ export default function CarPages() {
             .catch((err) => console.error("Lỗi khi lấy danh sách xe:", err));
     }, []);
 
-    // 🧩 Lọc theo hãng xe
     const filteredCars = useMemo(() => {
-        if (activeFilter === "all") return cars;
-        return cars.filter(
-            (car) =>
-                car.brand &&
-                car.brand.toLowerCase().includes(activeFilter.toLowerCase())
-        );
+        // lọc theo hãng xe và chỉ lấy xe có availableCount > 0
+        let result = cars.filter((car) => car.availableCount > 0);
+
+        if (activeFilter !== "all") {
+            result = result.filter(
+                (car) =>
+                    car.brand &&
+                    car.brand.toLowerCase().includes(activeFilter.toLowerCase())
+            );
+        }
+
+        return result;
     }, [cars, activeFilter]);
 
     return (
@@ -137,23 +139,17 @@ export default function CarPages() {
                         Chọn chiếc xe điện hoàn hảo cho hành trình của bạn
                     </h1>
                     <p className="car-page__description">
-                        Bộ sưu tập 100% xe điện được kiểm tra định kỳ, tích hợp bảo hiểm và hỗ trợ sạc 24/7. Lọc nhanh theo hãng xe bạn yêu thích và đặt ngay.
+                        Bộ sưu tập 100% xe điện được kiểm tra định kỳ, tích hợp bảo hiểm và hỗ trợ sạc 24/7.
                     </p>
                     <h4>Chọn loại xe bạn thích</h4>
-                    <div
-                        className="car-filters"
-                        role="tablist"
-                        aria-label="Lọc theo hãng xe điện"
-                    >
+                    <div className="car-filters" role="tablist" aria-label="Lọc theo hãng xe điện">
                         {filterOptions.map((option) => {
                             const isActive = option.value === activeFilter;
                             return (
                                 <button
                                     key={option.value}
                                     type="button"
-                                    className={`car-filters__button${
-                                        isActive ? " is-active" : ""
-                                    }`}
+                                    className={`car-filters__button${isActive ? " is-active" : ""}`}
                                     onClick={() => setActiveFilter(option.value)}
                                     aria-pressed={isActive}
                                 >
@@ -164,12 +160,10 @@ export default function CarPages() {
                     </div>
                 </section>
 
-                {/* <RentNowCard /> */}
-
                 <section aria-live="polite" aria-label="Danh sách xe điện sẵn sàng">
                     <div className="car-grid">
                         {filteredCars.map((car) => (
-                            <CarCard key={car.id} car={car} />
+                            <CarCard key={car.vehicleModelId} car={car} />
                         ))}
                     </div>
                     {filteredCars.length === 0 && (
