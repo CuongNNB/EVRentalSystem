@@ -75,6 +75,7 @@ CREATE TABLE Vehicle_Model
     price      DECIMAL(10, 2) NOT NULL,
     seats      INT            NOT NULL,
     [color]          NVARCHAR(50),
+    picture          NVARCHAR(50),
     );
 
 -- ============================
@@ -88,7 +89,6 @@ CREATE TABLE Vehicle_Detail
     station_id       INT          NOT NULL,
     battery_capacity NVARCHAR(50),
     odo              INT,
-    picture          NVARCHAR(50),
     [status]         NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station (station_id)
@@ -305,215 +305,209 @@ GO
 -- ========================
 -- 5. Vehicle_Model
 -- ========================
-INSERT INTO Vehicle_Model (brand, model, price, seats, [color])
+INSERT INTO Vehicle_Model (brand, model, price, seats, [color], picture)
 VALUES
-    (N'VinFast', N'VF e34',    700, 5, N'Trắng'),
-    (N'VinFast', N'VF e34',    700, 5, N'Đen'),
-    (N'VinFast', N'VF e34',    700, 5, N'Xanh dương'),
-    (N'VinFast', N'VF e34',    700, 5, N'Đỏ'),
-    (N'VinFast', N'VF 8',      950, 5, N'Đen'),
-    (N'VinFast', N'VF 8',      950, 5, N'Xám'),
-    (N'VinFast', N'VF 8',      950, 5, N'Trắng'),
-    (N'VinFast', N'VF 5 Plus', 600, 4, N'Bạc'),
-    (N'VinFast', N'VF 5 Plus', 600, 4, N'Đen'),
-    (N'VinFast', N'VF 9',     1200, 7, N'Trắng ngọc trai'),
-    (N'VinFast', N'VF 9',     1200, 7, N'Đen'),
-
-    -- Tesla
-    (N'Tesla', N'Model 3', 1100, 5, N'Đỏ'),
-    (N'Tesla', N'Model 3', 1100, 5, N'Đen'),
-    (N'Tesla', N'Model 3', 1100, 5, N'Bạc'),
-    (N'Tesla', N'Model Y', 1000, 5, N'Trắng'),
-    (N'Tesla', N'Model Y', 1000, 5, N'Xám'),
-    (N'Tesla', N'Model Y', 1000, 5, N'Đen'),
-    (N'Tesla', N'Model X', 1200, 7, N'Đen'),
-    (N'Tesla', N'Model X', 1200, 7, N'Bạc'),
-
-    -- Hyundai / Kia / Nissan
-    (N'Hyundai', N'IONIQ 5', 950, 5, N'Xám bạc'),
-    (N'Hyundai', N'IONIQ 5', 950, 5, N'Trắng'),
-    (N'Kia', N'EV6', 900, 5, N'Đỏ'),
-    (N'Kia', N'EV6', 900, 5, N'Xanh dương'),
-    (N'Nissan', N'Leaf', 750, 5, N'Xanh lá'),
-    (N'Nissan', N'Leaf', 750, 5, N'Bạc'),
-
-    -- BMW / Mercedes / Porsche
-    (N'BMW', N'i4 eDrive40', 1150, 5, N'Bạc'),
-    (N'BMW', N'i4 eDrive40', 1150, 5, N'Màu than'),
-    (N'Mercedes-Benz', N'EQE 300', 1200, 5, N'Trắng ngọc'),
-    (N'Porsche', N'Taycan 4S', 1200, 4, N'Đỏ đô'),
-    (N'Porsche', N'Taycan 4S', 1200, 4, N'Đen');
+    (N'VinFast', N'VF e34',     700, 5, N'Trắng',         N'1.jpg'),
+    (N'VinFast', N'VF e34',     700, 5, N'Đen',           N'2.jpg'),
+    (N'VinFast', N'VF e34',     700, 5, N'Xanh dương',    N'3.jpg'),
+    (N'VinFast', N'VF e34',     700, 5, N'Đỏ',            N'4.jpg'),
+    (N'VinFast', N'VF 8',       950, 5, N'Đen',           N'5.jpg'),
+    (N'VinFast', N'VF 8',       950, 5, N'Xám',           N'6.jpg'),
+    (N'VinFast', N'VF 8',       950, 5, N'Trắng',         N'7.jpg'),
+    (N'VinFast', N'VF 5 Plus',  600, 4, N'Bạc',           N'8.jpg'),
+    (N'VinFast', N'VF 5 Plus',  600, 4, N'Đen',           N'9.jpg'),
+    (N'VinFast', N'VF 9',      1200, 7, N'Trắng ngọc trai', N'10.jpg'),
+    (N'VinFast', N'VF 9',      1200, 7, N'Đen',           N'11.jpg'),
+    (N'Tesla',   N'Model 3',   1100, 5, N'Đỏ',            N'12.jpg'),
+    (N'Tesla',   N'Model 3',   1100, 5, N'Đen',           N'13.jpg'),
+    (N'Tesla',   N'Model 3',   1100, 5, N'Bạc',           N'14.jpg'),
+    (N'Tesla',   N'Model Y',   1000, 5, N'Trắng',         N'15.jpg'),
+    (N'Tesla',   N'Model Y',   1000, 5, N'Xám',           N'16.jpg'),
+    (N'Tesla',   N'Model Y',   1000, 5, N'Đen',           N'17.jpg'),
+    (N'Tesla',   N'Model X',   1200, 7, N'Đen',           N'18.jpg'),
+    (N'Tesla',   N'Model X',   1200, 7, N'Bạc',           N'19.jpg'),
+    (N'Hyundai', N'IONIQ 5',    950, 5, N'Xám bạc',       N'20.jpg'),
+    (N'Hyundai', N'IONIQ 5',    950, 5, N'Trắng',         N'21.jpg'),
+    (N'Kia',     N'EV6',        900, 5, N'Đỏ',            N'22.jpg'),
+    (N'Kia',     N'EV6',        900, 5, N'Xanh dương',    N'23.jpg'),
+    (N'Nissan',  N'Leaf',       750, 5, N'Xanh lá',       N'24.jpg'),
+    (N'Nissan',  N'Leaf',       750, 5, N'Bạc',           N'25.jpg'),
+    (N'BMW',     N'i4 eDrive40',1150, 5, N'Bạc',          N'26.jpg'),
+    (N'BMW',     N'i4 eDrive40',1150, 5, N'Màu than',     N'27.jpg'),
+    (N'Mercedes-Benz', N'EQE 300', 1200, 5, N'Trắng ngọc',N'28.jpg'),
+    (N'Porsche', N'Taycan 4S', 1200, 4, N'Đỏ đô',         N'29.jpg'),
+    (N'Porsche', N'Taycan 4S', 1200, 4, N'Đen',           N'30.jpg');
 GO
 
 -- ========================
 -- 6. Vehicle_Detail
 -- ========================
-INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, battery_capacity, odo, picture, [status])
+INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, battery_capacity, odo, [status])
 VALUES
-        -- vehicle_id = 1 (3 bản ghi)
-    ('51A-10001', 1, 1, N'42 kWh',  1200, '1_1.jpg', 'AVAILABLE'),
-    ('51A-10002', 1, 2, N'42 kWh',   800, '1_2.jpg', 'AVAILABLE'),
-    ('51A-10003', 1, 3, N'42 kWh',  2500, '1_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 1
+    ('51A-10001', 1, 1, N'42 kWh', 1200, 'AVAILABLE'),
+    ('51A-10002', 1, 2, N'42 kWh', 800, 'AVAILABLE'),
+    ('51A-10003', 1, 3, N'42 kWh', 2500, 'AVAILABLE'),
 
-    -- vehicle_id = 2 (4 bản ghi)
-    ('51B-20001', 2, 1, N'82 kWh',  2500, '2_1.jpg', 'AVAILABLE'),
-    ('51B-20002', 2, 2, N'82 kWh',  1400, '2_2.jpg', 'AVAILABLE'),
-    ('51B-20003', 2, 3, N'82 kWh',  3200, '2_3.jpg', 'AVAILABLE'),
-    ('51B-20004', 2, 4, N'82 kWh',   600, '2_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 2
+    ('51B-20001', 2, 1, N'82 kWh', 2500, 'AVAILABLE'),
+    ('51B-20002', 2, 2, N'82 kWh', 1400, 'AVAILABLE'),
+    ('51B-20003', 2, 3, N'82 kWh', 3200, 'AVAILABLE'),
+    ('51B-20004', 2, 4, N'82 kWh', 600, 'AVAILABLE'),
 
-    -- vehicle_id = 3 (3 bản ghi)
-    ('51C-30001', 3, 2, N'60 kWh',  5000, '3_1.jpg', 'AVAILABLE'),
-    ('51C-30002', 3, 3, N'60 kWh',  4200, '3_2.jpg', 'AVAILABLE'),
-    ('51C-30003', 3, 1, N'60 kWh',  1100, '3_3.jpg', 'FIXING'),
+    -- vehicle_id = 3
+    ('51C-30001', 3, 2, N'60 kWh', 5000, 'AVAILABLE'),
+    ('51C-30002', 3, 3, N'60 kWh', 4200, 'AVAILABLE'),
+    ('51C-30003', 3, 1, N'60 kWh', 1100, 'AVAILABLE'),
 
-    -- vehicle_id = 4 (4 bản ghi)
-    ('51D-40001', 4, 1, N'37 kWh',  1500, '4_1.jpg', 'AVAILABLE'),
-    ('51D-40002', 4, 2, N'37 kWh',   900, '4_2.jpg', 'AVAILABLE'),
-    ('51D-40003', 4, 3, N'37 kWh',  2100, '4_3.jpg', 'AVAILABLE'),
-    ('51D-40004', 4, 4, N'37 kWh',   300, '4_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 4
+    ('51D-40001', 4, 1, N'37 kWh', 1500, 'AVAILABLE'),
+    ('51D-40002', 4, 2, N'37 kWh', 900, 'AVAILABLE'),
+    ('51D-40003', 4, 3, N'37 kWh', 2100, 'AVAILABLE'),
+    ('51D-40004', 4, 4, N'37 kWh', 300, 'AVAILABLE'),
 
-    -- vehicle_id = 5 (3 bản ghi)
-    ('51E-50001', 5, 2, N'92 kWh',  2000, '5_1.jpg', 'AVAILABLE'),
-    ('51E-50002', 5, 3, N'92 kWh',   450, '5_2.jpg', 'AVAILABLE'),
-    ('51E-50003', 5, 1, N'92 kWh',  1800, '5_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 5
+    ('51E-50001', 5, 2, N'92 kWh', 2000, 'AVAILABLE'),
+    ('51E-50002', 5, 3, N'92 kWh', 450, 'AVAILABLE'),
+    ('51E-50003', 5, 1, N'92 kWh', 1800, 'AVAILABLE'),
 
-    -- vehicle_id = 6 (4 bản ghi)
-    ('51F-60001', 6, 1, N'75 kWh',  1200, '6_1.jpg', 'AVAILABLE'),
-    ('51F-60002', 6, 2, N'75 kWh',   700, '6_2.jpg', 'AVAILABLE'),
-    ('51F-60003', 6, 3, N'75 kWh',  2300, '6_3.jpg', 'AVAILABLE'),
-    ('51F-60004', 6, 4, N'75 kWh',   200, '6_4.jpg', 'MAINTENANCE'),
+    -- vehicle_id = 6
+    ('51F-60001', 6, 1, N'75 kWh', 1200, 'AVAILABLE'),
+    ('51F-60002', 6, 2, N'75 kWh', 700, 'AVAILABLE'),
+    ('51F-60003', 6, 3, N'75 kWh', 2300, 'AVAILABLE'),
+    ('51F-60004', 6, 4, N'75 kWh', 200, 'AVAILABLE'),
 
-    -- vehicle_id = 7 (3 bản ghi)
-    ('51G-70001', 7, 2, N'100 kWh', 2500, '7_1.jpg', 'AVAILABLE'),
-    ('51G-70002', 7, 3, N'100 kWh', 1100, '7_2.jpg', 'AVAILABLE'),
-    ('51G-70003', 7, 1, N'100 kWh',  500, '7_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 7
+    ('51G-70001', 7, 2, N'100 kWh', 2500, 'AVAILABLE'),
+    ('51G-70002', 7, 3, N'100 kWh', 1100, 'AVAILABLE'),
+    ('51G-70003', 7, 1, N'100 kWh', 500, 'AVAILABLE'),
 
-    -- vehicle_id = 8 (4 bản ghi)
-    ('51H-80001', 8, 3, N'58 kWh',  1700, '8_1.jpg', 'AVAILABLE'),
-    ('51H-80002', 8, 4, N'58 kWh',   900, '8_2.jpg', 'AVAILABLE'),
-    ('51H-80003', 8, 5, N'58 kWh',  3200, '8_3.jpg', 'AVAILABLE'),
-    ('51H-80004', 8, 1, N'58 kWh',   400, '8_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 8
+    ('51H-80001', 8, 3, N'58 kWh', 1700, 'AVAILABLE'),
+    ('51H-80002', 8, 4, N'58 kWh', 900, 'AVAILABLE'),
+    ('51H-80003', 8, 5, N'58 kWh', 3200, 'AVAILABLE'),
+    ('51H-80004', 8, 1, N'58 kWh', 400, 'AVAILABLE'),
 
-    -- vehicle_id = 9 (3 bản ghi)
-    ('51J-90001', 9, 1, N'77 kWh',  2300, '9_1.jpg', 'AVAILABLE'),
-    ('51J-90002', 9, 2, N'77 kWh',  1500, '9_2.jpg', 'AVAILABLE'),
-    ('51J-90003', 9, 3, N'77 kWh',   800, '9_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 9
+    ('51J-90001', 9, 1, N'77 kWh', 2300, 'AVAILABLE'),
+    ('51J-90002', 9, 2, N'77 kWh', 1500, 'AVAILABLE'),
+    ('51J-90003', 9, 3, N'77 kWh', 800, 'AVAILABLE'),
 
-    -- vehicle_id = 10 (4 bản ghi)
-    ('51K-10001', 10, 2, N'40 kWh',  800, '10_1.jpg', 'AVAILABLE'),
-    ('51K-10002', 10, 3, N'40 kWh',  120, '10_2.jpg', 'AVAILABLE'),
-    ('51K-10003', 10, 1, N'40 kWh', 2000, '10_3.jpg', 'AVAILABLE'),
-    ('51K-10004', 10, 4, N'40 kWh',  450, '10_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 10
+    ('51K-10001', 10, 2, N'40 kWh', 800, 'AVAILABLE'),
+    ('51K-10002', 10, 3, N'40 kWh', 120, 'AVAILABLE'),
+    ('51K-10003', 10, 1, N'40 kWh', 2000, 'AVAILABLE'),
+    ('51K-10004', 10, 4, N'40 kWh', 450, 'AVAILABLE'),
 
-    -- vehicle_id = 11 (3 bản ghi)
-    ('51L-11001', 11, 1, N'83 kWh',  900, '11_1.jpg', 'AVAILABLE'),
-    ('51L-11002', 11, 2, N'83 kWh', 1300, '11_2.jpg', 'AVAILABLE'),
-    ('51L-11003', 11, 3, N'83 kWh',  250, '11_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 11
+    ('51L-11001', 11, 1, N'83 kWh', 900, 'AVAILABLE'),
+    ('51L-11002', 11, 2, N'83 kWh', 1300, 'AVAILABLE'),
+    ('51L-11003', 11, 3, N'83 kWh', 250, 'AVAILABLE'),
 
-    -- vehicle_id = 12 (4 bản ghi)
-    ('51M-12001', 12, 2, N'90 kWh', 1100, '12_1.jpg', 'AVAILABLE'),
-    ('51M-12002', 12, 3, N'90 kWh',  600, '12_2.jpg', 'AVAILABLE'),
-    ('51M-12003', 12, 1, N'90 kWh', 1900, '12_3.jpg', 'AVAILABLE'),
-    ('51M-12004', 12, 4, N'90 kWh',  350, '12_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 12
+    ('51M-12001', 12, 2, N'90 kWh', 1100, 'AVAILABLE'),
+    ('51M-12002', 12, 3, N'90 kWh', 600, 'AVAILABLE'),
+    ('51M-12003', 12, 1, N'90 kWh', 1900, 'AVAILABLE'),
+    ('51M-12004', 12, 4, N'90 kWh', 350, 'AVAILABLE'),
 
-    -- vehicle_id = 13 (3 bản ghi)
-    ('51N-13001', 13, 1, N'93 kWh', 3000, '13_1.jpg', 'AVAILABLE'),
-    ('51N-13002', 13, 2, N'93 kWh', 1500, '13_2.jpg', 'AVAILABLE'),
-    ('51N-13003', 13, 3, N'93 kWh',  700, '13_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 13
+    ('51N-13001', 13, 1, N'93 kWh', 3000, 'AVAILABLE'),
+    ('51N-13002', 13, 2, N'93 kWh', 1500, 'AVAILABLE'),
+    ('51N-13003', 13, 3, N'93 kWh', 700, 'AVAILABLE'),
 
-    -- vehicle_id = 14 (4 bản ghi)
-    ('51P-14001', 14, 3, N'42 kWh',  800, '14_1.jpg', 'AVAILABLE'),
-    ('51P-14002', 14, 4, N'42 kWh', 1000, '14_2.jpg', 'AVAILABLE'),
-    ('51P-14003', 14, 5, N'42 kWh',  200, '14_3.jpg', 'AVAILABLE'),
-    ('51P-14004', 14, 1, N'42 kWh', 1500, '14_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 14
+    ('51P-14001', 14, 3, N'42 kWh', 800, 'AVAILABLE'),
+    ('51P-14002', 14, 4, N'42 kWh', 1000, 'AVAILABLE'),
+    ('51P-14003', 14, 5, N'42 kWh', 200, 'AVAILABLE'),
+    ('51P-14004', 14, 1, N'42 kWh', 1500, 'AVAILABLE'),
 
-    -- vehicle_id = 15 (3 bản ghi)
-    ('51Q-15001', 15, 4, N'82 kWh', 1200, '15_1.jpg', 'AVAILABLE'),
-    ('51Q-15002', 15, 5, N'82 kWh',  300, '15_2.jpg', 'AVAILABLE'),
-    ('51Q-15003', 15, 2, N'82 kWh', 2100, '15_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 15
+    ('51Q-15001', 15, 4, N'82 kWh', 1200, 'AVAILABLE'),
+    ('51Q-15002', 15, 5, N'82 kWh', 300, 'AVAILABLE'),
+    ('51Q-15003', 15, 2, N'82 kWh', 2100, 'AVAILABLE'),
 
-    -- vehicle_id = 16 (4 bản ghi)
-    ('51R-16001', 16, 5, N'60 kWh', 1500, '16_1.jpg', 'AVAILABLE'),
-    ('51R-16002', 16, 6, N'60 kWh',  900, '16_2.jpg', 'AVAILABLE'),
-    ('51R-16003', 16, 3, N'60 kWh', 2500, '16_3.jpg', 'AVAILABLE'),
-    ('51R-16004', 16, 1, N'60 kWh',  100, '16_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 16
+    ('51R-16001', 16, 5, N'60 kWh', 1500, 'AVAILABLE'),
+    ('51R-16002', 16, 6, N'60 kWh', 900, 'AVAILABLE'),
+    ('51R-16003', 16, 3, N'60 kWh', 2500, 'AVAILABLE'),
+    ('51R-16004', 16, 1, N'60 kWh', 100, 'AVAILABLE'),
 
-    -- vehicle_id = 17 (3 bản ghi)
-    ('51S-17001', 17, 6, N'37 kWh',  900, '17_1.jpg', 'AVAILABLE'),
-    ('51S-17002', 17, 4, N'37 kWh',  600, '17_2.jpg', 'AVAILABLE'),
-    ('51S-17003', 17, 2, N'37 kWh', 1100, '17_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 17
+    ('51S-17001', 17, 6, N'37 kWh', 900, 'AVAILABLE'),
+    ('51S-17002', 17, 4, N'37 kWh', 600, 'AVAILABLE'),
+    ('51S-17003', 17, 2, N'37 kWh', 1100, 'AVAILABLE'),
 
-    -- vehicle_id = 18 (4 bản ghi)
-    ('51T-18001', 18, 7, N'92 kWh', 2000, '18_1.jpg', 'AVAILABLE'),
-    ('51T-18002', 18, 1, N'92 kWh',  450, '18_2.jpg', 'AVAILABLE'),
-    ('51T-18003', 18, 2, N'92 kWh', 1800, '18_3.jpg', 'AVAILABLE'),
-    ('51T-18004', 18, 3, N'92 kWh',  220, '18_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 18
+    ('51T-18001', 18, 7, N'92 kWh', 2000, 'AVAILABLE'),
+    ('51T-18002', 18, 1, N'92 kWh', 450, 'AVAILABLE'),
+    ('51T-18003', 18, 2, N'92 kWh', 1800, 'AVAILABLE'),
+    ('51T-18004', 18, 3, N'92 kWh', 220, 'AVAILABLE'),
 
-    -- vehicle_id = 19 (3 bản ghi)
-    ('51U-19001', 19, 3, N'75 kWh',  500, '19_1.jpg', 'AVAILABLE'),
-    ('51U-19002', 19, 4, N'75 kWh', 1100, '19_2.jpg', 'AVAILABLE'),
-    ('51U-19003', 19, 5, N'75 kWh',  250, '19_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 19
+    ('51U-19001', 19, 3, N'75 kWh', 500, 'AVAILABLE'),
+    ('51U-19002', 19, 4, N'75 kWh', 1100, 'AVAILABLE'),
+    ('51U-19003', 19, 5, N'75 kWh', 250, 'AVAILABLE'),
 
-    -- vehicle_id = 20 (4 bản ghi)
-    ('51V-20001', 20, 4, N'100 kWh',1100, '20_1.jpg', 'AVAILABLE'),
-    ('51V-20002', 20, 5, N'100 kWh', 300, '20_2.jpg', 'AVAILABLE'),
-    ('51V-20003', 20, 6, N'100 kWh',2000, '20_3.jpg', 'AVAILABLE'),
-    ('51V-20004', 20, 1, N'100 kWh',  50, '20_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 20
+    ('51V-20001', 20, 4, N'100 kWh', 1100, 'AVAILABLE'),
+    ('51V-20002', 20, 5, N'100 kWh', 300, 'AVAILABLE'),
+    ('51V-20003', 20, 6, N'100 kWh', 2000, 'AVAILABLE'),
+    ('51V-20004', 20, 1, N'100 kWh', 50, 'AVAILABLE'),
 
-    -- vehicle_id = 21 (3 bản ghi)
-    ('51W-21001', 21, 5, N'58 kWh',  700, '21_1.jpg', 'AVAILABLE'),
-    ('51W-21002', 21, 6, N'58 kWh', 1300, '21_2.jpg', 'AVAILABLE'),
-    ('51W-21003', 21, 2, N'58 kWh',  120, '21_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 21
+    ('51W-21001', 21, 5, N'58 kWh', 700, 'AVAILABLE'),
+    ('51W-21002', 21, 6, N'58 kWh', 1300, 'AVAILABLE'),
+    ('51W-21003', 21, 2, N'58 kWh', 120, 'AVAILABLE'),
 
-    -- vehicle_id = 22 (4 bản ghi)
-    ('51X-22001', 22, 6, N'77 kWh', 1600, '22_1.jpg', 'AVAILABLE'),
-    ('51X-22002', 22, 7, N'77 kWh',  900, '22_2.jpg', 'AVAILABLE'),
-    ('51X-22003', 22, 1, N'77 kWh', 2400, '22_3.jpg', 'AVAILABLE'),
-    ('51X-22004', 22, 3, N'77 kWh',  430, '22_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 22
+    ('51X-22001', 22, 6, N'77 kWh', 1600, 'AVAILABLE'),
+    ('51X-22002', 22, 7, N'77 kWh', 900, 'AVAILABLE'),
+    ('51X-22003', 22, 1, N'77 kWh', 2400, 'AVAILABLE'),
+    ('51X-22004', 22, 3, N'77 kWh', 430, 'AVAILABLE'),
 
-    -- vehicle_id = 23 (3 bản ghi)
-    ('51Y-23001', 23, 7, N'40 kWh',  300, '23_1.jpg', 'AVAILABLE'),
-    ('51Y-23002', 23, 1, N'40 kWh',  900, '23_2.jpg', 'AVAILABLE'),
-    ('51Y-23003', 23, 2, N'40 kWh', 1500, '23_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 23
+    ('51Y-23001', 23, 7, N'40 kWh', 300, 'AVAILABLE'),
+    ('51Y-23002', 23, 1, N'40 kWh', 900, 'AVAILABLE'),
+    ('51Y-23003', 23, 2, N'40 kWh', 1500, 'AVAILABLE'),
 
-    -- vehicle_id = 24 (4 bản ghi)
-    ('51Z-24001', 24, 1, N'83 kWh', 1300, '24_1.jpg', 'AVAILABLE'),
-    ('51Z-24002', 24, 2, N'83 kWh',  700, '24_2.jpg', 'AVAILABLE'),
-    ('51Z-24003', 24, 3, N'83 kWh', 2200, '24_3.jpg', 'AVAILABLE'),
-    ('51Z-24004', 24, 4, N'83 kWh',  420, '24_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 24
+    ('51Z-24001', 24, 1, N'83 kWh', 1300, 'AVAILABLE'),
+    ('51Z-24002', 24, 2, N'83 kWh', 700, 'AVAILABLE'),
+    ('51Z-24003', 24, 3, N'83 kWh', 2200, 'AVAILABLE'),
+    ('51Z-24004', 24, 4, N'83 kWh', 420, 'AVAILABLE'),
 
-    -- vehicle_id = 25 (3 bản ghi)
-    ('52A-25001', 25, 2, N'85 kWh',  700, '25_1.jpg', 'AVAILABLE'),
-    ('52A-25002', 25, 3, N'85 kWh', 1100, '25_2.jpg', 'AVAILABLE'),
-    ('52A-25003', 25, 1, N'85 kWh',  300, '25_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 25
+    ('52A-25001', 25, 2, N'85 kWh', 700, 'AVAILABLE'),
+    ('52A-25002', 25, 3, N'85 kWh', 1100, 'AVAILABLE'),
+    ('52A-25003', 25, 1, N'85 kWh', 300, 'AVAILABLE'),
 
-    -- vehicle_id = 26 (4 bản ghi)
-    ('52B-26001', 26, 3, N'88 kWh',  900, '26_1.jpg', 'AVAILABLE'),
-    ('52B-26002', 26, 4, N'88 kWh',  500, '26_2.jpg', 'AVAILABLE'),
-    ('52B-26003', 26, 5, N'88 kWh', 2000, '26_3.jpg', 'AVAILABLE'),
-    ('52B-26004', 26, 1, N'88 kWh',  110, '26_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 26
+    ('52B-26001', 26, 3, N'88 kWh', 900, 'AVAILABLE'),
+    ('52B-26002', 26, 4, N'88 kWh', 500, 'AVAILABLE'),
+    ('52B-26003', 26, 5, N'88 kWh', 2000, 'AVAILABLE'),
+    ('52B-26004', 26, 1, N'88 kWh', 110, 'AVAILABLE'),
 
-    -- vehicle_id = 27 (3 bản ghi)
-    ('52C-27001', 27, 4, N'95 kWh',  600, '27_1.jpg', 'AVAILABLE'),
-    ('52C-27002', 27, 5, N'95 kWh',  300, '27_2.jpg', 'AVAILABLE'),
-    ('52C-27003', 27, 2, N'95 kWh', 1200, '27_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 27
+    ('52C-27001', 27, 4, N'95 kWh', 600, 'AVAILABLE'),
+    ('52C-27002', 27, 5, N'95 kWh', 300, 'AVAILABLE'),
+    ('52C-27003', 27, 2, N'95 kWh', 1200, 'AVAILABLE'),
 
-    -- vehicle_id = 28 (4 bản ghi)
-    ('52D-28001', 28, 5, N'70 kWh',  400, '28_1.jpg', 'AVAILABLE'),
-    ('52D-28002', 28, 6, N'70 kWh',  850, '28_2.jpg', 'AVAILABLE'),
-    ('52D-28003', 28, 1, N'70 kWh', 1600, '28_3.jpg', 'AVAILABLE'),
-    ('52D-28004', 28, 2, N'70 kWh',  220, '28_4.jpg', 'AVAILABLE'),
+    -- vehicle_id = 28
+    ('52D-28001', 28, 5, N'70 kWh', 400, 'AVAILABLE'),
+    ('52D-28002', 28, 6, N'70 kWh', 850, 'AVAILABLE'),
+    ('52D-28003', 28, 1, N'70 kWh', 1600, 'AVAILABLE'),
+    ('52D-28004', 28, 2, N'70 kWh', 220, 'AVAILABLE'),
 
-    -- vehicle_id = 29 (3 bản ghi)
-    ('52E-29001', 29, 6, N'93 kWh',  500, '29_1.jpg', 'AVAILABLE'),
-    ('52E-29002', 29, 7, N'93 kWh',  900, '29_2.jpg', 'AVAILABLE'),
-    ('52E-29003', 29, 1, N'93 kWh', 1400, '29_3.jpg', 'AVAILABLE'),
+    -- vehicle_id = 29
+    ('52E-29001', 29, 6, N'93 kWh', 500, 'AVAILABLE'),
+    ('52E-29002', 29, 7, N'93 kWh', 900, 'AVAILABLE'),
+    ('52E-29003', 29, 1, N'93 kWh', 1400, 'AVAILABLE'),
 
-    -- vehicle_id = 30 (4 bản ghi)
-    ('52F-30001', 30, 1, N'78 kWh',  850, '30_1.jpg', 'AVAILABLE'),
-    ('52F-30002', 30, 2, N'78 kWh', 1200, '30_2.jpg', 'AVAILABLE'),
-    ('52F-30003', 30, 3, N'78 kWh', 2100, '30_3.jpg', 'AVAILABLE'),
-    ('52F-30004', 30, 4, N'78 kWh',  320, '30_4.jpg', 'AVAILABLE');
+    -- vehicle_id = 30
+    ('52F-30001', 30, 1, N'78 kWh', 850, 'AVAILABLE'),
+    ('52F-30002', 30, 2, N'78 kWh', 1200, 'AVAILABLE'),
+    ('52F-30003', 30, 3, N'78 kWh', 2100, 'AVAILABLE'),
+    ('52F-30004', 30, 4, N'78 kWh', 320, 'AVAILABLE');
 GO
 
 -- ========================
