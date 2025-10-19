@@ -361,7 +361,7 @@ export default function BookingPage() {
 
             const contractSummary = buildContractSummary(fullBooking, data);
             navigate("/deposit-payment", {
-                state: { contractSummary },
+                state: { contractSummary, fullBooking },
             });
         } catch (error) {
             console.error("Lỗi khi đặt xe (exception):", error);
@@ -377,7 +377,7 @@ export default function BookingPage() {
 
         navigate("/deposit-payment", {
             state: {
-                contractSummary,
+                contractSummary, fullBooking
             },
         });
     };
