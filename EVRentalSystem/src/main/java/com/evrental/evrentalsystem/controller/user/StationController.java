@@ -16,16 +16,12 @@ public class StationController {
     private final StationService stationService;
 
 
-    //API này cho phép người dùng tìm kiếm các trạm theo quận/huyện
-    //Gọi API này dùng: http://localhost:8084/EVRentalSystem/api/stations/{stationId}/vehicles/available
-    //Ví dụ: http://localhost:8084/EVRentalSystem/api/stations/3/vehicles/available
-    @GetMapping("/{stationId}/vehicles/available")
-    public ResponseEntity<List<VehicleAtStationResponse>> getAvailableVehicles(@PathVariable Integer stationId) {
-        try {
-            List<VehicleAtStationResponse> list = stationService.findStationsByDistrict(stationId);
-            return ResponseEntity.ok(list);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{stationId}/models")
+    public ResponseEntity<List<VehicleAtStationResponse>> getVehicleModelsByStation(
+            @PathVariable("stationId") Integer stationId) {
+
+        List<VehicleAtStationResponse> models = stationService.getModelsByStation(stationId);
+        if (models.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(models);
     }
 }

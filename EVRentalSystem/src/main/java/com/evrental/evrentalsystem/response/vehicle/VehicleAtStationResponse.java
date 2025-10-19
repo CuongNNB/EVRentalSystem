@@ -7,15 +7,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class VehicleAtStationResponse {
-    private Integer vehicleId;          // ID của vehicleDetail
-    private Integer modelId;
+    private Integer vehicleModelId;
     private String brand;
     private String model;
-    private Double price;               // giá thuê cơ bản
+    private Double price;
     private Integer seats;
-    private String color;
-    private String batteryCapacity;
-    private Integer odo;
-    private String picture;
-    private String status;
+    private String modelPicture;
+    private Integer availableCount;
 }

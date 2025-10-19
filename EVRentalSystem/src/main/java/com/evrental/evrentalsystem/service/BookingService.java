@@ -58,7 +58,6 @@ public class    BookingService {
         booking.setStation(station);
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
-        booking.setStatus(BookingStatus.Pending_Deposit_Confirmation.toString());
         booking.setDeposit(request.getDeposit());
 
         bookingRepository.save(booking);
@@ -80,12 +79,8 @@ public class    BookingService {
     public String confirmDepositPayment(ConfirmDepositPaymentRequest request) {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
-//
-        if (!booking.getStatus().equals(BookingStatus.Pending_Deposit_Confirmation.toString())) {
-            return "Booking is not in Pending_Deposit_Confirmation status.";
-        }
 
-        booking.setStatus(BookingStatus.Pending_Contract_Signing.toString());
+        booking.setStatus(BookingStatus.Pending_Deposit_Confirmation.toString());
         bookingRepository.save(booking);
 
         return "Booking confirmed successfully.";
