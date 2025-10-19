@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class VehicleDetailResponse {
     private Integer id;
+    private Integer vehicleModelId;
     private String brand;
     private String model;
     private String color;
@@ -16,6 +17,7 @@ public class VehicleDetailResponse {
     private String status;
     private Integer odo;
     private String picture;
+    private Integer stationId;
     private String stationName;
     private String stationAddress;
     private double price; //

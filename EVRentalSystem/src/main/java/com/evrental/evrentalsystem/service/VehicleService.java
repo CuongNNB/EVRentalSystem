@@ -22,13 +22,15 @@ public class VehicleService {
         List<VehicleDetail> vehicles = vehicleDetailRepository.findByVehicleModelStatus("AVAILABLE");
         return vehicles.stream().map(v -> new VehicleDetailResponse(
                 v.getId(),
+                v.getVehicleModel().getVehicleId(),
                 v.getVehicleModel().getBrand(),
                 v.getVehicleModel().getModel(),
-                v.getColor(),
+                v.getVehicleModel().getColor(),
                 v.getBatteryCapacity(),
                 v.getStatus(),
                 v.getOdo(),
                 v.getPicture(),
+                v.getStation().getStationId(),
                 v.getStation().getStationName(),
                 v.getStation().getAddress(),
                 v.getVehicleModel().getPrice()
@@ -43,7 +45,7 @@ public class VehicleService {
         // VehicleDetail
         res.setId(v.getId());
         res.setLicensePlate(v.getLicensePlate());
-        res.setColor(v.getColor());
+        res.setColor(v.getVehicleModel().getColor());
         res.setBatteryCapacity(v.getBatteryCapacity());
         res.setStatus(v.getStatus());
         res.setOdo(v.getOdo());

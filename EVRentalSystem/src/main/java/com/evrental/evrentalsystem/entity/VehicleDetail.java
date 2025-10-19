@@ -25,7 +25,6 @@ public class VehicleDetail {
     @JoinColumn(name = "station_id", referencedColumnName = "station_id", nullable = false)
     private Station station;
 
-    private String color;
     private String batteryCapacity;
     private Integer odo;
     private String picture;

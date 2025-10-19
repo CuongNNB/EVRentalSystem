@@ -115,7 +115,7 @@ public class StaffService {
             response.setId(vehicleDetail.getId());
             response.setModelName(vehicleDetail.getVehicleModel().getModel());
             response.setLicensePlate(vehicleDetail.getLicensePlate());
-            response.setColor(vehicleDetail.getColor());
+            response.setColor(vehicleDetail.getVehicleModel().getColor());
             response.setBattery(vehicleDetail.getBatteryCapacity());
             response.setOdo(vehicleDetail.getOdo());
             response.setImage(vehicleDetail.getPicture());
@@ -277,7 +277,7 @@ public class StaffService {
         VehicleDetailsByBookingResponse response = new VehicleDetailsByBookingResponse();
         response.setLicensePlate(booking.getVehicleDetail().getLicensePlate());
         response.setOdo(booking.getVehicleDetail().getOdo());
-        response.setColor(booking.getVehicleDetail().getColor());
+        response.setColor(booking.getVehicleDetail().getVehicleModel().getColor());
         response.setBatteryCapacity(booking.getVehicleDetail().getBatteryCapacity());
         return response;
     }
