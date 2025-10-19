@@ -339,12 +339,9 @@ const UserProfilePage = () => {
 
     // Sidebar menu items
     const menuItems = [
-        { id: 'overview', label: 'Tổng quan', icon: '📊' },
         { id: 'personal', label: 'Thông tin cá nhân', icon: '👤' },
         { id: 'documents', label: 'Giấy tờ (CCCD/GPLX)', icon: '📄' },
         { id: 'security', label: 'Bảo mật', icon: '🔒' },
-        { id: 'notifications', label: 'Thông báo', icon: '🔔' },
-        { id: 'danger', label: 'Khu vực nguy hiểm', icon: '⚠️' },
     ];
 
     return (
@@ -425,21 +422,6 @@ const UserProfilePage = () => {
                                     exit={{ opacity: 0, y: -20 }}
                                     className="content-card"
                                 >
-                                    <h2 className="content-title">Tổng quan tài khoản</h2>
-
-                                    <div className="overview-grid">
-                                        <div className="overview-card overview-card-emerald">
-                                            <div className="overview-label">Trạng thái KYC</div>
-                                            <div className="overview-value">{kycBadge.text}</div>
-                                        </div>
-
-                                        <div className="overview-card overview-card-blue">
-                                            <div className="overview-label">Số điện thoại</div>
-                                            <div className="overview-value">{userData.phone}</div>
-                                        </div>
-
-
-                                    </div>
                                 </motion.div>
                             )}
 
@@ -735,121 +717,6 @@ const UserProfilePage = () => {
                                                 <span className="toggle-slider"></span>
                                             </label>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Notifications Section */}
-                            {activeSection === 'notifications' && (
-                                <motion.div
-                                    key="notifications"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    className="content-card"
-                                >
-                                    <h2 className="content-title">Cài đặt thông báo</h2>
-
-                                    <div className="notifications-list">
-                                        {/* Booking Updates */}
-                                        <div className="toggle-row">
-                                            <div className="toggle-info">
-                                                <h3 className="toggle-title">Thông báo trạng thái đơn thuê</h3>
-                                                <p className="toggle-description">Nhận thông báo khi đơn thuê thay đổi trạng thái</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.bookingUpdates}
-                                                    onChange={() => handleNotificationToggle('bookingUpdates')}
-                                                />
-                                                <span className="toggle-slider"></span>
-                                            </label>
-                                        </div>
-
-                                        {/* Return Reminder */}
-                                        <div className="toggle-row">
-                                            <div className="toggle-info">
-                                                <h3 className="toggle-title">Nhắc sớm trả xe</h3>
-                                                <p className="toggle-description">Nhận nhắc nhở trước 24h khi đến hạn trả xe</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.returnReminder}
-                                                    onChange={() => handleNotificationToggle('returnReminder')}
-                                                />
-                                                <span className="toggle-slider"></span>
-                                            </label>
-                                        </div>
-
-                                        {/* Promo */}
-                                        <div className="toggle-row">
-                                            <div className="toggle-info">
-                                                <h3 className="toggle-title">Khuyến mãi & ưu đãi</h3>
-                                                <p className="toggle-description">Nhận thông tin về các chương trình khuyến mãi</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.promo}
-                                                    onChange={() => handleNotificationToggle('promo')}
-                                                />
-                                                <span className="toggle-slider"></span>
-                                            </label>
-                                        </div>
-
-                                        {/* Analytics */}
-                                        <div className="toggle-row">
-                                            <div className="toggle-info">
-                                                <h3 className="toggle-title">Cho phép phân tích ẩn danh</h3>
-                                                <p className="toggle-description">Giúp cải thiện trải nghiệm dịch vụ</p>
-                                            </div>
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={notifications.analytics}
-                                                    onChange={() => handleNotificationToggle('analytics')}
-                                                />
-                                                <span className="toggle-slider"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div className="form-actions">
-                                        <button onClick={handleSaveNotifications} className="btn btn-primary">
-                                            <span>💾 Lưu cài đặt</span>
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Danger Zone */}
-                            {activeSection === 'danger' && (
-                                <motion.div
-                                    key="danger"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    className="danger-zone"
-                                >
-                                    <h2 className="content-title" style={{ color: '#dc2626' }}>⚠️ Khu vực nguy hiểm</h2>
-
-                                    <div className="danger-zone-content">
-                                        <h3 className="danger-title">Xóa tài khoản vĩnh viễn</h3>
-                                        <p className="danger-description">
-                                            Khi bạn xóa tài khoản, tất cả dữ liệu cá nhân, lịch sử đặt xe, và thông tin liên quan sẽ bị xóa vĩnh viễn và không thể khôi phục.
-                                        </p>
-
-                                        <ul className="danger-list">
-                                            <li>Bạn sẽ mất quyền truy cập vào tài khoản ngay lập tức</li>
-                                            <li>Các đơn thuê đang hoạt động sẽ bị hủy</li>
-                                            <li>Không thể hoàn tác sau khi xác nhận</li>
-                                        </ul>
-
-                                        <button onClick={handleDeleteAccount} className="btn btn-danger" style={{ width: '100%' }}>
-                                            <span>🗑️ Xóa tài khoản</span>
-                                        </button>
                                     </div>
                                 </motion.div>
                             )}
