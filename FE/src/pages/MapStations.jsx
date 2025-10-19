@@ -1,45 +1,54 @@
-// MapStationsDemo.jsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { Search, MapPin, Car, Clock, Navigation, X } from "lucide-react";
 import './MapStations.css';
-
-// ---------------------------
-// MapStations component (gộp vào file demo)
-// ---------------------------
 
 // Brand color
 const BRAND = "#009B72";
 
 // Static stations list (kept for map centering & demo UI)
 const stations = [
-    { id: 1, name: "Cho thuê Xe điện VinFast - Thảo Điền", district: "Thủ Đức",
+    {
+        id: 1, name: "Cho thuê Xe điện VinFast - Thảo Điền", district: "Thủ Đức",
         address: "Hầm gửi xe B3 - Vincom Mega Mall, 161 Võ Nguyên Giáp, Thảo Điền, Thủ Đức, Hồ Chí Minh",
-        location: "10.801,-106.730", cars: 15, status: "active" },
-    { id: 2, name: "Cho thuê Xe điện VinFast - Tân Cảng", district: "Bình Thạnh",
+        location: "10.801,-106.730", cars: 15, status: "active"
+    },
+    {
+        id: 2, name: "Cho thuê Xe điện VinFast - Tân Cảng", district: "Bình Thạnh",
         address: "208 Nguyễn Hữu Cảnh, Vinhomes Tân Cảng, Bình Thạnh, Hồ Chí Minh",
-        location: "10.793,-106.721", cars: 12, status: "active" },
-    { id: 3, name: "Cho thuê Xe điện VinFast - Quận 1", district: "Quận 1",
+        location: "10.793,-106.721", cars: 12, status: "active"
+    },
+    {
+        id: 3, name: "Cho thuê Xe điện VinFast - Quận 1", district: "Quận 1",
         address: "Tầng hầm B2 - Vincom Đồng Khởi, 70 Lê Thánh Tôn, Quận 1, TP. Hồ Chí Minh",
-        location: "10.776,-106.700", cars: 20, status: "active" },
-    { id: 4, name: "Cho thuê Xe điện VinFast - Quận 7", district: "Quận 7",
+        location: "10.776,-106.700", cars: 20, status: "active"
+    },
+    {
+        id: 4, name: "Cho thuê Xe điện VinFast - Quận 7", district: "Quận 7",
         address: "Crescent Mall, 101 Tôn Dật Tiên, Tân Phú, Quận 7, TP. Hồ Chí Minh",
-        location: "10.732,-106.721", cars: 18, status: "active" },
-    { id: 5, name: "Cho thuê Xe điện VinFast - Gò Vấp", district: "Gò Vấp",
+        location: "10.732,-106.721", cars: 18, status: "active"
+    },
+    {
+        id: 5, name: "Cho thuê Xe điện VinFast - Gò Vấp", district: "Gò Vấp",
         address: "Trung tâm thương mại Emart, 366 Phan Văn Trị, Gò Vấp, TP. Hồ Chí Minh",
-        location: "10.839,-106.667", cars: 14, status: "active" },
-    { id: 6, name: "Cho thuê Xe điện VinFast - Bình Tân", district: "Bình Tân",
+        location: "10.839,-106.667", cars: 14, status: "active"
+    },
+    {
+        id: 6, name: "Cho thuê Xe điện VinFast - Bình Tân", district: "Bình Tân",
         address: "AEON Mall Bình Tân, 1 Đường số 17A, Bình Trị Đông B, Bình Tân, TP. Hồ Chí Minh",
-        location: "10.755,-106.611", cars: 16, status: "active" },
-    { id: 7, name: "Cho thuê Xe điện VinFast - Phú Nhuận", district: "Phú Nhuận",
+        location: "10.755,-106.611", cars: 16, status: "active"
+    },
+    {
+        id: 7, name: "Cho thuê Xe điện VinFast - Phú Nhuận", district: "Phú Nhuận",
         address: "Co.opmart Nguyễn Kiệm, 571 Nguyễn Kiệm, Phú Nhuận, TP. Hồ Chí Minh",
-        location: "10.801,-106.679", cars: 10, status: "active" },
+        location: "10.801,-106.679", cars: 10, status: "active"
+    },
 ];
 
 // Helper functions
 const parseLoc = (locStr) => {
     let [lat, lng] = String(locStr).split(",").map(s => Number(s.trim()));
-    // Some static data uses negative longitudes; keep them as positive for embed URLs if necessary
     if (lng < 0) lng = Math.abs(lng);
     return { lat, lng };
 };
@@ -65,11 +74,13 @@ const MapStations = () => {
     const [showModal, setShowModal] = useState(false);
     const [mapKey, setMapKey] = useState(0);
     const mapRef = useRef(null);
+    const navigate = useNavigate();
 
     // API-driven states
     const [loading, setLoading] = useState(false);
     const [stationsData, setStationsData] = useState([]); // kept if you still want search-by-stations API
-    const [vehiclesData, setVehiclesData] = useState([]); // vehicles to render (filtered)
+    const [vehiclesData, setVehiclesData] = useState([]); // old vehicle list fallback
+    const [vehicleModels, setVehicleModels] = useState([]); // NEW: models per-station in selected district
     const [selectedStation, setSelectedStation] = useState(null);
     const [availableVehiclesState, setAvailableVehicles] = useState([]);
 
@@ -79,7 +90,7 @@ const MapStations = () => {
         []
     );
 
-    // stationsInDistrict from static list (used only for map centering and station list UI)
+    // stationsInDistrict from static list (used for map centering and station list UI)
     const stationsInDistrict = useMemo(
         () => (selectedDistrict === "Tất cả"
             ? stations
@@ -95,7 +106,6 @@ const MapStations = () => {
     // Generate map URL (keeps previous logic)
     const mapUrl = useMemo(() => {
         if (selectedStation && selectedDistrict !== "Tất cả") {
-            // if selectedStation has a location (from static or stationsData), use it
             if (selectedStation.location) {
                 const { lat, lng } = parseLoc(selectedStation.location);
                 return buildEmbedUrl(lat, lng, selectedStation.name, 15);
@@ -120,59 +130,75 @@ const MapStations = () => {
         setSelectedStation(found);
     }, [selectedStationId, stationsData, stationsInDistrict]);
 
-    /**
-     * NEW: load vehicles from /api/vehicles/available then filter by stationAddress
-     * - If districtLabel === "Tất cả": use all vehicles
-     * - Else: filter vehicles whose stationAddress includes districtLabel (case-insensitive)
-     */
-    const loadVehiclesAndFilterByDistrict = async (districtLabel) => {
-        setLoading(true);
+    // ---------- NEW: API call to get model details for a station ----------
+    // NOTE: Adjust the URL below to match your actual API path if different.
+    // Current assumption: GET /EVRentalSystem/api/vehicle-models/station/{stationId}/details
+    const fetchModelDetailsForStation = async (stationId) => {
         try {
-            const res = await fetch("http://localhost:8084/EVRentalSystem/api/vehicles/available");
+            //http://localhost:8084/EVRentalSystem/api/stations/5/models
+            const url = `http://localhost:8084/EVRentalSystem/api/stations/${stationId}/models`;
+            const res = await fetch(url);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const allVehicles = await res.json();
-            const arr = Array.isArray(allVehicles) ? allVehicles : [];
+            const json = await res.json();
+            // Expecting an array of model objects similar to sample:
+            // { vehicleModelId, brand, model, price, seats, modelPicture, availableCount }
+            return Array.isArray(json) ? json : [];
+        } catch (err) {
+            console.error(`Error fetching models for station ${stationId}:`, err);
+            return [];
+        }
+    };
 
-            // set stationsData to empty because we're using vehicles endpoint now
-            setStationsData([]);
-
+    // Load vehicle models for all stations in a district (parallel)
+    const loadVehicleModelsForDistrict = async (districtLabel) => {
+        setLoading(true);
+        setVehicleModels([]);
+        try {
             if (!districtLabel || districtLabel === "Tất cả") {
-                setVehiclesData(arr);
+                // fallback: load all available vehicles (existing behavior)
+                const res = await fetch("http://localhost:8084/EVRentalSystem/api/vehicles/available");
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const allVehicles = await res.json();
+                setVehiclesData(Array.isArray(allVehicles) ? allVehicles : []);
+                setVehicleModels([]); // clear models
             } else {
-                const needle = districtLabel.toLowerCase().trim();
-                const filtered = arr.filter((v) => {
-                    const addr = (v.stationAddress || '').toLowerCase();
-                    return addr.includes(needle);
-                });
-                setVehiclesData(filtered);
+                // get stations in that district (using static stations list)
+                const stationsInThisDistrict = stations.filter(s => s.district === districtLabel);
+                // parallel fetch per station
+                const promises = stationsInThisDistrict.map(s => fetchModelDetailsForStation(s.id));
+                const results = await Promise.all(promises);
+                // Flatten, and attach station info to each model (so UI can show stationName)
+                const flattened = results.flatMap((models, idx) =>
+                    (models || []).map(m => ({
+                        ...m,
+                        stationId: stationsInThisDistrict[idx].id,
+                        stationName: stationsInThisDistrict[idx].name,
+                        stationAddress: stationsInThisDistrict[idx].address,
+                        stationDistrict: stationsInThisDistrict[idx].district,
+                    }))
+                );
+                setVehicleModels(flattened);
+                // clear old vehiclesData to avoid confusion
+                setVehiclesData([]);
             }
-
-            // also update availableVehiclesState for first few vehicles (optional)
-            const avail = (arr || []).filter(v => (v.status || '').toUpperCase() === 'AVAILABLE');
-            setAvailableVehicles(avail);
         } catch (error) {
-            console.error("Error fetching vehicles:", error);
+            console.error("Error loading vehicle models for district:", error);
+            setVehicleModels([]);
             setVehiclesData([]);
-            setStationsData([]);
-            setAvailableVehicles([]);
         } finally {
             setLoading(false);
         }
     };
 
-    // When tab changes, load via vehicles endpoint and filter by stationAddress
+    // When tab changes, call the appropriate loader
     const handleDistrictChange = (district) => {
-        setSelectedDistrict(district);
-        setMapKey(prev => prev + 1);
-        loadVehiclesAndFilterByDistrict(district);
-
-        // scroll to map
-        setTimeout(() => {
-            if (mapRef.current) {
-                mapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
+        // lưu district vào URL query param rồi reload trang
+        const newUrl = `${window.location.pathname}?district=${encodeURIComponent(district)}`;
+        window.history.pushState({}, '', newUrl);
+        window.location.reload();
     };
+
+
 
     // Sync selectedStationId when district changes (keep a sensible default)
     useEffect(() => {
@@ -215,12 +241,16 @@ const MapStations = () => {
         alert(`Chức năng thuê xe tại ${station.name} sẽ được triển khai sớm!`);
     };
 
-    // Load default district vehicles on mount
+    // Load default district models on mount
     useEffect(() => {
-        const defaultDistrict = "Thủ Đức";
-        setSelectedDistrict(defaultDistrict);
-        loadVehiclesAndFilterByDistrict(defaultDistrict);
+        const params = new URLSearchParams(window.location.search);
+        const districtFromUrl = params.get('district');
+        const districtToLoad = districtFromUrl || "Thủ Đức";
+        setSelectedDistrict(districtToLoad);
+        loadVehicleModelsForDistrict(districtToLoad);
     }, []);
+
+
 
     // Formatting helper for vehicle price (copied)
     const fPrice = (price) => {
@@ -250,9 +280,9 @@ const MapStations = () => {
                                         onClick={() => handleDistrictChange(district)}
                                         className={`district-tab ${isActive ? 'active' : ''}`}
                                     >
-                    <span className="tab-text">
-                      {district}
-                    </span>
+                                            <span className="tab-text">
+                                                {district}
+                                            </span>
                                     </button>
                                 );
                             })}
@@ -280,7 +310,7 @@ const MapStations = () => {
                     </div>
                 </div>
 
-                {/* Vehicles Section */}
+                {/* Vehicles / Models Section */}
                 <section className="vehicles-section">
                     <h3 className="vehicles-section-title">
                         {selectedDistrict === "Tất cả" ? "Tất cả xe khả dụng" : `Xe khả dụng tại ${selectedDistrict}`}
@@ -288,77 +318,165 @@ const MapStations = () => {
 
                     {loading ? (
                         <div className="vehicles-loading">Đang tải dữ liệu...</div>
-                    ) : vehiclesData.length === 0 ? (
-                        <div className="vehicles-empty-state">
-                            Không có xe khả dụng.
-                        </div>
                     ) : (
-                        <div className="vehicles-grid-display">
-                            {vehiclesData.map(v => {
-                                const img = v.picture ? `/carpic/${v.picture}` : "/anhxe/default.jpg";
-                                return (
-                                    <article key={`${v.licensePlate || v.id || Math.random()}`} className="vehicle-card">
-                                        <div className="vehicle-card__media">
-                                            {img ? (
-                                                <img
-                                                    src={img}
-                                                    alt={`${v.brand} ${v.model}`}
-                                                    className="vehicle-card__image"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="vehicle-card__placeholder" aria-hidden="true">
-                                                    🚗
+                        <>
+                            {/* If vehicleModels exist (i.e. we loaded model-per-station), show them */}
+                            {vehicleModels && vehicleModels.length > 0 ? (
+                                <div className="vehicles-grid-display">
+                                    {vehicleModels.map((m, idx) => {
+                                        const img = m.modelPicture ? `/carpic/${m.modelPicture}` : "/anhxe/default.jpg";
+                                        return (
+                                            <article key={`${m.vehicleModelId || m.model}-${idx}`} className="vehicle-card">
+                                                <div className="vehicle-card__media">
+                                                    {img ? (
+                                                        <img
+                                                            src={img}
+                                                            alt={`${m.brand} ${m.model}`}
+                                                            className="vehicle-card__image"
+                                                            loading="lazy"
+                                                        />
+                                                    ) : (
+                                                        <div className="vehicle-card__placeholder" aria-hidden="true">
+                                                            🚗
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        <div className="vehicle-card__header">
-                                            <div>
-                                                <h3 className="vehicle-card__name">{v.model}</h3>
-                                                <p className="vehicle-card__subtitle">
-                                                    {v.brand} – {v.color}
-                                                </p>
-                                            </div>
-                                            <div className="vehicle-card__price-wrapper">
-                                                <span className="vehicle-card__price-label">Giá thuê</span>
-                                                <p className="vehicle-card__price">
-                                                    {fPrice(v.vehicleModel?.price || v.price || 1200)}
-                                                </p>
-                                            </div>
-                                        </div>
+                                                <div className="vehicle-card__header">
+                                                    <div>
+                                                        <h3 className="vehicle-card__name">{m.model}</h3>
+                                                        <p className="vehicle-card__subtitle">
+                                                            {m.brand} – {m.seats} chỗ
+                                                        </p>
+                                                        <p className="vehicle-card__subtitle" style={{ marginTop: 6, fontSize: 13 }}>
+                                                            Trạm: {m.stationName}
+                                                        </p>
+                                                    </div>
+                                                    <div className="vehicle-card__price-wrapper">
+                                                        <span className="vehicle-card__price-label">Giá mẫu</span>
+                                                        <p className="vehicle-card__price">
+                                                            {fPrice(m.price || (m.vehicleModel?.price))}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                        <div className="vehicle-card__tags">
-                                            <span className="vehicle-card__tag">⚡ {v.batteryCapacity}</span>
-                                            <span className="vehicle-card__tag">{v.status}</span>
-                                        </div>
+                                                <div className="vehicle-card__tags">
+                                                    <span className="vehicle-card__tag">Còn: {m.availableCount ?? '—'}</span>
+                                                    <span className="vehicle-card__tag">{m.seats} chỗ</span>
+                                                </div>
 
-                                        <ul className="vehicle-card__features">
-                                            <li className="vehicle-card__feature">
-                                                <span className="vehicle-card__feature-icon">📍</span>
-                                                <span>{v.stationName || v.station || 'Không rõ'}</span>
-                                            </li>
-                                            <li className="vehicle-card__feature">
-                                                <span className="vehicle-card__feature-icon">🧭</span>
-                                                <span>Odo: {(v.odo || 0).toLocaleString('vi-VN')} km</span>
-                                            </li>
-                                        </ul>
+                                                <div className="vehicle-card__actions">
+                                                    <button
+                                                        type="button"
+                                                        className="vehicle-card__cta vehicle-card__cta--secondary"
+                                                        onClick={() => {
+                                                            // navigate to model detail or car list — adjust as needed
+                                                            navigate(`/car-model/${m.vehicleModelId || m.id}`, {
+                                                                state: {
+                                                                    modelId: m.vehicleModelId || m.id,
+                                                                    brand: m.brand,
+                                                                    model: m.model,
+                                                                    price: m.price,
+                                                                    stationId: m.stationId,
+                                                                    stationName: m.stationName,
+                                                                    images: [m.modelPicture ? `/carpic/${m.modelPicture}` : '/anhxe/default.jpg'],
+                                                                }
+                                                            });
+                                                        }}
+                                                    >
+                                                        Xem chi tiết <span aria-hidden>→</span>
+                                                    </button>
+                                                </div>
+                                            </article>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                // fallback: either vehiclesData (old endpoint) or empty-state
+                                vehiclesData && vehiclesData.length > 0 ? (
+                                    <div className="vehicles-grid-display">
+                                        {vehiclesData.map(v => {
+                                            const img = v.picture ? `/carpic/${v.picture}` : "/anhxe/default.jpg";
+                                            return (
+                                                <article key={`${v.licensePlate || v.id || Math.random()}`} className="vehicle-card">
+                                                    <div className="vehicle-card__media">
+                                                        {img ? (
+                                                            <img
+                                                                src={img}
+                                                                alt={`${v.brand} ${v.model}`}
+                                                                className="vehicle-card__image"
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <div className="vehicle-card__placeholder" aria-hidden="true">
+                                                                🚗
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                        <div className="vehicle-card__actions">
-                                            <button
-                                                type="button"
-                                                className="vehicle-card__cta vehicle-card__cta--secondary"
-                                                onClick={() => {
-                                                    alert(`Xem chi tiết xe: ${v.brand} ${v.model}`);
-                                                }}
-                                            >
-                                                Xem chi tiết <span aria-hidden>→</span>
-                                            </button>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
+                                                    <div className="vehicle-card__header">
+                                                        <div>
+                                                            <h3 className="vehicle-card__name">{v.model}</h3>
+                                                            <p className="vehicle-card__subtitle">
+                                                                {v.brand} – {v.color}
+                                                            </p>
+                                                        </div>
+                                                        <div className="vehicle-card__price-wrapper">
+                                                            <span className="vehicle-card__price-label">Giá thuê</span>
+                                                            <p className="vehicle-card__price">
+                                                                {fPrice(v.vehicleModel?.price || v.price || 1200)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="vehicle-card__tags">
+                                                        <span className="vehicle-card__tag">⚡ {v.batteryCapacity}</span>
+                                                        <span className="vehicle-card__tag">{v.status}</span>
+                                                    </div>
+
+                                                    <ul className="vehicle-card__features">
+                                                        <li className="vehicle-card__feature">
+                                                            <span className="vehicle-card__feature-icon">📍</span>
+                                                            <span>{v.stationName || v.station || 'Không rõ'}</span>
+                                                        </li>
+                                                        <li className="vehicle-card__feature">
+                                                            <span className="vehicle-card__feature-icon">🧭</span>
+                                                            <span>Odo: {(v.odo || 0).toLocaleString('vi-VN')} km</span>
+                                                        </li>
+                                                    </ul>
+
+                                                    <div className="vehicle-card__actions">
+                                                        <button
+                                                            type="button"
+                                                            className="vehicle-card__cta vehicle-card__cta--secondary"
+                                                            onClick={() => {
+                                                                navigate(`/car/${v.id}`, {
+                                                                    state: {
+                                                                        id: v.id,
+                                                                        brand: v.brand,
+                                                                        model: v.model,
+                                                                        price: v.price,
+                                                                        stationId: v.stationId || v.stationId || null,
+                                                                        stationName: v.stationName || v.station || 'Không rõ trạm',
+                                                                        images: [v.picture ? `/carpic/${v.picture}` : '/anhxe/default.jpg'],
+                                                                    }
+                                                                });
+                                                            }}
+                                                        >
+                                                            Xem chi tiết <span aria-hidden>→</span>
+                                                        </button>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="vehicles-empty-state">
+                                        Không có xe khả dụng.
+                                    </div>
+                                )
+                            )}
+                        </>
                     )}
                 </section>
             </div>
@@ -466,4 +584,3 @@ const MapStationsDemo = () => {
 };
 
 export default MapStations;
-  
