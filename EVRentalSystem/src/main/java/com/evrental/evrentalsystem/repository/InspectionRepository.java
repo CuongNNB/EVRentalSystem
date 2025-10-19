@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface InspectionRepository extends JpaRepository<Inspection, Integer> {
     List<Inspection> findByBooking_BookingId(Integer bookingId);
     List<Inspection> findAllByBooking(Booking booking);
+    Inspection findByBookingAndPartName(Booking booking, String partName );
 }
