@@ -280,9 +280,9 @@ const MapStations = () => {
                                         onClick={() => handleDistrictChange(district)}
                                         className={`district-tab ${isActive ? 'active' : ''}`}
                                     >
-                                            <span className="tab-text">
-                                                {district}
-                                            </span>
+                                        <span className="tab-text">
+                                            {district}
+                                        </span>
                                     </button>
                                 );
                             })}
@@ -369,18 +369,25 @@ const MapStations = () => {
                                                     <button
                                                         type="button"
                                                         className="vehicle-card__cta vehicle-card__cta--secondary"
-                                                        onClick={() => {
-                                                            // navigate to model detail or car list — adjust as needed
-                                                            navigate(`/car-model/${m.vehicleModelId || m.id}`, {
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/car/${m.vehicleModelId || m.id}`, {
                                                                 state: {
-                                                                    modelId: m.vehicleModelId || m.id,
-                                                                    brand: m.brand,
-                                                                    model: m.model,
-                                                                    price: m.price,
+                                                                    id: m.vehicleModelId || m.id,
+                                                                    brand: m.brand || "Không rõ thương hiệu",
+                                                                    model: m.model || "Không rõ model",
+                                                                    price: m.price || 0,
+                                                                    seats: m.seats || 4,
+                                                                    availableCount: m.availableCount ?? 1,
+                                                                    modelPicture: m.modelPicture,
+                                                                    images: [
+                                                                        m.modelPicture
+                                                                            ? `/carpic/${m.modelPicture}`
+                                                                            : "/anhxe/default.jpg",
+                                                                    ],
                                                                     stationId: m.stationId,
                                                                     stationName: m.stationName,
-                                                                    images: [m.modelPicture ? `/carpic/${m.modelPicture}` : '/anhxe/default.jpg'],
-                                                                }
+                                                                },
                                                             });
                                                         }}
                                                     >
