@@ -808,7 +808,6 @@
 }
 
 .car-info .car-location::before {
-    content: "📍";
     font-size: 1rem;
     color: #0bb97f;
 }

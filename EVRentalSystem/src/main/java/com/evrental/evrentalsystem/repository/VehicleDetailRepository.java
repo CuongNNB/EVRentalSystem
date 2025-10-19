@@ -68,5 +68,14 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     List<VehicleDetail> findByStationIdAndStatus(@Param("stationId") Integer stationId,
                                                  @Param("status") String status);
 
+
+    @Query("""
+        SELECT vd
+        FROM VehicleDetail vd
+        JOIN FETCH vd.station s
+        JOIN FETCH vd.vehicleModel vm
+        WHERE vm.vehicleId = :vehicleModelId
+    """)
+    List<VehicleDetail> findByVehicleModelId(@Param("vehicleModelId") Integer vehicleModelId);
     //End code here
 }

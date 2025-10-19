@@ -39,7 +39,6 @@ export default function BookingPage() {
     const passedCar = location.state;
     const bookingImage = passedCar?.images?.[0] || "/anhxe/default.jpg";
     const bookingName = passedCar?.name || "Xe điện";
-    const pickupStation = passedCar?.stationName;
     const bookingPrice = passedCar?.price ? passedCar.price * 1000 : 1000000;
 
     const carData = passedCar || {
@@ -51,26 +50,21 @@ export default function BookingPage() {
         images: [bookingImage],
         specifications: {
             seats: 4,
-            transmission: "Tự động",
-            power: "43 HP",
-            range: "210 km (NEDC)",
-            costPerKm: "400đ/km",
-            chargeTime: "45 phút (sạc nhanh)",
         },
     };
 
-    const storedUser = user && user.email
-        ? {
-            id: user.id || user.userId || user?.data?.id,
-            name: user.fullName || user.name || user.username || "Người dùng",
-            email: user.email,
-            phone: user.phone || user.phoneNumber || "",
-        }
-        : { id: 1, name: "Người dùng", email: "user@gmail.com", phone: "" };
+    const storedUser =
+        user && user.email
+            ? {
+                id: user.id || user.userId || user?.data?.id,
+                name: user.fullName || user.name || user.username || "Người dùng",
+                email: user.email,
+                phone: user.phone || user.phoneNumber || "",
+            }
+            : { id: 1, name: "Người dùng", email: "user@gmail.com", phone: "" };
 
     // now at component mount
     const now = new Date();
-    // Round now to nearest minute to avoid seconds issues
     now.setSeconds(0);
     now.setMilliseconds(0);
 
@@ -88,9 +82,13 @@ export default function BookingPage() {
     });
 
     const [isBooking, setIsBooking] = useState(false);
-
-    // overlay error state
     const [errorOverlay, setErrorOverlay] = useState({ visible: false, message: "" });
+
+    // NEW: stations list & selectedStationId
+    const [stations, setStations] = useState([]); // each: { vehicleDetailId, stationId, stationName, stationAddress }
+    const [selectedStationId, setSelectedStationId] = useState(
+        passedCar?.stationId || carData.stationId || null
+    );
 
     useEffect(() => {
         let t;
@@ -108,7 +106,7 @@ export default function BookingPage() {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    // Validations + constraints
+    // Validations + constraints (unchanged)
     const getNow = () => {
         const d = new Date();
         d.setSeconds(0);
@@ -126,7 +124,6 @@ export default function BookingPage() {
             showError("Thời gian nhận xe không được chọn trong quá khứ. Đã đặt lại về thời gian hiện tại.");
             handleInputChange("pickupDateTime", formatDateTimeLocal(nowDate));
 
-            // ensure return is not before pickup
             const returnDate = new Date(formData.returnDateTime);
             if (returnDate <= nowDate) {
                 const newReturn = addDays(nowDate, 1);
@@ -139,7 +136,6 @@ export default function BookingPage() {
             showError("Thời gian nhận xe chỉ được phép trong vòng 5 ngày kể từ lúc đặt.");
             handleInputChange("pickupDateTime", formatDateTimeLocal(maxPickup));
 
-            // adjust return if needed
             const returnDate = new Date(formData.returnDateTime);
             if (returnDate <= maxPickup) {
                 const newReturn = addDays(maxPickup, 1);
@@ -148,10 +144,8 @@ export default function BookingPage() {
             return;
         }
 
-        // valid
         handleInputChange("pickupDateTime", val);
 
-        // If return is earlier than pickup, push return to pickup + 1 hour
         const returnDate = new Date(formData.returnDateTime);
         if (returnDate <= selected) {
             const minReturn = new Date(selected.getTime() + 60 * 60 * 1000); // +1 hour
@@ -179,7 +173,6 @@ export default function BookingPage() {
             return;
         }
 
-        // also prevent selecting return in the past
         if (selected < nowDate) {
             showError("Thời gian trả xe không thể ở quá khứ. Đã đặt lại về tối thiểu 1 giờ sau khi nhận xe hoặc thời gian hiện tại.");
             const minReturn = new Date(Math.max(pickup.getTime() + 60 * 60 * 1000, nowDate.getTime()));
@@ -188,6 +181,49 @@ export default function BookingPage() {
         }
 
         handleInputChange("returnDateTime", val);
+    };
+
+    // NEW: fetch vehicle details (stations) for this vehicleModelId
+    useEffect(() => {
+        const modelId = passedCar?.id || parseInt(carId);
+        if (!modelId) return;
+
+        const fetchStations = async () => {
+            try {
+                const res = await fetch(
+                    `http://localhost:8084/EVRentalSystem/api/vehicles/${modelId}/details`
+                );
+                if (!res.ok) throw new Error("Không thể lấy thông tin trạm");
+                const data = await res.json();
+                // Expecting array of { vehicleDetailId, stationId, stationName, stationAddress }
+                setStations(data || []);
+                // Nếu chưa có selectedStationId, hoặc selectedStationId không thuộc data -> set default là first
+                if (!selectedStationId || !data.some((s) => s.stationId === selectedStationId)) {
+                    if (data && data.length > 0) {
+                        const first = data[0];
+                        setSelectedStationId(first.stationId);
+                        handleInputChange("pickupLocation", first.stationName);
+                    }
+                } else {
+                    // ensure pickupLocation string syncs with selectedStationId
+                    const found = data.find((s) => s.stationId === selectedStationId);
+                    if (found) handleInputChange("pickupLocation", found.stationName);
+                }
+            } catch (err) {
+                console.error("Lỗi khi lấy stations:", err);
+            }
+        };
+
+        fetchStations();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [passedCar, carId]);
+
+    // NEW: when user picks a different station from select
+    const handleStationSelect = (e) => {
+        const id = parseInt(e.target.value, 10);
+        setSelectedStationId(id);
+        const found = stations.find((s) => s.stationId === id);
+        if (found) handleInputChange("pickupLocation", found.stationName);
     };
 
     // NEW: calculate days/hours/minutes between pickup and return
@@ -199,11 +235,9 @@ export default function BookingPage() {
             return { days: 0, hours: 0, totalHours: 0 };
         }
         const totalHoursFloat = diffMs / (1000 * 60 * 60);
-        // Ensure at least 1 hour
         const totalHours = Math.max(1, totalHoursFloat);
         let days = Math.floor(totalHours / 24);
         let hours = Math.floor(totalHours - days * 24);
-        // handle case hours === 24 (rare due rounding) -> increment day
         if (hours >= 24) {
             days += Math.floor(hours / 24);
             hours = hours % 24;
@@ -212,28 +246,24 @@ export default function BookingPage() {
         return { days, hours, totalHours: roundedTotalHours };
     };
 
-    // NEW: calculate totals by hourly conversion
     const calculateTotalsByHours = () => {
         const { days, hours, totalHours } = calculateDaysHours();
         const dailyPrice = bookingPrice;
         const hourlyRate = dailyPrice / 24;
-        // Compute total rental by multiplying hourlyRate * totalHours
         const totalRental = Math.round(hourlyRate * totalHours);
         const deposit = Math.round(totalRental * 0.3);
-        const totalToPay = deposit; // same as previous behavior (pay deposit)
+        const totalToPay = deposit;
         return { dailyPrice, days, hours, totalHours, hourlyRate, totalRental, deposit, totalToPay };
     };
 
     const totals = calculateTotalsByHours();
-
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p);
 
-    // Booking / navigation logic unchanged from original
     const makeFullBooking = (apiResponse = null) => ({
         bookingPayload: {
             userId: storedUser.id,
             vehicleModelId: passedCar?.id || parseInt(carId),
-            stationId: passedCar?.stationId || carData.stationId,
+            stationId: selectedStationId || passedCar?.stationId || carData.stationId,
             startTime: formData.pickupDateTime,
             expectedReturnTime: formData.returnDateTime,
             deposit: totals.deposit,
@@ -256,13 +286,13 @@ export default function BookingPage() {
                 name: fullBooking.user?.name,
                 email: fullBooking.user?.email,
                 phone: fullBooking.user?.phone,
-                address: fullBooking.user?.address || '',
+                address: fullBooking.user?.address || "",
             },
             car: {
                 id: fullBooking.carData?.id,
                 name: fullBooking.carData?.name,
-                licensePlate: fullBooking.carData?.licensePlate || '---',
-                color: fullBooking.carData?.color || '',
+                licensePlate: fullBooking.carData?.licensePlate || "---",
+                color: fullBooking.carData?.color || "",
                 price: fullBooking.totals?.dailyPrice,
                 rentalDays: `${fullBooking.totals?.days} ngày ${fullBooking.totals?.hours} giờ`,
                 totalAmount: fullBooking.totals?.totalRental,
@@ -272,7 +302,7 @@ export default function BookingPage() {
                 startDate: fullBooking.bookingForm?.pickupDateTime,
                 endDate: fullBooking.bookingForm?.returnDateTime,
                 pickupLocation: fullBooking.bookingForm?.pickupLocation || fullBooking.carData?.stationName,
-            }
+            },
         };
 
         return {
@@ -281,7 +311,7 @@ export default function BookingPage() {
                 bookingForm: fullBooking.bookingForm,
                 bookingPayload: fullBooking.bookingPayload,
                 meta: { forwardedAt: new Date().toISOString() },
-            }
+            },
         };
     };
 
@@ -290,23 +320,38 @@ export default function BookingPage() {
         const payload = {
             userId: storedUser.id,
             vehicleModelId: passedCar?.id || parseInt(carId),
-            stationId: passedCar?.stationId || carData.stationId,
+            stationId: selectedStationId || passedCar?.stationId || carData.stationId,
             startTime: formData.pickupDateTime,
             expectedReturnTime: formData.returnDateTime,
             deposit: totals.deposit,
         };
 
+        console.debug("[Booking] payload:", payload);
+
         try {
             const response = await fetch("http://localhost:8084/EVRentalSystem/api/user/booking", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(payload),
             });
 
-            if (!response.ok) throw new Error("Booking failed");
+            if (!response.ok) {
+                let errText = "";
+                try {
+                    const errJson = await response.json();
+                    errText = errJson?.message || JSON.stringify(errJson);
+                } catch (parseErr) {
+                    errText = await response.text().catch(() => `HTTP ${response.status}`);
+                }
+                console.error("[Booking] failed response:", errText);
+                showError(`Đặt xe thất bại: ${errText}`);
+                setIsBooking(false);
+                return;
+            }
 
             const data = await response.json();
-
             const fullBooking = makeFullBooking(data);
 
             const existingBookings = JSON.parse(localStorage.getItem("bookingList")) || [];
@@ -316,14 +361,11 @@ export default function BookingPage() {
 
             const contractSummary = buildContractSummary(fullBooking, data);
             navigate("/deposit-payment", {
-                state: {
-                    contractSummary,
-                },
+                state: { contractSummary },
             });
-
         } catch (error) {
-            console.error("Lỗi khi đặt xe:", error);
-            showError("Đặt xe thất bại! Vui lòng thử lại.");
+            console.error("Lỗi khi đặt xe (exception):", error);
+            showError("Đặt xe thất bại! Vui lòng thử lại. (Xem console để biết chi tiết)");
         } finally {
             setIsBooking(false);
         }
@@ -340,11 +382,17 @@ export default function BookingPage() {
         });
     };
 
-    // min / max attributes for inputs
     const minPickup = formatDateTimeLocal(getNow());
     const maxPickup = formatDateTimeLocal(addDays(getNow(), 5));
-    const minReturnAttr = formData.pickupDateTime; // return must be >= pickup
+    const minReturnAttr = formData.pickupDateTime;
     const maxReturnAttr = formatDateTimeLocal(addDays(new Date(formData.pickupDateTime), 30));
+
+    // Resolve pickup station display name (from selectedStationId)
+    const pickupStationName =
+        stations.find((s) => s.stationId === selectedStationId)?.stationName ||
+        formData.pickupLocation ||
+        passedCar?.stationName ||
+        carData.stationName;
 
     return (
         <div className="booking-page">
@@ -414,12 +462,26 @@ export default function BookingPage() {
 
                                 <div className="form-group">
                                     <label className="form-label">Địa điểm nhận xe</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={pickupStation || formData.pickupLocation}
-                                        readOnly
-                                    />
+
+                                    {/* Select populated from stations API */}
+                                    <div className="form-select-wrapper">
+                                        <select
+                                            className="form-select"
+                                            value={selectedStationId ?? ""}
+                                            onChange={handleStationSelect}
+                                        >
+                                            {/* If no stations, still show fallback single option */}
+                                            {stations && stations.length > 0 ? (
+                                                stations.map((s) => (
+                                                    <option key={s.vehicleDetailId} value={s.stationId}>
+                                                        {s.stationName}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option value={carData.stationId}>{carData.stationName}</option>
+                                            )}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -432,16 +494,30 @@ export default function BookingPage() {
 
                                 <div className="car-info">
                                     <h3 className="car-name">{bookingName}</h3>
-                                    <p className="car-location">{pickupStation}</p>
+                                    <p className="car-location">{pickupStationName}</p>
                                 </div>
 
-
                                 <div className="cost-summary">
-                                    <div className="cost-item"><span className="cost-label">Giá thuê/ngày:</span><span className="cost-value">{formatPrice(totals.dailyPrice)}₫</span></div>
-                                    <div className="cost-item"><span className="cost-label">Số ngày thuê:</span><span className="cost-value">{totals.days} ngày {totals.hours} giờ</span></div>
-                                    <div className="cost-item"><span className="cost-label">Tổng tiền thuê:</span><span className="cost-value">{formatPrice(totals.totalRental)}₫</span></div>
-                                    <div className="cost-item"><span className="cost-label">Đặt cọc (30%):</span><span className="cost-value">{formatPrice(totals.deposit)}₫</span></div>
-                                    <div className="cost-item total-cost"><span className="cost-label">Tổng tiền cọc cần thanh toán:</span><span className="cost-value">{formatPrice(totals.totalToPay)} VNĐ</span></div>
+                                    <div className="cost-item">
+                                        <span className="cost-label">Giá thuê/ngày:</span>
+                                        <span className="cost-value">{formatPrice(totals.dailyPrice)}₫</span>
+                                    </div>
+                                    <div className="cost-item">
+                                        <span className="cost-label">Số ngày thuê:</span>
+                                        <span className="cost-value">{totals.days} ngày {totals.hours} giờ</span>
+                                    </div>
+                                    <div className="cost-item">
+                                        <span className="cost-label">Tổng tiền thuê:</span>
+                                        <span className="cost-value">{formatPrice(totals.totalRental)}₫</span>
+                                    </div>
+                                    <div className="cost-item">
+                                        <span className="cost-label">Đặt cọc (30%):</span>
+                                        <span className="cost-value">{formatPrice(totals.deposit)}₫</span>
+                                    </div>
+                                    <div className="cost-item total-cost">
+                                        <span className="cost-label">Tổng tiền cọc cần thanh toán:</span>
+                                        <span className="cost-value">{formatPrice(totals.totalToPay)} VNĐ</span>
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: 12 }}>
@@ -452,7 +528,6 @@ export default function BookingPage() {
                                     >
                                         {isBooking ? (<><span className="spinner"></span>Đang xử lý...</>) : ("Thanh toán cọc")}
                                     </button>
-
                                 </div>
 
                             </div>
@@ -460,7 +535,6 @@ export default function BookingPage() {
                     </div>
                 </div>
 
-                {/* Error overlay */}
                 {errorOverlay.visible && (
                     <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999}}>
                         <div style={{background: '#fff', padding: 20, borderRadius: 8, width: 'min(420px, 90%)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'}}>
