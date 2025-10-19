@@ -1,8 +1,10 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.entity.VehicleModel;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
+import com.evrental.evrentalsystem.repository.VehicleModelRepository;
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
 import com.evrental.evrentalsystem.response.vehicle.VehicleWithIdResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,26 +17,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VehicleService {
     private final VehicleDetailRepository vehicleDetailRepository;
+    private final VehicleModelRepository vehicleModelRepository;
     private final StationRepository stationRepository;
 
     //Hàm này dùng để lấy các danh sách xe có sẵn khi nhấn ở interface.
     public List<VehicleDetailResponse> getAvailableVehicles() {
-        List<VehicleDetail> vehicles = vehicleDetailRepository.findByVehicleModelStatus("AVAILABLE");
-        return vehicles.stream().map(v -> new VehicleDetailResponse(
-                v.getId(),
-                v.getVehicleModel().getVehicleId(),
-                v.getVehicleModel().getBrand(),
-                v.getVehicleModel().getModel(),
-                v.getVehicleModel().getColor(),
-                v.getBatteryCapacity(),
-                v.getStatus(),
-                v.getOdo(),
-                v.getPicture(),
-                v.getStation().getStationId(),
-                v.getStation().getStationName(),
-                v.getStation().getAddress(),
-                v.getVehicleModel().getPrice()
-        )).collect(Collectors.toList());
+        List<VehicleModel> models = vehicleModelRepository.findAll();
+
+        return models.stream().map(m -> {
+            long count = vehicleDetailRepository.countByVehicleModel_VehicleIdAndStatus(m.getVehicleId(), "AVAILABLE");
+            return new VehicleDetailResponse(
+                    m.getVehicleId(),
+                    m.getBrand(),
+                    m.getModel(),
+                    m.getPrice(),
+                    m.getSeats(),
+                    count
+            );
+        }).collect(Collectors.toList());
     }
 //
     public VehicleWithIdResponse getVehicleFullDetail(Integer id) {
@@ -45,7 +45,7 @@ public class VehicleService {
         // VehicleDetail
         res.setId(v.getId());
         res.setLicensePlate(v.getLicensePlate());
-        res.setColor(v.getVehicleModel().getColor());
+        res.setColor(v.getColor());
         res.setBatteryCapacity(v.getBatteryCapacity());
         res.setStatus(v.getStatus());
         res.setOdo(v.getOdo());

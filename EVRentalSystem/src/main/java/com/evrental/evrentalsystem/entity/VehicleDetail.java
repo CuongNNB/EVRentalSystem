@@ -29,6 +29,5 @@ public class VehicleDetail {
     private Integer odo;
     private String picture;
     private String status;
-
-
+    private String color;
 }

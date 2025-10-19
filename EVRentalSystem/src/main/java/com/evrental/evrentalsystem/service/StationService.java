@@ -41,7 +41,7 @@ public class StationService {
                 .model(v.getVehicleModel().getModel())
                 .price(v.getVehicleModel().getPrice())
                 .seats(v.getVehicleModel().getSeats())
-                .color(v.getVehicleModel().getColor())
+                .color(v.getColor())
                 .batteryCapacity(v.getBatteryCapacity())
                 .odo(v.getOdo())
                 .picture(v.getPicture())

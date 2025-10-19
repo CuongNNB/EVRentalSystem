@@ -50,7 +50,7 @@ public class AdminService {
                 new FixingVehicleResponse.VehicleInfo(
                         v.getId(),
                         v.getLicensePlate(),
-                        v.getVehicleModel().getColor(),
+                        v.getColor(),
                         v.getBatteryCapacity(),
                         v.getVehicleModel().getModel(),
                         v.getStatus()

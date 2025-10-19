@@ -20,8 +20,7 @@ public class VehicleModel {
     private String model;  // Mẫu xe
     private Double price;  // Giá xe
     private Integer seats;  // Số ghế
-    private String color;
-    // Một VehicleModel có thể có nhiều VehicleDetail
+
     @OneToMany(mappedBy = "vehicleModel")
     private List<VehicleDetail> vehicleDetails;  // Liên kết với VehicleDetail
 }

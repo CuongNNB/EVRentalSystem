@@ -127,10 +127,10 @@ public class    BookingService {
             dto.setVehicleModel(model.getModel());
             dto.setBrand(model.getBrand());
             dto.setSeats(model.getSeats());
-            dto.setColor(model.getColor());
         }
 
         if (detail != null) {
+            dto.setColor(detail.getColor());
             dto.setBatteryCapacity(detail.getBatteryCapacity());
             dto.setOdo(detail.getOdo());
             dto.setLicensePlate(detail.getLicensePlate());

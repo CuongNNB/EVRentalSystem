@@ -8,17 +8,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VehicleDetailResponse {
-    private Integer id;
     private Integer vehicleModelId;
     private String brand;
     private String model;
-    private String color;
-    private String batteryCapacity;
-    private String status;
-    private Integer odo;
-    private String picture;
-    private Integer stationId;
-    private String stationName;
-    private String stationAddress;
-    private double price; //
+    private Double price;
+    private Integer seats;
+    private Long availableCount;
 }

@@ -29,8 +29,8 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     @Query("SELECT COUNT(v) FROM VehicleDetail v WHERE v.station.stationId = :stationId AND v.status = 'RENTED'")
     Long countRentedVehiclesByStationId(@Param("stationId") Integer stationId);
 
-    VehicleDetail findByLicensePlate(String licensePlate);
-
+    // Đếm số VehicleDetail của một vehicleId với status cho trước
+    long countByVehicleModel_VehicleIdAndStatus(Integer vehicleId, String status);
 
     @Query("""
         SELECT v FROM VehicleDetail v
