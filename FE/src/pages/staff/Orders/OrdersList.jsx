@@ -977,8 +977,9 @@ const OrdersList = () => {
             : "Đã bàn giao xe cho khách (tạm thời do lỗi kết nối, vui lòng kiểm tra lại).";
           const cachedSelection = getCachedHandoverSelection(orderSnapshot.id);
           const vehicleId =
-            resolveVehicleDetailId(orderSnapshot.raw) ||
-            cachedSelection?.vehicleId;
+            cachedSelection?.vehicle?.id ||
+            cachedSelection?.vehicleId ||
+            resolveVehicleDetailId(orderSnapshot.raw);
           const previousVehicleStatus = cachedSelection?.vehicleStatus || "UNKNOWN";
           if (!vehicleId) {
             setConnectionState({

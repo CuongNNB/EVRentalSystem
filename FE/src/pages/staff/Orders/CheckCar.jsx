@@ -168,10 +168,27 @@ const CheckCar = () => {
     return;
   }
 
-
   setIsSending(true);
 
   try {
+    // 1) Update license plate for booking
+    if (vehicleInfo?.plate) {
+      try {
+        await api.post(`/api/bookings/${encodeURIComponent(bookingId)}`, null, {
+          params: { licensePlate: vehicleInfo.plate },
+        });
+        console.log("✅ Cập nhật biển số thành công:", vehicleInfo.plate);
+      } catch (plateErr) {
+        console.error("Không thể cập nhật biển số", plateErr);
+        setErrorMessage("Không thể cập nhật biển số cho đơn. Vui lòng thử lại.");
+        setIsSending(false);
+        return;
+      }
+    }
+
+    // Vehicle status will be updated in OrdersList when "Bàn giao xe" button is clicked
+
+    // 3) Continue creating inspections
     let successCount = 0;
     let failCount = 0;
 
