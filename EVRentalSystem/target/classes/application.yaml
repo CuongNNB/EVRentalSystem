@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=EVRentalSystem;encrypt=false;trustServerCertificate=true
+    username: sa
+    password: 12345
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "4aesieunhan.work@gmail.com"
+    password: "sddgnlwdoazcctno"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 8084
+  servlet:
+    context-path: /EVRentalSystem
+
+
