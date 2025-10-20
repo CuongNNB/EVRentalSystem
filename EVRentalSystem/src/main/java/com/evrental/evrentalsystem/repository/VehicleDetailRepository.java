@@ -78,4 +78,6 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     """)
     List<VehicleDetail> findByVehicleModelId(@Param("vehicleModelId") Integer vehicleModelId);
     //End code here
+
+    VehicleDetail findByLicensePlate(String licensePlate);
 }

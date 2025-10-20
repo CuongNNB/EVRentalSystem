@@ -177,7 +177,8 @@ public class StaffService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
-            int odoBefore = booking.getVehicleDetail().getOdo();
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
+            int odoBefore =  Integer.parseInt(i.getDescription().replaceAll("[^0-9]", "")) ;
             int odoAfter = amount;
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
@@ -345,6 +346,13 @@ public class StaffService {
                     return response;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public void UpdateLicensePlateForBooking(int bookingId, String licensePlate){
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(licensePlate);
+        booking.setVehicleDetail(vd);
     }
 }
 

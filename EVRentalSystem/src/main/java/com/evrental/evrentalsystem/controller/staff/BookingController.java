@@ -87,12 +87,22 @@ public class BookingController {
     }
 
     //API lấy thông tin chi tiết booking theo bookingId
-    @GetMapping("/{bookingId}/booking-details")
+    @GetMapping("/booking-details")
     public ResponseEntity<ApiResponse<BookingDetailsByBookingResponse>> getBookingDetailsByBooking(
             @RequestParam int bookingId
     ) {
         BookingDetailsByBookingResponse response = staffService.getBookingDetailsByBooking(bookingId);
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin chi tiết đơn thuê thành công", response));
+    }
+
+    //API update xe cho booking
+    @PostMapping("/{bookingId}")
+    public ResponseEntity<ApiResponse<String>> updateLicensePlateForBooking(
+            @PathVariable int bookingId,
+            @RequestParam String licensePlate
+    ){
+        staffService.UpdateLicensePlateForBooking(bookingId,licensePlate);
+        return ResponseEntity.ok(ApiResponse.success("Update thành công", ""));
     }
 
 
