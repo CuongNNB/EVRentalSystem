@@ -1,21 +1,25 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
+import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.response.vehicle.UserInspectionDetailResponse;
 import com.evrental.evrentalsystem.entity.Inspection;
 import com.evrental.evrentalsystem.repository.InspectionRepository;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class InspectionService {
-    private final InspectionRepository inspectionRepository;
 
-    public InspectionService(InspectionRepository inspectionRepository) {
-        this.inspectionRepository = inspectionRepository;
-    }
+    private final InspectionRepository inspectionRepository;
+    private final BookingRepository bookingRepository;
 
     public List<UserInspectionDetailResponse> getInspectionsByBookingId(Integer bookingId) {
         List<Inspection> inspections = inspectionRepository.findByBooking_BookingId(bookingId);
@@ -64,7 +68,19 @@ public class InspectionService {
             inspection.setStatus(status);
         }
 
+        if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
+            bookingRepository.findById(bookingId).ifPresent(booking -> {
+                booking.setStatus(BookingStatus.Pending_Vehicle_Pickup.toString());
+                bookingRepository.save(booking);
+            });
+            int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+        }
         return inspectionRepository.saveAll(inspections);
+    }
+
+    @Transactional
+    public int deleteRejectedInspectionsByBookingId(Integer bookingId) {
+        return inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
     }
     //End code here
 }
