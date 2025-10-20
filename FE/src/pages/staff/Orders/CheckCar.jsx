@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import StaffSlideBar from "../../../components/staff/StaffSlideBar";
 import StaffHeader from "../../../components/staff/StaffHeader";
 import api from "../../../utils/api";
+import { carDatabase } from "../../../data/carData";
 import {
   DEFAULT_INSPECTION_STATUS,
   ROW_INSPECTION_SLOTS,
@@ -22,11 +23,36 @@ const CheckCar = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [additionalRows, setAdditionalRows] = useState([]);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [renterDetails, setRenterDetails] = useState(null);
 
-  // Lấy thông tin xe từ HandoverCar
+  // Lấy thông tin xe từ HandoverCar hoặc từ state
   const vehicleInfo = useMemo(() => {
     const state = location.state || {};
     return state.vehicle || null;
+  }, [location.state]);
+
+  const resolveVehicleImage = () => {
+    if (vehicleInfo?.imageUrl) return vehicleInfo.imageUrl;
+    const lower = (s) => String(s).trim().toLowerCase();
+    const candidates = [vehicleInfo?.name, bookingDetails?.vehicleModel].filter(Boolean);
+    for (const candidate of candidates) {
+      const candLower = lower(candidate);
+      for (const key of Object.keys(carDatabase)) {
+        const entry = carDatabase[key];
+        if (lower(entry?.name) === candLower && entry?.images?.length) {
+          return entry.images[0];
+        }
+      }
+    }
+    return "/carpic/1.jpg";
+  };
+
+  // Lấy booking và renter details từ state (đã fetch ở HandoverCar)
+  useMemo(() => {
+    const state = location.state || {};
+    if (state.bookingDetails) setBookingDetails(state.bookingDetails);
+    if (state.renterDetails) setRenterDetails(state.renterDetails);
   }, [location.state]);
 
   const staffId = useMemo(() => {
@@ -142,10 +168,27 @@ const CheckCar = () => {
     return;
   }
 
-
   setIsSending(true);
 
   try {
+    // 1) Update license plate for booking
+    if (vehicleInfo?.plate) {
+      try {
+        await api.post(`/api/bookings/${encodeURIComponent(bookingId)}`, null, {
+          params: { licensePlate: vehicleInfo.plate },
+        });
+        console.log("✅ Cập nhật biển số thành công:", vehicleInfo.plate);
+      } catch (plateErr) {
+        console.error("Không thể cập nhật biển số", plateErr);
+        setErrorMessage("Không thể cập nhật biển số cho đơn. Vui lòng thử lại.");
+        setIsSending(false);
+        return;
+      }
+    }
+
+    // Vehicle status will be updated in OrdersList when "Bàn giao xe" button is clicked
+
+    // 3) Continue creating inspections
     let successCount = 0;
     let failCount = 0;
 
@@ -306,6 +349,78 @@ const CheckCar = () => {
               </div>
             )}
 
+            {/* Thông tin người thuê */}
+            {renterDetails && (
+              <section className="return-check__vehicle-info">
+                <header className="return-check__vehicle-header">
+                  <h2>Thông tin người thuê</h2>
+                </header>
+                <div className="return-check__vehicle-details">
+                  <div className="return-check__vehicle-card">
+                    <dl className="return-check__vehicle-specs">
+                      <div>
+                        <dt>Họ tên</dt>
+                        <dd>{renterDetails.fullName || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Email</dt>
+                        <dd>{renterDetails.email || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Số điện thoại</dt>
+                        <dd>{renterDetails.phoneNumber || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Giấy phép lái xe</dt>
+                        <dd>{renterDetails.drivingLicense || "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Thông tin booking */}
+            {bookingDetails && (
+              <section className="return-check__vehicle-info">
+                <header className="return-check__vehicle-header">
+                  <h2>Chi tiết đơn thuê</h2>
+                </header>
+                <div className="return-check__vehicle-details">
+                  <div className="return-check__vehicle-card">
+                    <dl className="return-check__vehicle-specs">
+                      <div>
+                        <dt>Mẫu xe</dt>
+                        <dd>{bookingDetails.vehicleModel || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Ngày thuê</dt>
+                        <dd>
+                          {bookingDetails.pickupDate || "—"}
+                          {bookingDetails.pickupTime ? ` • ${bookingDetails.pickupTime}` : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Ngày trả</dt>
+                        <dd>
+                          {bookingDetails.dropoffDate || "—"}
+                          {bookingDetails.dropoffTime ? ` • ${bookingDetails.dropoffTime}` : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Trạng thái</dt>
+                        <dd>{bookingDetails.status || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Tổng tiền</dt>
+                        <dd>{bookingDetails.totalPrice ? `${bookingDetails.totalPrice.toLocaleString('vi-VN')} ₫` : "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Thông tin xe đã chọn */}
             {vehicleInfo && (
               <section className="return-check__vehicle-info">
@@ -314,8 +429,13 @@ const CheckCar = () => {
                 </header>
                 <div className="return-check__vehicle-details">
                   <div className="return-check__vehicle-card">
-                    <div className="return-check__vehicle-preview">
-                      <span className="return-check__vehicle-icon" aria-hidden="true">🚗</span>
+                    <div className="return-check__vehicle-preview" style={{ minWidth: 180 }}>
+                      <img
+                        src={resolveVehicleImage()}
+                        alt={vehicleInfo?.name || "Vehicle"}
+                        style={{ width: 160, height: 100, objectFit: "cover", borderRadius: 8 }}
+                        onError={(e) => { e.currentTarget.src = "/carpic/1.jpg"; }}
+                      />
                       <strong>{vehicleInfo.plate || "—"}</strong>
                     </div>
                     <dl className="return-check__vehicle-specs">

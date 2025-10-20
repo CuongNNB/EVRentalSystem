@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -178,12 +179,30 @@ public class StaffService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
             Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
-            int odoBefore =  Integer.parseInt(i.getDescription().replaceAll("[^0-9]", "")) ;
-            int odoAfter = amount;
+            if (i == null) {
+                log.warn("⚠️ Không tìm thấy inspection Odometer cho booking {}", booking.getBookingId());
+                return false;
+            }
+
+            // 2️⃣ Parse mô tả (description) để lấy số km trước khi thuê
+            int odoBefore = Integer.parseInt(i.getDescription().replaceAll("[^0-9]", ""));
+            int odoAfter = amount; // amount bạn truyền vào chính là km hiện tại (sau khi khách trả)
+            log.info("📏 Odo trước: {} km | Odo sau: {} km", odoBefore, odoAfter);
+
+            // 3️⃣ Tính tổng thời gian thuê
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
+            log.info("⏱️ Thời gian thuê: {} phút (~{} giờ)", minutes, rentingHours);
+
+            // 4️⃣ Tính tổng số km cho phép
             int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
-            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
+            log.info("✅ Tổng quãng đường cho phép: {} km ({} km/h)",
+                    totalAllowedOdo, Enum.Allowed_distance_per_hour.getValue());
+
+            // 5️⃣ Lấy giá xe theo giờ
+            double pricePerHour = booking.getVehicleModel().getPrice() / 24.0;
+            log.info("💰 Giá thuê theo giờ: {} VND/giờ (Giá ngày = {})", pricePerHour, booking.getVehicleModel().getPrice());
+
             if(totalAllowedOdo < odoAfter){
                 try {
                     AdditionalFee af = new AdditionalFee();
@@ -212,7 +231,7 @@ public class StaffService {
                     af.setBooking(booking);
                     af.setFeeName(feeName.name());
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
-                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue();
+                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
@@ -348,11 +367,13 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void UpdateLicensePlateForBooking(int bookingId, String licensePlate){
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(licensePlate);
         booking.setVehicleDetail(vd);
+        bookingRepository.save(booking);
     }
 }
 

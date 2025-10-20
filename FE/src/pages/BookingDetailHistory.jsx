@@ -232,7 +232,15 @@ const BookingDetailHistory = () => {
     const handleRejectConfirm = async () => {
         setRejectModalOpen(false);
         if (!normalized.bookingId) return;
-        await callUpdateStatusApi(normalized.bookingId, "REJECTED");
+
+        const result = await callUpdateStatusApi(normalized.bookingId, "REJECTED");
+
+        // ✅ Nếu API trả về success, reload lại trang
+        if (result.success) {
+            window.location.reload();
+        } else {
+            alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
+        }
     };
 
 
@@ -343,8 +351,7 @@ const BookingDetailHistory = () => {
                                 <button
                                     className="btn-pay"
                                     onClick={() => {
-                                        alert(`Thanh toán đơn #${normalized.bookingId} thành công!`);
-                                        console.log("Thanh toán booking:", normalized.bookingId);
+                                        navigate('/checkout', { state: { booking: normalized } });
                                     }}
                                 >
                                     Thanh toán
