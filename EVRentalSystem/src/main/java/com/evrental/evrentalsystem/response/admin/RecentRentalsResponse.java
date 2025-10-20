@@ -18,3 +18,4 @@ public class RecentRentalsResponse {
         private Long price;       // VND, có thể null
     }
 }
+//

@@ -12,3 +12,4 @@ public class RentedVehicleResponse {
     private String stationName;
     private Long rentedVehicleCount;
 }
+//

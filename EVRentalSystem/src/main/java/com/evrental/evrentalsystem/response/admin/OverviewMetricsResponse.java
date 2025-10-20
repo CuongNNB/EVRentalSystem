@@ -17,3 +17,4 @@ public class OverviewMetricsResponse {
         private Double rentals; // ví dụ: 0.052 => +5.2%
     }
 }
+//

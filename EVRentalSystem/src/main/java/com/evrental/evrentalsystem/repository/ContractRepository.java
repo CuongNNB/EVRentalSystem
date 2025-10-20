@@ -22,4 +22,11 @@ public interface ContractRepository extends JpaRepository<Contract, Integer> {
             c.contractId DESC
     """)
     List<Contract> findAllOrderedForUser(@Param("userId") Integer userId);
+
+    @Query("select c from Contract c order by c.signedAt desc")
+    List<Contract> findRecent(org.springframework.data.domain.Pageable pageable);
+
+    default List<Contract> findTopNByOrderBySignedAtDesc(int n) {
+        return findRecent(org.springframework.data.domain.PageRequest.of(0, n));
+    }
 }

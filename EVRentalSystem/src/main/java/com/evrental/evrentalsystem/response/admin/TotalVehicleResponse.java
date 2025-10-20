@@ -12,3 +12,4 @@ public class TotalVehicleResponse {
     private String stationName;
     private Long totalVehicles;
 }
+//

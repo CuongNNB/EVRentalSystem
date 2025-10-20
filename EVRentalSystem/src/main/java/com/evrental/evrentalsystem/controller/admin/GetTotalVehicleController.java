@@ -13,7 +13,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/admin")
-@CrossOrigin(origins = "*")
+@CrossOrigin(
+        origins = "http://localhost:8084",
+        allowCredentials = "false"
+)
 @Data
 @AllArgsConstructor
 public class GetTotalVehicleController {
@@ -35,7 +38,7 @@ public class GetTotalVehicleController {
         return adminService.getRentedVehiclesByStation(stationId);
     }
 
-    //API này dùng để lấy các list xe đang được sửa ở 1 trạm cụ tể
+    //API này dùng để lấy các list xe đang được sửa ở 1 trạm cụ thể
     //API: http://localhost:8084/EVRentalSystem/api/admin/fixing/{stationId}
     @GetMapping("/fixing/{stationId}")
     public ResponseEntity<FixingVehicleResponse> getFixingVehicles(@PathVariable Integer stationId) {

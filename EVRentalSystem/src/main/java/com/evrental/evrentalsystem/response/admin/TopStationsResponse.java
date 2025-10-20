@@ -16,3 +16,4 @@ public class TopStationsResponse {
         private double utilizationRate; // 0..1
     }
 }
+//

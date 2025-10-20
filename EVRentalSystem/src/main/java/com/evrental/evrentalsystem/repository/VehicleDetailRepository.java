@@ -80,4 +80,16 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     //End code here
 
     VehicleDetail findByLicensePlate(String licensePlate);
+//ADMIN REPOSITORY BELOW//
+    // Tổng theo station + status
+    @Query("""
+        select count(v) from VehicleDetail v
+        where v.station.stationId = :stationId and upper(v.status) = upper(:status)
+    """)
+    long countByStationIdAndStatus(@Param("stationId") Integer stationId,
+                                   @Param("status") String status);
+    // Tổng theo status (phục vụ KPI utilization toàn hệ thống)
+    @Query("select count(v) from VehicleDetail v where upper(v.status) = upper(:status)")
+    long countByStatus(@Param("status") String status);
+
 }
