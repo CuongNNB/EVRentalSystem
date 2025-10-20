@@ -4,6 +4,7 @@
         Pending_Deposit_Confirmation,
         Pending_Contract_Signing,
         Pending_Vehicle_Pickup,
+        Pending_renter_confirmation,
         Vehicle_Inspected_Before_Pickup,
         Vehicle_Pickup_Overdue,
         Currently_Renting,
