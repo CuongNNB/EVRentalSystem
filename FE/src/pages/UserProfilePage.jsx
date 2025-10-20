@@ -11,7 +11,7 @@ const UserProfilePage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [userData, setUserData] = useState(null);
-    const [activeSection, setActiveSection] = useState('overview');
+    const [activeSection, setActiveSection] = useState('personal');
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
