@@ -84,7 +84,10 @@ const HandoverCar = () => {
   const [vehicle, setVehicle] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
-
+    const [isLoadingBooking, setIsLoadingBooking] = useState(false);
+    const [bookingDetails, setBookingDetails] = useState(null);
+    const [renterDetails, setRenterDetails] = useState(null);
+// ...existing code...
   useEffect(() => {
     try {
       sessionStorage.removeItem("handover-order");
