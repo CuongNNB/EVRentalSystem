@@ -14,7 +14,8 @@ const AdminGuard = () => {
   }
 
   const roles = Array.isArray(user?.roles) ? user.roles : (user?.role ? [user.role] : [])
-  const isAdmin = roles.includes('ADMIN')
+  const rolesNorm = roles.map(r => String(r).toUpperCase())
+  const isAdmin = rolesNorm.includes('ADMIN')
 
   return isAdmin ? <Outlet /> : <Navigate to="/403" replace />
 }
