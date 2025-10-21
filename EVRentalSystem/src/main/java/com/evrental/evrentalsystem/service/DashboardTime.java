@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 public final class DashboardTime {
     public static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     public static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter ISO_LDT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private DashboardTime(){}
 
@@ -27,7 +28,10 @@ public final class DashboardTime {
         return Duration.between(s.atStartOfDay(), e.plusDays(1).atStartOfDay()).toDays();
     }
 
-    public static String iso(Instant instant) { return instant == null ? null : instant.toString(); }
+    /** Trả ISO_LOCAL_DATE_TIME (ví dụ: 2025-10-20T07:55:58.231947100) */
+    public static String iso(LocalDateTime ldt) {
+        return (ldt == null) ? null : ISO_LDT.format(ldt);
+    }
 
     public static Double pctDelta(Number prev, Number curr) {
         double p = prev == null ? 0.0 : prev.doubleValue();

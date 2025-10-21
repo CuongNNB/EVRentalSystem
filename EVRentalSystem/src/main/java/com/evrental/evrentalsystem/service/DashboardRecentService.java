@@ -35,12 +35,10 @@ public class DashboardRecentService {
                     ? b.getRenter().getFullName()
                     : "";
 
-            // Mã xe/biển số: ưu tiên cột ở Booking, fallback VehicleDetail nếu có
-            String vehicleCode = (b.getLicensePlate() != null && !b.getLicensePlate().isBlank())
-                    ? b.getLicensePlate()
-                    : (b.getVehicleDetail() != null && b.getVehicleDetail().getLicensePlate() != null
+            // Mã xe / biển số: lấy từ VehicleDetail
+            String vehicleCode = (b.getVehicleDetail() != null && b.getVehicleDetail().getLicensePlate() != null)
                     ? b.getVehicleDetail().getLicensePlate()
-                    : "");
+                    : "";
 
             // Thời gian: LocalDateTime -> chuỗi ISO đơn giản
             String startTime = b.getStartTime() != null ? b.getStartTime().toString() : null;
