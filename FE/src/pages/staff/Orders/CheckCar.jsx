@@ -245,13 +245,7 @@ const CheckCar = () => {
           formData.append("partName", partName);
           formData.append("picture", blob, "placeholder.png");
           
-          // Thêm đơn vị vào description
-          let description = descriptions[slotId].trim();
-          if (slotId === 'odometer') {
-            description = description ? `${description} km` : '';
-          } else if (slotId === 'battery') {
-            description = description ? `${description}%` : '';
-          }
+         
           
           formData.append("description", description);
           formData.append("staffId", staffId);
