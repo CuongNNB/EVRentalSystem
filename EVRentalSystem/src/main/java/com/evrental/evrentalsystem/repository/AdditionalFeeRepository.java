@@ -16,5 +16,6 @@ public interface AdditionalFeeRepository extends JpaRepository<AdditionalFee, In
 
     default List<AdditionalFee> findTopNByOrderByCreatedAtDesc(int n) {
         return findRecent(org.springframework.data.domain.PageRequest.of(0, n));
+
     }
 }
