@@ -5,7 +5,6 @@ import com.evrental.evrentalsystem.response.admin.ActivityFeedResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -27,7 +26,7 @@ public class DashboardActivityService {
         // booking
         for (var b : bookingRepository.findTopNByOrderByCreatedAtDesc(top)) {
             items.add(new ActivityFeedResponse.Activity(
-                    iso(Instant.from(b.getCreatedAt())), "BOOKING",
+                    iso(b.getCreatedAt()), "BOOKING",
                     "Đơn thuê #" + b.getBookingId() + " được tạo"
             ));
         }
@@ -35,7 +34,7 @@ public class DashboardActivityService {
         // payment
         for (var p : paymentRepository.findTopNByOrderByPaidAtDesc(top)) {
             items.add(new ActivityFeedResponse.Activity(
-                    iso(Instant.from(p.getPaidAt())), "PAYMENT",
+                    iso(p.getPaidAt()), "PAYMENT",
                     "Thanh toán hoàn tất cho đơn #" + p.getBooking().getBookingId()
                             + ": " + p.getTotal() + " VND"
             ));
@@ -44,7 +43,7 @@ public class DashboardActivityService {
         // fee
         for (var f : additionalFeeRepository.findTopNByOrderByCreatedAtDesc(top)) {
             items.add(new ActivityFeedResponse.Activity(
-                    iso(Instant.from(f.getCreatedAt())), "FEE",
+                    iso(f.getCreatedAt()), "FEE",
                     "Phụ phí cho đơn #" + f.getBooking().getBookingId()
                             + ": " + f.getFeeName() + " (" + f.getAmount() + " VND)"
             ));
@@ -53,7 +52,7 @@ public class DashboardActivityService {
         // contract
         for (var c : contractRepository.findTopNByOrderBySignedAtDesc(top)) {
             items.add(new ActivityFeedResponse.Activity(
-                    iso(Instant.from(c.getSignedAt())), "CONTRACT",
+                    iso(c.getSignedAt()), "CONTRACT",
                     "Hợp đồng cho đơn #" + c.getBooking().getBookingId() + " được ký"
             ));
         }
@@ -61,16 +60,18 @@ public class DashboardActivityService {
         // report
         for (var r : reportRepository.findTopNByOrderByCreatedAtDesc(top)) {
             items.add(new ActivityFeedResponse.Activity(
-                    iso(Instant.from(r.getCreatedAt())), "REPORT",
+                    iso(r.getCreatedAt()), "REPORT",
                     "Báo cáo từ nhân viên #" + r.getStaff().getUserId()
                             + " về xe detail #" + r.getVehicleDetail().getId()
             ));
         }
 
-        items.sort(Comparator.comparing(ActivityFeedResponse.Activity::getTime).reversed());
-        if (items.size() > top) items = new ArrayList<>(items.subList(0, top));
+        items.sort(Comparator.comparing(ActivityFeedResponse.Activity::getTime,
+                Comparator.nullsLast(String::compareTo)).reversed());
+        if (items.size() > top) {
+            items = new ArrayList<>(items.subList(0, top));
+        }
 
         return new ActivityFeedResponse(items);
     }
-
 }
