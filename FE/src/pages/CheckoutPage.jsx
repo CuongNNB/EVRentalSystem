@@ -30,6 +30,9 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const [discountPercent, setDiscountPercent] = useState(0);
     const [couponApplied, setCouponApplied] = useState(null);
 
+    const [promotions, setPromotions] = useState([]); // danh sách promotion
+    const [promotionsLoading, setPromotionsLoading] = useState(false);
+
     const paymentMethods = [
         { id: 'bank-transfer', name: 'Chuyển khoản ngân hàng', description: 'Chuyển khoản qua ngân hàng trong nước', icon: CreditCard, color: '#10b981', qr: '/qrimage/bank_qr.png' },
         { id: 'momo', name: 'Ví MoMo', description: 'Thanh toán nhanh chóng qua ví MoMo', icon: Smartphone, color: '#d946ef', qr: '/qrimage/momo_qr.png' },
@@ -109,6 +112,31 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
         setSummary(fallback);
     }, [forwardedToUse, contractId]);
 
+    // Fetch danh sách promotions hợp lệ từ backend
+    useEffect(() => {
+        const fetchPromotions = async () => {
+            setPromotionsLoading(true);
+            try {
+                const resp = await fetch('http://localhost:8084/EVRentalSystem/api/promotions/valid', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!resp.ok) throw new Error(`Server trả về ${resp.status}`);
+                const data = await resp.json();
+                // Giả định data là array of PromotionResponse
+                setPromotions(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error('Lỗi fetch promotions:', err);
+                showToast('Không thể lấy danh sách mã giảm giá từ server', 'error');
+                setPromotions([]);
+            } finally {
+                setPromotionsLoading(false);
+            }
+        };
+
+        fetchPromotions();
+    }, []);
+
     const showToast = (message, type = 'info') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: '' }), 2500);
@@ -144,6 +172,20 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
         }
     };
 
+    // Format thời gian dạng DD/MM/YYYY, HH:mm
+    const formatDateTime = (datetime) => {
+        if (!datetime) return '—';
+        const date = new Date(datetime);
+        if (isNaN(date)) return '—';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year}, ${hours}:${minutes}`;
+    };
+
+
     const extraFeesSum = (summary?.extraFees || []).reduce((s, f) => s + (Number(f.amount ?? 0) || 0), 0);
     const depositAmount = Number(summary?.depositAmount ?? 0);
 
@@ -159,31 +201,68 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     // Tổng thanh toán = (Tổng giá thuê) + (Các phí phát sinh) - (tiền cọc) - (tiền giảm giá trên tổng giá thuê)
     const finalTotal = Math.round(Math.max(0, rentalTotal + extraFeesSum - depositAmount - discountAmount));
 
-    // Áp dụng mã giảm giá (mock: percent)
     const handleApplyCoupon = () => {
-        const code = (couponCode || '').trim().toUpperCase();
-        if (!code) {
+        const codeInput = (couponCode || '').trim().toUpperCase();
+        if (!codeInput) {
             setDiscountPercent(0);
             setCouponApplied(null);
             showToast('Vui lòng nhập mã giảm giá', 'error');
             return;
         }
 
-        const percentMap = {
-            'SAVE10': 10,
-            'SAVE15': 15,
-            'SAVE20': 20
-        };
-
-        if (percentMap[code]) {
-            const pct = percentMap[code];
-            setDiscountPercent(pct);
-            setCouponApplied({ code, percent: pct });
-            showToast(`Áp dụng mã ${code}: ${pct}% giảm trên tổng giá thuê`, 'success');
-        } else {
+        // Nếu đã áp dụng 1 mã, thì nút sẽ làm chức năng 'hủy bỏ' (xem phần UI)
+        if (couponApplied) {
+            // HỦY MÃ
             setDiscountPercent(0);
             setCouponApplied(null);
-            showToast('Mã không hợp lệ (mock). Ví dụ: SAVE10, SAVE15, SAVE20', 'error');
+            setCouponCode(''); // tùy chọn: xoá input sau hủy
+            showToast('Đã hủy mã giảm giá', 'info');
+            return;
+        }
+
+        // Tìm promotion khớp promoName (thử check promoName và cũng lùi -> promo.code nếu cần)
+        const found = promotions.find(p =>
+            (p.promoName && p.promoName.toString().toUpperCase() === codeInput) ||
+            (p.code && p.code.toString().toUpperCase() === codeInput)
+        );
+
+        if (!found) {
+            setDiscountPercent(0);
+            setCouponApplied(null);
+            showToast('Mã không tồn tại hoặc không hợp lệ', 'error');
+            return;
+        }
+
+        // kiểm tra trạng thái và thời gian: status === 'ACTIVE' và đang trong range startTime..endTime
+        try {
+            const now = new Date();
+            const start = found.startTime ? new Date(found.startTime) : null;
+            const end = found.endTime ? new Date(found.endTime) : null;
+            const statusOk = (found.status && found.status.toUpperCase() === 'ACTIVE');
+            const timeOk = (!start || now >= start) && (!end || now <= end);
+
+            if (!statusOk) {
+                showToast('Mã hiện không hoạt động', 'error');
+                return;
+            }
+            if (!timeOk) {
+                showToast('Mã đã hết hiệu lực hoặc chưa đến ngày áp dụng', 'error');
+                return;
+            }
+
+            // Áp dụng
+            const pct = Number(found.discountPercent || 0);
+            if (!pct || isNaN(pct)) {
+                showToast('Mã không có giá trị giảm hợp lệ', 'error');
+                return;
+            }
+
+            setDiscountPercent(pct);
+            setCouponApplied(found); // lưu toàn bộ đối tượng promotion
+            showToast(`Áp dụng mã ${found.promoName}: ${pct}% giảm`, 'success');
+        } catch (err) {
+            console.error(err);
+            showToast('Lỗi khi kiểm tra mã giảm giá', 'error');
         }
     };
 
@@ -284,17 +363,16 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                         <div className="summary-body">
                             <div className="summary-row">
                                 <div className="label"><Calendar style={{ marginRight: 8 }} />Ngày nhận xe</div>
-                                <div className="value">{summary.rental.startDate || '—'}</div>
+                                <div className="value">{formatDateTime(summary.rental.startDate)}</div>
                             </div>
 
                             <div className="summary-row">
                                 <div className="label"><Clock style={{ marginRight: 8 }} />Ngày trả xe</div>
-                                <div className="value">{summary.rental.endDate || '—'}</div>
+                                <div className="value">{formatDateTime(summary.rental.endDate)}</div>
                             </div>
-
                             <div className="summary-row">
                                 <div className="label"><MapPin style={{ marginRight: 8 }} />Địa điểm nhận xe</div>
-                                <div className="value">{summary.rental.pickupLocation || '—'}</div>
+                                <div className="value" style={{ fontSize: 12 }} >{summary.rental.pickupLocation || '—'}</div>
                             </div>
                             <div className="summary-row">
                                 <div className="label">Thời gian thuê</div>
@@ -326,28 +404,36 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                             <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <input
                                     type="text"
-                                    placeholder="Nhập mã giảm giá (SAVE10, SAVE15...)"
+                                    placeholder="Nhập mã giảm giá (nếu có)"
                                     value={couponCode}
                                     onChange={(e) => setCouponCode(e.target.value)}
                                     style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid #e6eef4', fontSize: 14 }}
+                                    disabled={!!couponApplied} // disable khi đã áp dụng
                                 />
                                 <button
                                     className="apply-btn"
                                     onClick={handleApplyCoupon}
-                                    disabled={!couponCode}
+                                    disabled={!couponCode && !couponApplied} // nếu rỗng và chưa apply => disable
+                                    style={{
+                                        padding: '10px 14px',
+                                        borderRadius: 8,
+                                        border: 'none',
+                                        background: couponApplied ? '#ef4444' : '#2563eb',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        cursor: 'pointer'
+                                    }}
                                 >
-                                    Áp dụng
+                                    {couponApplied ? 'Hủy bỏ' : (promotionsLoading ? 'Đang tải...' : 'Áp dụng')}
                                 </button>
                             </div>
 
                             {couponApplied && (
                                 <div style={{ marginTop: 8, fontSize: 13, color: '#065f46', fontWeight: 700 }}>
-                                    Mã áp dụng: {couponApplied.code} — {couponApplied.percent}% giảm trên tổng giá thuê
+                                    Mã áp dụng: {couponApplied.promoName} — {couponApplied.code}
                                 </div>
                             )}
                         </div>
-
-
                         <div className="total-row">
                             <div className="label">Giảm giá</div>
                             <div className="value" style={{ color: discountPercent ? '#065f46' : '#94a3b8' }}>-{formatPrice(discountAmount)}</div>
@@ -385,7 +471,7 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                             className="qr-confirm-btn"
                             onClick={() => { setShowQRModal(false); showToast('Đã (giả) hoàn tất thanh toán — demo', 'success'); }}
                         >
-                            Tôi đã thanh toán (demo)
+                            Tôi đã thanh toán
                         </button>
                     </div>
                 </div>

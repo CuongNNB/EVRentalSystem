@@ -13,6 +13,7 @@ import java.util.List;
 public class UserPromotionController {
 
     private final PromotionService promotionService;
+    //API: http://localhost:8084/EVRentalSystem/api/promotions/valid
     @GetMapping("/valid")
     public ResponseEntity<List<PromotionResponse>> getValidPromotions() {
         List<PromotionResponse> list = promotionService.getValidPromotions();

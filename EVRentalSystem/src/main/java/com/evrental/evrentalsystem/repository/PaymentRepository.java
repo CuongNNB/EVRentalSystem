@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
 
@@ -41,4 +42,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     default List<Payment> findTopNByOrderByPaidAtDesc(int n) {
         return findRecent(PageRequest.of(0, n));
     }
+
+    Optional<Payment> findByBookingId(Integer bookingId);
 }
