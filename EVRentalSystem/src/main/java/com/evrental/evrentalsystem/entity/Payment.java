@@ -22,9 +22,5 @@ public class Payment {
 
     private Double total;
 
-    @ManyToOne
-    @JoinColumn(name = "method_id", nullable = false)
-    private PaymentMethod paymentMethod;
-
     private LocalDateTime paidAt = LocalDateTime.now();
 }

@@ -89,7 +89,7 @@ const MyBookings = () => {
                 return 'status-blue'; // fallback
         }
     };
-//==================================================
+    //==================================================
 
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('ALL');
@@ -171,6 +171,8 @@ const MyBookings = () => {
                     bookingId: item.bookingId,
                     vehicleBrand: item.brand ?? item.vehicleBrand ?? '',
                     vehicleModel: item.vehicleModel ?? '',
+                    seats: item.seats ?? '',
+                    pricePerDay: item.price ?? 0.0,
                     licensePlate: item.licensePlate ?? '',
                     status: item.bookingStatus ?? item.bookingStatus ?? 'UNKNOWN',
                     stationName: item.stationName ?? '',
@@ -178,8 +180,8 @@ const MyBookings = () => {
                     // Map times (use startTime / expectedReturnTime fields from API)
                     startAt: item.startTime ?? item.createdAt ?? null,
                     endAt: item.expectedReturnTime ?? item.actualReturnTime ?? null,
+                    actualReturnTime: item.actualReturnTime ?? null,
                     // Pricing (API may not provide pricePerHour, extrasFee, totalPrice)
-                    pricePerHour: item.pricePerHour ?? 0,
                     extrasFee: item.extrasFee ?? 0,
                     deposit: item.deposit ?? 0,
                     totalPrice: item.deposit / 0.3,
@@ -187,6 +189,10 @@ const MyBookings = () => {
                     contractUrl: item.contractUrl ?? null,
                     invoiceUrl: item.invoiceUrl ?? null,
                     // keep original raw payload so we can forward the full response to detail page
+                    odo: item.odo,
+                    color: item.color,
+                    batteryCapacity: item.batteryCapacity,
+
                     raw: item
                 }));
 
@@ -353,8 +359,8 @@ const MyBookings = () => {
                                                 <p>{booking.licensePlate}</p>
                                             </div>
                                             <span className={`status-badge ${getStatusClass(booking.status)}`}>
-                        {getStatusText(booking.status)}
-                      </span>
+                                                {getStatusText(booking.status)}
+                                            </span>
                                         </div>
 
                                         {/* Station */}
@@ -387,8 +393,8 @@ const MyBookings = () => {
                                         <div className="card-price">
                                             <span className="price-label">Tổng tiền:</span>
                                             <span className="price-amount">
-                        {fmtVND(booking.totalPrice)}
-                      </span>
+                                                {fmtVND(booking.totalPrice)}
+                                            </span>
                                         </div>
 
                                         {/* View Details Button */}

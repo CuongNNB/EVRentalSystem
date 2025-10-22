@@ -111,28 +111,64 @@ const ExtraFee = () => {
         setSubmitting(true);
 
         try {
-            // 1. Tạo các additional fee
-            const feePromises = fees.map(fee => {
-                let amount = fee.amount;
+            // 1. Tạo các additional fee - track từng kết quả riêng biệt
+            console.log(`🔄 Đang tạo ${fees.length} phí phát sinh...`, fees);
+            
+            const feeResults = await Promise.allSettled(
+                fees.map(async (fee, index) => {
+                    let amount = fee.amount;
 
-                // For Over_Mileage_Fee and Fuel_Fee, use special values
-                if (fee.type === "over_mileage") {
-                    amount = fee.odometer; // Backend will calculate the actual fee
-                } else if (fee.type === "fuel") {
-                    amount = fee.batteryLevel; // Backend will calculate the actual fee
+                    // For Over_Mileage_Fee and Fuel_Fee, use special values
+                    if (fee.type === "over_mileage") {
+                        amount = fee.odometer; // Backend will calculate the actual fee
+                    } else if (fee.type === "fuel") {
+                        amount = fee.batteryLevel; // Backend will calculate the actual fee
+                    }
+
+                    const params = new URLSearchParams({
+                        bookingId: orderId,
+                        feeName: mapTypeToEnum(fee.type),
+                        amount: amount,
+                        desc: fee.description
+                    });
+
+                    console.log(`📤 Gửi phí #${index + 1}:`, {
+                        type: fee.type,
+                        feeName: mapTypeToEnum(fee.type),
+                        amount,
+                        desc: fee.description
+                    });
+
+                    return api.post(`/api/additional-fee/create?${params.toString()}`);
+                })
+            );
+
+            // Kiểm tra kết quả
+            const successCount = feeResults.filter(r => r.status === 'fulfilled').length;
+            const failedCount = feeResults.filter(r => r.status === 'rejected').length;
+            
+            console.log(`✅ Thành công: ${successCount}/${fees.length} phí`);
+            console.log(`❌ Thất bại: ${failedCount}/${fees.length} phí`);
+            
+            // Log chi tiết các fee thất bại
+            feeResults.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    console.error(`❌ Phí #${index + 1} thất bại:`, result.reason?.response?.data || result.reason);
                 }
-
-                const params = new URLSearchParams({
-                    bookingId: orderId,
-                    feeName: mapTypeToEnum(fee.type),
-                    amount: amount,
-                    desc: fee.description
-                });
-
-                return api.post(`/api/additional-fee/create?${params.toString()}`);
             });
 
-            await Promise.all(feePromises);
+            if (failedCount > 0) {
+                const failedIndexes = feeResults
+                    .map((r, i) => r.status === 'rejected' ? i + 1 : null)
+                    .filter(i => i !== null);
+                
+                setSubmitting(false);
+                setToast({
+                    type: "error",
+                    message: `Không thể tạo ${failedCount}/${fees.length} phí phát sinh (phí số ${failedIndexes.join(', ')}). Một số phí có thể không đạt điều kiện (vd: chưa vượt quãng đường, pin không giảm).`,
+                });
+                return;
+            }
 
             // 2. Cập nhật trạng thái đơn hàng sang "Completed"
             await api.put(`/api/bookings/${orderId}/status`, null, {

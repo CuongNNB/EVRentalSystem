@@ -35,33 +35,63 @@ export default function Login() {
       { withCredentials: true }
     );
 
-    // Lấy dữ liệu từ response
-    const loginData = response.data?.data;
-    if (!loginData) {
-      setError("Không nhận được thông tin người dùng từ API");
-      return;
+    // Normalize payload from various backend shapes
+    let payload = null
+    try {
+      payload = response?.data?.data ?? response?.data ?? response
+    } catch (e) {
+      payload = null
     }
 
-    // 👉 Lưu toàn bộ thông tin user + token vào localStorage
-    localStorage.setItem("ev_user", JSON.stringify(loginData));
-    localStorage.setItem("ev_token", loginData.token);
+    // extract user and token from common shapes
+    let userObj = null
+    let tokenStr = null
 
-    // 👉 Cập nhật context (nếu có)
-    loginWithSession(loginData, loginData.token);
+    if (payload) {
+      if (payload.user && payload.token) {
+        userObj = payload.user
+        tokenStr = payload.token
+      } else if (payload.userData && payload.token) {
+        userObj = payload.userData
+        tokenStr = payload.token
+      } else if (payload.token && (payload.fullName || payload.username || payload.email)) {
+        userObj = { ...payload }
+        tokenStr = payload.token
+        delete userObj.token
+      } else if (payload.data && payload.data.user) {
+        userObj = payload.data.user
+        tokenStr = payload.data.token || payload.token
+      }
+    }
 
-    alert(`Xin chào ${loginData.fullName || loginData.username || "người dùng"}!`);
-    
-    // Kiểm tra role và điều hướng
-    if (loginData.role === "STAFF") {
-      // Tự động chuyển đến trang orders với stationId từ user data
-      navigate("/staff/orders");
+    if (!userObj || !tokenStr) {
+      console.error('Unexpected login response', response)
+      setError('Không nhận được thông tin user/token từ API')
+      return
+    }
+
+    // store and update context
+    localStorage.setItem('ev_user', JSON.stringify(userObj))
+    localStorage.setItem('ev_token', tokenStr)
+    loginWithSession && loginWithSession(userObj, tokenStr)
+
+    alert(`Xin chào ${userObj.fullName || userObj.username || userObj.name || 'người dùng'}!`)
+
+    // roles: support array or single string, case-insensitive
+    const roles = Array.isArray(userObj?.roles) ? userObj.roles : (userObj?.role ? [userObj.role] : [])
+    const rolesNorm = roles.map(r => String(r).toUpperCase())
+    console.debug('Login roles normalized:', rolesNorm)
+    if (rolesNorm.includes('ADMIN')) {
+      navigate('/admin', { replace: true })
+    } else if (rolesNorm.includes('STAFF')) {
+      navigate('/staff/orders', { replace: true })
     } else {
-      navigate("/dashboard");
+      navigate('/dashboard', { replace: true })
     }
 
   } catch (apiError) {
-    console.error("Login failed:", apiError);
-    setError("Đăng nhập thất bại, vui lòng kiểm tra lại.");
+    console.error('Login failed:', apiError)
+    setError('Đăng nhập thất bại, vui lòng kiểm tra lại.')
   }
 };
 
@@ -212,12 +242,26 @@ export default function Login() {
                     const data = await res.json()
                     console.log('Server auth response', data)
 
-                    // Lưu token và user vào localStorage
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // Lưu token và user (dùng cùng key ev_*)
+                    const userObj = data.user || data
+                    const tokenVal = data.token || data.accessToken || data.tokenValue
+                    localStorage.setItem('ev_user', JSON.stringify(userObj));
+                    if (tokenVal) localStorage.setItem('ev_token', tokenVal);
 
-                    alert(`Xin chào ${data.user.name}`)
-                    navigate('/dashboard')
+                    // cập nhật context nếu có
+                    try { loginWithSession && loginWithSession(userObj, tokenVal) } catch(e){}
+
+                    alert(`Xin chào ${userObj.name || userObj.fullName || userObj.username || ''}`)
+
+                    const roles = Array.isArray(userObj?.roles) ? userObj.roles : (userObj?.role ? [userObj.role] : [])
+                    const rolesNorm = roles.map(r => String(r).toUpperCase())
+                    if (rolesNorm.includes('ADMIN')) {
+                      navigate('/admin', { replace: true })
+                    } else if (rolesNorm.includes('STAFF')) {
+                      navigate('/staff/orders', { replace: true })
+                    } else {
+                      navigate('/dashboard', { replace: true })
+                    }
                   } catch (err) {
                     console.error('Google SSO error:', err)
                     alert('Đăng nhập Google thất bại: ' + (err.message || 'xảy ra lỗi'))

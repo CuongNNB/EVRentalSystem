@@ -1,464 +1,487 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useCheckout } from '../contexts/CheckoutContext';
-import { formatCurrency, formatDate, calculateDays } from '../utils/format';
+// CheckOutPage.jsx
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { CreditCard, Smartphone, Wallet, Shield, Check, Calendar, MapPin, Clock, X } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import './CheckoutPage.css';
+import './CheckoutPage.css'; // CSS mới của bạn
 
-const CheckoutPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { state, actions } = useCheckout();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showVoucherModal, setShowVoucherModal] = useState(false);
-//  Determine current step based on URL
-  // Mock data - in real app, this would come from route params or API
-  useEffect(() => {
-    if (!state.carInfo) {
-      actions.setCarInfo({
-        id: 'GV60-2023',
-        name: 'Genesis GV60 Performance',
-        image: '/anhxe/Genesis GV60 Performance.jpg',
-        year: 2023,
-        licensePlate: '30A-12345',
-        dailyPrice: 900000,
-        kmLimit: 200,
-        overKmFee: 2000
-      });
-    }
-    
-    if (!state.pickupDate) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const dayAfter = new Date();
-      dayAfter.setDate(dayAfter.getDate() + 3);
-      
-      actions.setDates(
-        tomorrow.toISOString(),
-        dayAfter.toISOString()
-      );
-    }
-    
-    if (!state.pickupLocation) {
-      actions.setLocations(
-        { id: 'HCM-Q1', name: 'Quận 1, TP.HCM', address: '123 Nguyễn Huệ, Q1, TP.HCM' },
-        { id: 'HCM-Q1', name: 'Quận 1, TP.HCM', address: '123 Nguyễn Huệ, Q1, TP.HCM' }
-      );
-    }
-  }, []);
+// NOTE: This component now supports two optional props:
+// - forwardedFromParent: object passed when embedded (if provided, it takes precedence over location.state)
+// - embedded: boolean; if true, Header/Footer are not rendered (useful when rendering inside a modal)
+const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
+    const { contractId } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const handleCustomerChange = (field, value) => {
-    actions.updateCustomer({ [field]: value });
-    actions.clearError(field);
-  };
+    // The booking detail is forwarded from BookingDetailHistory as location.state.detailBookingSummary
+    // But if parent passed forwardedFromParent, prefer that.
+    const forwarded = location?.state?.detailBookingSummary ?? null;
+    const forwardedToUse = forwardedFromParent ?? forwarded ?? null;
 
-  const handleDocumentUpload = (type, file) => {
-    if (file && file.size > 10 * 1024 * 1024) {
-      actions.setError(type, 'File không được vượt quá 10MB');
-      return;
-    }
-    actions.updateCustomerDocument(type, file);
-    actions.clearError(type);
-  };
+    const [selectedMethod, setSelectedMethod] = useState('');
+    const [summary, setSummary] = useState(null);
+    const [paying, setPaying] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
-  const handleAddonToggle = (addon) => {
-    actions.toggleAddon(addon);
-  };
+    // Coupon / discount (mock only, percent-based)
+    const [couponCode, setCouponCode] = useState('');
+    const [discountPercent, setDiscountPercent] = useState(0);
+    const [couponApplied, setCouponApplied] = useState(null);
 
-  const handleAddonQuantityChange = (addonId, quantity) => {
-    if (quantity <= 0) {
-      actions.toggleAddon({ id: addonId });
-    } else {
-      actions.updateAddonQuantity(addonId, quantity);
-    }
-  };
+    const [promotions, setPromotions] = useState([]); // danh sách promotion
+    const [promotionsLoading, setPromotionsLoading] = useState(false);
 
-  const handleVoucherApply = () => {
-    if (state.voucher) {
-      // Mock voucher validation
-      if (state.voucher === 'EV10') {
-        actions.setPricing({
-          ...state.pricing,
-          discount: 90000,
-          totalToday: state.pricing.totalToday - 90000
-        });
-      }
-    }
-  };
+    const paymentMethods = [
+        { id: 'bank-transfer', name: 'Chuyển khoản ngân hàng', description: 'Chuyển khoản qua ngân hàng trong nước', icon: CreditCard, color: '#10b981', qr: '/qrimage/bank_qr.png' },
+        { id: 'momo', name: 'Ví MoMo', description: 'Thanh toán nhanh chóng qua ví MoMo', icon: Smartphone, color: '#d946ef', qr: '/qrimage/momo_qr.png' },
+        { id: 'ewallet', name: 'Ví điện tử khác', description: 'ZaloPay, ShopeePay, ViettelPay, VNPAY', icon: Wallet, color: '#3b82f6', qr: '/qrimage/ewallet_qr.png' }
+    ];
 
-  const handlePayment = async () => {
-    if (!state.agreedToTerms) {
-      actions.setError('terms', 'Vui lòng đồng ý với điều khoản');
-      return;
-    }
+    useEffect(() => {
+        // Build summary from forwarded data if present; otherwise use fallback mock (so UI always shows something)
+        // --- Khi nhận forwarded detailBookingSummary, chuẩn hoá kĩ:
+        if (forwardedToUse) {
+            const totals = forwardedToUse.totals || {};
 
-    actions.setLoading({ payment: true });
-    
-    try {
-      // Mock payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Generate mock booking ID
-      const bookingId = Math.floor(Math.random() * 1000000);
-      navigate(`/checkout/success?bookingId=${bookingId}`);
-    } catch (error) {
-      actions.setError('payment', 'Thanh toán thất bại. Vui lòng thử lại.');
-    } finally {
-      actions.setLoading({ payment: false });
-    }
-  };
+            // Nếu có totalRental thì lấy trực tiếp, nếu không thì tính lại như cũ
+            const totalRental = Number(totals.totalRental ?? 0);
 
-  const addons = [
-    { id: 'child-seat', name: 'Ghế trẻ em', price: 50000, description: 'Ghế an toàn cho trẻ em' },
-    { id: 'insurance', name: 'Bảo hiểm mở rộng', price: 120000, description: 'Bảo hiểm toàn diện' },
-    { id: 'delivery', name: 'Giao xe tận nơi', price: 100000, description: 'Giao xe đến địa chỉ của bạn' },
-    { id: 'different-return', name: 'Thu xe khác điểm', price: 150000, description: 'Trả xe tại điểm khác' },
-    { id: 'charging-cable', name: 'Cáp sạc dự phòng', price: 30000, description: 'Cáp sạc bổ sung' }
-  ];
+            // Giá thuê/ngày fallback
+            const rawDaily = (typeof totals.dailyPrice !== 'undefined'
+                ? totals.dailyPrice
+                : (typeof totals.pricePerDay !== 'undefined'
+                    ? totals.pricePerDay
+                    : (typeof totals.pricePerHour !== 'undefined' ? totals.pricePerHour * 24 : 0)));
 
-  const days = state.pickupDate && state.dropoffDate 
-    ? calculateDays(state.pickupDate, state.dropoffDate) 
-    : 0;
+            const mapped = {
+                user: {
+                    name: forwardedToUse.user?.name ?? '',
+                    email: forwardedToUse.user?.email ?? '',
+                    phone: forwardedToUse.user?.phone ?? '',
+                    address: forwardedToUse.user?.address ?? ''
+                },
+                car: {
+                    name: forwardedToUse.carData?.name ?? '',
+                    licensePlate: forwardedToUse.carData?.licensePlate ?? ''
+                },
+                rental: {
+                    pickupLocation: forwardedToUse.bookingPayload?.pickupLocation ?? '',
+                    startDate: forwardedToUse.bookingPayload?.startTime ?? '',
+                    endDate: forwardedToUse.bookingPayload?.actualReturnTime ?? ''
+                },
+                pricePerDay: forwardedToUse.pricePerDay || 0,
+                depositAmount: Number(totals.deposit ?? 0),
+                totalRental: totalRental, // ✅ Thêm dòng này để lưu “Tiền dự tính phải trả”
+                contractCode: forwardedToUse.bookingId ?? contractId ?? null,
+                extraFees: Array.isArray(forwardedToUse.extraFees)
+                    ? forwardedToUse.extraFees.map(f => {
+                        const feeType = f.feeType || f.label || f.name || f.feeName;
+                        const feeLabelMap = {
+                            Damage_Fee: 'Phí hư hỏng xe',
+                            Over_Mileage_Fee: 'Phí vượt quá odo quy định',
+                            Late_Return_Fee: 'Phí trả trễ xe',
+                            Cleaning_Fee: 'Phí vệ sinh xe',
+                            Fuel_Fee: 'Phí xăng dầu',
+                            Other_Fee: 'Phí khác'
+                        };
+                        const label = feeLabelMap[feeType] || f.label || f.name || f.feeName || 'Phí phát sinh khác';
+                        const amount = Number(f.amount ?? f.feeAmount ?? 0) || 0;
+                        return { id: f.id ?? feeType ?? 'extra', label, amount };
+                    })
+                    : []
+            };
+            setSummary(mapped);
+            return;
+        }
 
-  const totalPrice = state.carInfo ? state.carInfo.dailyPrice * days : 0;
-  const addonsTotal = state.addons.reduce((sum, addon) => sum + (addon.price * addon.quantity), 0);
-  const vat = Math.round((totalPrice + addonsTotal) * 0.1);
-  const grandTotal = totalPrice + addonsTotal + vat - (state.pricing?.discount || 0);
+        // fallback mock
+        const fallback = {
+            user: { name: 'Nguyễn Văn A', email: 'a.nguyen@example.com', phone: '0987654321', address: 'Hà Nội' },
+            car: { name: 'Toyota Vios 2020', licensePlate: '30A-123.45' },
+            rental: { pickupLocation: 'Trạm 1 - Hà Nội', startDate: '2025-10-28T09:00:00', endDate: '2025-10-30T11:00:00' },
+            pricePerDay: 450000,
+            depositAmount: 300000,
+            contractCode: contractId || 'CT-20251020-001',
+            extraFees: [
+                { id: 'clean', label: 'Phí dọn xe', amount: 50000 },
+                { id: 'late', label: 'Phí trả muộn', amount: 30000 }
+            ]
+        };
+        setSummary(fallback);
+    }, [forwardedToUse, contractId]);
 
-  return (
-    <div className="checkout-page">
-      <Header />
-      
-      <div className="checkout-container">
-        {/* Breadcrumb & Stepper */}
-        <div className="checkout-header">
-          <div className="breadcrumb">
-            <span>Trang chủ</span>
-            <span>/</span>
-            <span>Xe</span>
-            <span>/</span>
-            <span>Chi tiết</span>
-            <span>/</span>
-            <span>Thanh toán</span>
-          </div>
-          
-          <div className="stepper">
-            <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
-              <div className="step-number">1</div>
-              <div className="step-label">Thông tin</div>
-            </div>
-            <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
-              <div className="step-number">2</div>
-              <div className="step-label">Thanh toán</div>
-            </div>
-            <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
-              <div className="step-number">3</div>
-              <div className="step-label">Xác nhận</div>
-            </div>
-          </div>
-        </div>
+    // Fetch danh sách promotions hợp lệ từ backend
+    useEffect(() => {
+        const fetchPromotions = async () => {
+            setPromotionsLoading(true);
+            try {
+                const resp = await fetch('http://localhost:8084/EVRentalSystem/api/promotions/valid', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!resp.ok) throw new Error(`Server trả về ${resp.status}`);
+                const data = await resp.json();
+                // Giả định data là array of PromotionResponse
+                setPromotions(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error('Lỗi fetch promotions:', err);
+                showToast('Không thể lấy danh sách mã giảm giá từ server', 'error');
+                setPromotions([]);
+            } finally {
+                setPromotionsLoading(false);
+            }
+        };
 
-        <div className="checkout-content">
-          {/* Left Column */}
-          <div className="checkout-main">
-            {/* Car Information */}
-            <div className="checkout-card">
-              <h3>Thông tin đặt xe</h3>
-              {state.carInfo && (
-                <div className="car-info">
-                  <div className="car-image">
-                    <img src={state.carInfo.image} alt={state.carInfo.name} />
-                  </div>
-                  <div className="car-details">
-                    <h4>{state.carInfo.name}</h4>
-                    <p>Năm sản xuất: {state.carInfo.year}</p>
-                    <p>Biển số: {state.carInfo.licensePlate}</p>
-                    <div className="rental-dates">
-                      <div className="date-info">
-                        <strong>Nhận xe:</strong>
-                        <span>{formatDate(state.pickupDate)}</span>
-                        <span>{state.pickupLocation?.address}</span>
-                      </div>
-                      <div className="date-info">
-                        <strong>Trả xe:</strong>
-                        <span>{formatDate(state.dropoffDate)}</span>
-                        <span>{state.dropoffLocation?.address}</span>
-                      </div>
-                      <div className="date-info">
-                        <strong>Số ngày thuê:</strong>
-                        <span>{days} ngày</span>
-                      </div>
-                    </div>
-                    <div className="car-policies">
-                      <p>Giới hạn: {state.carInfo.kmLimit}km/ngày</p>
-                      <p>Phụ phí vượt km: {formatCurrency(state.carInfo.overKmFee)}/km</p>
-                    </div>
-                  </div>
+        fetchPromotions();
+    }, []);
+
+    const showToast = (message, type = 'info') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: '' }), 2500);
+    };
+
+    const formatPrice = (price) =>
+        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
+
+    // --- computeDaysHours: trả về totalHours, days, hours, formatted ---
+    const computeDaysHours = (start, end) => {
+        try {
+            const s = new Date(start);
+            const e = new Date(end);
+            if (isNaN(s) || isNaN(e)) return { totalHours: 0, days: 0, hours: 0, formatted: '0 giờ' };
+
+            const ms = e.getTime() - s.getTime();
+            const totalHoursRaw = ms / (1000 * 60 * 60);
+            const totalHours = Math.ceil(totalHoursRaw);
+
+            const days = Math.floor(totalHours / 24);
+            const hours = totalHours % 24;
+
+            let formatted = '';
+            if (days > 0) {
+                formatted = `${days} ngày${hours > 0 ? ' ' + hours + ' giờ' : ''}`;
+            } else {
+                formatted = `${hours} giờ`;
+            }
+
+            return { totalHours, days, hours, formatted };
+        } catch {
+            return { totalHours: 0, days: 0, hours: 0, formatted: '0 giờ' };
+        }
+    };
+
+    // Format thời gian dạng DD/MM/YYYY, HH:mm
+    const formatDateTime = (datetime) => {
+        if (!datetime) return '—';
+        const date = new Date(datetime);
+        if (isNaN(date)) return '—';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year}, ${hours}:${minutes}`;
+    };
+
+
+    const extraFeesSum = (summary?.extraFees || []).reduce((s, f) => s + (Number(f.amount ?? 0) || 0), 0);
+    const depositAmount = Number(summary?.depositAmount ?? 0);
+
+    // lấy ngày + giờ + tổng giờ
+    const { totalHours: rentalHours, formatted: rentalDurationText } =
+        computeDaysHours(summary?.rental?.startDate, summary?.rental?.endDate);
+    const pricePerDay = Number(depositAmount / 0.3);
+    const pricePerHour = pricePerDay / 24;
+    const rentalTotal = Math.round(depositAmount / 0.3); //tổng giá thuê
+    const discountAmount = Math.round((discountPercent / 100) * rentalTotal);
+
+    // Tổng thanh toán theo công thức bạn yêu cầu:
+    // Tổng thanh toán = (Tổng giá thuê) + (Các phí phát sinh) - (tiền cọc) - (tiền giảm giá trên tổng giá thuê)
+    const finalTotal = Math.round(Math.max(0, rentalTotal + extraFeesSum - depositAmount - discountAmount));
+
+    const handleApplyCoupon = () => {
+        const codeInput = (couponCode || '').trim().toUpperCase();
+        if (!codeInput) {
+            setDiscountPercent(0);
+            setCouponApplied(null);
+            showToast('Vui lòng nhập mã giảm giá', 'error');
+            return;
+        }
+
+        // Nếu đã áp dụng 1 mã, thì nút sẽ làm chức năng 'hủy bỏ' (xem phần UI)
+        if (couponApplied) {
+            // HỦY MÃ
+            setDiscountPercent(0);
+            setCouponApplied(null);
+            setCouponCode(''); // tùy chọn: xoá input sau hủy
+            showToast('Đã hủy mã giảm giá', 'info');
+            return;
+        }
+
+        // Tìm promotion khớp promoName (thử check promoName và cũng lùi -> promo.code nếu cần)
+        const found = promotions.find(p =>
+            (p.promoName && p.promoName.toString().toUpperCase() === codeInput) ||
+            (p.code && p.code.toString().toUpperCase() === codeInput)
+        );
+
+        if (!found) {
+            setDiscountPercent(0);
+            setCouponApplied(null);
+            showToast('Mã không tồn tại hoặc không hợp lệ', 'error');
+            return;
+        }
+
+        // kiểm tra trạng thái và thời gian: status === 'ACTIVE' và đang trong range startTime..endTime
+        try {
+            const now = new Date();
+            const start = found.startTime ? new Date(found.startTime) : null;
+            const end = found.endTime ? new Date(found.endTime) : null;
+            const statusOk = (found.status && found.status.toUpperCase() === 'ACTIVE');
+            const timeOk = (!start || now >= start) && (!end || now <= end);
+
+            if (!statusOk) {
+                showToast('Mã hiện không hoạt động', 'error');
+                return;
+            }
+            if (!timeOk) {
+                showToast('Mã đã hết hiệu lực hoặc chưa đến ngày áp dụng', 'error');
+                return;
+            }
+
+            // Áp dụng
+            const pct = Number(found.discountPercent || 0);
+            if (!pct || isNaN(pct)) {
+                showToast('Mã không có giá trị giảm hợp lệ', 'error');
+                return;
+            }
+
+            setDiscountPercent(pct);
+            setCouponApplied(found); // lưu toàn bộ đối tượng promotion
+            showToast(`Áp dụng mã ${found.promoName}: ${pct}% giảm`, 'success');
+        } catch (err) {
+            console.error(err);
+            showToast('Lỗi khi kiểm tra mã giảm giá', 'error');
+        }
+    };
+
+    const handlePayment = () => {
+        if (!selectedMethod) {
+            showToast('Vui lòng chọn phương thức thanh toán', 'error');
+            return;
+        }
+        setShowQRModal(true);
+    };
+
+    // If there's no summary (shouldn't happen, but safe guard)
+    if (!summary) {
+        return (
+            <>
+                {!embedded && <Header />}
+                <div className="deposit-payment-page">
+                    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 20px', textAlign: 'center' }}>
+                        <h1 style={{ fontSize: 20, color: '#6b7280' }}>Không tìm thấy thông tin</h1>
+                    </main>
                 </div>
-              )}
-            </div>
+                {!embedded && <Footer />}
+            </>
+        );
+    }
 
-            {/* Customer Information */}
-            <div className="checkout-card">
-              <h3>Thông tin người thuê</h3>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Họ và tên *</label>
-                  <input
-                    type="text"
-                    value={state.customer.name}
-                    onChange={(e) => handleCustomerChange('name', e.target.value)}
-                    placeholder="Nhập họ và tên"
-                  />
-                  {state.errors.name && <span className="error">{state.errors.name}</span>}
+    return (
+        <div className="deposit-payment-page">
+            {/* Khi embedded=true thì Header/Footer không hiện */}
+            {!embedded && <Header />}
+            <div className="dp-container">
+                <div className="dp-header">
+                    <h1>Thanh toán đơn hàng</h1>
                 </div>
-                
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    value={state.customer.email}
-                    onChange={(e) => handleCustomerChange('email', e.target.value)}
-                    placeholder="Nhập email"
-                  />
-                  {state.errors.email && <span className="error">{state.errors.email}</span>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Số điện thoại *</label>
-                  <input
-                    type="tel"
-                    value={state.customer.phone}
-                    onChange={(e) => handleCustomerChange('phone', e.target.value)}
-                    placeholder="Nhập số điện thoại"
-                  />
-                  {state.errors.phone && <span className="error">{state.errors.phone}</span>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Ngày sinh *</label>
-                  <input
-                    type="date"
-                    value={state.customer.birthDate}
-                    onChange={(e) => handleCustomerChange('birthDate', e.target.value)}
-                  />
-                  {state.errors.birthDate && <span className="error">{state.errors.birthDate}</span>}
-                </div>
-              </div>
 
-              {/* Document Upload */}
-              <div className="document-upload">
-                <h4>Giấy tờ tùy thân</h4>
-                <div className="upload-grid">
-                  <div className="upload-group">
-                    <label>Mặt trước CCCD/CMND</label>
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleDocumentUpload('cccdFront', e.target.files[0])}
-                    />
-                    {state.customer.documents.cccdFront && (
-                      <span className="file-name">{state.customer.documents.cccdFront.name}</span>
-                    )}
-                  </div>
-                  
-                  <div className="upload-group">
-                    <label>Mặt sau CCCD/CMND</label>
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleDocumentUpload('cccdBack', e.target.files[0])}
-                    />
-                    {state.customer.documents.cccdBack && (
-                      <span className="file-name">{state.customer.documents.cccdBack.name}</span>
-                    )}
-                  </div>
-                  
-                  <div className="upload-group">
-                    <label>Bằng lái xe</label>
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleDocumentUpload('licenseFront', e.target.files[0])}
-                    />
-                    {state.customer.documents.licenseFront && (
-                      <span className="file-name">{state.customer.documents.licenseFront.name}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+                {/* LEFT: Payment methods */}
+                <div className="payment-col">
+                    <div className="payment-panel">
+                        <div className="panel-title">Các phương thức thanh toán</div>
 
-            {/* Add-ons */}
-            <div className="checkout-card">
-              <h3>Tùy chọn bổ sung</h3>
-              <div className="addons-list">
-                {addons.map(addon => {
-                  const isSelected = state.addons.find(item => item.id === addon.id);
-                  return (
-                    <div key={addon.id} className="addon-item">
-                      <div className="addon-info">
-                        <input
-                          type="checkbox"
-                          checked={!!isSelected}
-                          onChange={() => handleAddonToggle(addon)}
-                        />
-                        <div>
-                          <h4>{addon.name}</h4>
-                          <p>{addon.description}</p>
-                          <span className="addon-price">{formatCurrency(addon.price)}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 6 }}>
+                            {paymentMethods.map((method) => {
+                                const Icon = method.icon;
+                                const isSelected = selectedMethod === method.id;
+                                return (
+                                    <div
+                                        key={method.id}
+                                        className={`payment-method-card ${isSelected ? 'selected' : ''}`}
+                                        onClick={() => setSelectedMethod(method.id)}
+                                    >
+                                        <div className="pm-icon" style={{ backgroundColor: '#f3f6f9' }}>
+                                            <Icon style={{ color: method.color }} />
+                                        </div>
+
+                                        <div className="pm-body">
+                                            <h3 style={{ margin: 0 }}>{method.name}</h3>
+                                            <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13 }}>{method.description}</p>
+                                        </div>
+
+                                        <div className="pm-right">
+                                            {isSelected ? <div style={{ width: 24, height: 24, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}><Check /></div> : '›'}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
-                      </div>
-                      {isSelected && (
-                        <div className="addon-quantity">
-                          <button onClick={() => handleAddonQuantityChange(addon.id, isSelected.quantity - 1)}>-</button>
-                          <span>{isSelected.quantity}</span>
-                          <button onClick={() => handleAddonQuantityChange(addon.id, isSelected.quantity + 1)}>+</button>
+
+                        <div className="secure-note">
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                <div style={{ color: '#10b981' }}><Shield /></div>
+                                <div>
+                                    <div style={{ fontWeight: 700 }}>Bảo mật thanh toán</div>
+                                    <div style={{ color: '#55627a', fontSize: 13 }}>
+                                        Thông tin thanh toán được mã hóa SSL 256-bit theo tiêu chuẩn bảo mật quốc tế.
+                                        Chúng tôi KHÔNG lưu trữ thông tin thẻ của bạn.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                      )}
+
+                        <button
+                            className="checkout-btn"
+                            onClick={handlePayment}
+                            disabled={!selectedMethod || paying}
+                        >
+                            {paying ? 'Đang xử lý...' : 'Hoàn tất thanh toán'}
+                        </button>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Payment Method */}
-            <div className="checkout-card">
-              <h3>Phương thức thanh toán</h3>
-              <div className="payment-methods">
-                <label className="payment-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="vnpay"
-                    checked={state.paymentMethod === 'vnpay'}
-                    onChange={(e) => actions.setPaymentMethod(e.target.value)}
-                  />
-                  <span>VNPay</span>
-                </label>
-                
-                <label className="payment-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="momo"
-                    checked={state.paymentMethod === 'momo'}
-                    onChange={(e) => actions.setPaymentMethod(e.target.value)}
-                  />
-                  <span>MoMo</span>
-                </label>
-                
-                <label className="payment-option">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="bank"
-                    checked={state.paymentMethod === 'bank'}
-                    onChange={(e) => actions.setPaymentMethod(e.target.value)}
-                  />
-                  <span>Chuyển khoản ngân hàng</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Voucher */}
-            <div className="checkout-card">
-              <h3>Mã khuyến mãi</h3>
-              <div className="voucher-input">
-                <input
-                  type="text"
-                  value={state.voucher}
-                  onChange={(e) => actions.setVoucher(e.target.value)}
-                  placeholder="Nhập mã khuyến mãi"
-                />
-                <button onClick={handleVoucherApply}>Áp dụng</button>
-              </div>
-            </div>
-
-            {/* Terms */}
-            <div className="checkout-card">
-              <label className="terms-checkbox">
-                <input
-                  type="checkbox"
-                  checked={state.agreedToTerms}
-                  onChange={(e) => actions.setTermsAgreement(e.target.checked)}
-                />
-                <span>
-                  Tôi đồng ý với{' '}
-                  <button type="button" onClick={() => setShowTermsModal(true)}>
-                    Điều khoản thuê xe
-                  </button>
-                  ,{' '}
-                  <button type="button" onClick={() => setShowTermsModal(true)}>
-                    Chính sách hủy
-                  </button>
-                  {' '}và{' '}
-                  <button type="button" onClick={() => setShowTermsModal(true)}>
-                    Xử lý dữ liệu cá nhân
-                  </button>
-                </span>
-              </label>
-              {state.errors.terms && <span className="error">{state.errors.terms}</span>}
-            </div>
-          </div>
-
-          {/* Right Column - Order Summary */}
-          <div className="checkout-sidebar">
-            <div className="order-summary">
-              <h3>Tóm tắt đơn hàng</h3>
-              
-              <div className="price-breakdown">
-                <div className="price-row">
-                  <span>Giá thuê ({days} ngày)</span>
-                  <span>{formatCurrency(totalPrice)}</span>
                 </div>
-                
-                {state.addons.map(addon => (
-                  <div key={addon.id} className="price-row">
-                    <span>{addon.name} x{addon.quantity}</span>
-                    <span>{formatCurrency(addon.price * addon.quantity)}</span>
-                  </div>
-                ))}
-                
-                <div className="price-row">
-                  <span>VAT (10%)</span>
-                  <span>{formatCurrency(vat)}</span>
+
+                {/* RIGHT: Order summary */}
+                <div className="summary-col">
+                    <div className="order-summary">
+                        <div className="summary-header">
+                            <h3>Thông tin đặt xe</h3>
+                        </div>
+
+                        <div className="summary-body">
+                            <div className="summary-row">
+                                <div className="label"><Calendar style={{ marginRight: 8 }} />Ngày nhận xe</div>
+                                <div className="value">{formatDateTime(summary.rental.startDate)}</div>
+                            </div>
+
+                            <div className="summary-row">
+                                <div className="label"><Clock style={{ marginRight: 8 }} />Ngày trả xe</div>
+                                <div className="value">{formatDateTime(summary.rental.endDate)}</div>
+                            </div>
+                            <div className="summary-row">
+                                <div className="label"><MapPin style={{ marginRight: 8 }} />Địa điểm nhận xe</div>
+                                <div className="value" style={{ fontSize: 12 }} >{summary.rental.pickupLocation || '—'}</div>
+                            </div>
+                            <div className="summary-row">
+                                <div className="label">Thời gian thuê</div>
+                                <div className="value">{rentalDurationText}</div>
+                            </div>
+
+                            <div className="summary-row">
+                                <div className="label">Tổng giá thuê</div>
+                                <div className="value">
+                                    {formatPrice(Math.round(rentalTotal))}
+                                </div>
+                            </div>
+
+                            <div style={{ paddingTop: 6, paddingBottom: 6 }}>
+                                <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6, fontWeight: 700 }}>Các chi phí phát sinh</div>
+                                {(summary.extraFees || []).map(f => (
+                                    <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #f0f3f6' }}>
+                                        <div style={{ color: '#64748b', fontSize: 14 }}>{f.label}</div>
+                                        <div style={{ fontWeight: 700 }}>{formatPrice(Number(f.amount ?? 0))}</div>
+                                    </div>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, fontWeight: 700 }}>
+                                    <div style={{ color: '#374151' }}>Tổng chi phí phát sinh</div>
+                                    <div>{formatPrice(extraFeesSum)}</div>
+                                </div>
+                            </div>
+
+                            {/* Mã giảm giá */}
+                            <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Nhập mã giảm giá (nếu có)"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value)}
+                                    style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid #e6eef4', fontSize: 14 }}
+                                    disabled={!!couponApplied} // disable khi đã áp dụng
+                                />
+                                <button
+                                    className="apply-btn"
+                                    onClick={handleApplyCoupon}
+                                    disabled={!couponCode && !couponApplied} // nếu rỗng và chưa apply => disable
+                                    style={{
+                                        padding: '10px 14px',
+                                        borderRadius: 8,
+                                        border: 'none',
+                                        background: couponApplied ? '#ef4444' : '#2563eb',
+                                        color: '#fff',
+                                        fontWeight: 700,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {couponApplied ? 'Hủy bỏ' : (promotionsLoading ? 'Đang tải...' : 'Áp dụng')}
+                                </button>
+                            </div>
+
+                            {couponApplied && (
+                                <div style={{ marginTop: 8, fontSize: 13, color: '#065f46', fontWeight: 700 }}>
+                                    Mã áp dụng: {couponApplied.promoName} — {couponApplied.code}
+                                </div>
+                            )}
+                        </div>
+                        <div className="total-row">
+                            <div className="label">Giảm giá</div>
+                            <div className="value" style={{ color: discountPercent ? '#065f46' : '#94a3b8' }}>-{formatPrice(discountAmount)}</div>
+                        </div>
+
+                        <div className="total-row">
+                            <div className="label">Tiền cọc đã đặt cọc</div>
+                            <div className="value">-{formatPrice(depositAmount)}</div>
+                        </div>
+
+                        <div className="total-row" style={{ borderTop: '1px solid #eef2f6', fontSize: 18, fontWeight: 800 }}>
+                            <div className="label">Tổng thanh toán</div>
+                            <div className="value">{formatPrice(finalTotal)}</div>
+                        </div>
+                    </div>
                 </div>
-                
-                {state.pricing?.discount > 0 && (
-                  <div className="price-row discount">
-                    <span>Giảm giá</span>
-                    <span>-{formatCurrency(state.pricing.discount)}</span>
-                  </div>
-                )}
-                
-                <div className="price-row total">
-                  <span>Tổng thanh toán</span>
-                  <span>{formatCurrency(grandTotal)}</span>
-                </div>
-              </div>
-              
-              <div className="security-info">
-                <p>🔒 Thanh toán an toàn qua VNPay – 3D Secure/OTP</p>
-              </div>
-              
-              <button
-                className="payment-button"
-                onClick={handlePayment}
-                disabled={state.loading.payment || !state.agreedToTerms}
-              >
-                {state.loading.payment ? 'Đang xử lý...' : 'Hoàn tất thanh toán'}
-              </button>
             </div>
-          </div>
+
+            {/* QR Modal */}
+            {showQRModal && (
+                <div className="qr-modal-overlay" onClick={() => setShowQRModal(false)}>
+                    <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-btn" onClick={() => setShowQRModal(false)} style={{ position: 'absolute', right: 12, top: 12, border: 'none', background: 'transparent' }}>
+                            <X />
+                        </button>
+
+                        <h3 style={{ marginTop: 0 }}>Quét mã QR để thanh toán (demo)</h3>
+                        <p style={{ color: '#64748b' }}>
+                            Ứng dụng: {selectedMethod === 'momo' ? 'MoMo' : (selectedMethod === 'bank-transfer' ? 'Ngân hàng' : 'Ví điện tử')}
+                        </p>
+
+                        <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
+
+                        <button
+                            className="qr-confirm-btn"
+                            onClick={() => { setShowQRModal(false); showToast('Đã (giả) hoàn tất thanh toán — demo', 'success'); }}
+                        >
+                            Tôi đã thanh toán
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {toast.show && <div className={`toast ${toast.type}`}>{toast.message}</div>}
+
+            {!embedded && <Footer />}
         </div>
-      </div>
-
-      <Footer />
-    </div>
-  );
+    );
 };
 
-export default CheckoutPage;
+export default CheckOutPage;

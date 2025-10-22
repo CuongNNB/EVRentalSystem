@@ -1,3 +1,14 @@
+export const formatVND = (n) =>
+  typeof n === 'number' ? n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : '--'
+
+export const formatPercent = (p) =>
+  typeof p === 'number' ? `${(p * 100).toFixed(1)}%` : '--'
+
+export const formatDateTime = (iso) => {
+  if (!iso) return '--'
+  const d = new Date(iso)
+  return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(d)
+}
 // Utility functions for formatting
 export const formatCurrency = (amount, currency = 'VND') => {
   return new Intl.NumberFormat('vi-VN', {
