@@ -87,7 +87,13 @@ const HandoverCar = () => {
     const [isLoadingBooking, setIsLoadingBooking] = useState(false);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [renterDetails, setRenterDetails] = useState(null);
+    const selectedVehicle = useMemo(
+        () => vehicles.find(v => String(v.id) === String(selectedId)) || null,
+        [vehicles, selectedId]
+    );
+    const selectedPlate = selectedVehicle?.licensePlate || "—";
 // ...existing code...
+    
     useEffect(() => {
         try {
             sessionStorage.removeItem("handover-order");
@@ -95,7 +101,7 @@ const HandoverCar = () => {
             console.warn("Unable to clear cached handover payload", cleanupError);
         }
     }, []);
-
+    
     // Fetch booking details and renter details
     useEffect(() => {
         if (!orderId || orderId === "--") return;
@@ -234,23 +240,38 @@ const HandoverCar = () => {
         return "/carpic/1.jpg";
     };
 
-    const handleProceed = () => {
-        if (!vehicle) return;
-        const nextState = {
-            order,
-            stationId,
-            vehicle,
-            vehicles,
-            bookingDetails,
-            renterDetails,
-        };
-        try {
-            sessionStorage.setItem("handover-order", JSON.stringify(nextState));
-        } catch (cacheError) {
-            console.warn("Unable to cache handover payload", cacheError);
-        }
-        navigate(`/staff/orders/${orderId}/handover/check`, { state: nextState });
+    const handleProceed = async () => {
+  if (!vehicle) {
+    alert("Vui lòng chọn xe trước khi bàn giao.");
+    return;
+  }
+
+  try {
+    // Gọi API cập nhật biển số cho đơn
+    await api.post(`/api/bookings/${orderId}`, null, {
+  params: { licensePlate: selectedPlate },
+});
+
+
+    // Lưu state và chuyển sang bước tiếp theo
+    const nextState = {
+      order,
+      stationId,
+      vehicle,
+      vehicles,
+      bookingDetails,
+      renterDetails,
+      selectedPlate,
     };
+
+    sessionStorage.setItem("handover-order", JSON.stringify(nextState));
+    navigate(`/staff/orders/${orderId}/handover/check`, { state: nextState });
+
+  } catch (err) {
+    console.error("Lỗi khi cập nhật biển số:", err);
+    alert("Cập nhật biển số thất bại!");
+  }
+};
 
     if (!order) {
         return (
