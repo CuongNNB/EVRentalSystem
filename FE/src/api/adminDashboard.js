@@ -34,12 +34,33 @@ export const getOverviewMetrics = async (params = {}) => {
 
 export const getRevenueSeries = async (params = {}) => {
 	const { data } = await api.get('/admin/overview/revenue-series', { params })
-	return {
-		granularity: data.granularity ?? data.scale ?? 'DAY',
-		labels: data.labels ?? data.dates ?? [],
-		values: data.values ?? data.series ?? [],
-		previousValues: data.previousValues ?? null,
+
+	// If backend returns points: [{date, revenue}]
+	if (Array.isArray(data?.points)) {
+		const labels = data.points.map(p => p.date)
+		const values = data.points.map(p => Number(p.revenue ?? 0))
+		return {
+			granularity: data.granularity ?? data.scale ?? 'DAY',
+			labels,
+			values,
+			total: Number(data.total ?? values.reduce((s, v) => s + (Number(v) || 0), 0)),
+			previousValues: data.previousValues ?? null,
+		}
 	}
+
+	// If backend returns labels / values arrays
+	if (Array.isArray(data?.labels) && Array.isArray(data?.values)) {
+		return {
+			granularity: data.granularity ?? data.scale ?? 'DAY',
+			labels: data.labels,
+			values: data.values.map(v => Number(v ?? 0)),
+			total: Number(data.total ?? 0),
+			previousValues: data.previousValues ?? null,
+		}
+	}
+
+	// fallback
+	return { granularity: 'DAY', labels: [], values: [], total: 0 }
 }
 
 export const getTopStations = async (params = {}) => {
