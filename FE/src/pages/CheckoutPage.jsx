@@ -6,13 +6,18 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import './CheckoutPage.css'; // CSS mới của bạn
 
-const CheckOutPage = () => {
+// NOTE: This component now supports two optional props:
+// - forwardedFromParent: object passed when embedded (if provided, it takes precedence over location.state)
+// - embedded: boolean; if true, Header/Footer are not rendered (useful when rendering inside a modal)
+const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const { contractId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
     // The booking detail is forwarded from BookingDetailHistory as location.state.detailBookingSummary
+    // But if parent passed forwardedFromParent, prefer that.
     const forwarded = location?.state?.detailBookingSummary ?? null;
+    const forwardedToUse = forwardedFromParent ?? forwarded ?? null;
 
     const [selectedMethod, setSelectedMethod] = useState('');
     const [summary, setSummary] = useState(null);
@@ -34,8 +39,8 @@ const CheckOutPage = () => {
     useEffect(() => {
         // Build summary from forwarded data if present; otherwise use fallback mock (so UI always shows something)
         // --- Khi nhận forwarded detailBookingSummary, chuẩn hoá kĩ:
-        if (forwarded) {
-            const totals = forwarded.totals || {};
+        if (forwardedToUse) {
+            const totals = forwardedToUse.totals || {};
 
             // Nếu có totalRental thì lấy trực tiếp, nếu không thì tính lại như cũ
             const totalRental = Number(totals.totalRental ?? 0);
@@ -49,30 +54,39 @@ const CheckOutPage = () => {
 
             const mapped = {
                 user: {
-                    name: forwarded.user?.name ?? '',
-                    email: forwarded.user?.email ?? '',
-                    phone: forwarded.user?.phone ?? '',
-                    address: forwarded.user?.address ?? ''
+                    name: forwardedToUse.user?.name ?? '',
+                    email: forwardedToUse.user?.email ?? '',
+                    phone: forwardedToUse.user?.phone ?? '',
+                    address: forwardedToUse.user?.address ?? ''
                 },
                 car: {
-                    name: forwarded.carData?.name ?? '',
-                    licensePlate: forwarded.carData?.licensePlate ?? ''
+                    name: forwardedToUse.carData?.name ?? '',
+                    licensePlate: forwardedToUse.carData?.licensePlate ?? ''
                 },
                 rental: {
-                    pickupLocation: forwarded.bookingPayload?.pickupLocation ?? '',
-                    startDate: forwarded.bookingPayload?.startTime ?? '',
-                    endDate: forwarded.bookingPayload?.expectedReturnTime ?? ''
+                    pickupLocation: forwardedToUse.bookingPayload?.pickupLocation ?? '',
+                    startDate: forwardedToUse.bookingPayload?.startTime ?? '',
+                    endDate: forwardedToUse.bookingPayload?.actualReturnTime ?? ''
                 },
-                pricePerDay: Number(rawDaily) || 0,
+                pricePerDay: forwardedToUse.pricePerDay || 0,
                 depositAmount: Number(totals.deposit ?? 0),
                 totalRental: totalRental, // ✅ Thêm dòng này để lưu “Tiền dự tính phải trả”
-                contractCode: forwarded.bookingId ?? contractId ?? null,
-                extraFees: Array.isArray(forwarded.extraFees)
-                    ? forwarded.extraFees.map(f => ({
-                        id: f.id ?? f.label ?? 'extra',
-                        label: f.label ?? f.name ?? f.feeName ?? 'Phí phát sinh',
-                        amount: Number(f.amount ?? f.feeAmount ?? 0) || 0
-                    }))
+                contractCode: forwardedToUse.bookingId ?? contractId ?? null,
+                extraFees: Array.isArray(forwardedToUse.extraFees)
+                    ? forwardedToUse.extraFees.map(f => {
+                        const feeType = f.feeType || f.label || f.name || f.feeName;
+                        const feeLabelMap = {
+                            Damage_Fee: 'Phí hư hỏng xe',
+                            Over_Mileage_Fee: 'Phí vượt quá odo quy định',
+                            Late_Return_Fee: 'Phí trả trễ xe',
+                            Cleaning_Fee: 'Phí vệ sinh xe',
+                            Fuel_Fee: 'Phí xăng dầu',
+                            Other_Fee: 'Phí khác'
+                        };
+                        const label = feeLabelMap[feeType] || f.label || f.name || f.feeName || 'Phí phát sinh khác';
+                        const amount = Number(f.amount ?? f.feeAmount ?? 0) || 0;
+                        return { id: f.id ?? feeType ?? 'extra', label, amount };
+                    })
                     : []
             };
             setSummary(mapped);
@@ -93,7 +107,7 @@ const CheckOutPage = () => {
             ]
         };
         setSummary(fallback);
-    }, [forwarded, contractId]);
+    }, [forwardedToUse, contractId]);
 
     const showToast = (message, type = 'info') => {
         setToast({ show: true, message, type });
@@ -136,15 +150,14 @@ const CheckOutPage = () => {
     // lấy ngày + giờ + tổng giờ
     const { totalHours: rentalHours, formatted: rentalDurationText } =
         computeDaysHours(summary?.rental?.startDate, summary?.rental?.endDate);
-
-    // tổng giá thuê = giá/24 * tổng giờ (lưu ý pricePerDay có thể thực ra là giá theo ngày hoặc giá tổng; follow forwarded.totals.dailyPrice)
-    const rentalTotal = (Number(summary?.pricePerDay ?? 0)) / 24 * rentalHours;
-
-    // giảm giá = % * tổng giá thuê (coupon mock)
+    const pricePerDay = Number(depositAmount / 0.3);
+    const pricePerHour = pricePerDay / 24;
+    const rentalTotal = Math.round(depositAmount / 0.3); //tổng giá thuê
     const discountAmount = Math.round((discountPercent / 100) * rentalTotal);
 
-    // tổng thanh toán = tổng giá thuê - giảm giá + phí phát sinh - tiền cọc
-    const finalTotal = Math.round(Math.max(0, rentalTotal - discountAmount + extraFeesSum - depositAmount));
+    // Tổng thanh toán theo công thức bạn yêu cầu:
+    // Tổng thanh toán = (Tổng giá thuê) + (Các phí phát sinh) - (tiền cọc) - (tiền giảm giá trên tổng giá thuê)
+    const finalTotal = Math.round(Math.max(0, rentalTotal + extraFeesSum - depositAmount - discountAmount));
 
     // Áp dụng mã giảm giá (mock: percent)
     const handleApplyCoupon = () => {
@@ -186,24 +199,24 @@ const CheckOutPage = () => {
     if (!summary) {
         return (
             <>
-                <Header />
+                {!embedded && <Header />}
                 <div className="deposit-payment-page">
                     <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 20px', textAlign: 'center' }}>
                         <h1 style={{ fontSize: 20, color: '#6b7280' }}>Không tìm thấy thông tin</h1>
                     </main>
                 </div>
-                <Footer />
+                {!embedded && <Footer />}
             </>
         );
     }
 
     return (
         <div className="deposit-payment-page">
-            <Header />
+            {/* Khi embedded=true thì Header/Footer không hiện */}
+            {!embedded && <Header />}
             <div className="dp-container">
                 <div className="dp-header">
-                    <h1>Thanh toán đặt cọc — Xem lại đơn</h1>
-                    <p className="lead">Kiểm tra chi tiết, áp mã giảm giá (mock) và các chi phí phát sinh trước khi hoàn tất.</p>
+                    <h1>Thanh toán đơn hàng</h1>
                 </div>
 
                 {/* LEFT: Payment methods */}
@@ -283,30 +296,20 @@ const CheckOutPage = () => {
                                 <div className="label"><MapPin style={{ marginRight: 8 }} />Địa điểm nhận xe</div>
                                 <div className="value">{summary.rental.pickupLocation || '—'}</div>
                             </div>
-
-                            <div className="summary-row">
-                                <div className="label">Giá thuê/ngày</div>
-                                <div className="value">{formatPrice(summary.pricePerDay)}</div>
-                            </div>
-
                             <div className="summary-row">
                                 <div className="label">Thời gian thuê</div>
                                 <div className="value">{rentalDurationText}</div>
                             </div>
 
                             <div className="summary-row">
-                                <div className="label">Tổng giá thuê (theo giờ)</div>
+                                <div className="label">Tổng giá thuê</div>
                                 <div className="value">
-                                    {formatPrice(
-                                        summary.totalRental && summary.totalRental > 0
-                                            ? summary.totalRental
-                                            : Math.round(rentalTotal)
-                                    )}
+                                    {formatPrice(Math.round(rentalTotal))}
                                 </div>
                             </div>
 
                             <div style={{ paddingTop: 6, paddingBottom: 6 }}>
-                                <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6, fontWeight: 700 }}>Chi phí phát sinh</div>
+                                <div style={{ fontSize: 13, color: '#4b5563', marginBottom: 6, fontWeight: 700 }}>Các chi phí phát sinh</div>
                                 {(summary.extraFees || []).map(f => (
                                     <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #f0f3f6' }}>
                                         <div style={{ color: '#64748b', fontSize: 14 }}>{f.label}</div>
@@ -339,29 +342,19 @@ const CheckOutPage = () => {
 
                             {couponApplied && (
                                 <div style={{ marginTop: 8, fontSize: 13, color: '#065f46', fontWeight: 700 }}>
-                                    Mã áp dụng: {couponApplied.code} — {couponApplied.percent}% giảm trên tổng giá thuê ( -{formatPrice(discountAmount)} )
+                                    Mã áp dụng: {couponApplied.code} — {couponApplied.percent}% giảm trên tổng giá thuê
                                 </div>
                             )}
                         </div>
 
-                        {/* Tổng tiền */}
-                        <div className="total-row">
-                            <div className="label">Tổng giá thuê</div>
-                            <div className="value">{formatPrice(Math.round(rentalTotal))}</div>
-                        </div>
 
                         <div className="total-row">
-                            <div className="label">Giảm giá ({discountPercent}%)</div>
+                            <div className="label">Giảm giá</div>
                             <div className="value" style={{ color: discountPercent ? '#065f46' : '#94a3b8' }}>-{formatPrice(discountAmount)}</div>
                         </div>
 
                         <div className="total-row">
-                            <div className="label">Chi phí phát sinh</div>
-                            <div className="value">{formatPrice(extraFeesSum)}</div>
-                        </div>
-
-                        <div className="total-row">
-                            <div className="label">Tiền cọc</div>
+                            <div className="label">Tiền cọc đã đặt cọc</div>
                             <div className="value">-{formatPrice(depositAmount)}</div>
                         </div>
 
@@ -369,8 +362,6 @@ const CheckOutPage = () => {
                             <div className="label">Tổng thanh toán</div>
                             <div className="value">{formatPrice(finalTotal)}</div>
                         </div>
-
-                        <div className="note">* Đây là giao diện demo. Mã giảm giá chỉ hoạt động giả lập (mock).</div>
                     </div>
                 </div>
             </div>
@@ -402,7 +393,7 @@ const CheckOutPage = () => {
 
             {toast.show && <div className={`toast ${toast.type}`}>{toast.message}</div>}
 
-            <Footer />
+            {!embedded && <Footer />}
         </div>
     );
 };

@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
 import './BookingDetailHistory.css';
+import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhúng vào modal
 
 const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
@@ -69,6 +70,10 @@ const BookingDetailHistory = () => {
     const [updateError, setUpdateError] = useState(null);
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
+
+    // NEW: checkout modal state & payload
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [checkoutPayload, setCheckoutPayload] = useState(null);
 
     // Prefer booking from navigation state (forwarded from MyBookings)
     useEffect(() => {
@@ -369,57 +374,107 @@ const BookingDetailHistory = () => {
         }
     };
 
-    // Chuẩn hóa dữ liệu và navigate đến CheckoutPage, giữ nguyên className nút
+    // CHỈNH: mở modal Checkout và truyền dữ liệu
+    // Thay thế hàm handleProceedToCheckout trong BookingDetailHistory.jsx bằng đoạn sau:
+    // Thay thế hoàn toàn hàm handleProceedToCheckout cũ bằng đoạn này
     const handleProceedToCheckout = () => {
-        // Tạo fullBooking theo cấu trúc mà CheckoutPage đang map
+        // Chuẩn hoá các trường thời gian
+        const startIso = normalized.startAt || null;
+        // ưu tiên Ngày trả thực tế ở trang BookingDetail (actualReturnTime), nếu không có thì fallback expected endAt
+        const actualReturnIso = normalized.actualReturnTime || normalized.endAt || null;
+
+        // Lấy giá thuê/ngày từ dữ liệu đã map ở MyBookings (pricePerDay)
+        // (MyBookings đã map API -> booking.pricePerDay). Nếu không có, fallback 0.
+        const pricePerDay = Number(
+            // normalized có thể chứa pricePerDay hoặc pricePerHour; ưu tiên pricePerDay
+            (booking && (booking.pricePerDay ?? booking.price ?? booking.pricePerDay)) ??
+            (normalized.pricePerDay ?? normalized.pricePerDay ?? 0)
+        ) || 0;
+
+        // Tính thời gian thuê:
+        let rentalHours = 0;
+        let rentalDays = 0;
+        let rentalDurationText = '0 giờ';
+        if (startIso && actualReturnIso) {
+            const s = new Date(startIso);
+            const e = new Date(actualReturnIso);
+            if (!isNaN(s) && !isNaN(e) && e.getTime() > s.getTime()) {
+                const ms = e.getTime() - s.getTime();
+                const totalHoursRaw = ms / (1000 * 60 * 60);
+                // làm tròn lên 1 giờ (thông thường billing theo giờ, nếu bạn muốn làm tròn khác thì sửa)
+                rentalHours = Math.ceil(totalHoursRaw);
+                rentalDays = Math.floor(rentalHours / 24);
+                const remHours = rentalHours % 24;
+                rentalDurationText = rentalDays > 0 ? `${rentalDays} ngày${remHours > 0 ? ' ' + remHours + ' giờ' : ''}` : `${remHours} giờ`;
+            }
+        }
+
+        // Tổng giá thuê (theo giờ) = rentalHours * (pricePerDay / 24)
+        // (Đây là công thức đúng khi pricePerDay là giá cho 1 ngày.)
+        const totalRentalByHour = Math.round(rentalHours * (pricePerDay / 24));
+
+        // Nếu backend đã trả tổng (totalPrice hoặc totalRental), ưu tiên dùng nó
+        const backendTotal = Number(normalized.totalPrice ?? normalized.totalRental ?? booking?.totalPrice ?? 0) || 0;
+        const totalRentalToSend = backendTotal > 0 ? backendTotal : totalRentalByHour;
+
+        // Build payload theo cấu trúc CheckoutPage mong đợi (location.state.detailBookingSummary hoặc forwardedFromParent)
         const fb = {
             user: {
-                // nếu backend không có thông tin user trong booking, để fallback rỗng/unknown
                 name: normalized.raw?.userName || normalized.raw?.renterName || (normalized.raw?.user?.name) || '',
                 email: normalized.raw?.user?.email || '',
                 phone: normalized.raw?.user?.phone || '',
                 address: normalized.raw?.user?.address || ''
             },
             carData: {
-                // CheckoutPage truy cập fb?.carData?.name và licensePlate
-                name: normalized.vehicleBrand ? `${normalized.vehicleBrand} ${normalized.vehicleModel || ''}`.trim() : normalized.vehicleModel || '',
+                name: normalized.vehicleBrand ? `${normalized.vehicleBrand} ${normalized.vehicleModel || ''}`.trim() : (normalized.vehicleModel || ''),
                 licensePlate: normalized.licensePlate || ''
             },
             bookingPayload: {
-                // CheckoutPage dùng fb?.bookingPayload?.pickupLocation, startTime, expectedReturnTime
                 pickupLocation: normalized.stationName || normalized.stationAddress || '',
-                startTime: normalized.startAt || '',
-                expectedReturnTime: normalized.endAt || ''
+                startTime: startIso || '',
+                expectedReturnTime: normalized.endAt || '',
+                actualReturnTime: actualReturnIso || null  // <-- forward ngày trả thực tế
             },
             totals: {
-                // CheckoutPage dùng fb?.totals?.dailyPrice và fb?.totals?.deposit
-                dailyPrice: normalized.pricePerHour ?? normalized.pricePerDay ?? 0,
-                deposit: normalized.deposit ?? 0
+                // pricePerDay từ MyBookings (đảm bảo backend pricePerDay được map khi fetch ở MyBookings). :contentReference[oaicite:4]{index=4}
+                pricePerDay: Number(pricePerDay) || 0,
+                dailyPrice: Number(pricePerDay) || 0, // giữ cả 2 tên để tương thích
+                deposit: Number(normalized.deposit ?? booking?.deposit ?? 0) || 0,
+                // gửi cả thời lượng tính sẵn và tổng dự tính theo giờ để Checkout dễ hiển thị
+                rentalHours,
+                rentalDays,
+                rentalDurationText,
+                totalRentalByHour,
+                totalRental: estimated
             },
             bookingId: normalized.bookingId ?? null,
-            // thêm extraFees theo format CheckoutPage dùng (id,label,amount)
+            // extraFees giữ nguyên mapping cũ
             extraFees: Array.isArray(additionalFees) && additionalFees.length > 0
                 ? additionalFees.map((f, i) => {
                     const label = (f.feeType && ({
                         Damage_Fee: 'Phí hư hỏng xe',
-                        Over_Mileage_Fee: 'Phí vượt quá odo quy định',
-                        Late_Return_Fee: 'Phí trả trễ xe',
-                        Cleaning_Fee: 'Phí vệ sinh xe',
+                        Over_Mileage_Fee: 'Phí vượt odo',
+                        Late_Return_Fee: 'Phí trả trễ',
+                        Cleaning_Fee: 'Phí vệ sinh',
                         Fuel_Fee: 'Phí xăng dầu',
                         Other_Fee: 'Phí khác'
                     }[f.feeType])) || f.name || f.feeName || f.title || `Phụ phí ${i + 1}`;
-
                     const amount = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0) || 0;
                     return { id: f.id ?? `fee_${i}`, label, amount };
                 })
-                : // fallback: nếu không có additionalFees từ API, fallback về booking.extrasFee (tổng) nếu có
-                (normalized.extrasFee ? [{ id: 'fallback', label: 'Phụ phí (tổng)', amount: normalized.extrasFee }] : [])
+                : (normalized.extrasFee ? [{ id: 'fallback', label: 'Phụ phí (tổng)', amount: Number(normalized.extrasFee) || 0 }] : [])
         };
 
-        // Navigate — CheckoutPage sẽ đọc location.state.fullBooking
-        navigate('/checkout', { state: { detailBookingSummary: fb } });
+        // Mở modal và truyền payload (hiện tại BookingDetailHistory đang embed CheckoutPage trong modal).
+        setCheckoutPayload(fb);
+        setCheckoutModalOpen(true);
     };
 
+
+    const closeCheckoutModal = () => {
+        setCheckoutModalOpen(false);
+        setCheckoutPayload(null);
+    };
 
     return (
         <div className="detail-page">
@@ -465,7 +520,7 @@ const BookingDetailHistory = () => {
                             <div className="info-column">
                                 <div className="info-row"><span className="info-label">Màu:</span><span className="info-value">{normalized.color}</span></div>
                                 <div className="info-row"><span className="info-label">Pin:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
-                                <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
+                                <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.odo}</span></div>
                             </div>
                         </div>
                     </motion.div>
@@ -665,6 +720,7 @@ const BookingDetailHistory = () => {
                     </motion.div>
                 </div>
             </div>
+
             {/* 🔹 ACCEPT MODAL */}
             {acceptModalOpen && (
                 <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -716,6 +772,23 @@ const BookingDetailHistory = () => {
                             >
                                 {updating ? "Đang xử lý..." : "Xác nhận từ chối"}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🔹 CHECKOUT MODAL (EMBEDDED CheckoutPage) */}
+            {checkoutModalOpen && (
+                <div className="modal-overlay large" role="dialog" aria-modal="true" onClick={closeCheckoutModal}>
+                    <div className="modal-card large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 1100, width: '95%', maxHeight: '90vh', overflow: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <h3 style={{ margin: 0 }}>Thanh toán — Xem lại đơn</h3>
+                            <button className="modal-close" onClick={closeCheckoutModal} aria-label="Đóng">Đóng ✕</button>
+                        </div>
+
+                        {/* Embed CheckoutPage and pass forwardedFromParent + embedded flag to hide Header/Footer */}
+                        <div style={{ width: '100%' }}>
+                            <CheckOutPage forwardedFromParent={checkoutPayload} embedded={true} />
                         </div>
                     </div>
                 </div>
