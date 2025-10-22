@@ -42,6 +42,4 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     default List<Payment> findTopNByOrderByPaidAtDesc(int n) {
         return findRecent(PageRequest.of(0, n));
     }
-
-    Optional<Payment> findByBookingId(Integer bookingId);
 }
