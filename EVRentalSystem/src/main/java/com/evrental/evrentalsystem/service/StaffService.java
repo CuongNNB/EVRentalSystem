@@ -376,6 +376,7 @@ public class StaffService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(licensePlate);
         booking.setVehicleDetail(vd);
+        bookingRepository.save(booking);
     }
 
     public void updateActualReturnTimeOfBooking(int bookingId){
@@ -391,7 +392,5 @@ public class StaffService {
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(booking.getVehicleDetail().getLicensePlate());
         vd.setStatus(VehicleStatus.AVAILABLE.name());
     }
-
-
 }
 
