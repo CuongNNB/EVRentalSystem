@@ -222,26 +222,67 @@ const BookingDetailHistory = () => {
     };
 
     // compute days, estimated and total for display
+    // compute days/hours/minutes and price-related data
     const computePriceData = () => {
+        // Start luôn là thời điểm đặt / bắt đầu thuê (normalized.startAt)
         const start = normalized.startAt ? new Date(normalized.startAt) : null;
-        const end = normalized.endAt ? new Date(normalized.endAt) : null;
-        let durationText = '';
+
+        // End ưu tiên actualReturnTime (ngày trả thực tế), nếu không có thì expectedReturnTime (endAt)
+        const endSource = normalized.actualReturnTime ? normalized.actualReturnTime : normalized.endAt;
+        const end = endSource ? new Date(endSource) : null;
+
+        // default values
+        let durationText = '';     // human readable: "1 ngày 3 giờ" / "3 giờ 15 phút" / "45 phút"
+        let daysForBilling = 0;    // số ngày nguyên (cũng giữ để nếu cần tính phí dựa trên ngày)
         if (start && end) {
-            const diffMs = end.getTime() - start.getTime();
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const daysPart = Math.floor(diffHours / 24);
-            const hoursPart = diffHours % 24;
-            durationText =
-                daysPart > 0
-                    ? `${daysPart} ngày ${hoursPart > 0 ? hoursPart + ' giờ' : ''}`
-                    : `${hoursPart} giờ`;
+            // bảo đảm end >= start
+            let diffMs = end.getTime() - start.getTime();
+            if (diffMs < 0) diffMs = 0;
+
+            // tính tổng phút/giờ/ngày
+            const totalMinutes = Math.floor(diffMs / (1000 * 60));
+            const totalHours = Math.floor(totalMinutes / 60);
+            const daysPart = Math.floor(totalHours / 24);
+            const hoursPart = totalHours % 24;
+            const minutesPart = totalMinutes % 60;
+
+            // xây chuỗi hiển thị thân thiện
+            if (daysPart > 0) {
+                // có ít nhất 1 ngày
+                daysForBilling = daysPart;
+                if (hoursPart > 0) {
+                    durationText = `${daysPart} ngày ${hoursPart} giờ`;
+                } else if (minutesPart > 0) {
+                    durationText = `${daysPart} ngày ${minutesPart} phút`;
+                } else {
+                    durationText = `${daysPart} ngày`;
+                }
+            } else {
+                // < 24 giờ
+                if (totalHours > 0) {
+                    if (minutesPart > 0) {
+                        durationText = `${totalHours} giờ ${minutesPart} phút`;
+                    } else {
+                        durationText = `${totalHours} giờ`;
+                    }
+                } else {
+                    // < 1 giờ -> show phút (ít nhất 1 phút)
+                    const minutesToShow = Math.max(1, minutesPart);
+                    durationText = `${minutesToShow} phút`;
+                }
+                daysForBilling = 0;
+            }
+        } else {
+            // nếu thiếu start hoặc end
+            durationText = 'Đang cập nhật';
+            daysForBilling = 0;
         }
+
         const deposit = normalized.deposit ?? 0;
 
         // Compute extrasFee from fetched additionalFees if available, otherwise fallback to normalized.extrasFee
         const extrasFromResponse = Array.isArray(additionalFees) && additionalFees.length > 0
             ? additionalFees.reduce((sum, f) => {
-                // defensive parsing: try common property names for amount
                 const amt = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0);
                 return sum + (isNaN(amt) ? 0 : amt);
             }, 0)
@@ -251,11 +292,11 @@ const BookingDetailHistory = () => {
 
         const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
         const total = estimated + extrasFeeComputed;
-        return { durationText, deposit, extrasFee: extrasFeeComputed, estimated, total };
+        return { durationText, daysForBilling, deposit, extrasFee: extrasFeeComputed, estimated, total };
     };
     // hide action buttons if any inspection already CONFIRMED
     const hasConfirmed = inspections.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
-    const { durationText, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
+    const { durationText, daysForBilling, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
     const callUpdateStatusApi = async (bookingId, status) => {
@@ -464,7 +505,7 @@ const BookingDetailHistory = () => {
                         <div className="price-list">
                             <div className="price-row">
                                 <span className="price-label">Số ngày thuê:</span>
-                                <span className="price-value">{durationText || '---'}</span>
+                                <span className="price-value">{durationText || 'Đang cập nhật'}</span>
                             </div>
                             <div className="price-row">
                                 <span className="price-label">Tiền dự tính phải trả:</span>
@@ -572,12 +613,29 @@ const BookingDetailHistory = () => {
                                         <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
                                         <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
                                     </div>
-                                    {insp.pictureUrl && (
+                                    {insp.pictureUrl && insp.pictureUrl.trim() !== '' ? (
                                         <div className="inspection-image-box">
-                                            <img src={insp.pictureUrl} alt={insp.partName} className="inspection-image" />
-                                            <a href={insp.pictureUrl} target="_blank" rel="noreferrer" className="document-view-link">Xem ảnh lớn</a>
+                                            <img
+                                                src={insp.pictureUrl}
+                                                alt={insp.partName || 'Ảnh kiểm tra'}
+                                                className="inspection-image"
+                                                onError={(e) => {
+                                                    // nếu ảnh lỗi (404, ...), ẩn luôn để tránh khung trống
+                                                    e.target.style.display = 'none';
+                                                    const link = e.target.parentNode.querySelector('.document-view-link');
+                                                    if (link) link.style.display = 'none';
+                                                }}
+                                            />
+                                            <a
+                                                href={insp.pictureUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="document-view-link"
+                                            >
+                                                Xem ảnh lớn
+                                            </a>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             ))}
 
