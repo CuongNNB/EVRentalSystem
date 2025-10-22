@@ -13,6 +13,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserAdditionalFeeController {
     private final UserAdditionalFeeService additionalFeeService;
+
+    //API: http://localhost:8084/EVRentalSystem/api/additional-fees/by-booking
+    /// RequestBody:
+    ///  "bookingId": Integer
     @PostMapping("/by-booking")
     public ResponseEntity<List<UserAdditionalFeeResponse>> getAdditionalFeesByBookingId(
             @RequestBody UserAdditionalFeeRequest request) {

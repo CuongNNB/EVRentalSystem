@@ -61,6 +61,10 @@ const BookingDetailHistory = () => {
     const [loadingInsp, setLoadingInsp] = useState(true);
     const [errorInsp, setErrorInsp] = useState(null);
 
+    const [additionalFees, setAdditionalFees] = useState([]);
+    const [loadingFees, setLoadingFees] = useState(false);
+    const [errorFees, setErrorFees] = useState(null);
+
     const [updating, setUpdating] = useState(false);
     const [updateError, setUpdateError] = useState(null);
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
@@ -111,6 +115,69 @@ const BookingDetailHistory = () => {
         fetchInspections();
     }, [booking, id]);
 
+    // 🔹 NEW: Fetch additional fees by bookingId on load, save to localStorage
+    useEffect(() => {
+        const bookingIdToUse = booking?.bookingId ? booking.bookingId : (id ? parseInt(id) : null);
+        if (!bookingIdToUse) return;
+
+        const storageKey = `additionalFees_booking_${bookingIdToUse}`;
+
+        // try to load from localStorage first
+        const loadFromLocal = () => {
+            try {
+                const raw = localStorage.getItem(storageKey);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+                return null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const cached = loadFromLocal();
+        if (cached) {
+            setAdditionalFees(cached);
+            // still try to refresh from server in background (non-blocking)
+        }
+
+        const fetchFees = async () => {
+            try {
+                setLoadingFees(true);
+                setErrorFees(null);
+
+                const resp = await fetch(`${API_BASE}/additional-fees/by-booking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId: bookingIdToUse }),
+                });
+
+                if (!resp.ok) {
+                    const errBody = await resp.json().catch(() => ({}));
+                    throw new Error(errBody.message || `HTTP ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                const fees = Array.isArray(data) ? data : [];
+
+                // save to state and localStorage
+                setAdditionalFees(fees);
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify(fees));
+                } catch (e) {
+                    console.warn("Không thể lưu phụ phí vào localStorage:", e);
+                }
+            } catch (err) {
+                setErrorFees(err.message);
+            } finally {
+                setLoadingFees(false);
+            }
+        };
+
+        // Always attempt to fetch fresh data (even if cached exists)
+        fetchFees();
+    }, [booking, id]);
+
     if (!booking) {
         return (
             <div className="detail-page">
@@ -158,19 +225,37 @@ const BookingDetailHistory = () => {
     const computePriceData = () => {
         const start = normalized.startAt ? new Date(normalized.startAt) : null;
         const end = normalized.endAt ? new Date(normalized.endAt) : null;
-        let days = 0;
+        let durationText = '';
         if (start && end) {
             const diffMs = end.getTime() - start.getTime();
-            days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const daysPart = Math.floor(diffHours / 24);
+            const hoursPart = diffHours % 24;
+            durationText =
+                daysPart > 0
+                    ? `${daysPart} ngày ${hoursPart > 0 ? hoursPart + ' giờ' : ''}`
+                    : `${hoursPart} giờ`;
         }
         const deposit = normalized.deposit ?? 0;
-        const extrasFee = normalized.extrasFee ?? 0;
-        const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
-        const total = estimated + extrasFee;
-        return { days, deposit, extrasFee, estimated, total };
-    };
 
-    const { days, deposit, extrasFee, estimated, total } = computePriceData();
+        // Compute extrasFee from fetched additionalFees if available, otherwise fallback to normalized.extrasFee
+        const extrasFromResponse = Array.isArray(additionalFees) && additionalFees.length > 0
+            ? additionalFees.reduce((sum, f) => {
+                // defensive parsing: try common property names for amount
+                const amt = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0);
+                return sum + (isNaN(amt) ? 0 : amt);
+            }, 0)
+            : null;
+
+        const extrasFeeComputed = extrasFromResponse !== null ? extrasFromResponse : (normalized.extrasFee ?? 0);
+
+        const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
+        const total = estimated + extrasFeeComputed;
+        return { durationText, deposit, extrasFee: extrasFeeComputed, estimated, total };
+    };
+    // hide action buttons if any inspection already CONFIRMED
+    const hasConfirmed = inspections.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
+    const { durationText, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
     const callUpdateStatusApi = async (bookingId, status) => {
@@ -243,6 +328,57 @@ const BookingDetailHistory = () => {
         }
     };
 
+    // Chuẩn hóa dữ liệu và navigate đến CheckoutPage, giữ nguyên className nút
+    const handleProceedToCheckout = () => {
+        // Tạo fullBooking theo cấu trúc mà CheckoutPage đang map
+        const fb = {
+            user: {
+                // nếu backend không có thông tin user trong booking, để fallback rỗng/unknown
+                name: normalized.raw?.userName || normalized.raw?.renterName || (normalized.raw?.user?.name) || '',
+                email: normalized.raw?.user?.email || '',
+                phone: normalized.raw?.user?.phone || '',
+                address: normalized.raw?.user?.address || ''
+            },
+            carData: {
+                // CheckoutPage truy cập fb?.carData?.name và licensePlate
+                name: normalized.vehicleBrand ? `${normalized.vehicleBrand} ${normalized.vehicleModel || ''}`.trim() : normalized.vehicleModel || '',
+                licensePlate: normalized.licensePlate || ''
+            },
+            bookingPayload: {
+                // CheckoutPage dùng fb?.bookingPayload?.pickupLocation, startTime, expectedReturnTime
+                pickupLocation: normalized.stationName || normalized.stationAddress || '',
+                startTime: normalized.startAt || '',
+                expectedReturnTime: normalized.endAt || ''
+            },
+            totals: {
+                // CheckoutPage dùng fb?.totals?.dailyPrice và fb?.totals?.deposit
+                dailyPrice: normalized.pricePerHour ?? normalized.pricePerDay ?? 0,
+                deposit: normalized.deposit ?? 0
+            },
+            bookingId: normalized.bookingId ?? null,
+            // thêm extraFees theo format CheckoutPage dùng (id,label,amount)
+            extraFees: Array.isArray(additionalFees) && additionalFees.length > 0
+                ? additionalFees.map((f, i) => {
+                    const label = (f.feeType && ({
+                        Damage_Fee: 'Phí hư hỏng xe',
+                        Over_Mileage_Fee: 'Phí vượt quá odo quy định',
+                        Late_Return_Fee: 'Phí trả trễ xe',
+                        Cleaning_Fee: 'Phí vệ sinh xe',
+                        Fuel_Fee: 'Phí xăng dầu',
+                        Other_Fee: 'Phí khác'
+                    }[f.feeType])) || f.name || f.feeName || f.title || `Phụ phí ${i + 1}`;
+
+                    const amount = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0) || 0;
+                    return { id: f.id ?? `fee_${i}`, label, amount };
+                })
+                : // fallback: nếu không có additionalFees từ API, fallback về booking.extrasFee (tổng) nếu có
+                (normalized.extrasFee ? [{ id: 'fallback', label: 'Phụ phí (tổng)', amount: normalized.extrasFee }] : [])
+        };
+
+        // Navigate — CheckoutPage sẽ đọc location.state.fullBooking
+        navigate('/checkout', { state: { detailBookingSummary: fb } });
+    };
+
 
     return (
         <div className="detail-page">
@@ -267,8 +403,8 @@ const BookingDetailHistory = () => {
                     <div className="detail-header-top">
                         <h1 className="detail-title">Chi tiết đơn #{normalized.bookingId}</h1>
                         <span className={`detail-status-badge status-${(normalized.status || 'unknown').toLowerCase()}`}>
-              {getStatusText(normalized.status)}
-            </span>
+                            {getStatusText(normalized.status)}
+                        </span>
                     </div>
                     <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe</p>
                 </motion.div>
@@ -328,19 +464,67 @@ const BookingDetailHistory = () => {
                         <div className="price-list">
                             <div className="price-row">
                                 <span className="price-label">Số ngày thuê:</span>
-                                <span className="price-value">{days} ngày</span>
+                                <span className="price-value">{durationText || '---'}</span>
                             </div>
                             <div className="price-row">
-                                <span className="price-label">Tiền dự tính:</span>
+                                <span className="price-label">Tiền dự tính phải trả:</span>
                                 <span className="price-value">{fmtVND(estimated)}</span>
                             </div>
                             <div className="price-row">
-                                <span className="price-label">Đặt cọc:</span>
+                                <span className="price-label">Số tiền đã đặt cọc:</span>
                                 <span className="price-value">{fmtVND(deposit)}</span>
                             </div>
+
+                            {/* Phụ phí: hiển thị danh sách phụ phí có tên tiếng Việt */}
                             <div className="price-row">
                                 <span className="price-label">Phụ phí:</span>
-                                <span className="price-value">{fmtVND(extrasFee)}</span>
+                                <div className="fees-container">
+                                    {/* Tổng phụ phí */}
+                                    <div className="fee-line fee-total">
+                                        <span className="fee-label">Tổng phụ phí</span>
+                                        <span className="fee-amount">{fmtVND(extrasFeeDisplayed)}</span>
+                                    </div>
+
+                                    {/* Loading & Error */}
+                                    {loadingFees && <div className="fee-line"><span className="fee-label">🔄 Đang tải...</span></div>}
+                                    {errorFees && <div className="fee-line text-error"><span className="fee-label">Lỗi tải phụ phí: {errorFees}</span></div>}
+
+                                    {/* Danh sách chi tiết phụ phí */}
+                                    {!loadingFees && Array.isArray(additionalFees) && additionalFees.length > 0 ? (
+                                        <div className="fee-list">
+                                            {additionalFees.map((fee, idx) => {
+                                                // Lấy feeType hoặc name
+                                                const feeType = (fee.feeType ?? fee.name ?? fee.feeName ?? '').trim();
+
+                                                // Map sang tên tiếng Việt
+                                                const feeNameMap = {
+                                                    Damage_Fee: 'Phí hư hỏng xe',
+                                                    Over_Mileage_Fee: 'Phí vượt quá odo quy định',
+                                                    Late_Return_Fee: 'Phí trả trễ xe',
+                                                    Cleaning_Fee: 'Phí vệ sinh xe',
+                                                    Fuel_Fee: 'Phí xăng dầu',
+                                                    Other_Fee: 'Phí khác',
+                                                };
+
+                                                const vietnameseName = feeNameMap[feeType] || feeType || `Phụ phí ${idx + 1}`;
+                                                const amount = Number(fee.amount ?? fee.feeAmount ?? fee.value ?? fee.total ?? 0);
+
+                                                return (
+                                                    <div key={idx} className="fee-item">
+                                                        <span className="fee-item-label">- {vietnameseName}:</span>
+                                                        <span className="fee-item-amount">{fmtVND(isNaN(amount) ? 0 : amount)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        !loadingFees && (
+                                            <div className="fee-line">
+                                                <span className="fee-label">Không có mục phụ phí chi tiết</span>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
                             </div>
                             <div className="price-total">
                                 <span className="price-total-label">Tổng thanh toán:</span>
@@ -350,9 +534,7 @@ const BookingDetailHistory = () => {
                             <div className="price-actions">
                                 <button
                                     className="btn-pay"
-                                    onClick={() => {
-                                        navigate('/checkout', { state: { booking: normalized } });
-                                    }}
+                                    onClick={handleProceedToCheckout}
                                 >
                                     Thanh toán
                                 </button>
@@ -376,7 +558,16 @@ const BookingDetailHistory = () => {
                                 <div key={insp.inspectionId} className="inspection-item">
                                     <div className="inspection-info">
                                         <div><strong>Phần:</strong> {insp.partName}</div>
-                                        <div><strong>Trạng thái:</strong> {insp.status}</div>
+                                        <div>
+                                            <strong>Trạng thái:</strong>{' '}
+                                            {insp.status === 'CONFIRMED'
+                                                ? 'Đã đồng ý'
+                                                : insp.status === 'PENDING'
+                                                    ? 'Đang chờ xác thực'
+                                                    : insp.status === 'REJECTED'
+                                                        ? 'Đã từ chối'
+                                                        : insp.status ?? 'Không xác định'}
+                                        </div>
                                         <div><strong>Nhân viên:</strong> {insp.staffName}</div>
                                         <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
                                         <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
@@ -390,7 +581,7 @@ const BookingDetailHistory = () => {
                                 </div>
                             ))}
 
-                            {inspections.length > 0 && (
+                            {inspections.length > 0 && !hasConfirmed && (
                                 <div className="inspection-actions">
                                     <button
                                         className="btn-accept"
