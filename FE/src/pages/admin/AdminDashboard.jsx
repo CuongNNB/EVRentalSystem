@@ -11,8 +11,21 @@ import { formatPercent, formatVND } from '../../utils/format'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 
 export default function AdminDashboard() {
-  useEffect(() => { console.log('[AdminDashboard] mounted') }, [])
   const { data: m, loading, error, refetch } = useAdminMetrics()
+
+  // === from/to = đầu tháng -> hôm nay (YYYY-MM-DD local time) ===
+  // Use local date (toLocaleDateString('en-CA')) to avoid UTC shift when using toISOString()
+  const ymd = (d) => d.toLocaleDateString('en-CA')
+  const today = new Date()
+  const to = ymd(today)
+  const from = ymd(new Date(today.getFullYear(), today.getMonth(), 1))
+
+  // Gọi API với from/to khi mount (retry cũng truyền same range)
+  useEffect(() => {
+    console.log('[AdminDashboard] mounted — fetching metrics for', { from, to })
+    refetch({ from, to }) // => GET /admin/overview/metrics?from=YYYY-MM-DD&to=YYYY-MM-DD
+  }, [refetch])
+
   const num = (v) => (typeof v === 'number' ? v : 0)
 
   return (
@@ -34,7 +47,11 @@ export default function AdminDashboard() {
       <main className="main-content">
         <header className="header">
           <div className="welcome-section">
-            <div className="breadcrumb"><i className="fas fa-home" /> <span>Dashboard</span></div>
+            <div className="breadcrumb">
+              <i className="fas fa-home" /> <span>Dashboard</span>
+              {/* Hiển thị range đang dùng cho dễ kiểm tra */}
+              <span style={{marginLeft: 8, color: '#666'}}>• {from} → {to}</span>
+            </div>
             <h1 className="welcome-title">Xin chào, Admin!</h1>
             <p className="welcome-subtitle">Chào mừng bạn đến với EV Rental Dashboard</p>
           </div>
@@ -52,7 +69,10 @@ export default function AdminDashboard() {
           {loading ? (
             <div className="stat-card">Đang tải...</div>
           ) : error ? (
-            <div className="stat-card">Lỗi KPI: {error?.message || error} <button onClick={refetch}>Thử lại</button></div>
+            <div className="stat-card">
+              Lỗi KPI: {error?.message || String(error)}{' '}
+              <button onClick={() => refetch({ from, to })}>Thử lại</button>
+            </div>
           ) : (
             <>
               <KpiCard title="Tổng doanh thu (tháng)" value={formatVND(num(m?.revenueMonth))} sub={m?.deltaRevenueMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaRevenueMoM)}`} />

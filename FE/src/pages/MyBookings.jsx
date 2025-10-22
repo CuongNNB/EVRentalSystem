@@ -178,6 +178,7 @@ const MyBookings = () => {
                     // Map times (use startTime / expectedReturnTime fields from API)
                     startAt: item.startTime ?? item.createdAt ?? null,
                     endAt: item.expectedReturnTime ?? item.actualReturnTime ?? null,
+                    actualReturnTime: item.actualReturnTime ?? null,
                     // Pricing (API may not provide pricePerHour, extrasFee, totalPrice)
                     pricePerHour: item.pricePerHour ?? 0,
                     extrasFee: item.extrasFee ?? 0,
