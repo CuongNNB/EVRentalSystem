@@ -782,7 +782,7 @@ const BookingDetailHistory = () => {
                 <div className="modal-overlay large" role="dialog" aria-modal="true" onClick={closeCheckoutModal}>
                     <div className="modal-card large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 1100, width: '95%', maxHeight: '90vh', overflow: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <h3 style={{ margin: 0 }}>Thanh toán — Xem lại đơn</h3>
+                            <h3 style={{ margin: 0 }}>Thanh toán đơn hàng #{normalized.bookingId}</h3>
                             <button className="modal-close" onClick={closeCheckoutModal} aria-label="Đóng">Đóng ✕</button>
                         </div>
 
