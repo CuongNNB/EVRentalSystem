@@ -70,7 +70,7 @@ public class InspectionService {
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
-                booking.setStatus(BookingStatus.Pending_Vehicle_Pickup.toString());
+                booking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
                 bookingRepository.save(booking);
             });
             int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
