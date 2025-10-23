@@ -18,7 +18,7 @@ public class BookingPaymentController {
 
     private final BookingPaymentService bookingPaymentService;
 
-    /// PUT API: http://localhost:8084/EVRentalSystem/api/bookings/{bookingId}/payment
+    /// PUT API: http://localhost:8084/EVRentalSystem/api/bookings/payment
     /// RequestBody gồm có:
     /// bookingId: Integer
     /// promotionId: Integer (nullable)

@@ -1004,3 +1004,70 @@
 .modal-cancel:hover {
     background: #f3f4f6;
 }
+
+/* container */
+.fees-container {
+    margin-top: 8px;
+    border-top: 1px dotted #e6e6e6; /* hoặc dashed tùy thích */
+    padding-top: 8px;
+}
+
+/* header nhỏ (optional) */
+.fees-header {
+    font-weight: 600;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+/* tổng phụ phí - nổi bật */
+.fee-line.fee-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed #f0f0f0;
+    font-weight: 600;
+}
+
+/* mỗi item phí */
+.fee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dotted #f4f4f4;
+}
+
+/* nhãn phí (trái) */
+.fee-item-label {
+    font-size: 14px;
+    color: #444;
+}
+
+/* số tiền (phải) */
+.fee-item-amount {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111;
+    white-space: nowrap;
+    margin-left: 12px;
+}
+
+/* khi không có mục phụ phí */
+.fee-line .fee-label {
+    color: #777;
+}
+
+/* responsive: nếu container nhỏ, cho label xuống dòng nhỏ (tùy chọn) */
+@media (max-width: 520px) {
+    .fee-item, .fee-line.fee-total {
+        flex-wrap: wrap;
+    }
+    .fee-item-amount {
+        margin-left: 0;
+        width: 100%;
+        text-align: right;
+        margin-top: 4px;
+    }
+}

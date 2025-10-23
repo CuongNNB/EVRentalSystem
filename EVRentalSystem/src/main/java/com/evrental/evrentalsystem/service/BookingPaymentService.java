@@ -57,14 +57,14 @@ public class BookingPaymentService {
         // Tạo hoặc cập nhật Payment
         Payment payment = paymentRepository.findByBooking(booking)
                 .map(existing -> {
-                    existing.setTotal(req.getTotalCharged());
+                    existing.setTotal(req.getTotal());
                     existing.setPaidAt(LocalDateTime.now());
                     return existing;
                 })
                 .orElseGet(() -> {
                     Payment p = new Payment();
                     p.setBooking(booking);
-                    p.setTotal(req.getTotalCharged());
+                    p.setTotal(req.getTotal());
                     p.setPaidAt(LocalDateTime.now());
                     return p;
                 });

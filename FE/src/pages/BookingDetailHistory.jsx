@@ -240,47 +240,39 @@ const BookingDetailHistory = () => {
         let durationText = '';     // human readable: "1 ngày 3 giờ" / "3 giờ 15 phút" / "45 phút"
         let daysForBilling = 0;    // số ngày nguyên (cũng giữ để nếu cần tính phí dựa trên ngày)
         if (start && end) {
-            // bảo đảm end >= start
             let diffMs = end.getTime() - start.getTime();
             if (diffMs < 0) diffMs = 0;
 
-            // tính tổng phút/giờ/ngày
+            // Tính tổng phút, giờ, ngày
             const totalMinutes = Math.floor(diffMs / (1000 * 60));
             const totalHours = Math.floor(totalMinutes / 60);
-            const daysPart = Math.floor(totalHours / 24);
-            const hoursPart = totalHours % 24;
             const minutesPart = totalMinutes % 60;
 
-            // xây chuỗi hiển thị thân thiện
+            // 👉 Làm tròn theo quy tắc 30 phút
+            let roundedHours = totalHours;
+            if (minutesPart >= 30) {
+                roundedHours += 1;
+            }
+
+            const daysPart = Math.floor(roundedHours / 24);
+            const hoursPart = roundedHours % 24;
+
+            // Xây chuỗi hiển thị
             if (daysPart > 0) {
-                // có ít nhất 1 ngày
                 daysForBilling = daysPart;
                 if (hoursPart > 0) {
                     durationText = `${daysPart} ngày ${hoursPart} giờ`;
-                } else if (minutesPart > 0) {
-                    durationText = `${daysPart} ngày ${minutesPart} phút`;
                 } else {
                     durationText = `${daysPart} ngày`;
                 }
             } else {
-                // < 24 giờ
-                if (totalHours > 0) {
-                    if (minutesPart > 0) {
-                        durationText = `${totalHours} giờ ${minutesPart} phút`;
-                    } else {
-                        durationText = `${totalHours} giờ`;
-                    }
+                if (hoursPart > 0) {
+                    durationText = `${hoursPart} giờ`;
                 } else {
-                    // < 1 giờ -> show phút (ít nhất 1 phút)
-                    const minutesToShow = Math.max(1, minutesPart);
-                    durationText = `${minutesToShow} phút`;
+                    durationText = `${minutesPart} phút`;
                 }
                 daysForBilling = 0;
             }
-        } else {
-            // nếu thiếu start hoặc end
-            durationText = 'Đang cập nhật';
-            daysForBilling = 0;
         }
 
         const deposit = normalized.deposit ?? 0;
@@ -574,25 +566,26 @@ const BookingDetailHistory = () => {
                             {/* Phụ phí: hiển thị danh sách phụ phí có tên tiếng Việt */}
                             <div className="price-row">
                                 <span className="price-label">Phụ phí:</span>
+                                {/* Phần hiển thị phụ phí */}
                                 <div className="fees-container">
-                                    {/* Tổng phụ phí */}
+                                    {/* Tiêu đề nhỏ (nếu muốn giống ảnh) */}
+                                    <div className="fees-header">Các chi phí phát sinh</div>
+
+                                    {/* Tổng phụ phí - nổi bật ở trên cùng */}
                                     <div className="fee-line fee-total">
-                                        <span className="fee-label">Tổng phụ phí</span>
+                                        <span className="fee-label" style={{ fontWeight: 'bold'}}>Tổng phụ phí</span>
                                         <span className="fee-amount">{fmtVND(extrasFeeDisplayed)}</span>
                                     </div>
 
                                     {/* Loading & Error */}
-                                    {loadingFees && <div className="fee-line"><span className="fee-label">🔄 Đang tải...</span></div>}
+                                    {loadingFees && <div className="fee-line"><span className="fee-label">Đang tải...</span></div>}
                                     {errorFees && <div className="fee-line text-error"><span className="fee-label">Lỗi tải phụ phí: {errorFees}</span></div>}
 
                                     {/* Danh sách chi tiết phụ phí */}
                                     {!loadingFees && Array.isArray(additionalFees) && additionalFees.length > 0 ? (
                                         <div className="fee-list">
                                             {additionalFees.map((fee, idx) => {
-                                                // Lấy feeType hoặc name
                                                 const feeType = (fee.feeType ?? fee.name ?? fee.feeName ?? '').trim();
-
-                                                // Map sang tên tiếng Việt
                                                 const feeNameMap = {
                                                     Damage_Fee: 'Phí hư hỏng xe',
                                                     Over_Mileage_Fee: 'Phí vượt quá odo quy định',
@@ -601,14 +594,13 @@ const BookingDetailHistory = () => {
                                                     Fuel_Fee: 'Phí xăng dầu',
                                                     Other_Fee: 'Phí khác',
                                                 };
-
-                                                const vietnameseName = feeNameMap[feeType] || feeType || `Phụ phí ${idx + 1}`;
-                                                const amount = Number(fee.amount ?? fee.feeAmount ?? fee.value ?? fee.total ?? 0);
+                                                const label = feeNameMap[feeType] || feeType || fee.title || `Phụ phí ${idx + 1}`;
+                                                const amount = Number(fee.amount ?? fee.feeAmount ?? fee.value ?? fee.total ?? 0) || 0;
 
                                                 return (
                                                     <div key={idx} className="fee-item">
-                                                        <span className="fee-item-label">- {vietnameseName}:</span>
-                                                        <span className="fee-item-amount">{fmtVND(isNaN(amount) ? 0 : amount)}</span>
+                                                        <span className="fee-item-label">- {label}</span>
+                                                        <span className="fee-item-amount">{fmtVND(amount)}</span>
                                                     </div>
                                                 );
                                             })}
