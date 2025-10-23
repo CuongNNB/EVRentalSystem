@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.repository;
 
+import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.Payment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,4 +43,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Integer> {
     default List<Payment> findTopNByOrderByPaidAtDesc(int n) {
         return findRecent(PageRequest.of(0, n));
     }
+
+    Optional<Payment> findByBooking(Booking booking);
 }

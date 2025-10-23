@@ -11,6 +11,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class UpdatePaymentRequest {
     private Integer bookingId;
-    private BigDecimal total;
     private Integer promotionId;
+    private Double totalCharged;
 }
