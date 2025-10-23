@@ -132,17 +132,6 @@ CREATE TABLE Booking
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion (promotion_id)
     );
 
--- ============================
--- (9) Payment_Method
--- ============================
-CREATE TABLE Payment_Method
-(
-    method_id     INT IDENTITY (1,1) PRIMARY KEY,
-    method_name   NVARCHAR(100) NOT NULL,
-    [description] NVARCHAR(MAX),
-    qr_image      NVARCHAR(MAX),
-    [status]      NVARCHAR(50)
-);
 
 -- ============================
 -- (10) Payment
@@ -152,10 +141,8 @@ CREATE TABLE Payment
     payment_id INT IDENTITY (1,1) PRIMARY KEY,
     booking_id INT            NOT NULL UNIQUE,
     total      DECIMAL(10, 2) NOT NULL,
-    method_id  INT            NOT NULL,
     paid_at    DATETIME2      NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Payment_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
-    CONSTRAINT FK_Payment_Method FOREIGN KEY (method_id) REFERENCES Payment_Method (method_id)
 );
 
 -- ============================
@@ -371,19 +358,12 @@ VALUES (3, 1, 1, '51A-12345', 1, GETDATE(), GETDATE(), DATEADD(DAY, 1, GETDATE()
         DATEADD(DAY, -9, GETDATE()), DATEADD(DAY, -9, GETDATE()), 3000000, 'COMPLETED'); -- booking_id = 2
 GO
 
--- ========================
--- 9. Payment_Method
--- ========================
-INSERT INTO Payment_Method (method_name, [description], qr_image, [status])
-VALUES (N'MoMo', N'Thanh toán qua ví MoMo', NULL, 'ACTIVE'),
-       (N'ZaloPay', N'Thanh toán qua ví ZaloPay', NULL, 'ACTIVE');
-GO
 
 -- ========================
 -- 10. Payment
 -- ========================
-INSERT INTO Payment (booking_id, total, method_id, paid_at)
-VALUES (2, 2700000, 1, DATEADD(DAY, -9, GETDATE())); -- Thanh toán hoàn tất cho booking 2
+INSERT INTO Payment (booking_id, total, paid_at)
+VALUES (2, 2700000, DATEADD(DAY, -9, GETDATE())); -- Thanh toán hoàn tất cho booking 2
 GO
 
 -- ========================
