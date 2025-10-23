@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
 import './BookingDetailHistory.css';
+import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhúng vào modal
 
 const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
@@ -61,10 +62,18 @@ const BookingDetailHistory = () => {
     const [loadingInsp, setLoadingInsp] = useState(true);
     const [errorInsp, setErrorInsp] = useState(null);
 
+    const [additionalFees, setAdditionalFees] = useState([]);
+    const [loadingFees, setLoadingFees] = useState(false);
+    const [errorFees, setErrorFees] = useState(null);
+
     const [updating, setUpdating] = useState(false);
     const [updateError, setUpdateError] = useState(null);
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
+
+    // NEW: checkout modal state & payload
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [checkoutPayload, setCheckoutPayload] = useState(null);
 
     // Prefer booking from navigation state (forwarded from MyBookings)
     useEffect(() => {
@@ -111,6 +120,69 @@ const BookingDetailHistory = () => {
         fetchInspections();
     }, [booking, id]);
 
+    // 🔹 NEW: Fetch additional fees by bookingId on load, save to localStorage
+    useEffect(() => {
+        const bookingIdToUse = booking?.bookingId ? booking.bookingId : (id ? parseInt(id) : null);
+        if (!bookingIdToUse) return;
+
+        const storageKey = `additionalFees_booking_${bookingIdToUse}`;
+
+        // try to load from localStorage first
+        const loadFromLocal = () => {
+            try {
+                const raw = localStorage.getItem(storageKey);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+                return null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const cached = loadFromLocal();
+        if (cached) {
+            setAdditionalFees(cached);
+            // still try to refresh from server in background (non-blocking)
+        }
+
+        const fetchFees = async () => {
+            try {
+                setLoadingFees(true);
+                setErrorFees(null);
+
+                const resp = await fetch(`${API_BASE}/additional-fees/by-booking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId: bookingIdToUse }),
+                });
+
+                if (!resp.ok) {
+                    const errBody = await resp.json().catch(() => ({}));
+                    throw new Error(errBody.message || `HTTP ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                const fees = Array.isArray(data) ? data : [];
+
+                // save to state and localStorage
+                setAdditionalFees(fees);
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify(fees));
+                } catch (e) {
+                    console.warn("Không thể lưu phụ phí vào localStorage:", e);
+                }
+            } catch (err) {
+                setErrorFees(err.message);
+            } finally {
+                setLoadingFees(false);
+            }
+        };
+
+        // Always attempt to fetch fresh data (even if cached exists)
+        fetchFees();
+    }, [booking, id]);
+
     if (!booking) {
         return (
             <div className="detail-page">
@@ -155,22 +227,81 @@ const BookingDetailHistory = () => {
     };
 
     // compute days, estimated and total for display
+    // compute days/hours/minutes and price-related data
     const computePriceData = () => {
+        // Start luôn là thời điểm đặt / bắt đầu thuê (normalized.startAt)
         const start = normalized.startAt ? new Date(normalized.startAt) : null;
-        const end = normalized.endAt ? new Date(normalized.endAt) : null;
-        let days = 0;
-        if (start && end) {
-            const diffMs = end.getTime() - start.getTime();
-            days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-        }
-        const deposit = normalized.deposit ?? 0;
-        const extrasFee = normalized.extrasFee ?? 0;
-        const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
-        const total = estimated + extrasFee;
-        return { days, deposit, extrasFee, estimated, total };
-    };
 
-    const { days, deposit, extrasFee, estimated, total } = computePriceData();
+        // End ưu tiên actualReturnTime (ngày trả thực tế), nếu không có thì expectedReturnTime (endAt)
+        const endSource = normalized.actualReturnTime ? normalized.actualReturnTime : normalized.endAt;
+        const end = endSource ? new Date(endSource) : null;
+
+        // default values
+        let durationText = '';     // human readable: "1 ngày 3 giờ" / "3 giờ 15 phút" / "45 phút"
+        let daysForBilling = 0;    // số ngày nguyên (cũng giữ để nếu cần tính phí dựa trên ngày)
+        if (start && end) {
+            // bảo đảm end >= start
+            let diffMs = end.getTime() - start.getTime();
+            if (diffMs < 0) diffMs = 0;
+
+            // tính tổng phút/giờ/ngày
+            const totalMinutes = Math.floor(diffMs / (1000 * 60));
+            const totalHours = Math.floor(totalMinutes / 60);
+            const daysPart = Math.floor(totalHours / 24);
+            const hoursPart = totalHours % 24;
+            const minutesPart = totalMinutes % 60;
+
+            // xây chuỗi hiển thị thân thiện
+            if (daysPart > 0) {
+                // có ít nhất 1 ngày
+                daysForBilling = daysPart;
+                if (hoursPart > 0) {
+                    durationText = `${daysPart} ngày ${hoursPart} giờ`;
+                } else if (minutesPart > 0) {
+                    durationText = `${daysPart} ngày ${minutesPart} phút`;
+                } else {
+                    durationText = `${daysPart} ngày`;
+                }
+            } else {
+                // < 24 giờ
+                if (totalHours > 0) {
+                    if (minutesPart > 0) {
+                        durationText = `${totalHours} giờ ${minutesPart} phút`;
+                    } else {
+                        durationText = `${totalHours} giờ`;
+                    }
+                } else {
+                    // < 1 giờ -> show phút (ít nhất 1 phút)
+                    const minutesToShow = Math.max(1, minutesPart);
+                    durationText = `${minutesToShow} phút`;
+                }
+                daysForBilling = 0;
+            }
+        } else {
+            // nếu thiếu start hoặc end
+            durationText = 'Đang cập nhật';
+            daysForBilling = 0;
+        }
+
+        const deposit = normalized.deposit ?? 0;
+
+        // Compute extrasFee from fetched additionalFees if available, otherwise fallback to normalized.extrasFee
+        const extrasFromResponse = Array.isArray(additionalFees) && additionalFees.length > 0
+            ? additionalFees.reduce((sum, f) => {
+                const amt = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0);
+                return sum + (isNaN(amt) ? 0 : amt);
+            }, 0)
+            : null;
+
+        const extrasFeeComputed = extrasFromResponse !== null ? extrasFromResponse : (normalized.extrasFee ?? 0);
+
+        const estimated = Math.round(deposit / 0.3); // deposit*(1+0.3)
+        const total = estimated + extrasFeeComputed;
+        return { durationText, daysForBilling, deposit, extrasFee: extrasFeeComputed, estimated, total };
+    };
+    // hide action buttons if any inspection already CONFIRMED
+    const hasConfirmed = inspections.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
+    const { durationText, daysForBilling, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
     const callUpdateStatusApi = async (bookingId, status) => {
@@ -243,6 +374,107 @@ const BookingDetailHistory = () => {
         }
     };
 
+    // CHỈNH: mở modal Checkout và truyền dữ liệu
+    // Thay thế hàm handleProceedToCheckout trong BookingDetailHistory.jsx bằng đoạn sau:
+    // Thay thế hoàn toàn hàm handleProceedToCheckout cũ bằng đoạn này
+    const handleProceedToCheckout = () => {
+        // Chuẩn hoá các trường thời gian
+        const startIso = normalized.startAt || null;
+        // ưu tiên Ngày trả thực tế ở trang BookingDetail (actualReturnTime), nếu không có thì fallback expected endAt
+        const actualReturnIso = normalized.actualReturnTime || normalized.endAt || null;
+
+        // Lấy giá thuê/ngày từ dữ liệu đã map ở MyBookings (pricePerDay)
+        // (MyBookings đã map API -> booking.pricePerDay). Nếu không có, fallback 0.
+        const pricePerDay = Number(
+            // normalized có thể chứa pricePerDay hoặc pricePerHour; ưu tiên pricePerDay
+            (booking && (booking.pricePerDay ?? booking.price ?? booking.pricePerDay)) ??
+            (normalized.pricePerDay ?? normalized.pricePerDay ?? 0)
+        ) || 0;
+
+        // Tính thời gian thuê:
+        let rentalHours = 0;
+        let rentalDays = 0;
+        let rentalDurationText = '0 giờ';
+        if (startIso && actualReturnIso) {
+            const s = new Date(startIso);
+            const e = new Date(actualReturnIso);
+            if (!isNaN(s) && !isNaN(e) && e.getTime() > s.getTime()) {
+                const ms = e.getTime() - s.getTime();
+                const totalHoursRaw = ms / (1000 * 60 * 60);
+                // làm tròn lên 1 giờ (thông thường billing theo giờ, nếu bạn muốn làm tròn khác thì sửa)
+                rentalHours = Math.ceil(totalHoursRaw);
+                rentalDays = Math.floor(rentalHours / 24);
+                const remHours = rentalHours % 24;
+                rentalDurationText = rentalDays > 0 ? `${rentalDays} ngày${remHours > 0 ? ' ' + remHours + ' giờ' : ''}` : `${remHours} giờ`;
+            }
+        }
+
+        // Tổng giá thuê (theo giờ) = rentalHours * (pricePerDay / 24)
+        // (Đây là công thức đúng khi pricePerDay là giá cho 1 ngày.)
+        const totalRentalByHour = Math.round(rentalHours * (pricePerDay / 24));
+
+        // Nếu backend đã trả tổng (totalPrice hoặc totalRental), ưu tiên dùng nó
+        const backendTotal = Number(normalized.totalPrice ?? normalized.totalRental ?? booking?.totalPrice ?? 0) || 0;
+        const totalRentalToSend = backendTotal > 0 ? backendTotal : totalRentalByHour;
+
+        // Build payload theo cấu trúc CheckoutPage mong đợi (location.state.detailBookingSummary hoặc forwardedFromParent)
+        const fb = {
+            user: {
+                name: normalized.raw?.userName || normalized.raw?.renterName || (normalized.raw?.user?.name) || '',
+                email: normalized.raw?.user?.email || '',
+                phone: normalized.raw?.user?.phone || '',
+                address: normalized.raw?.user?.address || ''
+            },
+            carData: {
+                name: normalized.vehicleBrand ? `${normalized.vehicleBrand} ${normalized.vehicleModel || ''}`.trim() : (normalized.vehicleModel || ''),
+                licensePlate: normalized.licensePlate || ''
+            },
+            bookingPayload: {
+                pickupLocation: normalized.stationName || normalized.stationAddress || '',
+                startTime: startIso || '',
+                expectedReturnTime: normalized.endAt || '',
+                actualReturnTime: actualReturnIso || null  // <-- forward ngày trả thực tế
+            },
+            totals: {
+                // pricePerDay từ MyBookings (đảm bảo backend pricePerDay được map khi fetch ở MyBookings). :contentReference[oaicite:4]{index=4}
+                pricePerDay: Number(pricePerDay) || 0,
+                dailyPrice: Number(pricePerDay) || 0, // giữ cả 2 tên để tương thích
+                deposit: Number(normalized.deposit ?? booking?.deposit ?? 0) || 0,
+                // gửi cả thời lượng tính sẵn và tổng dự tính theo giờ để Checkout dễ hiển thị
+                rentalHours,
+                rentalDays,
+                rentalDurationText,
+                totalRentalByHour,
+                totalRental: estimated
+            },
+            bookingId: normalized.bookingId ?? null,
+            // extraFees giữ nguyên mapping cũ
+            extraFees: Array.isArray(additionalFees) && additionalFees.length > 0
+                ? additionalFees.map((f, i) => {
+                    const label = (f.feeType && ({
+                        Damage_Fee: 'Phí hư hỏng xe',
+                        Over_Mileage_Fee: 'Phí vượt odo',
+                        Late_Return_Fee: 'Phí trả trễ',
+                        Cleaning_Fee: 'Phí vệ sinh',
+                        Fuel_Fee: 'Phí xăng dầu',
+                        Other_Fee: 'Phí khác'
+                    }[f.feeType])) || f.name || f.feeName || f.title || `Phụ phí ${i + 1}`;
+                    const amount = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0) || 0;
+                    return { id: f.id ?? `fee_${i}`, label, amount };
+                })
+                : (normalized.extrasFee ? [{ id: 'fallback', label: 'Phụ phí (tổng)', amount: Number(normalized.extrasFee) || 0 }] : [])
+        };
+
+        // Mở modal và truyền payload (hiện tại BookingDetailHistory đang embed CheckoutPage trong modal).
+        setCheckoutPayload(fb);
+        setCheckoutModalOpen(true);
+    };
+
+
+    const closeCheckoutModal = () => {
+        setCheckoutModalOpen(false);
+        setCheckoutPayload(null);
+    };
 
     return (
         <div className="detail-page">
@@ -267,8 +499,8 @@ const BookingDetailHistory = () => {
                     <div className="detail-header-top">
                         <h1 className="detail-title">Chi tiết đơn #{normalized.bookingId}</h1>
                         <span className={`detail-status-badge status-${(normalized.status || 'unknown').toLowerCase()}`}>
-              {getStatusText(normalized.status)}
-            </span>
+                            {getStatusText(normalized.status)}
+                        </span>
                     </div>
                     <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe</p>
                 </motion.div>
@@ -288,7 +520,7 @@ const BookingDetailHistory = () => {
                             <div className="info-column">
                                 <div className="info-row"><span className="info-label">Màu:</span><span className="info-value">{normalized.color}</span></div>
                                 <div className="info-row"><span className="info-label">Pin:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
-                                <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.batteryCapacity}</span></div>
+                                <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.odo}</span></div>
                             </div>
                         </div>
                     </motion.div>
@@ -328,19 +560,67 @@ const BookingDetailHistory = () => {
                         <div className="price-list">
                             <div className="price-row">
                                 <span className="price-label">Số ngày thuê:</span>
-                                <span className="price-value">{days} ngày</span>
+                                <span className="price-value">{durationText || 'Đang cập nhật'}</span>
                             </div>
                             <div className="price-row">
-                                <span className="price-label">Tiền dự tính:</span>
+                                <span className="price-label">Tiền dự tính phải trả:</span>
                                 <span className="price-value">{fmtVND(estimated)}</span>
                             </div>
                             <div className="price-row">
-                                <span className="price-label">Đặt cọc:</span>
+                                <span className="price-label">Số tiền đã đặt cọc:</span>
                                 <span className="price-value">{fmtVND(deposit)}</span>
                             </div>
+
+                            {/* Phụ phí: hiển thị danh sách phụ phí có tên tiếng Việt */}
                             <div className="price-row">
                                 <span className="price-label">Phụ phí:</span>
-                                <span className="price-value">{fmtVND(extrasFee)}</span>
+                                <div className="fees-container">
+                                    {/* Tổng phụ phí */}
+                                    <div className="fee-line fee-total">
+                                        <span className="fee-label">Tổng phụ phí</span>
+                                        <span className="fee-amount">{fmtVND(extrasFeeDisplayed)}</span>
+                                    </div>
+
+                                    {/* Loading & Error */}
+                                    {loadingFees && <div className="fee-line"><span className="fee-label">🔄 Đang tải...</span></div>}
+                                    {errorFees && <div className="fee-line text-error"><span className="fee-label">Lỗi tải phụ phí: {errorFees}</span></div>}
+
+                                    {/* Danh sách chi tiết phụ phí */}
+                                    {!loadingFees && Array.isArray(additionalFees) && additionalFees.length > 0 ? (
+                                        <div className="fee-list">
+                                            {additionalFees.map((fee, idx) => {
+                                                // Lấy feeType hoặc name
+                                                const feeType = (fee.feeType ?? fee.name ?? fee.feeName ?? '').trim();
+
+                                                // Map sang tên tiếng Việt
+                                                const feeNameMap = {
+                                                    Damage_Fee: 'Phí hư hỏng xe',
+                                                    Over_Mileage_Fee: 'Phí vượt quá odo quy định',
+                                                    Late_Return_Fee: 'Phí trả trễ xe',
+                                                    Cleaning_Fee: 'Phí vệ sinh xe',
+                                                    Fuel_Fee: 'Phí xăng dầu',
+                                                    Other_Fee: 'Phí khác',
+                                                };
+
+                                                const vietnameseName = feeNameMap[feeType] || feeType || `Phụ phí ${idx + 1}`;
+                                                const amount = Number(fee.amount ?? fee.feeAmount ?? fee.value ?? fee.total ?? 0);
+
+                                                return (
+                                                    <div key={idx} className="fee-item">
+                                                        <span className="fee-item-label">- {vietnameseName}:</span>
+                                                        <span className="fee-item-amount">{fmtVND(isNaN(amount) ? 0 : amount)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        !loadingFees && (
+                                            <div className="fee-line">
+                                                <span className="fee-label">Không có mục phụ phí chi tiết</span>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
                             </div>
                             <div className="price-total">
                                 <span className="price-total-label">Tổng thanh toán:</span>
@@ -350,9 +630,7 @@ const BookingDetailHistory = () => {
                             <div className="price-actions">
                                 <button
                                     className="btn-pay"
-                                    onClick={() => {
-                                        navigate('/checkout', { state: { booking: normalized } });
-                                    }}
+                                    onClick={handleProceedToCheckout}
                                 >
                                     Thanh toán
                                 </button>
@@ -376,21 +654,47 @@ const BookingDetailHistory = () => {
                                 <div key={insp.inspectionId} className="inspection-item">
                                     <div className="inspection-info">
                                         <div><strong>Phần:</strong> {insp.partName}</div>
-                                        <div><strong>Trạng thái:</strong> {insp.status}</div>
+                                        <div>
+                                            <strong>Trạng thái:</strong>{' '}
+                                            {insp.status === 'CONFIRMED'
+                                                ? 'Đã đồng ý'
+                                                : insp.status === 'PENDING'
+                                                    ? 'Đang chờ xác thực'
+                                                    : insp.status === 'REJECTED'
+                                                        ? 'Đã từ chối'
+                                                        : insp.status ?? 'Không xác định'}
+                                        </div>
                                         <div><strong>Nhân viên:</strong> {insp.staffName}</div>
                                         <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
                                         <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
                                     </div>
-                                    {insp.pictureUrl && (
+                                    {insp.pictureUrl && insp.pictureUrl.trim() !== '' ? (
                                         <div className="inspection-image-box">
-                                            <img src={insp.pictureUrl} alt={insp.partName} className="inspection-image" />
-                                            <a href={insp.pictureUrl} target="_blank" rel="noreferrer" className="document-view-link">Xem ảnh lớn</a>
+                                            <img
+                                                src={insp.pictureUrl}
+                                                alt={insp.partName || 'Ảnh kiểm tra'}
+                                                className="inspection-image"
+                                                onError={(e) => {
+                                                    // nếu ảnh lỗi (404, ...), ẩn luôn để tránh khung trống
+                                                    e.target.style.display = 'none';
+                                                    const link = e.target.parentNode.querySelector('.document-view-link');
+                                                    if (link) link.style.display = 'none';
+                                                }}
+                                            />
+                                            <a
+                                                href={insp.pictureUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="document-view-link"
+                                            >
+                                                Xem ảnh lớn
+                                            </a>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             ))}
 
-                            {inspections.length > 0 && (
+                            {inspections.length > 0 && !hasConfirmed && (
                                 <div className="inspection-actions">
                                     <button
                                         className="btn-accept"
@@ -416,6 +720,7 @@ const BookingDetailHistory = () => {
                     </motion.div>
                 </div>
             </div>
+
             {/* 🔹 ACCEPT MODAL */}
             {acceptModalOpen && (
                 <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -467,6 +772,23 @@ const BookingDetailHistory = () => {
                             >
                                 {updating ? "Đang xử lý..." : "Xác nhận từ chối"}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🔹 CHECKOUT MODAL (EMBEDDED CheckoutPage) */}
+            {checkoutModalOpen && (
+                <div className="modal-overlay large" role="dialog" aria-modal="true" onClick={closeCheckoutModal}>
+                    <div className="modal-card large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 1100, width: '95%', maxHeight: '90vh', overflow: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <h3 style={{ margin: 0 }}>Thanh toán — Xem lại đơn</h3>
+                            <button className="modal-close" onClick={closeCheckoutModal} aria-label="Đóng">Đóng ✕</button>
+                        </div>
+
+                        {/* Embed CheckoutPage and pass forwardedFromParent + embedded flag to hide Header/Footer */}
+                        <div style={{ width: '100%' }}>
+                            <CheckOutPage forwardedFromParent={checkoutPayload} embedded={true} />
                         </div>
                     </div>
                 </div>

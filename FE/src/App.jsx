@@ -25,6 +25,8 @@ import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
+import { AdminDashboard, AdminGuard } from "./pages/admin";
+import Forbidden from "./pages/Forbidden";
 
 function App() {
     console.log('App component is rendering...');
@@ -62,7 +64,11 @@ function App() {
                         <Route path="/map-stations" element={<MapStationsDemo/>}/>
 
                         //Phần trang của Staff
-                        <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
+                                                <Route path="/403" element={<Forbidden/>} />
+                                                <Route element={<AdminGuard/>}>
+                                                    <Route path="/admin" element={<AdminDashboard/>} />
+                                                </Route>
+                                                <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
                         <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
                         <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
                         <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />

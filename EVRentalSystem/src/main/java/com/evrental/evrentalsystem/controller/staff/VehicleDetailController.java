@@ -104,5 +104,15 @@ public class VehicleDetailController {
     }
 
 
+    @PostMapping("/{bookingId}/update-return-time")
+    public ResponseEntity<ApiResponse<String>> updateStatusOfVehicleToAvailableByBookingId(
+            @PathVariable int bookingId
+    ){
+        staffService.updateStatusOfVehicleToAvailableByBookingId(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Update thành công", ""));
+    }
+
+
+
 
 }

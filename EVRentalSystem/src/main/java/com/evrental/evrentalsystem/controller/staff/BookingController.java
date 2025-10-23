@@ -105,5 +105,13 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Update thành công", ""));
     }
 
+    @PostMapping("/{bookingId}/update-return-time")
+    public ResponseEntity<ApiResponse<String>> updateActualReturnTimeOfBooking(
+            @PathVariable int bookingId
+    ){
+        staffService.updateActualReturnTimeOfBooking(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Update thành công", ""));
+    }
+
 
 }

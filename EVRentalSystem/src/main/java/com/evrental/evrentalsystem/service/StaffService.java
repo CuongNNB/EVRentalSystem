@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -177,38 +176,43 @@ public class StaffService {
     ) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
-        if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
-            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
-            if (i == null) {
-                log.warn("⚠️ Không tìm thấy inspection Odometer cho booking {}", booking.getBookingId());
+        if(feeName == AdditionalFeeEnum.Late_Return_Fee){
+            long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
+            int rentingHours = (int) Math.ceil(minutes / 60.0);
+            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
+            if(minutes >= 0){
+                try {
+                    AdditionalFee af = new AdditionalFee();
+                    af.setBooking(booking);
+                    af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+                    double cost = rentingHours * pricePerHour;
+                    af.setAmount(cost);
+                    af.setDescription(desc);
+                    additionalFeeRepository.save(af);
+                    return true;
+                } catch (Exception e) {
+                    log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
+                    return false;
+                }
+            }else{
                 return false;
             }
 
-            // 2️⃣ Parse mô tả (description) để lấy số km trước khi thuê
-            int odoBefore = Integer.parseInt(i.getDescription().replaceAll("[^0-9]", ""));
-            int odoAfter = amount; // amount bạn truyền vào chính là km hiện tại (sau khi khách trả)
-            log.info("📏 Odo trước: {} km | Odo sau: {} km", odoBefore, odoAfter);
-
-            // 3️⃣ Tính tổng thời gian thuê
+        }
+        if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
+            int odoBefore =  Integer.parseInt(i.getDescription().replaceAll("[^0-9]", "")) ;
+            int odoAfter = amount;
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
-            log.info("⏱️ Thời gian thuê: {} phút (~{} giờ)", minutes, rentingHours);
-
-            // 4️⃣ Tính tổng số km cho phép
             int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
-            log.info("✅ Tổng quãng đường cho phép: {} km ({} km/h)",
-                    totalAllowedOdo, Enum.Allowed_distance_per_hour.getValue());
-
-            // 5️⃣ Lấy giá xe theo giờ
-            double pricePerHour = booking.getVehicleModel().getPrice() / 24.0;
-            log.info("💰 Giá thuê theo giờ: {} VND/giờ (Giá ngày = {})", pricePerHour, booking.getVehicleModel().getPrice());
-
+            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
             if(totalAllowedOdo < odoAfter){
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
                     af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
-                    double cost = (odoAfter - totalAllowedOdo) * (pricePerHour/Enum.Cost_per_kWh.getValue());
+                    double cost = (odoAfter - totalAllowedOdo) * (pricePerHour/Enum.Allowed_distance_per_hour.getValue());
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
@@ -231,7 +235,7 @@ public class StaffService {
                     af.setBooking(booking);
                     af.setFeeName(feeName.name());
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
-                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
+                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue();
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
@@ -367,13 +371,26 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public void UpdateLicensePlateForBooking(int bookingId, String licensePlate){
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(licensePlate);
         booking.setVehicleDetail(vd);
         bookingRepository.save(booking);
+    }
+
+    public void updateActualReturnTimeOfBooking(int bookingId){
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        booking.setActualReturnTime(LocalDateTime.now());
+        bookingRepository.save(booking);
+    }
+
+    public void updateStatusOfVehicleToAvailableByBookingId(int bookingId){
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(booking.getVehicleDetail().getLicensePlate());
+        vd.setStatus(VehicleStatus.AVAILABLE.name());
     }
 }
 

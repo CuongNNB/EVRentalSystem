@@ -122,6 +122,7 @@ public class    BookingService {
             dto.setVehicleModel(model.getModel());
             dto.setBrand(model.getBrand());
             dto.setSeats(model.getSeats());
+            dto.setPrice(model.getPrice()*1000);
         }
 
         if (detail != null) {

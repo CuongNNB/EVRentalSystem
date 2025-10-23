@@ -9,6 +9,7 @@ public class BookingDetailResponse {
     private String brand;
     private String color;
     private Integer seats;
+    private double price;
     private String batteryCapacity;
     private Integer odo;
     private String licensePlate;

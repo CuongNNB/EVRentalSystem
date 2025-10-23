@@ -6,10 +6,8 @@
         Pending_Vehicle_Pickup,
         Pending_renter_confirmation,
         Vehicle_Inspected_Before_Pickup,
-        Vehicle_Pickup_Overdue,
         Currently_Renting,
         Vehicle_Returned,
         Total_Fees_Charged,
         Completed,
-        Vehicle_Return_Overdue
     }
