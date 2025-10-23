@@ -1,14 +1,21 @@
 import React, { useEffect } from 'react'
 import './AdminDashboard.css'
+import '../staff/StaffLayout.css'
 import KpiCard from '../../components/admin/KpiCard'
 import RevenueChart from '../../components/admin/RevenueChart'
-import TopStations from '../../components/admin/TopStations'
+import TopStations from './components/TopStationsCard'
 import RecentRentals from '../../components/admin/RecentRentals'
 import ActivityFeed from '../../components/admin/ActivityFeed'
 import ExportButtons from '../../components/admin/ExportButtons'
+import StationVehiclesCard from './components/StationVehiclesCard'
+import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import useAdminMetrics from './hooks/useAdminMetrics'
+import useVehicles from './hooks/useVehicles'
+import VehicleCardList from './components/VehicleCardList'
 import { formatPercent, formatVND } from '../../utils/format'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
+import { useAuth } from '../../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 export default function AdminDashboard() {
   const { data: m, loading, error, refetch } = useAdminMetrics()
@@ -27,45 +34,44 @@ export default function AdminDashboard() {
   }, [refetch])
 
   const num = (v) => (typeof v === 'number' ? v : 0)
+  const params = new URLSearchParams(window.location.search)
+  const showDebug = params.get('debug') === '1'
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <ErrorBoundary>
-      <div className="container" style={{ padding: 16, color: '#111', background: '#fff', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
-      <div data-test="marker">MARKER: AdminDashboard is rendering</div>
-      <aside className="sidebar">
-        <div className="logo"><h1><i className="fas fa-bolt" /> <span className="logo-text">EV-Rental Admin</span></h1></div>
-        <nav>
-          <div className="nav-item active"><i className="fas fa-chart-pie" /> Tổng quan</div>
-          <div className="nav-item"><i className="fas fa-car" /> Quản lý xe</div>
-          <div className="nav-item"><i className="fas fa-map-marker-alt" /> Quản lý điểm thuê</div>
-          <div className="nav-item"><i className="fas fa-users" /> Quản lý khách hàng</div>
-          <div className="nav-item"><i className="fas fa-user-tie" /> Quản lý nhân viên</div>
-          <div className="nav-section"><div className="nav-section-title">Analytics</div></div>
-        </nav>
-      </aside>
+      <div className="admin-layout">
+        <AdminSlideBar activeKey="overview" />
 
-      <main className="main-content">
-        <header className="header">
-          <div className="welcome-section">
-            <div className="breadcrumb">
-              <i className="fas fa-home" /> <span>Dashboard</span>
-              {/* Hiển thị range đang dùng cho dễ kiểm tra */}
-              <span style={{marginLeft: 8, color: '#666'}}>• {from} → {to}</span>
+        <main className="main-content">
+          <header className="header">
+            <div className="search-container" style={{flex:1, maxWidth: 720}}>
+              <i className="fas fa-search" style={{marginRight:8, color:'#94a3b8'}} />
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Tìm kiếm xe theo biển số, mã xe hoặc model..."
+                style={{width: '100%', borderRadius: 8}}
+              />
             </div>
-            <h1 className="welcome-title">Xin chào, Admin!</h1>
-            <p className="welcome-subtitle">Chào mừng bạn đến với EV Rental Dashboard</p>
-          </div>
-          <div className="header-right"><div className="date-time"><div className="current-date">--</div><div className="current-time">--</div></div><div className="admin-avatar">AD</div></div>
-        </header>
+            <div className="header-actions" style={{display:'flex', gap:12, alignItems:'center'}}>
+              <ExportButtons />
+              <button className="quick-btn" onClick={() => console.log('Add new vehicle')}>
+                <i className="fas fa-plus"></i>
+                <span>Thêm xe mới</span>
+              </button>
+            </div>
+          </header>
 
-        <div className="quick-actions">
-          <button className="quick-btn"><i className="fas fa-plus-circle" /> Thêm xe mới</button>
-          <button className="quick-btn"><i className="fas fa-user-plus" /> Đăng ký KH</button>
-          <button className="quick-btn"><i className="fas fa-map-marker-alt" /> Thêm điểm thuê</button>
-          <button className="quick-btn"><i className="fas fa-file-export" /> Xuất báo cáo</button>
-        </div>
+       
 
-        <div className="stats-grid">
+  <div className="stats-grid">
           {loading ? (
             <div className="stat-card">Đang tải...</div>
           ) : error ? (
@@ -77,19 +83,29 @@ export default function AdminDashboard() {
             <>
               <KpiCard title="Tổng doanh thu (tháng)" value={formatVND(num(m?.revenueMonth))} sub={m?.deltaRevenueMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaRevenueMoM)}`} />
               <KpiCard title="Lượt thuê hôm nay" value={num(m?.rentalsToday)} sub={m?.deltaRentalsDoD!=null && `So với hôm qua: ${formatPercent(m?.deltaRentalsDoD)}`} />
-              <KpiCard title="Tổng số xe" value={num(m?.vehiclesTotal)} sub={`${num(m?.vehiclesActive)} hoạt động • ${num(m?.vehiclesMaint)} bảo trì`} />
+              <StationVehiclesCard />
               <KpiCard title="Khách hàng" value={num(m?.customersTotal)} sub={m?.deltaCustomersMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaCustomersMoM)}`} />
               <KpiCard title="Tỷ lệ sử dụng" value={formatPercent(num(m?.utilizationRate))} sub={m?.deltaUtilizationWoW!=null && `So với tuần trước: ${formatPercent(m?.deltaUtilizationWoW)}`} />
             </>
           )}
         </div>
 
+        {showDebug && (
+          <div style={{padding:12,background:'#fff',border:'1px solid #eee',marginTop:12}}>
+            <h4>Debug: mapped metrics</h4>
+            <pre style={{fontSize:12}}>{JSON.stringify(m, null, 2)}</pre>
+          </div>
+        )}
+
+        {/* Vehicles content card (preview) */}
+     
+
         <div className="dashboard-grid">
           <div className="chart-container"><RevenueChart /></div>
           <div className="activity-feed"><ActivityFeed /></div>
         </div>
 
-        <div style={{display:'grid', gridTemplateColumns: '1fr 1fr', gap:24, marginBottom:24}}>
+        <div className="panels-grid">
           <TopStations />
           <RecentRentals />
         </div>
@@ -99,4 +115,10 @@ export default function AdminDashboard() {
       </div>
     </ErrorBoundary>
   )
+}
+
+function VehiclePreview() {
+  // small preview using vehicles hook
+  const { data: vehicles, loading } = useVehicles({ filters: {}, pagination: { page: 1, limit: 8 } })
+  return <VehicleCardList vehicles={vehicles} loading={loading} />
 }
