@@ -244,10 +244,10 @@ const CheckCar = () => {
           formData.append("bookingId", bookingId);
           formData.append("partName", partName);
           formData.append("picture", blob, "placeholder.png");
-          
-         
-          
-          formData.append("description", description);
+
+
+
+          formData.append("description", descriptions[slotId] || "");
           formData.append("staffId", staffId);
           formData.append("status", DEFAULT_INSPECTION_STATUS);
 
@@ -275,7 +275,7 @@ const CheckCar = () => {
     // Gọi API cập nhật trạng thái booking
     try {
       await api.put(`/api/bookings/${encodeURIComponent(bookingId)}/status`, null, {
-        params: { status: "Vehicle_Inspected_Before_Pickup" },
+          params: { status: "Pending_Renter_Confirmation" },
       });
     } catch (statusError) {
       console.warn("Unable to update booking status", statusError);
