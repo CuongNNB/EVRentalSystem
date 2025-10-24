@@ -235,7 +235,7 @@ public class StaffService {
                     af.setBooking(booking);
                     af.setFeeName(feeName.name());
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
-                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue();
+                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
