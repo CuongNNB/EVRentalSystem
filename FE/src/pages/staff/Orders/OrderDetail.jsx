@@ -188,16 +188,15 @@ const OrderDetail = () => {
 
   const getStatusConfig = (status) => {
     const statusMap = {
-      Pending_Deposit_Confirmation: { label: "Chờ xác nhận đặt cọc", variant: "warning" },
-      Pending_Contract_Signing: { label: "Chờ ký hợp đồng", variant: "warning" },
-      Pending_Vehicle_Pickup: { label: "Chờ nhận xe", variant: "warning" },
-      Vehicle_Inspected_Before_Pickup: { label: "Đã kiểm tra xe", variant: "info" },
-      Vehicle_Pickup_Overdue: { label: "Quá hạn nhận xe", variant: "error" },
-      Currently_Renting: { label: "Đang thuê", variant: "success" },
-      Vehicle_Returned: { label: "Đã trả xe", variant: "success" },
-      Vehicle_Return_Overdue: { label: "Quá hạn trả xe", variant: "error" },
-      Total_Fees_Charged: { label: "Tính phí bổ sung", variant: "warning" },
-      Completed: { label: "Hoàn thành", variant: "success" },
+        Pending_Deposit_Confirmation: { label: "Chờ xác nhận đặt cọc", variant: "warning" },
+        Pending_Contract_Signing: { label: "Chờ ký hợp đồng", variant: "warning" },
+        Pending_Vehicle_Pickup: { label: "Chờ nhận xe", variant: "warning" },
+        Pending_Renter_Confirmation: { label: "Chờ khách xác nhận", variant: "warning" },
+        Vehicle_Inspected_Before_Pickup: { label: "Đã kiểm tra xe", variant: "info" },
+        Currently_Renting: { label: "Đang thuê", variant: "success" },
+        Vehicle_Returned: { label: "Đã trả xe", variant: "success" },
+        Total_Fees_Charged: { label: "Tính phí bổ sung", variant: "warning" },
+        Completed: { label: "Hoàn thành", variant: "success" },
     };
     return statusMap[status] || { label: status, variant: "default" };
   };

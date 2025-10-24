@@ -26,6 +26,7 @@ import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 import { AdminDashboard, AdminGuard } from "./pages/admin";
+import VehicleAdminPage from "./pages/admin/VehicleAdminPage";
 import Forbidden from "./pages/Forbidden";
 
 function App() {
@@ -67,6 +68,7 @@ function App() {
                                                 <Route path="/403" element={<Forbidden/>} />
                                                 <Route element={<AdminGuard/>}>
                                                     <Route path="/admin" element={<AdminDashboard/>} />
+                                                    <Route path="/admin/vehicles" element={<VehicleAdminPage/>} />
                                                 </Route>
                                                 <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
                         <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />

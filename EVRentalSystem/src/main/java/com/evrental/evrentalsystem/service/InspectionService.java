@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
 import com.evrental.evrentalsystem.repository.BookingRepository;
@@ -67,6 +68,9 @@ public class InspectionService {
         for (Inspection inspection : inspections) {
             inspection.setStatus(status);
         }
+
+        Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
+        checkBooking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {

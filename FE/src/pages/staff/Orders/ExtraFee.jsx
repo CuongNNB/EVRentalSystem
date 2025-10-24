@@ -94,6 +94,11 @@ const ExtraFee = () => {
                 return item.batteryLevel && Number(item.batteryLevel) >= 0;
             }
 
+            // Special validation for Late_Return_Fee - no amount needed
+            if (item.type === "late") {
+                return true; // Only description is required, which is already checked above
+            }
+
             return item.amount && Number(item.amount) > 0;
         });
     };
@@ -113,29 +118,31 @@ const ExtraFee = () => {
         try {
             // 1. Tạo các additional fee - track từng kết quả riêng biệt
             console.log(`🔄 Đang tạo ${fees.length} phí phát sinh...`, fees);
-            
+
             const feeResults = await Promise.allSettled(
                 fees.map(async (fee, index) => {
+                    // Chuẩn hóa tham số theo loại phí
                     let amount = fee.amount;
-
-                    // For Over_Mileage_Fee and Fuel_Fee, use special values
                     if (fee.type === "over_mileage") {
-                        amount = fee.odometer; // Backend will calculate the actual fee
+                        amount = fee.odometer; // BE tự tính dựa trên km
                     } else if (fee.type === "fuel") {
-                        amount = fee.batteryLevel; // Backend will calculate the actual fee
+                        amount = fee.batteryLevel; // BE tự tính dựa trên % pin
                     }
 
-                    const params = new URLSearchParams({
-                        bookingId: orderId,
-                        feeName: mapTypeToEnum(fee.type),
-                        amount: amount,
-                        desc: fee.description
-                    });
+                    // Dựng query theo yêu cầu BE
+                    const params = new URLSearchParams();
+                    params.set("bookingId", orderId);
+                    params.set("feeName", mapTypeToEnum(fee.type));
+                    // Lưu ý: với Late_Return_Fee không gửi amount (BE tự tính) → bỏ qua param này
+                    if (fee.type !== "late") {
+                        params.set("amount", String(amount ?? ""));
+                    }
+                    params.set("desc", fee.description);
 
                     console.log(`📤 Gửi phí #${index + 1}:`, {
                         type: fee.type,
                         feeName: mapTypeToEnum(fee.type),
-                        amount,
+                        amount: fee.type !== "late" ? amount : undefined,
                         desc: fee.description
                     });
 
@@ -146,10 +153,10 @@ const ExtraFee = () => {
             // Kiểm tra kết quả
             const successCount = feeResults.filter(r => r.status === 'fulfilled').length;
             const failedCount = feeResults.filter(r => r.status === 'rejected').length;
-            
+
             console.log(`✅ Thành công: ${successCount}/${fees.length} phí`);
             console.log(`❌ Thất bại: ${failedCount}/${fees.length} phí`);
-            
+
             // Log chi tiết các fee thất bại
             feeResults.forEach((result, index) => {
                 if (result.status === 'rejected') {
@@ -161,7 +168,7 @@ const ExtraFee = () => {
                 const failedIndexes = feeResults
                     .map((r, i) => r.status === 'rejected' ? i + 1 : null)
                     .filter(i => i !== null);
-                
+
                 setSubmitting(false);
                 setToast({
                     type: "error",
@@ -289,6 +296,13 @@ const ExtraFee = () => {
                                         </label>
                                     )}
 
+                                    {/* Special fields for Late_Return_Fee */}
+                                    {fee.type === "late" && (
+                                        <div className="extra-fee__info">
+                                            <p>💡 Phí trả xe trễ sẽ được tính tự động dựa trên thời gian trễ và chính sách của hệ thống.</p>
+                                        </div>
+                                    )}
+
                                     <label className="extra-fee__field">
                                         <span>Nội dung chi tiết *</span>
                                         <textarea
@@ -303,10 +317,10 @@ const ExtraFee = () => {
                                     </label>
 
                                     {/* Only show amount field for non-special fee types */}
-                                    {fee.type !== "over_mileage" && fee.type !== "fuel" && (
+                                    {fee.type !== "over_mileage" && fee.type !== "fuel" && fee.type !== "late" && (
                                         <label className="extra-fee__field extra-fee__field--inline">
                                             <div>
-                                                <span>Phí phát *</span>
+                                                <span>Phí phát sinh *</span>
                                                 <div className="extra-fee__input">
                                                     <input
                                                         type="text"

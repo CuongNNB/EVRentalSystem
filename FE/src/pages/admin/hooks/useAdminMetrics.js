@@ -8,7 +8,6 @@ export default function useAdminMetrics(initialParams) {
   const [error, setError] = useState(null)
 
   const defaultRange = thisMonthRange()
-  // store initialParams in a ref so it doesn't create a new dependency each render
   const initialRef = useRef(initialParams)
 
   const fetcher = useCallback(async (overrides = {}) => {
@@ -16,18 +15,24 @@ export default function useAdminMetrics(initialParams) {
     setLoading(true)
     setError(null)
     try {
+      // Nếu getOverviewMetrics trả Axios response, dùng: const raw = (await getOverviewMetrics(params))?.data
       const raw = await getOverviewMetrics(params)
 
+      const n = (v) => (v == null ? 0 : Number(v)) // optional: ép số an toàn
+
       const mapped = {
-        revenueMonth: raw?.revenueMonth ?? raw?.totalRevenue ?? 0,
-        rentalsToday: raw?.rentalsToday ?? raw?.todayRentals ?? 0,
+        revenueMonth: n(raw?.revenueMonth ?? raw?.totalRevenue),
+        rentalsToday: n(raw?.rentalsToday ?? raw?.todayRentals),
 
-        vehiclesTotal: raw?.vehiclesTotal ?? raw?.totalVehicles ?? 0,
-        vehiclesActive: raw?.vehiclesActive ?? raw?.activeVehicles ?? 0,
-        vehiclesMaint: raw?.vehiclesMaint ?? raw?.maintenanceVehicles ?? raw?.fixingVehicles ?? 0,
+        // thêm cả snake_case fallback:
+        vehiclesTotal: n(raw?.vehiclesTotal ?? raw?.totalVehicles ?? raw?.total_vehicles),
+        vehiclesActive: n(raw?.vehiclesActive ?? raw?.activeVehicles ?? raw?.active_vehicles),
+        vehiclesMaint: n(
+          raw?.vehiclesMaint ?? raw?.maintenanceVehicles ?? raw?.fixingVehicles ?? raw?.maintenance_vehicles
+        ),
 
-        customersTotal: raw?.customersTotal ?? raw?.totalCustomers ?? 0,
-        utilizationRate: raw?.utilizationRate ?? raw?.utilization ?? 0,
+        customersTotal: n(raw?.customersTotal ?? raw?.totalCustomers ?? raw?.total_customers),
+        utilizationRate: Number(raw?.utilizationRate ?? raw?.utilization ?? 0),
 
         deltaRevenueMoM: raw?.deltaRevenueMoM ?? raw?.delta?.revenue ?? null,
         deltaRentalsDoD: raw?.deltaRentalsDoD ?? raw?.delta?.rentals ?? null,
@@ -36,6 +41,7 @@ export default function useAdminMetrics(initialParams) {
       }
 
       setData(mapped)
+      console.debug?.('[useAdminMetrics] mapped metrics:', mapped)
       return mapped
     } catch (err) {
       setError(err)
@@ -43,10 +49,9 @@ export default function useAdminMetrics(initialParams) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, []) // deps rỗng là ổn vì initialRef giữ initialParams
 
   useEffect(() => {
-    // fetch on mount once
     fetcher().catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -210,6 +210,11 @@ const STATUS_CONFIG = {
         variant: "warning",
         bucket: "handover",
     },
+    pending_renter_confirmation: {
+        label: "Chờ khách xác nhận",
+        variant: "warning",
+        bucket: "handover",
+    },
     vehicle_inspected_before_pickup: {
         label: "Đã kiểm tra xe",
         variant: "info",
@@ -1026,24 +1031,61 @@ const OrdersList = () => {
             case "invoice":
                 // Nhận xe: cập nhật trạng thái đơn + gọi API cập nhật thời gian trả và set xe AVAILABLE
                 try {
-                    // Gọi API backend để cập nhật thời gian trả và trạng thái xe về AVAILABLE
-                    await api.post(`/api/bookings/${order.id}/update-return-time`);
+                    // 1) Cập nhật thời gian trả
+                    try {
+                        await api.post(`/api/bookings/${order.id}/update-return-time`);
+                    } catch (primaryErr) {
+                        // Fallback nếu controller map dưới /api/staff
+                        if (primaryErr?.response?.status === 404 || primaryErr?.response?.status === 405) {
+                            await api.post(`/api/staff/${order.id}/update-return-time`);
+                        } else {
+                            throw primaryErr;
+                        }
+                    }
+                    // 2) Đưa trạng thái xe về AVAILABLE
+                    let vehicleUpdateSucceeded = false;
+                    try {
+                        const cachedSelection = getCachedHandoverSelection(orderSnapshot.id);
+                        const vehicleId =
+                            cachedSelection?.vehicle?.id ||
+                            cachedSelection?.vehicleId ||
+                            resolveVehicleDetailId(orderSnapshot.raw);
 
-                    // Nếu trước đó cập nhật trạng thái đơn thành công, thông báo success; nếu không, cảnh báo nhưng vẫn coi là đã nhận xe
+                        if (vehicleId) {
+                            await api.put("/api/vehicle-details/update-status", null, {
+                                params: { vehicleId, newStatus: "AVAILABLE" },
+                            });
+                            vehicleUpdateSucceeded = true;
+                            if (typeof window !== "undefined") {
+                                window.sessionStorage.setItem(
+                                    `vehicle-status-${vehicleId}`,
+                                    JSON.stringify({ previous: "RENTED", current: "AVAILABLE", updatedAt: Date.now() })
+                                );
+                            }
+                        }
+                    } catch (vehicleErr) {
+                        console.warn("Unable to set vehicle AVAILABLE on receiving", vehicleErr);
+                    }
+
+                    const statusType = updateSucceeded && vehicleUpdateSucceeded ? "success" :
+                        (updateSucceeded || vehicleUpdateSucceeded ? "warning" : "error");
+                    const detailMessage = vehicleUpdateSucceeded
+                        ? "Trạng thái xe đã chuyển sang sẵn sàng (AVAILABLE)."
+                        : "Không thể cập nhật trạng thái xe về AVAILABLE.";
+
+                    setConnectionState({
+                        status: statusType,
+                        message: updateSucceeded
+                            ? `Đã nhận xe cho đơn ${order.id}. ${detailMessage}`
+                            : `Đã nhận xe (cập nhật trạng thái cục bộ). ${detailMessage}`,
+                    });
+                } catch (err) {
+                    console.error("Unable to update return time / vehicle availability", err);
                     setConnectionState({
                         status: updateSucceeded ? "success" : "warning",
                         message: updateSucceeded
                             ? `Đã nhận xe cho đơn ${order.id}. Đã cập nhật thời gian trả và trạng thái xe sẵn sàng.`
                             : `Đã gọi API nhận xe cho đơn ${order.id}, nhưng cập nhật trạng thái tạm thời do lỗi kết nối. Vui lòng kiểm tra lại.`,
-                    });
-                } catch (err) {
-                    console.error("Unable to update return time / vehicle availability", err);
-                    // Nếu API thất bại, vẫn giữ kết quả cập nhật trạng thái cục bộ (nếu có), và báo lỗi
-                    setConnectionState({
-                        status: updateSucceeded ? "warning" : "error",
-                        message: updateSucceeded
-                            ? `Đã nhận xe (cập nhật trạng thái cục bộ), nhưng không thể cập nhật thời gian trả/trạng thái xe. Vui lòng thử lại.`
-                            : `Không thể nhận xe cho đơn ${order.id}. Vui lòng thử lại.`,
                     });
                 }
                 break;
@@ -1192,13 +1234,12 @@ const OrdersList = () => {
                                     <option value="pending_deposit_confirmation">Chờ xác nhận đặt cọc</option>
                                     <option value="pending_contract_signing">Chờ ký hợp đồng</option>
                                     <option value="pending_vehicle_pickup">Chờ nhận xe</option>
+                                    <option value="pending_renter_confirmation">Chờ khách xác nhận</option>
                                     <option value="vehicle_inspected_before_pickup">Đã kiểm tra xe</option>
-                                    <option value="vehicle_pickup_overdue">Quá hạn nhận xe</option>
                                     <option value="currently_renting">Đang thuê</option>
                                     <option value="vehicle_returned">Đã trả xe</option>
                                     <option value="total_fees_charged">Tính phí bổ sung</option>
                                     <option value="completed">Hoàn thành</option>
-                                    <option value="vehicle_return_overdue">Quá hạn trả xe</option>
                                 </select>
                                 <select
                                     value={dateFilter}

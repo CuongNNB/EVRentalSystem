@@ -5,6 +5,7 @@ const asArray = (payload) => {
 	if (!payload) return []
 	if (Array.isArray(payload)) return payload
 	if (Array.isArray(payload.items)) return payload.items
+	if (Array.isArray(payload.rentals)) return payload.rentals
 	if (Array.isArray(payload.data)) return payload.data
 	if (Array.isArray(payload.content)) return payload.content
 	if (Array.isArray(payload.results)) return payload.results
@@ -13,23 +14,9 @@ const asArray = (payload) => {
 
 export const getOverviewMetrics = async (params = {}) => {
 	const { data } = await api.get('/admin/overview/metrics', { params })
-	return {
-		revenueMonth: data.revenueMonth ?? data.totalRevenueMonth ?? data.revenue ?? 0,
-		deltaRevenueMoM: data.deltaRevenueMoM ?? data.revenueMoM ?? null,
-
-		rentalsToday: data.rentalsToday ?? data.todayRentals ?? 0,
-		deltaRentalsDoD: data.deltaRentalsDoD ?? data.rentalsDoD ?? null,
-
-		vehiclesTotal: data.vehiclesTotal ?? data.totalVehicles ?? 0,
-		vehiclesActive: data.vehiclesActive ?? data.activeVehicles ?? 0,
-		vehiclesMaint: data.vehiclesMaint ?? data.maintenanceVehicles ?? 0,
-
-		customersTotal: data.customersTotal ?? data.totalCustomers ?? 0,
-		deltaCustomersMoM: data.deltaCustomersMoM ?? data.customersMoM ?? null,
-
-		utilizationRate: data.utilizationRate ?? data.utilization ?? 0,
-		deltaUtilizationWoW: data.deltaUtilizationWoW ?? data.utilizationWoW ?? null,
-	}
+	// return raw data (hook will map fields as needed)
+	try { console.debug && console.debug('[getOverviewMetrics] raw data:', data) } catch {}
+	return data
 }
 
 export const getRevenueSeries = async (params = {}) => {
@@ -63,13 +50,57 @@ export const getRevenueSeries = async (params = {}) => {
 	return { granularity: 'DAY', labels: [], values: [], total: 0 }
 }
 
-export const getTopStations = async (params = {}) => {
-	const { data } = await api.get('/admin/overview/top-stations', { params })
-	return asArray(data)
+export const getTopStations = async (params = {}, config = {}) => {
+	const { data } = await api.get('/admin/overview/top-stations', { params, ...config })
+	try { console.debug && console.debug('[getTopStations] raw:', data) } catch {}
+	// return raw data so caller can handle shapes like { stations: [...] } or [...]
+	return data
+}
+
+// --- Station helpers: total vehicles per station & options for dropdown ---
+export const getStationTotalVehicles = (stationId, config = {}) => {
+  const id = String(stationId).trim()
+  return api.get(`/admin/station/${id}/vehicles/total`, config).then(r => r.data)
+}
+
+export const getStationOptions = async () => {
+		// Try the top-stations endpoint first (less likely to 500 on some backends),
+		// then fallback to other common endpoints. This avoids hammering endpoints that return 500.
+		const tryUrls = ['/admin/overview/top-stations?limit=50', '/admin/stations', '/stations']
+	for (const u of tryUrls) {
+		try {
+				const { data } = await api.get(u)
+
+				// If we get a 500-like payload or empty, continue to next
+				if (!data) continue
+
+			if (Array.isArray(data)) {
+				return data
+					.map((x) => ({
+						id: x.id ?? x.stationId ?? x.station_id,
+						name: x.name ?? x.stationName ?? x.station_name ?? `Station ${x.id ?? ''}`,
+					}))
+					.filter((x) => x.id != null && x.name)
+			}
+
+			if (Array.isArray(data?.stations)) {
+				return data.stations
+					.map((x) => ({
+						id: x.id ?? x.stationId ?? x.station_id,
+						name: x.name ?? x.stationName ?? x.station_name ?? `Station ${x.id ?? ''}`,
+					}))
+					.filter((x) => x.id != null && x.name)
+			}
+		} catch (e) {
+			// try next URL
+		}
+	}
+	return []
 }
 
 export const getRecentRentals = async (limit = 10, range) => {
 	const { data } = await api.get('/admin/overview/recent-rentals', { params: { limit, ...(range || {}) } })
+	try { console.debug && console.debug('[getRecentRentals] raw:', data) } catch {}
 	return asArray(data)
 }
 

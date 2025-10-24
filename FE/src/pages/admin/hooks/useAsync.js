@@ -15,7 +15,9 @@ export function useAsync(fn, deps = []) {
       const res = await fn(ctl.current.signal);
       if (!ctl.current.signal.aborted) setData(res);
     } catch (e) {
-      if (!ctl.current.signal.aborted) setError(e?.message || e?.message || "Failed");
+      // If the error is due to abort/cancel, ignore it (don't surface 'canceled')
+      const isCanceled = ctl.current?.signal?.aborted || e?.code === 'ERR_CANCELED' || e?.message === 'canceled' || e?.name === 'CanceledError';
+      if (!isCanceled && !ctl.current.signal.aborted) setError(e?.message || 'Failed');
     } finally {
       if (!ctl.current.signal.aborted) setLoading(false);
     }

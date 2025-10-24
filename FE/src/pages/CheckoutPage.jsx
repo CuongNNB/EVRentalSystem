@@ -13,7 +13,6 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const { contractId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-
     // The booking detail is forwarded from BookingDetailHistory as location.state.detailBookingSummary
     // But if parent passed forwardedFromParent, prefer that.
     const forwarded = location?.state?.detailBookingSummary ?? null;
@@ -152,18 +151,33 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
             const e = new Date(end);
             if (isNaN(s) || isNaN(e)) return { totalHours: 0, days: 0, hours: 0, formatted: '0 giờ' };
 
-            const ms = e.getTime() - s.getTime();
-            const totalHoursRaw = ms / (1000 * 60 * 60);
-            const totalHours = Math.ceil(totalHoursRaw);
+            let ms = e.getTime() - s.getTime();
+            if (ms < 0) ms = 0;
+
+            const totalMinutes = Math.floor(ms / (1000 * 60));
+            const minutesPart = totalMinutes % 60;
+            let totalHours = Math.floor(totalMinutes / 60);
+
+            // Làm tròn theo quy tắc 30 phút
+            if (minutesPart >= 30) {
+                totalHours += 1;
+            }
 
             const days = Math.floor(totalHours / 24);
             const hours = totalHours % 24;
 
+            // Định dạng để hiển thị thân thiện
             let formatted = '';
             if (days > 0) {
                 formatted = `${days} ngày${hours > 0 ? ' ' + hours + ' giờ' : ''}`;
             } else {
-                formatted = `${hours} giờ`;
+                if (hours > 0) {
+                    formatted = `${hours} giờ`;
+                } else {
+                    // < 1 giờ: hiển thị phút (ít nhất 1 phút nếu totalMinutes là 0 thì giữ 0 phút)
+                    const minutesToShow = Math.max(0, minutesPart);
+                    formatted = `${minutesToShow} phút`;
+                }
             }
 
             return { totalHours, days, hours, formatted };
@@ -272,6 +286,91 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
             return;
         }
         setShowQRModal(true);
+    };
+    // Gọi API khi người dùng xác nhận "Tôi đã thanh toán"
+    const handleConfirmPayment = async () => {
+        try {
+            if (!summary) {
+                showToast && showToast('Không có thông tin booking để thực hiện thanh toán', 'error');
+                return;
+            }
+
+            // Lấy bookingId: cố gắng lấy từ các trường phổ biến
+            const rawBookingId = summary.contractCode ?? summary.bookingId ?? summary.id ?? null;
+            const bookingIdParsed = Number.isInteger(Number(rawBookingId)) ? Number(rawBookingId) : null;
+
+            if (!bookingIdParsed) {
+                showToast && showToast('BookingId không hợp lệ — không thể gửi yêu cầu thanh toán', 'error');
+                console.error('Invalid bookingId from summary:', rawBookingId, 'summary:', summary);
+                return;
+            }
+
+            // promotionId có thể null
+            const promotionId = couponApplied ? (couponApplied.id ?? couponApplied.promotionId ?? null) : null;
+
+            // totalCharge: dùng giá trị bạn đã tính (finalTotal) hoặc fallback sang summary.totalEstimate...
+            const totalCharge = Number(rentalTotal + extraFeesSum - depositAmount - discountAmount);
+
+            if (!totalCharge) {
+                // nếu totalCharge = 0 thì vẫn có thể hợp lệ, nhưng log để kiểm tra
+                console.warn('totalCharge is falsy:', totalCharge, { finalTotal, summary });
+            }
+
+            const body = {
+                bookingId: bookingIdParsed,
+                promotionId: promotionId, // null nếu không có khuyến mãi
+                total: totalCharge
+            };
+
+            setPaying(true);
+
+            // Endpoint mới (không chứa bookingId trong URL)
+            const url = 'http://localhost:8084/EVRentalSystem/api/bookings/payment';
+
+            console.info('Sending payment update to', url, 'body:', body);
+
+            const resp = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // nếu cần auth: 'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            // cố parse JSON (nếu response không phải JSON thì respJson = {})
+            const respJson = await resp.json().catch(() => ({}));
+
+            if (resp.ok) {
+                const msg = respJson.message ?? 'Thanh toán cập nhật thành công';
+                showToast && showToast(msg, 'success');
+
+                // đóng modal QR nếu có
+                setShowQRModal && setShowQRModal(false);
+
+                // chuyển hướng hoặc reload — tuỳ bạn. Mình để navigate(-1)
+                setTimeout(() => {
+                    if (typeof navigate === 'function') navigate(-1);
+                    else window.location.reload();
+                }, 700);
+            } else {
+                // hiển thị lỗi chi tiết để debug
+                const code = respJson.code ?? resp.status;
+                const message = respJson.message ?? resp.statusText ?? `HTTP ${resp.status}`;
+                showToast && showToast(`Lỗi (${code}): ${message}`, 'error');
+
+                console.error('Payment update failed', {
+                    status: resp.status,
+                    body: respJson,
+                    sentBody: body
+                });
+            }
+        } catch (err) {
+            console.error('Lỗi gọi API payment:', err);
+            showToast && showToast('Lỗi khi liên hệ server. Vui lòng thử lại.', 'error');
+        } finally {
+            setPaying(false);
+        }
     };
 
     // If there's no summary (shouldn't happen, but safe guard)
@@ -466,12 +565,12 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                         </p>
 
                         <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
-
                         <button
                             className="qr-confirm-btn"
-                            onClick={() => { setShowQRModal(false); showToast('Đã (giả) hoàn tất thanh toán — demo', 'success'); }}
+                            onClick={handleConfirmPayment}
+                            disabled={paying}
                         >
-                            Tôi đã thanh toán
+                            {paying ? 'Đang xác nhận...' : 'Tôi đã thanh toán'}
                         </button>
                     </div>
                 </div>

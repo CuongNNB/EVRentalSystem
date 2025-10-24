@@ -1,6 +1,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;min-height:100vh;color:#1e293b;font-size:14px;line-height:1.5}
+
+/* New Layout Structure */
+.admin-layout{display:flex;min-height:100vh;background:#f8fafc}
+
+/* Legacy container for backward compatibility */
 .container{display:block;min-height:100vh}
+
 .sidebar{width:280px;background:linear-gradient(180deg,#0bb97f 0%,#0a9d6d 100%);color:#fff;box-shadow:2px 0 16px rgba(0,0,0,.08);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;height:100vh;z-index:20}
 .logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
 .logo h1{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;color:#fff}
@@ -14,8 +20,11 @@ nav{flex:1;padding:16px 0;overflow-y:auto}
 .nav-item i{margin-right:12px;width:20px;text-align:center;font-size:16px}
 .nav-section{margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
 .nav-section-title{color:rgba(255,255,255,.85);font-size:12px;text-transform:uppercase;letter-spacing:1.2px;padding:0 24px 12px;font-weight:700}
-.main-content{margin-left:280px;padding:36px 48px;background:#f8fafc;overflow-y:auto;min-height:100vh}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;background:#fff;border-radius:14px;padding:18px 24px;box-shadow:0 8px 24px rgba(16,24,40,.06);border:1px solid #f1f5f9}
+
+/* Main content - updated for new layout */
+.main-content{flex:1;padding:0;background:#f8fafc;overflow-y:auto;min-height:100vh}
+
+.header{display:flex;justify-content:space-between;align-items:center;margin:0 0 28px 0;background:#fff;border-radius:0;padding:18px 48px;box-shadow:0 2px 8px rgba(16,24,40,.04);border:none;border-bottom:1px solid #f1f5f9}
 .welcome-section{flex:1}
 .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;margin-bottom:8px}
 .breadcrumb i{font-size:12px}
@@ -26,13 +35,16 @@ nav{flex:1;padding:16px 0;overflow-y:auto}
 .current-date{font-size:14px;font-weight:600;color:#1e293b}
 .current-time{font-size:13px;margin-top:2px}
 .admin-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#0bb97f 0%,#0a9d6d 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(11,185,127,.18)}
-.quick-actions{display:flex;gap:14px;margin:12px 0 22px;flex-wrap:wrap;align-items:center}
+
+.quick-actions{display:flex;gap:14px;margin:0 48px 22px 48px;flex-wrap:wrap;align-items:center}
+
 .quick-btn{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;background:#fff;border:1.4px solid #e7eef2;border-radius:12px;color:#1f2937;text-decoration:none;font-weight:700;font-size:13px;transition:all .14s ease;cursor:pointer;box-shadow:0 4px 10px rgba(15,23,42,.04)}
 .quick-btn .btn-icon{display:inline-flex;width:30px;height:30px;border-radius:8px;align-items:center;justify-content:center;background:linear-gradient(135deg,#f1fff9,#eefbf5);color:#0bb97f}
 .quick-btn:hover{background:#0bb97f;color:#fff;border-color:#0bb97f;transform:translateY(-2px);box-shadow:0 12px 30px rgba(11,185,127,.12)}
 .quick-btn i{font-size:16px}
 .quick-btn:focus-visible{outline:2px solid #0bb97f;outline-offset:2px}
-.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:16px 0 20px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:0 48px 20px 48px}
 @media (max-width:1279px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:767px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:420px){.stats-grid{grid-template-columns:1fr}}
@@ -48,7 +60,8 @@ nav{flex:1;padding:16px 0;overflow-y:auto}
 .stat-trend.negative{background:rgba(239,68,68,.1);color:#ef4444}
 .progress{margin-top:12px;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden}
 .progress .bar{height:100%;background:linear-gradient(90deg,#0bb97f 0%,#10b981 100%);border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-.dashboard-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px}
+
+.dashboard-grid{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin:0 48px 24px 48px}
 @media (max-width:1024px){.dashboard-grid{grid-template-columns:1fr}}
 .chart-container,.activity-feed{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #f1f5f9;padding:24px}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:16px}
@@ -108,3 +121,57 @@ nav{flex:1;padding:16px 0;overflow-y:auto}
 	.metrics-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:640px){.main-content{padding:16px 12px}.welcome-title{font-size:22px}.stats-grid{grid-template-columns:1fr}.quick-actions{flex-direction:column}.quick-btn{width:100%;justify-content:center}.chart-header{flex-direction:column;align-items:flex-start}.chart-filters{width:100%;justify-content:space-between}.filter-btn{flex:1;padding:8px 10px;font-size:12px}}
+
+/* Fallback styles for StationVehiclesCard (applied when utility classes are not available) */
+.station-vehicles-card{display:flex;flex-direction:column;gap:8px;min-width:220px}
+.station-vehicles-card .sv-header{display:flex;align-items:center;gap:8px}
+.station-vehicles-card .sv-select{padding:6px 10px;border-radius:8px}
+.station-vehicles-card .sv-refresh{padding:6px}
+.station-vehicles-card .sv-body{display:flex;flex-direction:column}
+.station-vehicles-card .sv-total{font-size:28px;color:#0f766e}
+.station-vehicles-card .sv-station-label{color:#64748b;font-size:12px;margin-top:4px}
+.station-vehicles-card .sv-sub{display:flex;gap:8px;align-items:center}
+.station-vehicles-card .sv-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;background:#f8fafc}
+.station-vehicles-card .sv-badge-active{background:#ecfdf5;color:#065f46}
+.station-vehicles-card .sv-badge-maint{background:#fffbeb;color:#92400e}
+.station-vehicles-card .sv-dot{width:8px;height:8px;border-radius:999px;background:currentColor;display:inline-block}
+
+/* small fallbacks for select and stat-value */
+.sv-select{padding:6px 10px;border-radius:999px;border:1px solid #e6edf0;background:#fff;font-size:12px}
+.stat-value{font-size:26px;font-weight:800;color:#0b9f7f;line-height:1}
+.stat-subtext{font-size:12px;color:#64748b}
+
+/* Two-panel grid for TopStations (left) and RecentRentals (right) */
+.panels-grid{
+	display:grid;
+	grid-template-columns:360px 1fr; /* fixed left column, flexible right */
+	gap:24px;
+	align-items:start;
+	margin:0 48px 24px 48px;
+}
+@media (max-width:1024px){
+	.panels-grid{grid-template-columns:1fr;margin:0 24px 24px 24px;}
+	.stats-grid{grid-template-columns:repeat(3,1fr);margin:0 24px 20px 24px;}
+	.quick-actions{margin:0 24px 22px 24px;}
+	.dashboard-grid{grid-template-columns:1fr;margin:0 24px 24px 24px;}
+	.header{padding:18px 24px;}
+}
+
+/* Recent rentals table styles */
+.recent-table thead th{background:#fff;position:sticky;top:0;z-index:5;padding:12px 8px;text-align:left;border-bottom:1px solid #e6eef6}
+.recent-table tbody tr{border-bottom:1px solid #eef2f6}
+.recent-table td{padding:12px 8px;vertical-align:middle}
+.recent-table td.amount{text-align:right;font-weight:700;color:#0f172a}
+.recent-table td.customer .truncate{max-width:240px;display:inline-block}
+.recent-table tr:hover{background:#fbfeff}
+.recent-table .status{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;font-weight:600}
+.recent-table .status .status-icon{width:14px;height:14px;border-radius:50%;display:inline-block}
+.recent-table .status.pending{background:#fffbeb;color:#92400e}
+.recent-table .status.pending .status-icon{background:#fef3c7}
+.recent-table .status.completed{background:#ecfdf5;color:#166534}
+.recent-table .status.completed .status-icon{background:#bbf7d0}
+.recent-table .status.canceled{background:#fff1f2;color:#b91c1c}
+.recent-table thead th:first-child{width:80px}
+.recent-table thead th:nth-child(3){width:120px}
+.recent-table thead th:nth-child(4){width:180px}
+.recent-table thead th:nth-child(5){width:140px}
