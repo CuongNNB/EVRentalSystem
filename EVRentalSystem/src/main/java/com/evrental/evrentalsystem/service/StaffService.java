@@ -179,7 +179,7 @@ public class StaffService {
         if(feeName == AdditionalFeeEnum.Late_Return_Fee){
             long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
-            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
+            double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
             if(minutes >= 0){
                 try {
                     AdditionalFee af = new AdditionalFee();
@@ -206,7 +206,7 @@ public class StaffService {
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
             int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
-            double pricePerHour =  booking.getVehicleModel().getPrice()/24;
+            double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
             if(totalAllowedOdo < odoAfter){
                 try {
                     AdditionalFee af = new AdditionalFee();
@@ -235,7 +235,7 @@ public class StaffService {
                     af.setBooking(booking);
                     af.setFeeName(feeName.name());
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
-                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue();
+                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
