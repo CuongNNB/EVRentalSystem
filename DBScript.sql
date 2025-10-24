@@ -1,10 +1,10 @@
 ﻿USE master;
 GO
 IF DB_ID('EVRentalSystem') IS NOT NULL
-BEGIN
+    BEGIN
         ALTER DATABASE EVRentalSystem SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
         DROP DATABASE EVRentalSystem;
-END
+    END
 GO
 CREATE DATABASE EVRentalSystem;
 GO
@@ -26,7 +26,7 @@ CREATE TABLE [User]
     role       NVARCHAR(50)  NOT NULL,
     [status]   NVARCHAR(50),
     created_at DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME()
-    );
+);
 
 -- ============================
 -- (2) Renter_Detail
@@ -93,7 +93,7 @@ CREATE TABLE Vehicle_Detail
     [status]         NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station (station_id)
-    );
+);
 
 -- ============================
 -- (7) Promotion
@@ -130,7 +130,7 @@ CREATE TABLE Booking
     CONSTRAINT FK_Booking_Renter FOREIGN KEY (renter_id) REFERENCES [User] (user_id),
     CONSTRAINT FK_Booking_Vehicle FOREIGN KEY (vehicle_model_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion (promotion_id)
-    );
+);
 
 
 -- ============================
@@ -160,7 +160,7 @@ CREATE TABLE Inspection
     [status]      NVARCHAR(50),
     CONSTRAINT FK_Inspection_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
     CONSTRAINT FK_Inspection_Staff FOREIGN KEY (staff_id) REFERENCES [User] (user_id)
-    );
+);
 
 -- ============================
 -- (12) Additional_Fee
@@ -189,7 +189,7 @@ CREATE TABLE Contract
     otp_code    NVARCHAR(10) NULL,
     CONSTRAINT FK_Contract_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
     CONSTRAINT FK_Contract_Staff FOREIGN KEY (staff_id) REFERENCES EMPLOYEE_DETAIL (employee_id)
-    );
+);
 
 -- ============================
 -- (14) Review
@@ -216,7 +216,7 @@ CREATE TABLE Holiday_Fee
     value      FLOAT         NOT NULL,
     [status]   NVARCHAR(50),
     created_at DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME()
-    );
+);
 
 -- ============================
 -- (16) Report
@@ -233,7 +233,7 @@ CREATE TABLE Report
     CONSTRAINT FK_Report_Staff FOREIGN KEY (staff_id) REFERENCES [User] (user_id),
     CONSTRAINT FK_Report_Admin FOREIGN KEY (admin_id) REFERENCES [User] (user_id),
     CONSTRAINT FK_Report_VDetail FOREIGN KEY (vehicle_detail_id) REFERENCES Vehicle_Detail (id)
-    );
+);
 
 
 -- ========================
@@ -241,12 +241,12 @@ CREATE TABLE Report
 -- ========================
 INSERT INTO [User] (username, [password], full_name, phone, email, [address], role, [status], created_at)
 VALUES ('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'baocuongg@gmail.com', N'Hồ Chí Minh', 'ADMIN',
-    'ACTIVE', GETDATE()), -- user_id = 1
-    ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
-    'ACTIVE', GETDATE()), -- user_id = 2
-    ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
-    GETDATE()),
-    ('Jang Won-young', '123456', N'Jang Won-young', '0123456789', 'jangwonyoung@gmail.com', N'69', 'STAFF', 'ACTIVE', GETDATE()); -- user_id = 3
+        'ACTIVE', GETDATE()), -- user_id = 1
+       ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
+        'ACTIVE', GETDATE()), -- user_id = 2
+       ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
+        GETDATE()),
+       ('Jang Won-young', '123456', N'Jang Won-young', '0123456789', 'jangwonyoung@gmail.com', N'69', 'STAFF', 'ACTIVE', GETDATE()); -- user_id = 3
 GO
 
 -- ========================
@@ -295,18 +295,18 @@ GO
 -- ========================
 INSERT INTO Vehicle_Model (brand, model, price, seats, picture)
 VALUES (N'VinFast', N'VF e34', 700, 5, 'M1.jpg'),
-    (N'VinFast', N'VF 8', 950, 5, 'M2.jpg'),
-    (N'Tesla', N'Model 3', 1100, 5, 'M3.jpg'),
-    (N'VinFast', N'VF 5 Plus', 600, 4, 'M4.jpg'),
-    (N'VinFast', N'VF 9', 1200, 7, 'M5.jpg'),
-    (N'Tesla', N'Model Y', 1000, 5, 'M6.jpg'),
-    (N'Tesla', N'Model X', 1200, 7, 'M7.jpg'),
-    (N'Hyundai', N'IONIQ 5', 950, 5, 'M8.jpg'),
-    (N'Kia', N'EV6', 900, 5, 'M9.jpg'),
-    (N'Nissan', N'Leaf', 750, 5, 'M10.jpg'),
-    (N'BMW', N'i4 eDrive40', 1150, 5, 'M11.jpg'),
-    (N'Mercedes-Benz', N'EQE 300', 1200, 5, 'M12.jpg'),
-    (N'Porsche', N'Taycan 4S', 1200, 4, 'M13.jpg');
+       (N'VinFast', N'VF 8', 950, 5, 'M2.jpg'),
+       (N'Tesla', N'Model 3', 1100, 5, 'M3.jpg'),
+       (N'VinFast', N'VF 5 Plus', 600, 4, 'M4.jpg'),
+       (N'VinFast', N'VF 9', 1200, 7, 'M5.jpg'),
+       (N'Tesla', N'Model Y', 1000, 5, 'M6.jpg'),
+       (N'Tesla', N'Model X', 1200, 7, 'M7.jpg'),
+       (N'Hyundai', N'IONIQ 5', 950, 5, 'M8.jpg'),
+       (N'Kia', N'EV6', 900, 5, 'M9.jpg'),
+       (N'Nissan', N'Leaf', 750, 5, 'M10.jpg'),
+       (N'BMW', N'i4 eDrive40', 1150, 5, 'M11.jpg'),
+       (N'Mercedes-Benz', N'EQE 300', 1200, 5, 'M12.jpg'),
+       (N'Porsche', N'Taycan 4S', 1200, 4, 'M13.jpg');
 GO
 
 -- ========================
@@ -314,10 +314,25 @@ GO
 -- ========================
 INSERT INTO Vehicle_Detail (license_plate, vehicle_id, station_id, [color],battery_capacity, odo, picture,[status])
 VALUES ('51A-12345', 1, 1, N'Trắng', N'42 kWh', 1000, '1.jpg', 'AVAILABLE'),
+       ('51A-39521', 1, 1, N'Xanh lơ', N'42 kWh', 2000, '1.jpg', 'AVAILABLE'),
+       ('51A-58748', 1, 1, N'Hồng nhạt', N'42 kWh', 1500, '1.jpg', 'AVAILABLE'),
+       ('51A-55451', 1, 1, N'Đỏ tía', N'42 kWh', 1250, '1.jpg', 'AVAILABLE'),
        ('51B-67890', 2, 1, N'Đen', N'82 kWh', 2500, '2.jpg', 'AVAILABLE'),
+       ('51B-32382', 2, 1, N'Cam', N'82 kWh', 2834, '2.jpg', 'AVAILABLE'),
+       ('51B-48050', 2, 1, N'Trắng', N'82 kWh', 6232, '2.jpg', 'AVAILABLE'),
+       ('51B-57823', 2, 1, N'Xám', N'82 kWh', 3255, '2.jpg', 'AVAILABLE'),
        ('51C-11111', 3, 2, N'Xám', N'60 kWh', 5000, '3.jpg', 'AVAILABLE'),
+       ('51C-32323', 3, 2, N'Cam', N'60 kWh', 1515, '3.jpg', 'AVAILABLE'),
+       ('51C-87857', 3, 2, N'Đỏ', N'60 kWh', 5772, '3.jpg', 'AVAILABLE'),
+       ('51C-99999', 3, 2, N'Đen', N'60 kWh', 500, '3.jpg', 'AVAILABLE'),
        ('51D-10001', 4, 1, N'Xanh', N'37 kWh', 1500, '4.jpg', 'AVAILABLE'),
+       ('51D-58585', 4, 1, N'Xanh biển', N'37 kWh', 1005, '4.jpg', 'AVAILABLE'),
+       ('51D-23335', 4, 1, N'Chàm', N'37 kWh', 900, '4.jpg', 'AVAILABLE'),
+       ('51D-87890', 4, 1, N'Hồng', N'37 kWh', 2346, '4.jpg', 'AVAILABLE'),
        ('51D-10002', 5, 2, N'Bạc', N'92 kWh', 2000, '5.jpg', 'RENTED'),
+       ('51D-56238', 5, 2, N'Xám', N'92 kWh', 500, '5.jpg', 'AVAILABLE'),
+       ('51D-11111', 5, 2, N'Đen', N'92 kWh', 1004, '5.jpg', 'AVAILABLE'),
+       ('51D-24723', 5, 2, N'', N'92 kWh', 500, '5.jpg', 'AVAILABLE'),
        ('51D-10003', 6, 1, N'Đỏ', N'75 kWh', 1200, '6.jpg', 'AVAILABLE'),
        ('51D-10004', 7, 2, N'Trắng', N'100 kWh', 2500, '7.jpg', 'FIXING'),
        ('51D-10005', 8, 1, N'Xám', N'58 kWh', 1700, '8.jpg', 'AVAILABLE'),
