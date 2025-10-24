@@ -203,7 +203,7 @@ public class StaffService {
             Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
             int odoBefore =  Integer.parseInt(i.getDescription().replaceAll("[^0-9]", "")) ;
             int odoAfter = amount;
-            long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
+            long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
             int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
             double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
