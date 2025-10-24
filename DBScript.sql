@@ -353,9 +353,9 @@ VALUES ('51A-12345', 1, 1, N'Trắng', N'42 kWh', 1000, '1.jpg', 'AVAILABLE'),
        ('51E-20010', 10, 7, N'Trắng ngọc', N'40 kWh', 300, '23.jpg', 'AVAILABLE');
 GO
 
--- ========================
+-- ======================
 -- 7. Promotion
--- ========================
+-- ======================
 INSERT INTO Promotion (promo_name, [code], discount_percent, start_time, end_time, [status])
 VALUES ('SALE10', N'Giảm 10% cho tất cả đơn trong tháng này', 10, GETDATE(), DATEADD(DAY, 30, GETDATE()), 'ACTIVE'),
        ('NEWUSER20', N'Ưu đãi 20% cho khách hàng mới', 20, GETDATE(), DATEADD(DAY, 60, GETDATE()), 'ACTIVE');
