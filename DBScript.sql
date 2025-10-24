@@ -374,7 +374,7 @@ VALUES (3, 1, 1, '51A-12345', 1, GETDATE(), GETDATE(), DATEADD(DAY, 1, GETDATE()
 GO
 
 
--- ========================
+-- =======================
 -- 10. Payment
 -- ========================
 INSERT INTO Payment (booking_id, total, paid_at)
