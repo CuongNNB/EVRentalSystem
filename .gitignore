@@ -1,0 +1,13 @@
+﻿# Maven build output
+/EVRentalSystem/target/
+
+# IntelliJ IDEA project files
+/.idea/
+/out/
+
+# Compiled class files
+*.class
+
+# Logs and temp
+*.log
+*.tmp
