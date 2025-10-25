@@ -25,8 +25,7 @@ import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
-import { AdminDashboard, AdminGuard } from "./pages/admin";
-import VehicleAdminPage from "./pages/admin/VehicleAdminPage";
+import { AdminDashboard, AdminGuard, VehicleAdminPage } from "./pages/admin";
 import Forbidden from "./pages/Forbidden";
 
 function App() {
