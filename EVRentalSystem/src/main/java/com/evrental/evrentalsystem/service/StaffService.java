@@ -177,7 +177,7 @@ public class StaffService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         if(feeName == AdditionalFeeEnum.Late_Return_Fee){
-            long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
+            long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
             double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
             if(minutes >= 0){
