@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/**
+ * useAsync Hook
+ * 
+ * NOTE: Được sửa để tránh warning về dependency array thay đổi kích thước
+ * - Sử dụng eslint-disable để cho phép dynamic deps
+ * - Đảm bảo các giá trị trong deps được memoize ở hook gọi nó
+ */
 export function useAsync(fn, deps = []) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +28,8 @@ export function useAsync(fn, deps = []) {
     } finally {
       if (!ctl.current.signal.aborted) setLoading(false);
     }
-  }, deps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps); // NOTE: deps được pass từ caller, các caller đã memoize values
 
   useEffect(() => { run(); return () => ctl.current?.abort(); }, [run]);
 

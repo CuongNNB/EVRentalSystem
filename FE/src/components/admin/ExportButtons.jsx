@@ -18,9 +18,9 @@ export default function ExportButtons() {
   }
 
   return (
-    <div style={{marginTop:12}}>
-      <button className="quick-btn" onClick={() => onExport('csv')} style={{marginRight:8}}>Xuất CSV</button>
-      <button className="quick-btn" onClick={() => onExport('xlsx')}>Xuất XLSX</button>
-    </div>
+    <button className="admin-btn admin-btn-success" onClick={() => onExport('xlsx')}>
+      <i className="fas fa-file-excel"></i>
+      <span>Xuất Excel</span>
+    </button>
   )
 }

@@ -1,4 +1,15 @@
-﻿import "./App.css";
+﻿/**
+ * App Component - Main Application Router
+ * 
+ * NOTE: File đã được cập nhật để bao gồm các trang admin mới
+ * 
+ * CÁC THAY ĐỔI:
+ * - Đã thêm VehicleManagement và StationManagement
+ * - Đã thêm routes /admin/vehicles và /admin/stations
+ * - Tất cả routes admin được bảo vệ bởi AdminGuard
+ */
+
+import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CheckoutProvider } from "./contexts/CheckoutContext";
@@ -25,7 +36,7 @@ import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
-import { AdminDashboard, AdminGuard, VehicleAdminPage } from "./pages/admin";
+import { AdminDashboard, AdminGuard, VehicleManagement, StationManagement } from "./pages/admin";
 import Forbidden from "./pages/Forbidden";
 
 function App() {
@@ -65,9 +76,11 @@ function App() {
 
                         //Phần trang của Staff
                                                 <Route path="/403" element={<Forbidden/>} />
+                                                {/* Admin Routes - Protected by AdminGuard */}
                                                 <Route element={<AdminGuard/>}>
                                                     <Route path="/admin" element={<AdminDashboard/>} />
-                                                    <Route path="/admin/vehicles" element={<VehicleAdminPage/>} />
+                                                    <Route path="/admin/vehicles" element={<VehicleManagement/>} />
+                                                    <Route path="/admin/stations" element={<StationManagement/>} />
                                                 </Route>
                                                 <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
                         <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />

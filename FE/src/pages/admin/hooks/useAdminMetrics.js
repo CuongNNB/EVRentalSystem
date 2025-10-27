@@ -7,10 +7,11 @@ export default function useAdminMetrics(initialParams) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const defaultRange = thisMonthRange()
   const initialRef = useRef(initialParams)
 
   const fetcher = useCallback(async (overrides = {}) => {
+    // NOTE: Tạo defaultRange bên trong callback để tránh stale closure
+    const defaultRange = thisMonthRange()
     const params = { ...defaultRange, ...(initialRef.current || {}), ...(overrides || {}) }
     setLoading(true)
     setError(null)
@@ -49,7 +50,7 @@ export default function useAdminMetrics(initialParams) {
     } finally {
       setLoading(false)
     }
-  }, []) // deps rỗng là ổn vì initialRef giữ initialParams
+  }, []) // NOTE: deps rỗng là ổn vì tất cả dependencies được tạo bên trong hoặc dùng ref
 
   useEffect(() => {
     fetcher().catch(() => {})

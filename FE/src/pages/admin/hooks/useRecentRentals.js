@@ -1,10 +1,15 @@
+import { useMemo } from 'react'
 import { useAsync } from './useAsync'
 import { getRecentRentals } from '../../../api/adminDashboard'
 import { lastNDays } from '../../../utils/dateRange'
 
 export default function useRecentRentals(params = {}) {
-  const def = lastNDays(7)
-  const p = { limit: params.limit ?? 10, ...(params || {}), ...def }
+  // NOTE: Sử dụng useMemo để tránh tạo object mới mỗi render
+  const def = useMemo(() => lastNDays(7), [])
+  const p = useMemo(
+    () => ({ limit: params.limit ?? 10, ...(params || {}), ...def }),
+    [params.limit, params.from, params.to, def]
+  )
 
   return useAsync(async (signal) => {
     const res = await getRecentRentals(p.limit, { from: p.from, to: p.to }, { signal })

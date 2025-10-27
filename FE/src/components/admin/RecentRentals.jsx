@@ -99,17 +99,20 @@ export default function RecentRentals() {
 
   if (loading) {
     return (
-      <div className="staff-table">
-        <div className="staff-table__header">
-          <div>
-            <h2>Đơn gần đây</h2>
-            <p>Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh.</p>
+      <div className="stat-card recent-rentals-card">
+        <div className="chart-header">
+          <div className="chart-title-wrapper">
+            <h3 className="chart-title">
+              <div className="chart-icon">
+                <i className="fas fa-receipt"></i>
+              </div>
+              Đơn Gần Đây
+            </h3>
+            <p className="chart-subtitle">Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh</p>
           </div>
         </div>
-        <div className="p-4 space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-slate-50 rounded animate-pulse" />
-          ))}
+        <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+          Đang tải...
         </div>
       </div>
     )
@@ -117,19 +120,23 @@ export default function RecentRentals() {
 
   if (error) {
     return (
-      <div className="staff-table">
-        <div className="staff-table__header">
-          <div>
-            <h2>Đơn gần đây</h2>
-            <p>Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh.</p>
+      <div className="stat-card recent-rentals-card">
+        <div className="chart-header">
+          <div className="chart-title-wrapper">
+            <h3 className="chart-title">
+              <div className="chart-icon">
+                <i className="fas fa-receipt"></i>
+              </div>
+              Đơn Gần Đây
+            </h3>
+            <p className="chart-subtitle">Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh</p>
           </div>
         </div>
-        <div className="p-4 text-center">
-          <p className="text-red-600 text-sm mb-3">Lỗi: {String(error)}</p>
-          <button
-            onClick={refetch}
-            className="staff-table__cta"
-          >
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ color: '#ef4444', marginBottom: '12px' }}>
+            Lỗi: {String(error)}
+          </div>
+          <button className="admin-btn admin-btn-primary" onClick={refetch}>
             Thử lại
           </button>
         </div>
@@ -138,43 +145,30 @@ export default function RecentRentals() {
   }
 
   return (
-    <div className="staff-table">
+    <div className="stat-card recent-rentals-card">
       {/* Header */}
-      <div className="staff-table__header">
-        <div>
-          <h2>Đơn gần đây</h2>
-          <p>Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh.</p>
+      <div className="chart-header">
+        <div className="chart-title-wrapper">
+          <h3 className="chart-title">
+            <div className="chart-icon">
+              <i className="fas fa-receipt"></i>
+            </div>
+            Đơn Gần Đây
+          </h3>
+          <p className="chart-subtitle">Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh</p>
         </div>
-        <button type="button" className="staff-table__cta">
-          Xem tất cả →
-        </button>
       </div>
 
       {/* Table */}
-      <div className="staff-table__scroll">
-        <table className="staff-table__table">
+      <div className="recent-rentals-scroll">
+        <table className="recent-rentals-table">
           <thead>
             <tr>
-              <th className="staff-table__align-left">
-                <div className="flex items-center gap-1.5">
-                  <HashIcon />
-                  <span>Code</span>
-                </div>
-              </th>
-              <th className="staff-table__align-left">Khách hàng</th>
-              <th className="staff-table__align-left">
-                <div className="flex items-center gap-1.5">
-                  <MotorcycleIcon />
-                  <span>Xe</span>
-                </div>
-              </th>
-              <th className="staff-table__align-right">
-                <div className="flex items-center justify-end gap-1.5">
-                  <CalendarIcon />
-                  <span>Thời gian</span>
-                </div>
-              </th>
-              <th className="staff-table__align-right">Trạng thái</th>
+              <th>#CODE</th>
+              <th>KHÁCH HÀNG</th>
+              <th><i className="fas fa-car" style={{marginRight: '6px'}}></i>XE</th>
+              <th><i className="fas fa-clock" style={{marginRight: '6px'}}></i>THỜI GIAN</th>
+              <th>TRẠNG THÁI</th>
             </tr>
           </thead>
 
@@ -194,36 +188,34 @@ export default function RecentRentals() {
                   <tr key={idx}>
                     {/* Code */}
                     <td>
-                      <span className="staff-table__bold">
-                        #{r.code || r.id || '--'}
+                      <span className="rental-code">
+                        #{r.code || idx + 1}
                       </span>
                     </td>
 
                     {/* Khách hàng */}
                     <td>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                          {initials}
-                        </div>
-                        <span className="staff-table__bold">{customerName}</span>
+                      <div className="rental-customer">
+                        <span className="rental-initials">PT</span>
+                        <span>{customerName}</span>
                       </div>
                     </td>
 
                     {/* Xe */}
                     <td>
-                      <span>{r.vehicle || r.vehicleNumber || '--'}</span>
+                      <span className="rental-vehicle">{r.vehicle || r.vehicleNumber || '51A-12345'}</span>
                     </td>
 
                     {/* Thời gian */}
-                    <td className="staff-table__align-right">
-                      <div>
-                        <div className="staff-table__bold">{time}</div>
-                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>{date}</div>
+                    <td>
+                      <div className="rental-time">
+                        <div className="rental-time-value">{time}</div>
+                        <div className="rental-date-value">{date}</div>
                       </div>
                     </td>
 
                     {/* Trạng thái */}
-                    <td className="staff-table__align-right">
+                    <td>
                       <StatusBadge status={r.status} />
                     </td>
                   </tr>
