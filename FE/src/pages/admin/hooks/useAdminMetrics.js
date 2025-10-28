@@ -15,9 +15,11 @@ export default function useAdminMetrics(initialParams) {
     const params = { ...defaultRange, ...(initialRef.current || {}), ...(overrides || {}) }
     setLoading(true)
     setError(null)
+    console.log('[useAdminMetrics] fetching with params:', params)
     try {
       // Nếu getOverviewMetrics trả Axios response, dùng: const raw = (await getOverviewMetrics(params))?.data
       const raw = await getOverviewMetrics(params)
+      console.log('[useAdminMetrics] received raw data:', raw)
 
       const n = (v) => (v == null ? 0 : Number(v)) // optional: ép số an toàn
 
@@ -45,15 +47,20 @@ export default function useAdminMetrics(initialParams) {
       console.debug?.('[useAdminMetrics] mapped metrics:', mapped)
       return mapped
     } catch (err) {
+      console.error('[useAdminMetrics] error:', err)
       setError(err)
-      throw err
+      // Don't throw - let component render with error state
+      return null
     } finally {
       setLoading(false)
     }
   }, []) // NOTE: deps rỗng là ổn vì tất cả dependencies được tạo bên trong hoặc dùng ref
 
   useEffect(() => {
-    fetcher().catch(() => {})
+    console.log('[useAdminMetrics] mounting, will fetch data')
+    fetcher().catch((e) => {
+      console.error('[useAdminMetrics] fetch failed:', e)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -19,9 +19,11 @@
 
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import './AdminDashboard.css'
 import './AdminDashboardNew.css'
 import '../staff/StaffLayout.css'
+
+// Debug: Log để xác nhận file được load
+console.log('[AdminDashboard] Module loaded successfully')
 import KpiCard from '../../components/admin/KpiCard'
 import RevenueChart from '../../components/admin/RevenueChart'
 import TopStations from '../../components/admin/TopStations'
@@ -36,6 +38,8 @@ import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function AdminDashboard() {
+  console.log('[AdminDashboard] Component is rendering...')
+  
   // NOTE: useAdminMetrics đã tự động fetch data khi mount
   const { data: m, loading, error, refetch } = useAdminMetrics()
   const { logout } = useAuth()
@@ -56,6 +60,25 @@ export default function AdminDashboard() {
     logout() // Xóa token và thông tin user
     navigate('/') // Chuyển về trang homepage
   }
+
+  // Debug: Log state để kiểm tra
+  console.log('[AdminDashboard] loading:', loading, 'error:', error, 'data:', m)
+
+  // Fallback UI khi đang load toàn bộ trang lần đầu
+  if (loading && !m) {
+    console.log('[AdminDashboard] Rendering loading state...')
+    return (
+      <div className="admin-layout">
+        <AdminSlideBar activeKey="overview" />
+        <main className="admin-main-content" style={{ padding: '2rem', textAlign: 'center' }}>
+          <h2>⏳ Đang tải dữ liệu dashboard...</h2>
+          <p style={{ marginTop: '1rem', color: '#666' }}>Vui lòng đợi trong giây lát</p>
+        </main>
+      </div>
+    )
+  }
+  
+  console.log('[AdminDashboard] Rendering main content...')
 
   return (
     <ErrorBoundary>
@@ -110,11 +133,38 @@ export default function AdminDashboard() {
           {/* KPI Stats Grid */}
           <div className="admin-stats-grid">
           {loading ? (
-            <div className="stat-card">Đang tải...</div>
+            <div className="stat-card" style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center' }}>
+              <p>⏳ Đang tải dữ liệu KPI...</p>
+            </div>
           ) : error ? (
-            <div className="stat-card">
-              Lỗi KPI: {error?.message || String(error)}{' '}
-              <button onClick={() => refetch({ from, to })}>Thử lại</button>
+            <div className="stat-card" style={{ 
+              gridColumn: '1 / -1', 
+              padding: '2rem', 
+              textAlign: 'center',
+              background: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '8px'
+            }}>
+              <h3 style={{ marginBottom: '1rem', color: '#856404' }}>⚠️ Không thể tải dữ liệu KPI</h3>
+              <p style={{ marginBottom: '1rem', color: '#856404' }}>
+                {error?.message || String(error)}
+              </p>
+              <button 
+                onClick={() => refetch({ from, to })}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Thử lại
+              </button>
+              <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                Lưu ý: Trang vẫn hoạt động bình thường, chỉ KPI metrics không load được
+              </p>
             </div>
           ) : (
             <>
