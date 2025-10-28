@@ -6,6 +6,7 @@ const asArray = (payload) => {
 	if (Array.isArray(payload)) return payload
 	if (Array.isArray(payload.items)) return payload.items
 	if (Array.isArray(payload.rentals)) return payload.rentals
+	if (Array.isArray(payload.activities)) return payload.activities // ✅ FIX: Add activities key
 	if (Array.isArray(payload.data)) return payload.data
 	if (Array.isArray(payload.content)) return payload.content
 	if (Array.isArray(payload.results)) return payload.results
@@ -14,8 +15,6 @@ const asArray = (payload) => {
 
 export const getOverviewMetrics = async (params = {}) => {
 	const { data } = await api.get('/admin/overview/metrics', { params })
-	// return raw data (hook will map fields as needed)
-	try { console.debug && console.debug('[getOverviewMetrics] raw data:', data) } catch {}
 	return data
 }
 
@@ -52,8 +51,6 @@ export const getRevenueSeries = async (params = {}) => {
 
 export const getTopStations = async (params = {}, config = {}) => {
 	const { data } = await api.get('/admin/overview/top-stations', { params, ...config })
-	try { console.debug && console.debug('[getTopStations] raw:', data) } catch {}
-	// return raw data so caller can handle shapes like { stations: [...] } or [...]
 	return data
 }
 
@@ -100,7 +97,6 @@ export const getStationOptions = async () => {
 
 export const getRecentRentals = async (limit = 10, range) => {
 	const { data } = await api.get('/admin/overview/recent-rentals', { params: { limit, ...(range || {}) } })
-	try { console.debug && console.debug('[getRecentRentals] raw:', data) } catch {}
 	return asArray(data)
 }
 

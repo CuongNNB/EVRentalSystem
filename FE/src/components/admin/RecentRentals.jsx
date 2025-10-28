@@ -97,6 +97,16 @@ export default function RecentRentals() {
   const { data = [], loading, error, refetch } = useRecentRentals({ limit: 10 })
   const items = Array.isArray(data) ? data : []
 
+  // Check if backend API exists
+  React.useEffect(() => {
+    if (error) {
+      const errorMsg = error?.message || String(error)
+      if (errorMsg.includes('404') || errorMsg.includes('500') || errorMsg.includes('Network Error')) {
+        console.warn('⚠️ [RecentRentals] Backend API chưa có: /admin/overview/recent-rentals')
+      }
+    }
+  }, [error])
+
   if (loading) {
     return (
       <div className="stat-card recent-rentals-card">
@@ -118,7 +128,13 @@ export default function RecentRentals() {
     )
   }
 
+  // If backend API not ready, hide component
   if (error) {
+    const errorMsg = error?.message || String(error)
+    const isBackendNotReady = errorMsg.includes('404') || errorMsg.includes('500') || errorMsg.includes('Network Error')
+    
+    if (isBackendNotReady) return null
+    
     return (
       <div className="stat-card recent-rentals-card">
         <div className="chart-header">
@@ -150,31 +166,37 @@ export default function RecentRentals() {
       <div className="chart-header">
         <div className="chart-title-wrapper">
           <h3 className="chart-title">
-            <div className="chart-icon">
-              <i className="fas fa-receipt"></i>
+            <div className="chart-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+              <i className="fas fa-clipboard-list"></i>
             </div>
             Đơn Gần Đây
           </h3>
-          <p className="chart-subtitle">Theo dõi trạng thái và doanh thu từng đơn hàng phát sinh</p>
+          <p className="chart-subtitle">Theo dõi trạng thái và thông tin đơn hàng phát sinh</p>
         </div>
       </div>
 
       {/* Table */}
       <div className="recent-rentals-scroll">
-        <table className="recent-rentals-table">
-          <thead>
-            <tr>
-              <th>#CODE</th>
-              <th>KHÁCH HÀNG</th>
-              <th><i className="fas fa-car" style={{marginRight: '6px'}}></i>XE</th>
-              <th><i className="fas fa-clock" style={{marginRight: '6px'}}></i>THỜI GIAN</th>
-              <th>TRẠNG THÁI</th>
-            </tr>
-          </thead>
+        {items.length > 0 ? (
+          <table className="recent-rentals-table">
+            <thead>
+              <tr>
+                <th className="rental-col-code">#MÃ</th>
+                <th className="rental-col-customer">KHÁCH HÀNG</th>
+                <th className="rental-col-vehicle">
+                  <i className="fas fa-car"></i>
+                  <span>XE</span>
+                </th>
+                <th className="rental-col-time">
+                  <i className="fas fa-clock"></i>
+                  <span>THỜI GIAN</span>
+                </th>
+                <th className="rental-col-status">TRẠNG THÁI</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {items.length > 0 ? (
-              items.map((r, idx) => {
+            <tbody>
+              {items.map((r, idx) => {
                 const { time, date } = formatDateTime(r.time)
                 const customerName = r.customer || r.booker || 'N/A'
                 const initials = customerName
@@ -196,14 +218,16 @@ export default function RecentRentals() {
                     {/* Khách hàng */}
                     <td>
                       <div className="rental-customer">
-                        <span className="rental-initials">PT</span>
-                        <span>{customerName}</span>
+                        <span className="rental-initials">{initials}</span>
+                        <span className="rental-customer-name">{customerName}</span>
                       </div>
                     </td>
 
                     {/* Xe */}
                     <td>
-                      <span className="rental-vehicle">{r.vehicle || r.vehicleNumber || '51A-12345'}</span>
+                      <span className="rental-vehicle">
+                        {r.vehicle || r.vehicleNumber || 'N/A'}
+                      </span>
                     </td>
 
                     {/* Thời gian */}
@@ -220,16 +244,18 @@ export default function RecentRentals() {
                     </td>
                   </tr>
                 )
-              })
-            ) : (
-              <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '32px 16px', color: '#94a3b8' }}>
-                  Chưa có dữ liệu
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <i className="fas fa-inbox"></i>
+            <p style={{ fontWeight: '600', marginBottom: '4px' }}>Chưa có đơn hàng</p>
+            <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+              Chưa có đơn hàng nào gần đây trong hệ thống
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -13,9 +13,17 @@ export default function RevenueChart(){
   const canvasRef = useRef(null)
   const chartRef = useRef(null)
 
+  // Check if backend API exists
   useEffect(() => {
-    // debug incoming data shape
-    console.debug('[RevenueChart] data:', data)
+    if (error) {
+      const errorMsg = error?.message || String(error)
+      if (errorMsg.includes('404') || errorMsg.includes('500') || errorMsg.includes('Network Error')) {
+        console.warn('⚠️ [RevenueChart] Backend API chưa có: /admin/overview/revenue-series')
+      }
+    }
+  }, [error])
+
+  useEffect(() => {
     if (!data || !Array.isArray(data.labels) || !Array.isArray(data.values)) return
     const el = canvasRef.current
     if (!el) return
@@ -29,33 +37,73 @@ export default function RevenueChart(){
           label: 'Doanh thu (₫)',
           data: data.values,
           fill: true,
-          tension: 0.3,
-          pointRadius: 3,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
           borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.08)'
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          borderWidth: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            },
             callbacks: {
               label: (ctx) => {
-                // Chart.js v4: parsed.y holds the value for cartesian charts
                 const v = ctx.parsed?.y ?? ctx.parsed ?? 0
-                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(v || 0))
+                return ' Doanh thu: ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(v || 0))
               }
             }
           }
         },
         scales: {
-          x: { grid: { display: false } },
+          x: { 
+            grid: { display: false },
+            ticks: {
+              font: {
+                size: 11
+              },
+              color: '#64748b'
+            }
+          },
           y: {
             beginAtZero: true,
+            grid: {
+              color: '#f1f5f9',
+              drawBorder: false
+            },
             ticks: {
-              callback: (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value || 0))
+              font: {
+                size: 11
+              },
+              color: '#64748b',
+              padding: 8,
+              callback: (value) => {
+                if (value >= 1000000) {
+                  return (value / 1000000).toFixed(1) + 'M'
+                }
+                if (value >= 1000) {
+                  return (value / 1000).toFixed(0) + 'K'
+                }
+                return value
+              }
             }
           }
         }
@@ -65,17 +113,100 @@ export default function RevenueChart(){
     return () => { try { chartRef.current?.destroy() } catch {} ; chartRef.current = null }
   }, [data?.labels, data?.values])
 
-  if (loading) return <div className="skeleton chart">Loading chart…</div>
-  if (error) return <button onClick={refetch}>Retry chart</button>
+  if (loading) {
+    return (
+      <div className="stat-card revenue-chart-card">
+        <div className="chart-header">
+          <div className="chart-title-wrapper">
+            <h3 className="chart-title">
+              <div className="chart-icon">
+                <i className="fas fa-chart-line"></i>
+              </div>
+              Biểu đồ doanh thu
+            </h3>
+          </div>
+        </div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+          ⏳ Đang tải biểu đồ...
+        </div>
+      </div>
+    )
+  }
+  
+  // If backend API not ready, hide component
+  if (error) {
+    const errorMsg = error?.message || String(error)
+    const isBackendNotReady = errorMsg.includes('404') || errorMsg.includes('500') || errorMsg.includes('Network Error')
+    if (isBackendNotReady) return null
+    return (
+      <div className="stat-card revenue-chart-card">
+        <div className="chart-header">
+          <div className="chart-title-wrapper">
+            <h3 className="chart-title">
+              <div className="chart-icon">
+                <i className="fas fa-chart-line"></i>
+              </div>
+              Biểu đồ doanh thu
+            </h3>
+          </div>
+        </div>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <button onClick={refetch} className="admin-btn admin-btn-primary">Thử lại</button>
+        </div>
+      </div>
+    )
+  }
+  
   // Only treat as no-data when there are no labels at all.
-  if (!data?.labels || !data.labels.length) return <div className="empty">No data</div>
+  if (!data?.labels || !data.labels.length) {
+    return (
+      <div className="stat-card revenue-chart-card">
+        <div className="chart-header">
+          <div className="chart-title-wrapper">
+            <h3 className="chart-title">
+              <div className="chart-icon">
+                <i className="fas fa-chart-line"></i>
+              </div>
+              Biểu đồ doanh thu
+            </h3>
+          </div>
+        </div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+          Không có dữ liệu
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="card h-80">
-      <div className="tabs">
-        {Object.keys(mapRange).map(r => <button key={r} className={r===range ? 'active': ''} onClick={() => setRange(r)}>{r}</button>)}
+    <div className="stat-card revenue-chart-card">
+      {/* Header with Time Range Tabs */}
+      <div className="chart-header">
+        <div className="chart-title-wrapper">
+          <h3 className="chart-title">
+            <div className="chart-icon">
+              <i className="fas fa-chart-line"></i>
+            </div>
+            Biểu đồ doanh thu
+          </h3>
+        </div>
+        <div className="chart-tabs">
+          {Object.keys(mapRange).map(r => (
+            <button 
+              key={r} 
+              className={`chart-tab ${r === range ? 'active' : ''}`} 
+              onClick={() => setRange(r)}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="h-64"><canvas ref={canvasRef} /></div>
+      
+      {/* Chart Canvas */}
+      <div className="chart-canvas-wrapper">
+        <canvas ref={canvasRef} />
+      </div>
     </div>
   )
 }

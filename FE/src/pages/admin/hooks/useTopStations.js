@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback, useRef } from 'react'
 import { useAsync } from './useAsync'
 import { getTopStations } from '../../../api/adminDashboard'
 import { thisMonthRange } from '../../../utils/dateRange'
@@ -22,18 +22,52 @@ function mapStations(data) {
   }))
 }
 
+// Request ID để track requests
+let requestId = 0
+
 export default function useTopStations(params = {}) {
   const def = useMemo(() => thisMonthRange(), [])
-  const p = useMemo(() => ({ limit: 5, ...def, ...(params || {}) }), [def, params?.limit, params?.from, params?.to])
-
-  return useAsync(
-    async (signal) => {
+  const currentRequestId = useRef(0)
+  
+  // Stable values for deps
+  const limit = params?.limit || 5
+  const from = params?.from || def.from
+  const to = params?.to || def.to
+  
+  const fetchStations = useCallback(async (signal) => {
+    // Increment request ID
+    requestId++
+    const thisRequestId = requestId
+    currentRequestId.current = thisRequestId
+    
+    const p = { limit, from, to }
+    
+    try {
       const res = await getTopStations(p, { signal })
-      const stations = Array.isArray(res?.stations) ? res.stations : Array.isArray(res) ? res : []
+      
+      // Only process if this is still the latest request
+      if (currentRequestId.current !== thisRequestId) {
+        return []
+      }
+      
+      const stations = Array.isArray(res?.stations) 
+        ? res.stations 
+        : Array.isArray(res) 
+        ? res 
+        : []
+      
       const mapped = mapStations({ data: stations })
-      try { console.debug && console.debug('[useTopStations] mapped:', mapped) } catch {}
       return mapped
-    },
-    [p.limit, p.from, p.to]
-  )
+    } catch (error) {
+      // Ignore cancellation errors
+      if (error?.name === 'AbortError' || 
+          error?.name === 'CanceledError' || 
+          error?.message === 'canceled') {
+        return []
+      }
+      throw error
+    }
+  }, [limit, from, to])
+
+  return useAsync(fetchStations, [limit, from, to])
 }

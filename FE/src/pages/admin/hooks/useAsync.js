@@ -11,27 +11,61 @@ export function useAsync(fn, deps = []) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const ctl = useRef(null);
+  const ctlRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   const run = useCallback(async () => {
     try {
-      ctl.current?.abort();
-      ctl.current = new AbortController();
-      setLoading(true);
-      setError(null);
-      const res = await fn(ctl.current.signal);
-      if (!ctl.current.signal.aborted) setData(res);
+      // Abort previous request
+      if (ctlRef.current) {
+        ctlRef.current.abort();
+      }
+      
+      // Create new controller
+      ctlRef.current = new AbortController();
+      
+      // Only set loading if mounted
+      if (isMountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
+      
+      const res = await fn(ctlRef.current.signal);
+      
+      // Only update state if not aborted and still mounted
+      if (!ctlRef.current.signal.aborted && isMountedRef.current) {
+        setData(res);
+        setLoading(false);
+      }
     } catch (e) {
-      // If the error is due to abort/cancel, ignore it (don't surface 'canceled')
-      const isCanceled = ctl.current?.signal?.aborted || e?.code === 'ERR_CANCELED' || e?.message === 'canceled' || e?.name === 'CanceledError';
-      if (!isCanceled && !ctl.current.signal.aborted) setError(e?.message || 'Failed');
-    } finally {
-      if (!ctl.current.signal.aborted) setLoading(false);
+      // Check if error is due to cancellation
+      const isCanceled = 
+        ctlRef.current?.signal?.aborted || 
+        e?.code === 'ERR_CANCELED' || 
+        e?.message === 'canceled' || 
+        e?.name === 'CanceledError' ||
+        e?.name === 'AbortError';
+      
+      // Only set error if not canceled and still mounted
+      if (!isCanceled && isMountedRef.current && !ctlRef.current?.signal?.aborted) {
+        setError(e?.message || String(e) || 'Failed');
+        setLoading(false);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps); // NOTE: deps được pass từ caller, các caller đã memoize values
+  }, deps);
 
-  useEffect(() => { run(); return () => ctl.current?.abort(); }, [run]);
+  useEffect(() => { 
+    isMountedRef.current = true;
+    run();
+    
+    return () => {
+      isMountedRef.current = false;
+      if (ctlRef.current) {
+        ctlRef.current.abort();
+      }
+    };
+  }, [run]);
 
   return { data, loading, error, refetch: run };
 }

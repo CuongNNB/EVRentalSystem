@@ -1,21 +1,4 @@
-/**
- * AdminDashboard Component
- * 
- * NOTE: File đã được sửa để loại bỏ các import không tồn tại và thêm các component mới
- * 
- * CÁC THÀNH PHẦN ĐÃ XÓA:
- * - VehicleCardList (component không tồn tại)
- * - useVehicles hook (hook không tồn tại)
- * - VehiclePreview function (function không sử dụng)
- * - Các import không dùng: useAuth, useNavigate
- * 
- * CÁC THÀNH PHẦN ĐÃ THÊM/TÁI TẠO:
- * - AdminSlideBar: Thanh điều hướng sidebar cho admin
- * - StationVehiclesCard: Khung hiển thị tổng số xe (đã tạo lại)
- * 
- * Trang này hiển thị tổng quan dashboard cho admin với các KPI metrics,
- * biểu đồ doanh thu, hoạt động gần đây, và thống kê.
- */
+
 
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -105,23 +88,8 @@ export default function AdminDashboard() {
                 <p className="admin-page-subtitle">Theo dõi và quản lý toàn bộ hoạt động của hệ thống thuê xe điện</p>
               </div>
             </div>
-          </div>
-
-          {/* Search and Action Buttons */}
-          <div className="admin-toolbar">
-            <div className="admin-search-box">
-              <i className="fas fa-search"></i>
-              <input
-                type="text"
-                className="admin-search-input"
-                placeholder="Tìm kiếm xe theo biển số, mã xe hoặc model..."
-              />
-            </div>
-            <div className="admin-toolbar-actions">
-              <button className="admin-btn admin-btn-primary">
-                <i className="fas fa-plus"></i>
-                <span>Thêm xe</span>
-              </button>
+            {/* Action Buttons - Đã bỏ search box và button Thêm xe */}
+            <div className="admin-page-header-actions">
               <ExportButtons />
               <button className="admin-btn admin-btn-danger" onClick={handleLogout}>
                 <i className="fas fa-sign-out-alt"></i>
@@ -168,13 +136,37 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <>
-              {/* NOTE: Layout theo thứ tự giống trong ảnh, dữ liệu từ API */}
-              <KpiCard title="TỔNG DOANH THU" value={formatVND(num(m?.revenueMonth))} sub={m?.deltaRevenueMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaRevenueMoM)}`} />
-              <KpiCard title="LƯỢT THUÊ HÔM NAY" value={num(m?.rentalsToday)} sub={m?.deltaRentalsDoD!=null && `So với hôm qua: ${formatPercent(m?.deltaRentalsDoD)}`} />
+              {/* NOTE: Layout theo thứ tự giống trong ảnh, dữ liệu từ API với icons đẹp */}
+              <KpiCard 
+                title="TỔNG DOANH THU" 
+                value={formatVND(num(m?.revenueMonth))} 
+                sub={m?.deltaRevenueMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaRevenueMoM)}`}
+                icon="💰"
+                gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+              />
+              <KpiCard 
+                title="LƯỢT THUÊ HÔM NAY" 
+                value={num(m?.rentalsToday)} 
+                sub={m?.deltaRentalsDoD!=null && `So với hôm qua: ${formatPercent(m?.deltaRentalsDoD)}`}
+                icon="📋"
+                gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+              />
               {/* NOTE: StationVehiclesCard có dropdown 7 trạm, khi chọn trạm sẽ hiển thị số xe của trạm đó */}
               <StationVehiclesCard totalAll={num(m?.vehiclesTotal)} />
-              <KpiCard title="KHÁCH HÀNG" value={num(m?.customersTotal)} sub={m?.deltaCustomersMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaCustomersMoM)}`} />
-              <KpiCard title="TỶ LỆ SỬ DỤNG" value={formatPercent(num(m?.utilizationRate))} sub={m?.deltaUtilizationWoW!=null && `So với tuần trước: ${formatPercent(m?.deltaUtilizationWoW)}`} />
+              <KpiCard 
+                title="KHÁCH HÀNG" 
+                value={num(m?.customersTotal)} 
+                sub={m?.deltaCustomersMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaCustomersMoM)}`}
+                icon="👥"
+                gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+              />
+              <KpiCard 
+                title="TỶ LỆ SỬ DỤNG" 
+                value={formatPercent(num(m?.utilizationRate))} 
+                sub={m?.deltaUtilizationWoW!=null && `So với tuần trước: ${formatPercent(m?.deltaUtilizationWoW)}`}
+                icon="📊"
+                gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+              />
             </>
           )}
         </div>
@@ -194,12 +186,12 @@ export default function AdminDashboard() {
           <div className="activity-feed"><ActivityFeed /></div>
         </div>
 
-        <div className="panels-grid">
-          <TopStations />
-          <RecentRentals />
-        </div>
+         <div className="panels-grid">
+           <TopStations />
+           <RecentRentals />
+         </div>
 
-      </main>
+       </main>
       </div>
     </ErrorBoundary>
   )
