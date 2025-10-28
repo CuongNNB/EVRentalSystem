@@ -29,4 +29,12 @@ server:
   servlet:
     context-path: /EVRentalSystem
 
+vnpay:
+  tmnCode: "WWYAFHXG"                       # Mã Website (Terminal ID)
+  hashSecret: "CVUVWHGDBZLNQ7J6N7ZDJN1THFD2BHOV" # Chuỗi bí mật tạo checksum
+  payUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # URL thanh toán môi trường TEST
+  returnUrl: "http://localhost:8084/EVRentalSystem/api/vnpay/return"  # URL redirect sau khi thanh toán (client-side)
+  ipnUrl: "http://localhost:8084/EVRentalSystem/api/vnpay/ipn"        # URL nhận thông báo IPN (server-to-server)
+
+
 
