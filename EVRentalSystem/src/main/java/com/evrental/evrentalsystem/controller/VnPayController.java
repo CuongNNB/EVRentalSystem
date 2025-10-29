@@ -4,8 +4,11 @@ import com.evrental.evrentalsystem.request.CreatePaymentRequest;
 import com.evrental.evrentalsystem.service.VnPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
 import java.util.*;
 
 @RestController
@@ -27,21 +30,31 @@ public class VnPayController {
     }
 
     @GetMapping("/return")
-    public ResponseEntity<String> paymentReturn(@RequestParam Map<String, String> allParams) {
+    public RedirectView paymentReturn(@RequestParam Map<String, String> allParams) {
         boolean valid = vnPayService.validateSecureHash(allParams);
-        if (!valid) {
-            return ResponseEntity.badRequest().body("Invalid secure hash");
-        }
-        String responseCode = allParams.get("vnp_ResponseCode"); // "00" = success
+        String responseCode = allParams.get("vnp_ResponseCode");
         String txnRef = allParams.get("vnp_TxnRef");
         String amount = allParams.get("vnp_Amount");
-        if ("00".equals(responseCode)) {
-            // TODO: update order/payment status
-            return ResponseEntity.ok("Payment success for order " + txnRef + " amount=" + amount);
+
+        String redirectUrl;
+
+        if (valid && "00".equals(responseCode)) {
+            // ✅ Thanh toán thành công
+            Integer bookingId = Integer.parseInt(txnRef);
+            vnPayService.updateBookingStatus(bookingId);
+            redirectUrl = "http://localhost:5173/"; // hoặc trang bạn muốn
+            // TODO: cập nhật DB ở đây
         } else {
-            return ResponseEntity.ok("Payment failed or cancelled. code=" + responseCode);
+            // ❌ Thanh toán thất bại
+            redirectUrl = "http://localhost:3000/payment-failed";
         }
+
+        RedirectView view = new RedirectView(redirectUrl);
+        view.setExposeModelAttributes(false);
+        return view;
     }
+
+
 
     @PostMapping("/ipn")
     public ResponseEntity<String> ipn(@RequestParam Map<String, String> allParams) {

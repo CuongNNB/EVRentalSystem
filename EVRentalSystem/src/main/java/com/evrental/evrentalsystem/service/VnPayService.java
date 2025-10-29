@@ -1,6 +1,9 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.config.VnPayProperties;
+import com.evrental.evrentalsystem.entity.Booking;
+import com.evrental.evrentalsystem.enums.BookingStatus;
+import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.util.VnPayUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -67,5 +70,15 @@ public class VnPayService {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    private final BookingRepository bookingRepository;
+
+    public String updateBookingStatus(Integer bookingId) {
+        Booking booking = bookingRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new RuntimeException("Not found booking!"));
+        booking.setStatus(BookingStatus.Total_Fees_Charged.toString());
+        bookingRepository.save(booking);
+        return "Booking confirmed successfully.";
     }
 }

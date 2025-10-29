@@ -30,14 +30,41 @@ const getStatusText = (status) => {
         case 'Total_Fees_Charged':
             return 'Đã tính tổng chi phí';
         case 'Completed':
-            return 'Hoàn tất';
+            return 'Đợi thanh toán hóa đơn';
         case 'Vehicle_Return_Overdue':
             return 'Quá hạn trả xe';
+        case 'Pending_Renter_Confirmation':
+            return 'Đợi khách hàng xác nhận';
         default:
             return 'Không xác định';
     }
 };
-
+const getStatusClass = (status) => {
+    switch (status) {
+        case 'Pending_Deposit_Confirmation':
+            return 'status-yellow'; // vàng
+        case 'Pending_Contract_Signing':
+            return 'status-yellow-dark'; // vàng đậm
+        case 'Pending_Vehicle_Pickup':
+            return 'status-blue'; // xanh nước
+        case 'Vehicle_Inspected_Before_Pickup':
+            return 'status-blue-dark'; // xanh nước đậm
+        case 'Currently_Renting':
+            return 'status-purple'; // tím
+        case 'Vehicle_Returned':
+            return 'status-purple-dark'; // tím đậm
+        case 'Completed':
+            return 'status-yellow'; // xanh ngọc
+        case 'Vehicle_Return_Overdue':
+            return 'status-red'; // đỏ
+        case 'Pending_Renter_Confirmation':
+            return 'status-yellow';
+        case 'Total_Fees_Charged':
+            return 'status-emerald';
+        default:
+            return 'status-blue'; // fallback
+    }
+};
 
 const fmtVND = (amount) => (amount ?? 0).toLocaleString("vi-VN") + " ₫";
 
@@ -489,9 +516,9 @@ const BookingDetailHistory = () => {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="detail-header">
                     <div className="detail-header-top">
-                        <h1 className="detail-title">Chi tiết đơn #{normalized.bookingId}</h1>
-                        <span className={`detail-status-badge status-${(normalized.status || 'unknown').toLowerCase()}`}>
-                            {getStatusText(normalized.status)}
+                        <h1 className="detail-title">Chi tiết đơn hàng #{normalized.bookingId}</h1>
+                        <span className={`status-badge ${getStatusClass(booking.status)}`}>
+                            {getStatusText(booking.status)}
                         </span>
                     </div>
                     <p className="detail-subtitle">Thông tin chi tiết về đơn đặt xe</p>
@@ -573,7 +600,7 @@ const BookingDetailHistory = () => {
 
                                     {/* Tổng phụ phí - nổi bật ở trên cùng */}
                                     <div className="fee-line fee-total">
-                                        <span className="fee-label" style={{ fontWeight: 'bold'}}>Tổng phụ phí</span>
+                                        <span className="fee-label" style={{ fontWeight: 'bold' }}>Tổng phụ phí</span>
                                         <span className="fee-amount">{fmtVND(extrasFeeDisplayed)}</span>
                                     </div>
 
@@ -619,14 +646,16 @@ const BookingDetailHistory = () => {
                                 <span className="price-total-value">{fmtVND(total)}</span>
                             </div>
 
-                            <div className="price-actions">
-                                <button
-                                    className="btn-pay"
-                                    onClick={handleProceedToCheckout}
-                                >
-                                    Thanh toán
-                                </button>
-                            </div>
+                            {normalized.status === 'Completed' && (
+                                <div className="price-actions">
+                                    <button
+                                        className="btn-pay"
+                                        onClick={handleProceedToCheckout}
+                                    >
+                                        Thanh toán
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
