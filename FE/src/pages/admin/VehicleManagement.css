@@ -1,0 +1,401 @@
+/**
+ * VehicleManagement Styles
+ * 
+ * NOTE: Styles cho trang quản lý xe
+ * - Layout cân đối, responsive
+ * - Grid và List view
+ * - Filters và search
+ */
+
+/* KPI Card Content */
+.kpi-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.kpi-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.kpi-info {
+  flex: 1;
+}
+
+.kpi-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Vehicle Toolbar */
+.vehicle-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.vehicle-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  flex: 1;
+}
+
+.vehicle-search i {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.vehicle-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+}
+
+.vehicle-search input::placeholder {
+  color: #94a3b8;
+}
+
+.vehicle-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vehicle-filters select {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-width: 140px;
+}
+
+.vehicle-filters select:hover {
+  border-color: #cbd5e1;
+}
+
+.vehicle-filters select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  padding: 10px 14px;
+  border: none;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.view-toggle button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.view-toggle button.active {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.vehicle-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-btn-secondary {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-btn-secondary:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Vehicles Container */
+.vehicles-container {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  padding: 24px;
+  min-height: 400px;
+}
+
+/* Grid View */
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.vehicle-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.vehicle-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+}
+
+.vehicle-card-header {
+  position: relative;
+  height: 180px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.vehicle-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vehicle-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vehicle-status--available {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.vehicle-status--rented {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.vehicle-status--maintenance {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.vehicle-card-body {
+  padding: 16px;
+}
+
+.vehicle-model {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.vehicle-license {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.vehicle-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.vehicle-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vehicle-meta i {
+  font-size: 11px;
+}
+
+/* List View */
+.vehicles-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicles-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vehicles-table thead th {
+  text-align: left;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.vehicles-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.vehicles-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.vehicles-table tbody td {
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.vehicle-license-cell {
+  font-weight: 700;
+  color: #3b82f6;
+  font-family: 'Courier New', monospace;
+}
+
+.battery-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn-icon {
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: #f8fafc;
+  color: #3b82f6;
+}
+
+/* States */
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-state i,
+.error-state i,
+.empty-state i {
+  font-size: 48px;
+  color: #cbd5e1;
+}
+
+.loading-state p,
+.error-state p,
+.empty-state p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.error-state i {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vehicle-toolbar {
+    padding: 16px;
+  }
+
+  .vehicle-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .vehicle-filters select {
+    width: 100%;
+  }
+
+  .vehicles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vehicles-table {
+    font-size: 12px;
+  }
+
+  .vehicles-table thead th,
+  .vehicles-table tbody td {
+    padding: 10px 8px;
+  }
+}
+

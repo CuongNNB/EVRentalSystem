@@ -1,0 +1,314 @@
+/**
+ * StationManagement Styles
+ * 
+ * NOTE: Styles cho trang quản lý điểm thuê
+ * - Layout cân đối, responsive
+ * - Grid và List view
+ * - Filters và search
+ */
+
+/* Station Toolbar */
+.station-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.station-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  flex: 1;
+}
+
+.station-search i {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.station-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+}
+
+.station-search input::placeholder {
+  color: #94a3b8;
+}
+
+.station-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.station-filters select {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-width: 160px;
+}
+
+.station-filters select:hover {
+  border-color: #cbd5e1;
+}
+
+.station-filters select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.station-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Stations Container */
+.stations-container {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  padding: 24px;
+  min-height: 400px;
+}
+
+/* Grid View */
+.stations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.station-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.station-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  border-color: #10b981;
+}
+
+.station-card-header {
+  position: relative;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.station-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.station-status {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.station-status--active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.station-status--inactive {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.station-status--maintenance {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.station-card-body {
+  padding: 20px;
+}
+
+.station-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+}
+
+.station-address {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.6;
+}
+
+.station-address i {
+  margin-top: 2px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.station-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #64748b;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.station-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.station-meta i {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* List View */
+.stations-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.stations-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stations-table thead th {
+  text-align: left;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.stations-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.stations-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.stations-table tbody td {
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.station-name-cell {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.station-address-cell {
+  color: #64748b;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vehicle-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
+.vehicle-count i {
+  font-size: 12px;
+}
+
+.utilization-value {
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .station-toolbar {
+    padding: 16px;
+  }
+
+  .station-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .station-filters select {
+    width: 100%;
+  }
+
+  .stations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stations-table {
+    font-size: 12px;
+  }
+
+  .stations-table thead th,
+  .stations-table tbody td {
+    padding: 10px 8px;
+  }
+
+  .station-address-cell {
+    max-width: 150px;
+  }
+}
+
