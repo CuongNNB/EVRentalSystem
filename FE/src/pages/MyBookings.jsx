@@ -57,11 +57,13 @@ const MyBookings = () => {
             case 'Vehicle_Returned':
                 return 'Xe đã trả';
             case 'Total_Fees_Charged':
-                return 'Đã tính tổng chi phí';
+                return 'Đã hoàn tất đơn hàng';
             case 'Completed':
-                return 'Hoàn tất';
+                return 'Đợi thanh toán hóa đơn';
             case 'Vehicle_Return_Overdue':
                 return 'Quá hạn trả xe';
+            case 'Pending_Renter_Confirmation':
+                return 'Đợi khách hàng xác nhận';
             default:
                 return 'Không xác định';
         }
@@ -82,9 +84,13 @@ const MyBookings = () => {
             case 'Vehicle_Returned':
                 return 'status-purple-dark'; // tím đậm
             case 'Completed':
-                return 'status-emerald'; // xanh ngọc
+                return 'status-yellow'; // xanh ngọc
             case 'Vehicle_Return_Overdue':
                 return 'status-red'; // đỏ
+            case 'Pending_Renter_Confirmation':
+                return 'status-yellow';
+            case 'Total_Fees_Charged':
+                return 'status-emerald';
             default:
                 return 'status-blue'; // fallback
         }
@@ -101,13 +107,13 @@ const MyBookings = () => {
 
     const [bookings, setBookings] = useState([]); // <- use real bookings from API
 
-    const tabs = [
-        { key: 'ALL', label: 'Tất cả' },
-        { key: 'RENTED', label: 'Đang thuê' },
-        { key: 'PENDING', label: 'Sắp thuê' },
-        { key: 'RETURNED', label: 'Đã hoàn tất' },
-        { key: 'CANCELLED', label: 'Đã hủy' }
-    ];
+    // const tabs = [
+    //     { key: 'ALL', label: 'Tất cả' },
+    //     { key: 'RENTED', label: 'Đang thuê' },
+    //     { key: 'PENDING', label: 'Sắp thuê' },
+    //     { key: 'RETURNED', label: 'Đã hoàn tất' },
+    //     { key: 'CANCELLED', label: 'Đã hủy' }
+    // ];
 
     // Fetch user's bookings on mount
     useEffect(() => {
@@ -270,7 +276,7 @@ const MyBookings = () => {
                     <p className="bookings-subtitle">Xem và quản lý tất cả các đơn đặt xe của bạn</p>
                 </motion.div>
 
-                {/* Tabs */}
+                {/* Tabs
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -288,7 +294,7 @@ const MyBookings = () => {
                             </button>
                         ))}
                     </div>
-                </motion.div>
+                </motion.div> */}
 
                 {/* Error State */}
                 {error && (
@@ -353,10 +359,11 @@ const MyBookings = () => {
                                         {/* Header */}
                                         <div className="card-header">
                                             <div className="card-vehicle-info">
+                                                <h3 style={{ color: "green" }}>Đơn hàng #{booking.bookingId}</h3>
                                                 <h3>
                                                     {booking.vehicleBrand} {booking.vehicleModel}
                                                 </h3>
-                                                <p>{booking.licensePlate}</p>
+                                                {/* <p>{booking.licensePlate}</p> */}
                                             </div>
                                             <span className={`status-badge ${getStatusClass(booking.status)}`}>
                                                 {getStatusText(booking.status)}
