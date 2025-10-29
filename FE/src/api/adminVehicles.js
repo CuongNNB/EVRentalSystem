@@ -106,6 +106,22 @@ export const deleteVehicle = async (id) => {
 }
 
 /**
+ * Get list of unique vehicle models from database
+ * Endpoint: GET /admin/vehicles/models
+ * Returns: Array of distinct vehicle model names
+ */
+export const getVehicleModels = async () => {
+  try {
+    const { data } = await api.get('/admin/vehicles/models')
+    console.debug?.('[getVehicleModels] raw:', data)
+    return asArray(data)
+  } catch (error) {
+    console.error('[getVehicleModels] error:', error)
+    throw error
+  }
+}
+
+/**
  * Export vehicles to Excel
  * Endpoint: GET /admin/vehicles/export
  */

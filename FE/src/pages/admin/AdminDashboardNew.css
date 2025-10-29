@@ -425,36 +425,43 @@
 }
 
 .chart-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+  letter-spacing: -0.3px;
 }
 
 .chart-icon {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-radius: 11px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 17px;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.chart-icon:hover {
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .chart-subtitle {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #64748b;
   font-weight: 500;
   margin: 0;
-  padding-left: 48px;
-  line-height: 1.3;
+  padding-left: 54px;
+  line-height: 1.4;
 }
 
 /* ===================================
@@ -702,31 +709,56 @@
   font-size: 13px;
 }
 
-/* Recent Rentals Card */
+/* ===================================
+   RECENT RENTALS - Đơn Gần Đây
+   =================================== */
+
+/* Main Card Container - Giống Top Stations */
 .recent-rentals-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  background: #ffffff !important;
   border-radius: 16px !important;
-  overflow: hidden;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #f1f5f9 !important;
   padding: 0 !important;
+  position: relative !important;
+}
+
+/* Remove the ::before border from stat-card */
+.recent-rentals-card::before {
+  display: none !important;
+  content: none !important;
 }
 
 .recent-rentals-card > * {
   padding: 0 !important;
 }
 
+/* Header Section - Cố định ở trên */
 .recent-rentals-card .chart-header {
-  padding: 14px 18px 6px 18px !important;
-  margin-bottom: 6px !important;
-  border-bottom: 1px solid #eef2f7;
+  flex-shrink: 0 !important;
+  padding: 20px 24px 16px 24px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 3 !important;
 }
 
+/* Scroll Container - Giống Top Stations */
 .recent-rentals-scroll {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 4px;
+  flex: 1 1 auto !important;
+  padding: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: #ffffff !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 0 !important;
+  min-height: 0 !important; /* Important for flex children with overflow */
 }
 
 .recent-rentals-scroll::-webkit-scrollbar {
@@ -743,189 +775,349 @@
   background: transparent;
 }
 
+/* Table Layout */
 .recent-rentals-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+  width: 100% !important;
+  min-width: 560px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  table-layout: fixed !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+
+/* Table Header - Sticky trong scroll container */
+.recent-rentals-table thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #ffffff !important;
 }
 
 .recent-rentals-table thead th {
-  text-align: left;
-  padding: 12px 10px;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #e2e8f0;
-  background: #f8fafc;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  white-space: nowrap;
-  backdrop-filter: saturate(110%) blur(2px);
+  text-align: left !important;
+  padding: 10px 6px !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  position: relative !important;
+  white-space: nowrap !important;
+  backdrop-filter: saturate(110%) blur(10px) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.recent-rentals-table thead th:first-child {
+  padding-left: 12px !important;
+}
+
+.recent-rentals-table thead th:last-child {
+  padding-right: 12px !important;
 }
 
 .recent-rentals-table thead th i {
-  margin-right: 4px;
-  font-size: 9px;
-  opacity: 0.7;
+  margin-right: 3px;
+  font-size: 8px;
+  opacity: 0.8;
+  color: #64748b;
 }
 
-/* Column widths - Cố định để không nhảy layout */
-.rental-col-code {
-  width: 88px;
-  min-width: 88px;
+.recent-rentals-table thead th span {
+  vertical-align: middle;
 }
 
-.rental-col-customer {
-  width: 36%;
-  min-width: 220px;
-}
-
-.rental-col-vehicle {
-  width: 18%;
-  min-width: 120px;
-}
-
-.rental-col-time {
-  width: 20%;
-  min-width: 140px;
-}
-
-.rental-col-status {
-  width: 16%;
-  min-width: 110px;
-}
-
+/* Column widths - Compact tối đa */
 .recent-rentals-table thead th:nth-child(1) {
-  width: 8%;
+  width: 60px !important;
+  max-width: 60px !important;
+  min-width: 60px !important;
 }
 
 .recent-rentals-table thead th:nth-child(2) {
-  width: 28%;
+  width: 170px !important;
+  max-width: 170px !important;
+  min-width: 170px !important;
 }
 
 .recent-rentals-table thead th:nth-child(3) {
-  width: 18%;
+  width: 100px !important;
+  max-width: 100px !important;
+  min-width: 100px !important;
 }
 
 .recent-rentals-table thead th:nth-child(4) {
-  width: 22%;
+  width: 120px !important;
+  max-width: 120px !important;
+  min-width: 120px !important;
 }
 
 .recent-rentals-table thead th:nth-child(5) {
-  width: 24%;
+  width: 110px !important;
+  max-width: 110px !important;
+  min-width: 110px !important;
+}
+
+.recent-rentals-table tbody td:nth-child(1) {
+  width: 60px !important;
+  max-width: 60px !important;
+  min-width: 60px !important;
+}
+
+.recent-rentals-table tbody td:nth-child(2) {
+  width: 170px !important;
+  max-width: 170px !important;
+  min-width: 170px !important;
+}
+
+.recent-rentals-table tbody td:nth-child(3) {
+  width: 100px !important;
+  max-width: 100px !important;
+  min-width: 100px !important;
+}
+
+.recent-rentals-table tbody td:nth-child(4) {
+  width: 120px !important;
+  max-width: 120px !important;
+  min-width: 120px !important;
+}
+
+.recent-rentals-table tbody td:nth-child(5) {
+  width: 110px !important;
+  max-width: 110px !important;
+  min-width: 110px !important;
+}
+
+/* Table Body */
+.recent-rentals-table tbody {
+  background: #ffffff !important;
 }
 
 .recent-rentals-table tbody tr {
-  border-bottom: 1px solid #eef2f7;
-  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: all 0.2s ease !important;
+  background: #ffffff !important;
 }
 
 .recent-rentals-table tbody tr:hover {
-  background: #f7fafc;
+  background: #f8fafc !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+.recent-rentals-table tbody tr:last-child {
+  border-bottom: none !important;
 }
 
 .recent-rentals-table tbody td {
-  padding: 12px 10px;
-  font-size: 12.5px;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding: 12px 6px !important;
+  font-size: 11.5px !important;
+  color: #1e293b !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
 }
 
+.recent-rentals-table tbody td:first-child {
+  padding-left: 12px !important;
+}
+
+.recent-rentals-table tbody td:last-child {
+  padding-right: 12px !important;
+}
+
+.recent-rentals-table tbody tr:hover td {
+  background: #f8fafc !important;
+}
+
+/* Rental Code Badge */
 .rental-code {
-  font-weight: 700;
-  color: #3b82f6;
-  font-family: 'Courier New', monospace;
-  font-size: 12.5px;
+  font-weight: 700 !important;
+  color: #3b82f6 !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 10.5px !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1)) !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  max-width: 52px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
+.rental-code:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Customer Info */
 .rental-customer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
 }
 
 .rental-customer-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-  color: #1e293b;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  font-size: 11px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
+/* Customer Initial Avatar */
 .rental-initials {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  flex-shrink: 0;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2) !important;
+  border: 1.5px solid #ffffff !important;
+  transition: all 0.2s ease !important;
 }
 
+.recent-rentals-table tbody tr:hover .rental-initials {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.35) !important;
+}
+
+/* Vehicle Tag */
 .rental-vehicle {
-  font-weight: 600;
-  color: #475569;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 10px !important;
+  background: rgba(100, 116, 139, 0.08) !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(100, 116, 139, 0.12) !important;
+  transition: all 0.2s ease !important;
+  max-width: 90px !important;
 }
 
+.rental-vehicle:hover {
+  background: rgba(100, 116, 139, 0.12) !important;
+  border-color: rgba(100, 116, 139, 0.2) !important;
+}
+
+/* Time Info */
 .rental-time {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
 }
 
 .rental-time-value {
-  font-weight: 700;
-  color: #0f172a;
-  font-size: 12.5px;
-  white-space: nowrap;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  font-family: 'Courier New', monospace !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .rental-date-value {
-  font-size: 10.5px;
-  color: #94a3b8;
-  white-space: nowrap;
+  font-size: 9.5px !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
+/* Status Badges */
 .status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 700;
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 4px 8px !important;
+  border-radius: 999px !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease !important;
+  max-width: 100px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .status-badge--success {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15)) !important;
+  color: #059669 !important;
+  border: 1.5px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+.status-badge--success:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)) !important;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.2) !important;
 }
 
 .status-badge--warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #d97706;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.15)) !important;
+  color: #d97706 !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.status-badge--warning:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2)) !important;
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.2) !important;
 }
 
 .status-badge--default {
-  background: rgba(100, 116, 139, 0.1);
-  color: #64748b;
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.12), rgba(71, 85, 105, 0.12)) !important;
+  color: #64748b !important;
+  border: 1.5px solid rgba(100, 116, 139, 0.25) !important;
+}
+
+.status-badge--default:hover {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.18), rgba(71, 85, 105, 0.18)) !important;
+  box-shadow: 0 3px 8px rgba(100, 116, 139, 0.15) !important;
+}
+
+/* Empty State for Recent Rentals */
+.recent-rentals-scroll .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+}
+
+.recent-rentals-scroll .empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+  color: #cbd5e1;
 }
 
 /* Responsive Design */
@@ -1089,13 +1281,44 @@
     font-size: 11.5px;
   }
 
-  /* Recent rentals: horizontal scroll trên mobile */
-  .recent-rentals-table {
-    min-width: 600px;
+  /* Recent rentals: mobile responsive */
+  .recent-rentals-card .chart-header {
+    padding: 18px !important;
   }
-
+  
   .recent-rentals-scroll {
-    overflow-x: auto;
+    overflow-x: auto !important;
+    padding: 12px 16px !important;
+  }
+  
+  .recent-rentals-table {
+    min-width: 600px !important;
+  }
+  
+  .recent-rentals-table thead th {
+    padding: 12px 14px !important;
+    font-size: 10px !important;
+  }
+  
+  .recent-rentals-table tbody td {
+    padding: 14px !important;
+    font-size: 12px !important;
+  }
+  
+  .rental-initials {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 11px !important;
+  }
+  
+  .rental-code {
+    font-size: 12px !important;
+    padding: 5px 10px !important;
+  }
+  
+  .status-badge {
+    font-size: 8.5px !important;
+    padding: 5px 10px !important;
   }
 }
 

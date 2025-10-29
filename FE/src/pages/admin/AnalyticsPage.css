@@ -1,0 +1,509 @@
+/* ============================================
+   ANALYTICS PAGE STYLES
+   ============================================ */
+
+/* Filters */
+.analytics-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.analytics-filters select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #334155;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.analytics-filters select:hover {
+  border-color: #cbd5e1;
+}
+
+.analytics-filters select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Section */
+.analytics-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: 1px solid #f1f5f9;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.section-title i {
+  color: #8b5cf6;
+  font-size: 20px;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Revenue Cards */
+.revenue-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.revenue-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.revenue-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.revenue-card:hover::before {
+  opacity: 1;
+}
+
+.revenue-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+}
+
+.revenue-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.station-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.growth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.growth-badge.positive {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.growth-badge.negative {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.growth-badge i {
+  font-size: 10px;
+}
+
+.revenue-amount {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.revenue-details {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.revenue-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.revenue-detail-item i {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.revenue-bar {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.revenue-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* Vehicle Utilization */
+.utilization-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.utilization-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.utilization-item:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: #e2e8f0;
+}
+
+.utilization-info {
+  grid-column: 1;
+}
+
+.vehicle-model-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.vehicle-stats {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.utilization-rate {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.utilization-percentage {
+  font-size: 24px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.utilization-bar-container {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.utilization-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* Two Column Layout */
+.analytics-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Monthly Trend */
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 280px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.trend-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.trend-bar-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.trend-bar {
+  width: 100%;
+  max-width: 60px;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  min-height: 40px;
+}
+
+.trend-bar:hover {
+  opacity: 0.8;
+  transform: translateY(-4px);
+}
+
+.trend-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.trend-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.trend-rentals {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Peak Hours Chart */
+.peak-hours-chart {
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.peak-hours-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding: 10px 0;
+}
+
+.peak-hour-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.peak-hour-bars-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.peak-bar {
+  width: 50%;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 4px;
+}
+
+.peak-bar:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
+}
+
+.peak-bar.rentals {
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+
+.peak-bar.returns {
+  background: linear-gradient(180deg, #10b981, #059669);
+}
+
+.peak-hour-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .analytics-two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1200px) {
+  .admin-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .analytics-filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .revenue-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .revenue-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-section {
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .revenue-amount {
+    font-size: 24px;
+  }
+
+  .trend-chart {
+    height: 200px;
+    padding: 12px;
+  }
+
+  .peak-hours-bars {
+    height: 150px;
+    gap: 4px;
+  }
+
+  .peak-hour-label {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .analytics-filters select,
+  .analytics-filters button {
+    width: 100%;
+  }
+
+  .revenue-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .utilization-item {
+    grid-template-columns: 1fr;
+  }
+
+  .utilization-rate {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .utilization-percentage {
+    text-align: left;
+  }
+}
+

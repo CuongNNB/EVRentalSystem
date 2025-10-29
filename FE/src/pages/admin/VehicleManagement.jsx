@@ -1,104 +1,31 @@
 /**
  * VehicleManagement Component
  * 
- * NOTE: Trang quản lý xe điện trong hệ thống
- * - Layout giống AdminDashboard
- * - MOCK DATA (backend chưa có API)
+ * Trang quản lý xe điện trong hệ thống
+ * - Lấy dữ liệu từ API thực tế (không có mock data)
  * - KPI: Tổng xe, Xe khả dụng, Xe đang thuê, Xe bảo trì
  * - Filters: Trạng thái, Dòng xe, Điểm thuê, Mức pin
  * - View: Grid/List
+ * 
+ * Required Backend APIs:
+ * - GET /api/admin/vehicles/stats
+ * - GET /api/admin/vehicles/models
+ * - GET /api/admin/stations/options
+ * - GET /api/admin/vehicles (with filters)
+ * - POST /api/admin/vehicles
+ * - PUT /api/admin/vehicles/{id}
+ * - DELETE /api/admin/vehicles/{id}
+ * - GET /api/admin/vehicles/export
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
-// NOTE: API imports removed - backend chưa có endpoint
-// import { getVehicleStats, getVehicles, exportVehicles } from '../../api/adminVehicles'
-// import { getStationOptions } from '../../api/adminDashboard'
+import { getVehicleStats, getVehicles, getVehicleModels, exportVehicles } from '../../api/adminVehicles'
+import { getStationOptions } from '../../api/adminDashboard'
 import './AdminDashboardNew.css'
 import './VehicleManagement.css'
-
-// ============================================================
-// MOCK DATA - Backend chưa có API
-// ============================================================
-const MOCK_STATS = {
-  total: 28,
-  available: 15,
-  rented: 10,
-  maintenance: 3
-}
-
-const MOCK_STATIONS = [
-  { id: 1, name: 'Trạm Quận 1 - Nguyễn Huệ' },
-  { id: 2, name: 'Trạm Quận 3 - Võ Văn Tần' },
-  { id: 3, name: 'Trạm Bình Thạnh - Điện Biên Phủ' },
-  { id: 4, name: 'Trạm Phú Nhuận - Hoàng Văn Thụ' },
-  { id: 5, name: 'Trạm Tân Bình - Cộng Hòa' }
-]
-
-const MOCK_VEHICLES = [
-  { 
-    id: 'VF001', 
-    model: 'VinFast VF 8', 
-    status: 'available', 
-    battery: 85, 
-    stationId: 1,
-    stationName: 'Trạm Quận 1',
-    licensePlate: '51F-12345',
-    lastMaintenance: '2024-01-15'
-  },
-  { 
-    id: 'VF002', 
-    model: 'VinFast VF 5', 
-    status: 'rented', 
-    battery: 62, 
-    stationId: 2,
-    stationName: 'Trạm Quận 3',
-    licensePlate: '51F-12346',
-    lastMaintenance: '2024-01-10'
-  },
-  { 
-    id: 'TM001', 
-    model: 'Tesla Model 3', 
-    status: 'available', 
-    battery: 95, 
-    stationId: 1,
-    stationName: 'Trạm Quận 1',
-    licensePlate: '51F-12347',
-    lastMaintenance: '2024-01-20'
-  },
-  { 
-    id: 'TM002', 
-    model: 'Tesla Model Y', 
-    status: 'maintenance', 
-    battery: 15, 
-    stationId: 3,
-    stationName: 'Trạm Bình Thạnh',
-    licensePlate: '51F-12348',
-    lastMaintenance: '2024-01-05'
-  },
-  { 
-    id: 'VF003', 
-    model: 'VinFast VF e34', 
-    status: 'available', 
-    battery: 78, 
-    stationId: 4,
-    stationName: 'Trạm Phú Nhuận',
-    licensePlate: '51F-12349',
-    lastMaintenance: '2024-01-12'
-  },
-  { 
-    id: 'HY001', 
-    model: 'Hyundai Ioniq 5', 
-    status: 'rented', 
-    battery: 55, 
-    stationId: 2,
-    stationName: 'Trạm Quận 3',
-    licensePlate: '51F-12350',
-    lastMaintenance: '2024-01-18'
-  }
-]
 
 const VehicleManagement = () => {
   const navigate = useNavigate()
@@ -107,6 +34,7 @@ const VehicleManagement = () => {
   const [stats, setStats] = useState(null)
   const [vehicles, setVehicles] = useState([])
   const [stations, setStations] = useState([])
+  const [vehicleModels, setVehicleModels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
@@ -118,58 +46,71 @@ const VehicleManagement = () => {
   const [stationFilter, setStationFilter] = useState('all')
   const [batteryFilter, setBatteryFilter] = useState('all')
 
-  // MOCK: Load stats from mock data (backend chưa có API)
-  const fetchStats = useCallback(() => {
-    setTimeout(() => {
-      setStats(MOCK_STATS)
-    }, 300) // Simulate network delay
+  // Fetch stats from API
+  const fetchStats = useCallback(async () => {
+    try {
+      const data = await getVehicleStats()
+      setStats(data)
+    } catch (err) {
+      console.error('[VehicleManagement] Failed to fetch stats:', err)
+      setError(err.message || 'Không thể tải thống kê')
+    }
   }, [])
 
-  // MOCK: Filter vehicles from mock data (backend chưa có API)
-  const fetchVehicles = useCallback(() => {
+  // Fetch vehicles from API with filters
+  const fetchVehicles = useCallback(async () => {
     setLoading(true)
-    setTimeout(() => {
-      let filtered = [...MOCK_VEHICLES]
-      
-      // Apply filters
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(v => v.status === statusFilter)
-      }
-      if (modelFilter !== 'all') {
-        filtered = filtered.filter(v => v.model === modelFilter)
-      }
-      if (stationFilter !== 'all') {
-        filtered = filtered.filter(v => v.stationId === parseInt(stationFilter))
-      }
-      if (batteryFilter !== 'all') {
-        if (batteryFilter === 'low') {
-          filtered = filtered.filter(v => v.battery < 30)
-        } else if (batteryFilter === 'medium') {
-          filtered = filtered.filter(v => v.battery >= 30 && v.battery < 70)
-        } else if (batteryFilter === 'high') {
-          filtered = filtered.filter(v => v.battery >= 70)
-        }
-      }
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase()
-        filtered = filtered.filter(v => 
-          v.id.toLowerCase().includes(term) ||
-          v.model.toLowerCase().includes(term) ||
-          v.licensePlate.toLowerCase().includes(term)
-        )
+    setError(null)
+    
+    try {
+      const params = {
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        model: modelFilter !== 'all' ? modelFilter : undefined,
+        stationId: stationFilter !== 'all' ? stationFilter : undefined,
+        battery: batteryFilter !== 'all' ? batteryFilter : undefined,
+        search: searchTerm || undefined
       }
       
-      setVehicles(filtered)
-      setError(null)
+      const data = await getVehicles(params)
+      
+      // Handle both paginated and non-paginated response
+      if (data && data.content) {
+        // Paginated response
+        setVehicles(Array.isArray(data.content) ? data.content : [])
+      } else {
+        // Direct array response
+        setVehicles(Array.isArray(data) ? data : [])
+      }
+    } catch (err) {
+      console.error('[VehicleManagement] Failed to fetch vehicles:', err)
+      setError(err.message || 'Không thể tải dữ liệu xe')
+      setVehicles([])
+    } finally {
       setLoading(false)
-    }, 500) // Simulate network delay
+    }
   }, [statusFilter, modelFilter, stationFilter, batteryFilter, searchTerm])
 
-  // MOCK: Load stations from mock data (backend chưa có API)
-  const fetchStations = useCallback(() => {
-    setTimeout(() => {
-      setStations(MOCK_STATIONS)
-    }, 200) // Simulate network delay
+  // Fetch stations from API
+  const fetchStations = useCallback(async () => {
+    try {
+      const data = await getStationOptions()
+      setStations(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('[VehicleManagement] Failed to fetch stations:', err)
+      setStations([])
+    }
+  }, [])
+
+  // Fetch vehicle models from database
+  const fetchVehicleModels = useCallback(async () => {
+    try {
+      const data = await getVehicleModels()
+      console.log('[VehicleManagement] Vehicle models from DB:', data)
+      setVehicleModels(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('[VehicleManagement] Failed to fetch vehicle models:', err)
+      setVehicleModels([])
+    }
   }, [])
 
   // FIX: avoid duplicate requests - use useRef guard to prevent StrictMode double-run
@@ -180,6 +121,7 @@ const VehicleManagement = () => {
     
     fetchStats()
     fetchStations()
+    fetchVehicleModels() // Fetch vehicle models from database
     fetchVehicles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run once on mount
@@ -198,12 +140,39 @@ const VehicleManagement = () => {
   // Handle refresh
   const handleRefresh = () => {
     fetchStats()
+    fetchStations()
+    fetchVehicleModels()
     fetchVehicles()
   }
 
-  // MOCK: Export disabled (backend chưa có API)
-  const handleExport = () => {
-    alert('⚠️ Chức năng Export đang chờ backend hoàn thành API')
+  // Handle export to Excel
+  const handleExport = async () => {
+    try {
+      const params = {
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        model: modelFilter !== 'all' ? modelFilter : undefined,
+        stationId: stationFilter !== 'all' ? stationFilter : undefined,
+        battery: batteryFilter !== 'all' ? batteryFilter : undefined,
+        search: searchTerm || undefined
+      }
+      
+      const blob = await exportVehicles(params)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `vehicles_export_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      console.log('[VehicleManagement] Export successful')
+    } catch (err) {
+      console.error('[VehicleManagement] Export failed:', err)
+      alert('Không thể xuất file Excel. Vui lòng thử lại.')
+    }
   }
 
   // Handle add vehicle
@@ -312,9 +281,11 @@ const VehicleManagement = () => {
 
               <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)}>
                 <option value="all">Tất cả dòng xe</option>
-                <option value="VF8">VinFast VF8</option>
-                <option value="VF9">VinFast VF9</option>
-                <option value="VFe34">VinFast VF e34</option>
+                {vehicleModels.map((model, index) => (
+                  <option key={index} value={model}>
+                    {model}
+                  </option>
+                ))}
               </select>
 
               <select value={stationFilter} onChange={(e) => setStationFilter(e.target.value)}>
@@ -394,12 +365,17 @@ const VehicleManagement = () => {
                     <div key={vehicle.id} className="vehicle-card">
                       <div className="vehicle-card-header">
                         <img
-                          src={vehicle.image || '/placeholder-car.png'}
+                          src={vehicle.image || `/anhxe/${vehicle.model}.jpg`}
                           alt={vehicle.model}
                           className="vehicle-image"
+                          onError={(e) => {
+                            e.target.src = '/carpic/logo.png'
+                          }}
                         />
                         <span className={`vehicle-status vehicle-status--${vehicle.status?.toLowerCase()}`}>
-                          {vehicle.status}
+                          {vehicle.status === 'available' ? 'Khả dụng' : 
+                           vehicle.status === 'rented' ? 'Đang thuê' : 
+                           vehicle.status === 'maintenance' ? 'Bảo trì' : vehicle.status}
                         </span>
                       </div>
                       <div className="vehicle-card-body">
@@ -408,7 +384,7 @@ const VehicleManagement = () => {
                         <div className="vehicle-meta">
                           <span>
                             <i className="fas fa-map-marker-alt"></i>
-                            {vehicle.stationName}
+                            {vehicle.stationName || 'N/A'}
                           </span>
                           <span>
                             <i className="fas fa-battery-three-quarters"></i>
@@ -435,7 +411,7 @@ const VehicleManagement = () => {
                         <tr key={vehicle.id}>
                           <td className="vehicle-license-cell">{vehicle.licensePlate}</td>
                           <td>{vehicle.model}</td>
-                          <td>{vehicle.stationName}</td>
+                          <td>{vehicle.stationName || 'N/A'}</td>
                           <td>
                             <span className="battery-indicator">
                               <i className="fas fa-battery-three-quarters"></i>
@@ -444,7 +420,9 @@ const VehicleManagement = () => {
                           </td>
                           <td>
                             <span className={`vehicle-status vehicle-status--${vehicle.status?.toLowerCase()}`}>
-                              {vehicle.status}
+                              {vehicle.status === 'available' ? 'Khả dụng' : 
+                               vehicle.status === 'rented' ? 'Đang thuê' : 
+                               vehicle.status === 'maintenance' ? 'Bảo trì' : vehicle.status}
                             </span>
                           </td>
                           <td>
