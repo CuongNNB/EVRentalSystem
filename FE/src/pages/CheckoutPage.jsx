@@ -35,7 +35,7 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const paymentMethods = [
         { id: 'bank-transfer', name: 'Chuyển khoản ngân hàng', description: 'Chuyển khoản qua ngân hàng trong nước', icon: CreditCard, color: '#10b981', qr: '/qrimage/bank_qr.png' },
         { id: 'momo', name: 'Ví MoMo', description: 'Thanh toán nhanh chóng qua ví MoMo', icon: Smartphone, color: '#d946ef', qr: '/qrimage/momo_qr.png' },
-        { id: 'ewallet', name: 'Ví điện tử khác', description: 'ZaloPay, ShopeePay, ViettelPay, VNPAY', icon: Wallet, color: '#3b82f6', qr: '/qrimage/ewallet_qr.png' }
+        { id: 'ewallet', name: 'Thẻ ngân hàng nội địa', description: 'Ngân hàng NCB', icon: Wallet, color: '#3b82f6', qr: '/qrimage/ewallet_qr.png' }
     ];
 
     useEffect(() => {
@@ -135,6 +135,34 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
 
         fetchPromotions();
     }, []);
+
+    // --- handle VNPay return redirect ---
+    useEffect(() => {
+        // Kiểm tra nếu URL hiện tại chứa các tham số VNPay trả về
+        const search = window.location.search;
+        if (search.includes('vnp_ResponseCode')) {
+            (async () => {
+                try {
+                    const resp = await fetch(`http://localhost:8084/EVRentalSystem/api/vnpay/return${search}`);
+                    const data = await resp.json().catch(() => ({}));
+
+                    if (resp.ok && data.redirectUrl) {
+                        showToast(data.message || 'Thanh toán thành công', 'success');
+                        // Đợi 1 chút để user đọc thông báo rồi điều hướng
+                        setTimeout(() => navigate(data.redirectUrl), 1000);
+                    } else {
+                        showToast(data.message || 'Thanh toán thất bại', 'error');
+                        setTimeout(() => navigate('/payment-failed'), 1000);
+                    }
+                } catch (err) {
+                    console.error('VNPay return fetch error:', err);
+                    showToast('Lỗi khi xử lý kết quả thanh toán', 'error');
+                    setTimeout(() => navigate('/payment-failed'), 1000);
+                }
+            })();
+        }
+    }, [navigate]);
+
 
     const showToast = (message, type = 'info') => {
         setToast({ show: true, message, type });
@@ -280,13 +308,102 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
         }
     };
 
-    const handlePayment = () => {
+    // --- START: VNPay helper ---
+    const createVnPayPayment = async ({ bookingId, amount, locale = 'vn' }) => {
+        try {
+            setPaying(true);
+            const url = 'http://localhost:8084/EVRentalSystem/api/vnpay/create';
+            const body = {
+                amount: amount, // theo bạn: finalTotal
+                orderInfo: `Thanh toán đơn hàng #${bookingId}`,
+                orderId: String(bookingId),
+                locale: locale
+            };
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!resp.ok) {
+                const txt = await resp.text().catch(() => null);
+                throw new Error(`Server trả về ${resp.status} ${txt ? '- ' + txt : ''}`);
+            }
+
+            const data = await resp.json().catch(() => ({}));
+            const paymentUrl = data.paymentUrl || data.paymentURL || data.url;
+            if (!paymentUrl) throw new Error('Backend không trả về paymentUrl');
+
+            // mở tab mới để user thực hiện thanh toán trên VNPay
+            window.open(paymentUrl, '_blank');
+
+            return { paymentUrl, orderId: data.orderId ?? null };
+        } catch (err) {
+            console.error('createVnPayPayment error', err);
+            throw err;
+        } finally {
+            setPaying(false);
+        }
+    };
+    // --- END: VNPay helper ---
+
+
+    const handlePayment = async () => {
         if (!selectedMethod) {
             showToast('Vui lòng chọn phương thức thanh toán', 'error');
             return;
         }
+
+        // Nếu user chọn ví điện tử (ewallet) -> dùng VNPay (theo yêu cầu)
+        if (selectedMethod === 'ewallet') {
+            try {
+                if (!summary) {
+                    showToast('Không có thông tin booking để thực hiện thanh toán', 'error');
+                    return;
+                }
+
+                // Lấy bookingId từ summary (ưu tiên contractCode / bookingId / id)
+                const bookingId = summary.contractCode ?? summary.bookingId ?? summary.id ?? null;
+                if (!bookingId) {
+                    showToast('Không xác định được bookingId', 'error');
+                    return;
+                }
+
+                // finalTotal đã được tính trong file của bạn
+                const amountToPay = Number(finalTotal || 0);
+                if (!amountToPay || isNaN(amountToPay) || amountToPay <= 0) {
+                    showToast('Giá trị thanh toán không hợp lệ', 'error');
+                    return;
+                }
+
+                // Gửi đúng body theo yêu cầu bạn nêu
+                // NOTE: nếu backend/VnPayService yêu cầu amount = vnp_Amount (amount * 100), hãy đổi:
+                // const amountToSend = amountToPay * 100;
+                const amountToSend = amountToPay;
+
+                const res = await createVnPayPayment({
+                    bookingId,
+                    amount: amountToSend,
+                    locale: 'vn'
+                });
+
+                showToast('Đang chuyển tới VNPay...', 'info');
+                console.info('VNPay create response:', res);
+
+                // (Tùy) Lưu res.orderId nếu cần đối soát
+            } catch (err) {
+                console.error('Lỗi khi khởi tạo VNPay', err);
+                showToast('Không thể khởi tạo VNPay: ' + (err.message || ''), 'error');
+            }
+            return;
+        }
+
+        // các phương thức khác giữ luồng cũ (QR modal)
         setShowQRModal(true);
     };
+
+
     // Gọi API khi người dùng xác nhận "Tôi đã thanh toán"
     const handleConfirmPayment = async () => {
         try {
@@ -564,14 +681,34 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                             Ứng dụng: {selectedMethod === 'momo' ? 'MoMo' : (selectedMethod === 'bank-transfer' ? 'Ngân hàng' : 'Ví điện tử')}
                         </p>
 
-                        <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
-                        <button
-                            className="qr-confirm-btn"
-                            onClick={handleConfirmPayment}
-                            disabled={paying}
-                        >
-                            {paying ? 'Đang xác nhận...' : 'Tôi đã thanh toán'}
-                        </button>
+                        {selectedMethod === 'ewallet' ? (
+                            <>
+                                <p style={{ color: '#374151' }}>Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất (Sandbox).</p>
+                                <button
+                                    className="qr-confirm-btn"
+                                    onClick={() => {
+                                        // Gọi handlePayment để tạo VNPay và redirect
+                                        handlePayment();
+                                        // Đóng modal (nếu muốn)
+                                        setShowQRModal(false);
+                                    }}
+                                    disabled={paying}
+                                >
+                                    {paying ? 'Đang...' : 'Thanh toán bằng VNPay'}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
+                                <button
+                                    className="qr-confirm-btn"
+                                    onClick={handleConfirmPayment}
+                                    disabled={paying}
+                                >
+                                    {paying ? 'Đang xác nhận...' : 'Tôi đã thanh toán'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
