@@ -28,7 +28,7 @@ import UserProfilePage from "./pages/UserProfilePage";
 import Forbidden from "./pages/Forbidden";
 
 // Admin pages
-import { AdminDashboard, AdminGuard, VehicleManagement } from "./pages/admin";
+import { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement } from "./pages/admin";
 import CustomerManagement from "./pages/admin/CustomerManagement";
 import StaffManagement from "./pages/admin/StaffManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
@@ -81,11 +81,13 @@ function App() {
 
                         //Phần trang của Admin
                         <Route element={<AdminGuard />}>
-                            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                            <Route path="/admin/vehicles" element={<ProtectedRoute><VehicleManagement /></ProtectedRoute>} />
-                            <Route path="/admin/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
-                            <Route path="/admin/staff" element={<ProtectedRoute><StaffManagement /></ProtectedRoute>} />
-                            <Route path="/admin/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+                            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
+                                <Route index element={<AdminOverview />} />
+                                <Route path="vehicles" element={<VehicleManagement />} />
+                                <Route path="customers" element={<CustomerManagement />} />
+                                <Route path="staff" element={<StaffManagement />} />
+                                <Route path="analytics" element={<AnalyticsPage />} />
+                            </Route>
                         </Route>
 
                         <Route path="/403" element={<Forbidden />} />

@@ -2,98 +2,21 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import "./AdminDashboardNew.css";
 import "../staff/StaffLayout.css";
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import './AdminDashboardNew.css'
-import '../staff/StaffLayout.css'
-
-// Debug: Log để xác nhận file được load
-console.log('[AdminDashboard] Module loaded successfully')
 import KpiCard from '../../components/admin/KpiCard'
 import RevenueChart from '../../components/admin/RevenueChart'
 import TopStations from '../../components/admin/TopStations'
 import RecentRentals from '../../components/admin/RecentRentals'
 import ActivityFeed from '../../components/admin/ActivityFeed'
 import ExportButtons from '../../components/admin/ExportButtons'
-import AdminSlideBar from '../../components/admin/AdminSlideBar' // NOTE: Đã thêm import AdminSlideBar
-import StationVehiclesCard from '../../components/admin/StationVehiclesCard' // NOTE: Đã tạo lại StationVehiclesCard
+import AdminSlideBar from '../../components/admin/AdminSlideBar'
+import StationVehiclesCard from '../../components/admin/StationVehiclesCard'
 import useAdminMetrics from './hooks/useAdminMetrics'
 import { formatPercent, formatVND } from '../../utils/format'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { useAuth } from '../../contexts/AuthContext'
-import { getVehicleStats } from '../../api/adminVehicles'
 
+// AdminDashboard là layout component với sidebar và outlet cho các trang con
 export default function AdminDashboard() {
-  console.log('[AdminDashboard] Component is rendering...')
-  
-  // NOTE: useAdminMetrics đã tự động fetch data khi mount
-  const { data: m, loading, error, refetch } = useAdminMetrics()
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-  
-  // State cho tổng số xe
-  const [totalVehicles, setTotalVehicles] = useState(0)
-  
-  // Fetch tổng số xe từ API vehicle stats
-  useEffect(() => {
-
-    const fetchVehicleTotal = async () => {
-      try {
-        console.log('[AdminDashboard] Fetching vehicle stats...')
-        
-        // Gọi API với stationId = 0 để lấy tổng toàn hệ thống
-        const stats = await getVehicleStats(0)
-        console.log('[AdminDashboard] Vehicle stats:', stats)
-        
-        // Lấy tổng số xe từ stats
-        const total = stats?.total || 0
-        setTotalVehicles(total)
-        
-        console.log('[AdminDashboard] Total vehicles:', total)
-      } catch (err) {
-        console.error('[AdminDashboard] Error fetching vehicle total:', err)
-        setTotalVehicles(0)
-      }
-    }
-    
-    fetchVehicleTotal()
-  }, [])
-
-  const num = (v) => (typeof v === 'number' ? v : 0)
-  const params = new URLSearchParams(window.location.search)
-  const showDebug = params.get('debug') === '1'
-  
-  // === from/to = đầu tháng -> hôm nay (chỉ dùng cho retry button) ===
-  const ymd = (d) => d.toLocaleDateString('en-CA')
-  const today = new Date()
-  const to = ymd(today)
-  const from = ymd(new Date(today.getFullYear(), today.getMonth(), 1))
-
-  // Xử lý đăng xuất
-  const handleLogout = () => {
-    logout() // Xóa token và thông tin user
-    navigate('/') // Chuyển về trang homepage
-  }
-
-  // Debug: Log state để kiểm tra
-  console.log('[AdminDashboard] loading:', loading, 'error:', error, 'data:', m)
-
-  // Fallback UI khi đang load toàn bộ trang lần đầu
-  if (loading && !m) {
-    console.log('[AdminDashboard] Rendering loading state...')
-    return (
-      <div className="admin-layout">
-        <AdminSlideBar activeKey="overview" />
-        <main className="admin-main-content" style={{ padding: '2rem', textAlign: 'center' }}>
-          <h2>⏳ Đang tải dữ liệu dashboard...</h2>
-          <p style={{ marginTop: '1rem', color: '#666' }}>Vui lòng đợi trong giây lát</p>
-        </main>
-      </div>
-    )
-  }
-  
-  console.log('[AdminDashboard] Rendering main content...')
-
   return (
     <ErrorBoundary>
       <div className="admin-layout">
@@ -106,7 +29,7 @@ export default function AdminDashboard() {
   );
 }
 
-
+// Component trang tổng quan (Overview/Dashboard)
 export function AdminOverview() {
   const { data: m, loading, error, refetch } = useAdminMetrics();
   const { logout } = useAuth();
