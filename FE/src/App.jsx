@@ -36,10 +36,10 @@ import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
-import { AdminDashboard, AdminGuard, VehicleManagement, StationManagement } from "./pages/admin";
-import CustomerManagement from "./pages/admin/CustomerManagement";
-import StaffManagement from "./pages/admin/StaffManagement";
-import AnalyticsPage from "./pages/admin/AnalyticsPage";
+// import { AdminDashboard, AdminGuard, VehicleManagement, StationManagement } from "./pages/admin";
+// import CustomerManagement from "./pages/admin/CustomerManagement";
+// import StaffManagement from "./pages/admin/StaffManagement";
+// import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import Forbidden from "./pages/Forbidden";
 
 function App() {
@@ -80,14 +80,14 @@ function App() {
                         //Phần trang của Staff
                                                 <Route path="/403" element={<Forbidden/>} />
                                                 {/* Admin Routes - Protected by AdminGuard */}
-                                                <Route element={<AdminGuard/>}>
+                                                {/* <Route element={<AdminGuard/>}>
                                                     <Route path="/admin" element={<AdminDashboard/>} />
                                                     <Route path="/admin/vehicles" element={<VehicleManagement/>} />
                                                     <Route path="/admin/stations" element={<StationManagement/>} />
                                                     <Route path="/admin/customers" element={<CustomerManagement/>} />
                                                     <Route path="/admin/staff" element={<StaffManagement/>} />
                                                     <Route path="/admin/analytics" element={<AnalyticsPage/>} />
-                                                </Route>
+                                                </Route> */}
                                                 <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
                         <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
                         <Route path="/staff/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
