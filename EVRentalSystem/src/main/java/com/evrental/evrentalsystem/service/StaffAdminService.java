@@ -11,17 +11,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * StaffAdminService - KHÔNG dùng SP/View.
- * Dùng SQL thuần theo schema EVRentalSystem bạn đã cung cấp.
- */
 @Service
 @RequiredArgsConstructor
 public class StaffAdminService {
 
     private final DataSource dataSource;
 
-    /** List + filter + pagination + KPIs (NO SP/VIEW) */
     public StaffItemResponse getStaffList(String search,
                                           Integer stationId,
                                           String position,

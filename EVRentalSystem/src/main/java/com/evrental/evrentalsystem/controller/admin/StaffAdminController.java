@@ -19,10 +19,6 @@ public class StaffAdminController {
 
     private final StaffAdminService staffAdminService;
 
-    /**
-     * Danh sách + KPI (server-side, gọi SP sp_Staff_Query)
-     * GET /api/admin/staff?search=&stationId=&position=&status=&page=1&size=20
-     */
     @GetMapping
     public StaffItemResponse list(
             @RequestParam(required = false) String search,
