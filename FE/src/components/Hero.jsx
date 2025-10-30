@@ -141,7 +141,12 @@ export default function Hero({ backgroundImage }) {
     return (
         <section
             className="hero-section"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
+            style={{
+                backgroundImage: `url(${backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat',
+            }}
         >
             <div className="hero-overlay" />
             <div className="hero-inner">
