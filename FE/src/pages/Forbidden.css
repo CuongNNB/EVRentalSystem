@@ -1,140 +1,144 @@
 /* Forbidden.css - simple, responsive, modern style */
 
 :root{
-  --bg: #f6fbff;
-  --card-bg: #ffffff;
-  --muted: #6b7280;
-  --accent1: #18a0fb;
-  --accent2: #3ad7c8;
-  --btn-text: #ffffff;
-  --shadow: 0 6px 24px rgba(14, 30, 37, 0.08);
-  --radius: 14px;
-  --gap: 20px;
-  font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bg: #f6fbff;
+    --card-bg: #ffffff;
+    --muted: #6b7280;
+    --accent1: #18a0fb;
+    --accent2: #3ad7c8;
+    --btn-text: #ffffff;
+    --shadow: 0 6px 24px rgba(14, 30, 37, 0.08);
+    --radius: 14px;
+    --gap: 20px;
+    font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* page layout */
 .forbidden-page{
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
-  padding: 48px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999; /* đảm bảo nằm trên các layout khác */
+    background-color: #E9ECF1;
 }
 
 /* card */
 .forbidden-card{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--gap);
-  background: var(--card-bg);
-  padding: 32px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  max-width: 980px;
-  width: 100%;
-  box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--gap);
+    background: var(--card-bg);
+    padding: 32px;
+    border-radius: var(--radius);
+
+    max-width: 980px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #E9ECF1;
 }
 
 /* visual (image) */
 .forbidden-visual{
-  flex: 1 1 48%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
+    flex: 1 1 48%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
 }
 .forbidden-visual img{
-  max-width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 10px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
 }
 
 /* content */
 .forbidden-content{
-  flex: 1 1 52%;
-  padding: 8px 16px;
-  text-align: left;
+    flex: 1 1 52%;
+    padding: 8px 16px;
+    text-align: left;
 }
 
 .forbidden-code{
-  font-size: 72px;
-  margin: 0;
-  line-height: 1;
-  color: rgba(15, 23, 42, 0.08); /* subtle behind-the-scenes */
-  font-weight: 700;
-  letter-spacing: 4px;
+    font-size: 72px;
+    margin: 0;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 4px;
 }
 
 .forbidden-title{
-  font-size: 28px;
-  margin: 8px 0 8px 0;
-  color: #0f172a;
-  font-weight: 700;
+    font-size: 28px;
+    margin: 8px 0 8px 0;
+    color: #0f172a;
+    font-weight: 700;
 }
 
 .forbidden-desc{
-  margin: 0 0 22px 0;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.5;
+    margin: 0 0 22px 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 /* actions */
 .forbidden-actions{
-  display: flex;
-  gap: 12px;
-  align-items: center;
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 /* primary gradient button */
 .btn-go-back{
-  background: linear-gradient(90deg,var(--accent1) 0%, var(--accent2) 100%);
-  color: var(--btn-text);
-  padding: 12px 20px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(24,160,251,0.18);
-  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms;
-  font-size: 15px;
+    background: linear-gradient(135deg, #0bb97f, #06b6d4);
+    color: var(--btn-text);
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(24,160,251,0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms;
+    font-size: 15px;
 }
 .btn-go-back:hover,
 .btn-go-back:focus{
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(24,160,251,0.18);
-  outline: none;
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(24,160,251,0.18);
+    outline: none;
 }
 .btn-go-back:active{
-  transform: translateY(-1px);
+    transform: translateY(-1px);
 }
 
 /* responsive adjustments */
 @media (max-width: 880px){
-  .forbidden-card{
-    flex-direction: column-reverse;
-    padding: 20px;
-    gap: 18px;
-  }
-  .forbidden-visual, .forbidden-content{
-    width: 100%;
-    text-align: center;
-    padding: 0;
-  }
-  .forbidden-code{
-    font-size: 56px;
-  }
-  .forbidden-title{
-    font-size: 22px;
-  }
-  .forbidden-desc{
-    font-size: 14px;
-  }
-  .forbidden-actions{
-    justify-content: center;
-  }
+    .forbidden-card{
+        flex-direction: column-reverse;
+        padding: 20px;
+        gap: 18px;
+    }
+    .forbidden-visual, .forbidden-content{
+        width: 100%;
+        text-align: center;
+        padding: 0;
+    }
+    .forbidden-code{
+        font-size: 56px;
+    }
+    .forbidden-title{
+        font-size: 22px;
+    }
+    .forbidden-desc{
+        font-size: 14px;
+    }
+    .forbidden-actions{
+        justify-content: center;
+    }
 }
