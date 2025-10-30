@@ -92,4 +92,5 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     @Query("select count(v) from VehicleDetail v where upper(v.status) = upper(:status)")
     long countByStatus(@Param("status") String status);
 
+    List<VehicleDetail> findByStationStationId(Integer stationId);
 }
