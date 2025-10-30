@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Forbidden.css";
-import Illustration from "/403.gif"; // đặt ảnh vào src/assets/403-illustration.png
+import Illustration from "/403.jpg"; // đặt ảnh vào src/assets/403-illustration.png
 
 export default function Forbidden() {
     const navigate = useNavigate();
