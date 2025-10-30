@@ -6,13 +6,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-
+import com.evrental.evrentalsystem.service.VehicleAdminService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 @RestController
-@RequestMapping("api/vehicle")
+@RequestMapping("/api/vehicle") //
+
 @RequiredArgsConstructor
 public class VehicleAdminController {
 
     private final VehicleDetailRepository vehicleDetailRepository;
+
+    private final VehicleAdminService service;
+
 
     @PostMapping
     public ResponseEntity<?> handleVehicleActions(@RequestBody Map<String, Object> payload) {
@@ -39,4 +45,22 @@ public class VehicleAdminController {
 
         return ResponseEntity.ok(stats);
     }
+    @GetMapping("/vehicles")
+
+    public ResponseEntity<?> listVehicles(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer stationId,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String model,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        var result = service.getVehicleList(q, status, stationId, brand, model, pageable);
+        return ResponseEntity.ok(result);
+    }
+    @GetMapping("/ping")
+    public String ping() { return "OK"; }
+
 }

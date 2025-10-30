@@ -1,127 +1,175 @@
-// pages/admin/VehicleManagement.jsx
 /**
- * VehicleManagement – trang con trong /admin (KHÔNG render sidebar/layout)
+ * VehicleManagement Component
+ * 
+ * Quản lý xe - GỌI API THẬT với Pagination
+ * - Danh sách xe với pagination
+ * - Filter và search
+ * - Loading states
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import ErrorBoundary from '../../components/admin/ErrorBoundary'
-import { getVehicleStats, getVehicles, getVehicleModels, exportVehicles } from '../../api/adminVehicles'
+
+import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getVehicleList, getVehicleStats, getVehicleModels, getVehicleBrands } from '../../api/adminVehicles'
 import { getStationOptions } from '../../api/adminDashboard'
+import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import './AdminDashboardNew.css'
 import './VehicleManagement.css'
 
 const VehicleManagement = () => {
-  // --- state & filters ---
-  const [stats, setStats] = useState(null)
+  const navigate = useNavigate()
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [modelFilter, setModelFilter] = useState('')
+  const [brandFilter, setBrandFilter] = useState('')
+  const [stationFilter, setStationFilter] = useState('')
+
+  // Pagination
+  const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
+
+  // Data
   const [vehicles, setVehicles] = useState([])
+  const [stats, setStats] = useState({ total: 0, available: 0, rented: 0, fixing: 0 })
   const [stations, setStations] = useState([])
-  const [vehicleModels, setVehicleModels] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [models, setModels] = useState([])
+  const [brands, setBrands] = useState([])
+
+  // UI
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [viewMode, setViewMode] = useState('grid')
 
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [modelFilter, setModelFilter] = useState('all')
-  const [stationFilter, setStationFilter] = useState('0')
-  const [batteryFilter, setBatteryFilter] = useState('all')
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setPage(0) // Reset to first page on search
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
-  // --- fetchers ---
-  const fetchStats = useCallback(async () => {
-    try {
-      const stationId = Number(stationFilter || 0)
-      const data = await getVehicleStats({ stationId })
-      setStats(data)
-    } catch (err) {
-      console.error('[VehicleManagement] fetch stats:', err)
-      setError(err.message || 'Không thể tải thống kê')
-    }
-  }, [stationFilter])
-
+  // Fetch vehicles
   const fetchVehicles = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = {
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        model: modelFilter !== 'all' ? modelFilter : undefined,
-        stationId: stationFilter !== 'all' ? stationFilter : undefined,
-        battery: batteryFilter !== 'all' ? batteryFilter : undefined,
-        search: searchTerm || undefined
+      const data = await getVehicleList({
+        page,
+        size,
+        q: debouncedSearch,
+        status: statusFilter,
+        stationId: stationFilter,
+        brand: brandFilter,
+        model: modelFilter,
+      })
+
+      setVehicles(data.content || [])
+      setTotalPages(data.totalPages || 0)
+      setTotalElements(data.totalElements || 0)
+
+      // Fallback: if models/brands chưa có (API riêng lỗi), lấy từ danh sách
+      const list = Array.isArray(data?.content) ? data.content : []
+      if (list.length) {
+        if (models.length === 0) {
+          const mset = [...new Set(list.map(v => v?.model).filter(Boolean))]
+          setModels(mset)
+        }
+        if (brands.length === 0) {
+          const bset = [...new Set(list.map(v => v?.brand).filter(Boolean))]
+          setBrands(bset)
+        }
       }
-      const data = await getVehicles(params)
-      setVehicles(Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : [])
     } catch (err) {
-      console.error('[VehicleManagement] fetch vehicles:', err)
-      setError(err.message || 'Không thể tải dữ liệu xe')
+      console.error('Error fetching vehicles:', err)
+      setError(err.message || 'Không thể tải danh sách xe')
       setVehicles([])
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, modelFilter, stationFilter, batteryFilter, searchTerm])
+  }, [page, size, debouncedSearch, statusFilter, stationFilter, brandFilter, modelFilter])
 
-  const fetchStations = useCallback(async () => {
+  // Fetch stats
+  const fetchStats = useCallback(async () => {
     try {
-      const data = await getStationOptions()
-      setStations(Array.isArray(data) ? data : [])
+      const data = await getVehicleStats({ stationId: stationFilter || 0 })
+      setStats(data)
     } catch (err) {
-      console.error('[VehicleManagement] fetch stations:', err)
-      setStations([])
+      console.error('Error fetching stats:', err)
     }
+  }, [stationFilter])
+
+  // Fetch dropdown options
+  useEffect(() => {
+    Promise.all([getStationOptions(), getVehicleModels(), getVehicleBrands()])
+      .then(([stationsData, modelsData, brandsData]) => {
+        setStations(stationsData)
+        setModels(modelsData)
+        setBrands(brandsData)
+      })
+      .catch((err) => console.error('Error fetching options:', err))
   }, [])
 
-  const fetchVehicleModels = useCallback(async () => {
-    try {
-      const data = await getVehicleModels()
-      setVehicleModels(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error('[VehicleManagement] fetch models:', err)
-      setVehicleModels([])
+  // Fetch data when dependencies change
+  useEffect(() => {
+    fetchVehicles()
+    fetchStats()
+  }, [fetchVehicles, fetchStats])
+
+  // Handlers
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setPage(newPage)
     }
-  }, [])
+  }
 
-  // --- effects ---
-  const didInitialMount = useRef(false)
-  useEffect(() => {
-    if (didInitialMount.current) return
-    didInitialMount.current = true
-    fetchStations()
-    fetchVehicleModels()
-    fetchStats()
-    fetchVehicles()
-  }, [fetchStations, fetchVehicleModels, fetchStats, fetchVehicles])
-
-  useEffect(() => {
-    // refetch khi đổi filter
-    fetchStats()
-    fetchVehicles()
-  }, [fetchStats, fetchVehicles])
-
-  // --- actions ---
   const handleRefresh = () => {
-    fetchStats()
-    fetchStations()
-    fetchVehicleModels()
     fetchVehicles()
+    fetchStats()
   }
 
-  const handleExport = async () => {
-    try {
-      alert('Export sẽ bật khi backend có API.')
-      // const blob = await exportVehicles(params)
-      // ... download blob
-    } catch (err) {
-      console.error('[VehicleManagement] export:', err)
-      alert('Không thể xuất file Excel. Vui lòng thử lại.')
+  const handleResetFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('')
+    setModelFilter('')
+    setBrandFilter('')
+    setStationFilter('')
+    setPage(0)
+  }
+
+  const getStatusBadgeClass = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'AVAILABLE':
+        return 'vehicle-status--available'
+      case 'RENTED':
+        return 'vehicle-status--rented'
+      case 'FIXING':
+      case 'MAINTENANCE':
+        return 'vehicle-status--fixing'
+      default:
+        return ''
     }
   }
 
-  const handleAddVehicle = () => {
-    alert('Create/Update/Delete sẽ bật khi backend mở thêm action.')
+  const getStatusLabel = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'AVAILABLE':
+        return 'Khả dụng'
+      case 'RENTED':
+        return 'Đang thuê'
+      case 'FIXING':
+      case 'MAINTENANCE':
+        return 'Bảo trì'
+      default:
+        return status
+    }
   }
 
   return (
     <ErrorBoundary>
-      {/* KHÔNG có AdminSlideBar / .admin-layout / <main> ở đây */}
       {/* Breadcrumb */}
       <div className="admin-breadcrumb">
         <i className="fas fa-home"></i>
@@ -143,7 +191,7 @@ const VehicleManagement = () => {
         </div>
       </div>
 
-      {/* KPI */}
+      {/* KPI Cards */}
       <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card" style={{ borderTop: '4px solid #3b82f6' }}>
           <div className="kpi-card-content">
@@ -152,7 +200,7 @@ const VehicleManagement = () => {
             </span>
             <div className="kpi-info">
               <h3 className="kpi-title">TỔNG SỐ XE</h3>
-              <div className="kpi-value">{stats?.total ?? 0}</div>
+              <div className="kpi-value">{stats.total || 0}</div>
             </div>
           </div>
         </div>
@@ -164,7 +212,7 @@ const VehicleManagement = () => {
             </span>
             <div className="kpi-info">
               <h3 className="kpi-title">XE KHẢ DỤNG</h3>
-              <div className="kpi-value">{stats?.available ?? 0}</div>
+              <div className="kpi-value">{stats.available || 0}</div>
             </div>
           </div>
         </div>
@@ -176,7 +224,7 @@ const VehicleManagement = () => {
             </span>
             <div className="kpi-info">
               <h3 className="kpi-title">XE ĐANG THUÊ</h3>
-              <div className="kpi-value">{stats?.rented ?? 0}</div>
+              <div className="kpi-value">{stats.rented || 0}</div>
             </div>
           </div>
         </div>
@@ -188,7 +236,7 @@ const VehicleManagement = () => {
             </span>
             <div className="kpi-info">
               <h3 className="kpi-title">XE BẢO TRÌ</h3>
-              <div className="kpi-value">{stats?.fixing ?? stats?.maintenance ?? 0}</div>
+              <div className="kpi-value">{stats.fixing || 0}</div>
             </div>
           </div>
         </div>
@@ -200,7 +248,7 @@ const VehicleManagement = () => {
           <i className="fas fa-search"></i>
           <input
             type="text"
-            placeholder="Tìm kiếm xe theo biển số, mã xe hoặc model..."
+            placeholder="Tìm kiếm theo biển số, mã xe..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -208,127 +256,236 @@ const VehicleManagement = () => {
 
         <div className="vehicle-filters">
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">Tất cả trạng thái</option>
-            <option value="available">Khả dụng</option>
-            <option value="rented">Đang thuê</option>
-            <option value="maintenance">Bảo trì</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="AVAILABLE">Khả dụng</option>
+            <option value="RENTED">Đang thuê</option>
+            <option value="FIXING">Bảo trì</option>
+          </select>
+
+          <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)}>
+            <option value="">Tất cả hãng</option>
+            {brands.map((brand, i) => (
+              <option key={i} value={brand}>
+                {brand}
+              </option>
+            ))}
           </select>
 
           <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)}>
-            <option value="all">Tất cả dòng xe</option>
-            {vehicleModels.map((m, i) => (
-              <option key={i} value={m}>{m}</option>
+            <option value="">Tất cả dòng xe</option>
+            {models.map((model, i) => (
+              <option key={i} value={model}>
+                {model}
+              </option>
             ))}
           </select>
 
           <select value={stationFilter} onChange={(e) => setStationFilter(e.target.value)}>
-            <option value="0">Tất cả điểm thuê</option>
-            {stations.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+            <option value="">Tất cả trạm</option>
+            {stations.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
 
-          <select value={batteryFilter} onChange={(e) => setBatteryFilter(e.target.value)}>
-            <option value="all">Mức pin</option>
-            <option value="high">80-100%</option>
-            <option value="medium">50-79%</option>
-            <option value="low">0-49%</option>
-          </select>
-
           <div className="view-toggle">
-            <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} title="Grid view">
+            <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}>
               <i className="fas fa-th"></i>
             </button>
-            <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')} title="List view">
+            <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}>
               <i className="fas fa-list"></i>
             </button>
           </div>
         </div>
 
         <div className="vehicle-actions">
+          <button className="admin-btn admin-btn-secondary" onClick={handleResetFilters}>
+            <i className="fas fa-redo"></i>
+            <span>Reset</span>
+          </button>
           <button className="admin-btn admin-btn-secondary" onClick={handleRefresh}>
-            <i className="fas fa-sync-alt"></i><span>Làm mới</span>
-          </button>
-          <button className="admin-btn admin-btn-success" onClick={handleExport}>
-            <i className="fas fa-file-excel"></i><span>Xuất Excel</span>
-          </button>
-          <button className="admin-btn admin-btn-primary" onClick={handleAddVehicle}>
-            <i className="fas fa-plus"></i><span>Thêm xe</span>
+            <i className="fas fa-sync-alt"></i>
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
 
-      {/* List/Grid */}
+      {/* Content */}
       <div className="vehicles-container">
         {loading ? (
-          <div className="loading-state"><i className="fas fa-spinner fa-spin"></i><p>Đang tải...</p></div>
+          <div className="loading-state">
+            <i className="fas fa-spinner fa-spin"></i>
+            <p>Đang tải dữ liệu xe...</p>
+          </div>
         ) : error ? (
           <div className="error-state">
             <i className="fas fa-exclamation-triangle"></i>
-            <p>Không thể tải dữ liệu xe</p>
-            <button className="admin-btn admin-btn-primary" onClick={handleRefresh}>Thử lại</button>
+            <p>Lỗi: {error}</p>
+            <button className="admin-btn admin-btn-primary" onClick={handleRefresh}>
+              <i className="fas fa-redo"></i>
+              Thử lại
+            </button>
           </div>
         ) : vehicles.length === 0 ? (
-          <div className="empty-state"><i className="fas fa-inbox"></i><p>Không có xe nào</p></div>
-        ) : (
-          <div className={`vehicles-${viewMode}`}>
-            {viewMode === 'grid' ? (
-              vehicles.map(v => (
-                <div key={v.id} className="vehicle-card">
-                  <div className="vehicle-card-header">
-                    <img
-                      src={v.image || `/anhxe/${v.model}.jpg`}
-                      alt={v.model}
-                      className="vehicle-image"
-                      onError={(e) => { e.currentTarget.src = '/carpic/logo.png' }}
-                    />
-                    <span className={`vehicle-status vehicle-status--${v.status?.toLowerCase()}`}>
-                      {v.status === 'available' ? 'Khả dụng' :
-                       v.status === 'rented' ? 'Đang thuê' :
-                       v.status === 'maintenance' ? 'Bảo trì' : v.status}
-                    </span>
-                  </div>
-                  <div className="vehicle-card-body">
-                    <h3 className="vehicle-model">{v.model}</h3>
-                    <p className="vehicle-license">{v.licensePlate}</p>
-                    <div className="vehicle-meta">
-                      <span><i className="fas fa-map-marker-alt"></i>{v.stationName || 'N/A'}</span>
-                      <span><i className="fas fa-battery-three-quarters"></i>{v.battery}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <table className="vehicles-table">
-                <thead>
-                  <tr>
-                    <th>Biển số</th><th>Model</th><th>Điểm thuê</th><th>Pin</th><th>Trạng thái</th><th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vehicles.map(v => (
-                    <tr key={v.id}>
-                      <td className="vehicle-license-cell">{v.licensePlate}</td>
-                      <td>{v.model}</td>
-                      <td>{v.stationName || 'N/A'}</td>
-                      <td><span className="battery-indicator"><i className="fas fa-battery-three-quarters"></i>{v.battery}%</span></td>
-                      <td>
-                        <span className={`vehicle-status vehicle-status--${v.status?.toLowerCase()}`}>
-                          {v.status === 'available' ? 'Khả dụng' :
-                           v.status === 'rented' ? 'Đang thuê' :
-                           v.status === 'maintenance' ? 'Bảo trì' : v.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn-icon" title="Xem chi tiết"><i className="fas fa-eye"></i></button>
-                        <button className="btn-icon" title="Chỉnh sửa"><i className="fas fa-edit"></i></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <div className="empty-state">
+            <i className="fas fa-inbox"></i>
+            <p>Không tìm thấy xe nào</p>
+            <button className="admin-btn admin-btn-secondary" onClick={handleResetFilters}>
+              Xóa bộ lọc
+            </button>
           </div>
+        ) : (
+          <>
+            <div className={`vehicles-${viewMode}`}>
+              {viewMode === 'grid'
+                ? vehicles.map((v) => (
+                    <article key={v.id} className="car-card">
+                      <div className="car-card__media">
+                        <img
+                          src={v.imageUrl || v.image || `http://localhost:8084/EVRentalSystem${v.imagePath}` || `/anhxe/${v.model}.jpg`}
+                          alt={v.model}
+                          className="car-card__image"
+                          loading="lazy"
+                          onError={(e) => {
+                            if (!e.currentTarget.dataset.fallback) {
+                              e.currentTarget.dataset.fallback = '1'
+                              e.currentTarget.src = `/anhxe/${v.model}.jpg`
+                            } else if (e.currentTarget.dataset.fallback === '1') {
+                              e.currentTarget.dataset.fallback = '2'
+                              e.currentTarget.src = '/carpic/logo.png'
+                            }
+                          }}
+                        />
+                        <span className={`vehicle-status-badge ${getStatusBadgeClass(v.status)}`}>
+                          {getStatusLabel(v.status)}
+                        </span>
+                      </div>
+
+                      <div className="car-card__header">
+                        <div>
+                          <h3 className="car-card__name">{v.model}</h3>
+                          <p className="car-card__subtitle">{v.brand || 'VinFast'}</p>
+                        </div>
+                      </div>
+
+                      <div className="car-card__license">
+                        <i className="fas fa-id-card"></i>
+                        <span>{v.licensePlate}</span>
+                      </div>
+
+                      <ul className="car-card__features">
+                        <li className="car-card__feature">
+                          <i className="fas fa-map-marker-alt car-card__feature-icon"></i>
+                          {v.stationName || 'N/A'}
+                        </li>
+                        <li className="car-card__feature">
+                          <i className="fas fa-battery-three-quarters car-card__feature-icon"></i>
+                          Pin: {v.battery || 0}%
+                        </li>
+                      </ul>
+
+                      <div className="car-card__actions">
+                        <button
+                          className="car-card__cta car-card__cta--primary"
+                          onClick={() => navigate(`/admin/vehicles/${v.id}`)}
+                          aria-label={`Xem chi tiết xe ${v.licensePlate || v.id}`}
+                          title="Xem chi tiết"
+                        >
+                          <i className="fas fa-eye"></i>
+                          <span>Xem chi tiết</span>
+                        </button>
+                        <button
+                          className="car-card__cta car-card__cta--secondary"
+                          onClick={() => navigate(`/admin/vehicles/${v.id}/edit`)}
+                          aria-label={`Chỉnh sửa xe ${v.licensePlate || v.id}`}
+                          title="Chỉnh sửa"
+                        >
+                          <i className="fas fa-pencil-alt"></i>
+                          <span>Chỉnh sửa</span>
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                : null}
+
+              {viewMode === 'list' ? (
+                <table className="vehicles-table">
+                  <thead>
+                    <tr>
+                      <th>Biển số</th>
+                      <th>Model</th>
+                      <th>Hãng</th>
+                      <th>Trạm</th>
+                      <th>Pin</th>
+                      <th>Trạng thái</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vehicles.map((v) => (
+                      <tr key={v.id}>
+                        <td className="vehicle-license-cell">{v.licensePlate}</td>
+                        <td>{v.model}</td>
+                        <td>{v.brand}</td>
+                        <td>{v.stationName || 'N/A'}</td>
+                        <td>
+                          <span className="battery-indicator">
+                            <i className="fas fa-battery-three-quarters"></i>
+                            {v.battery || 0}%
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`vehicle-status ${getStatusBadgeClass(v.status)}`}>
+                            {getStatusLabel(v.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn-icon" title="Xem chi tiết">
+                            <i className="fas fa-eye"></i>
+                          </button>
+                          <button className="btn-icon" title="Chỉnh sửa">
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : null}
+            </div>
+
+            {/* Pagination */}
+            <div className="pagination">
+              <div className="pagination-info">
+                Hiển thị {page * size + 1}-{Math.min((page + 1) * size, totalElements)} / {totalElements} xe
+              </div>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 0}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <span className="pagination-current">
+                  Trang {page + 1} / {totalPages || 1}
+                </span>
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= totalPages - 1}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+              <select className="pagination-size" value={size} onChange={(e) => setSize(Number(e.target.value))}>
+                <option value="10">10 / trang</option>
+                <option value="20">20 / trang</option>
+                <option value="50">50 / trang</option>
+              </select>
+            </div>
+          </>
         )}
       </div>
     </ErrorBoundary>

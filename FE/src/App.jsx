@@ -29,7 +29,7 @@ import Forbidden from "./pages/Forbidden";
 import PromoPage from "./pages/PromoList.jsx";
 
 // Admin pages
-import { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement } from "./pages/admin";
+import { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement, AdminVehicleDetail, AdminVehicleEdit } from "./pages/admin";
 import CustomerManagement from "./pages/admin/CustomerManagement";
 import StaffManagement from "./pages/admin/StaffManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
@@ -86,6 +86,8 @@ function App() {
                             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
                                 <Route index element={<AdminOverview />} />
                                 <Route path="vehicles" element={<VehicleManagement />} />
+                                <Route path="vehicles/:id" element={<AdminVehicleDetail />} />
+                                <Route path="vehicles/:id/edit" element={<AdminVehicleEdit />} />
                                 <Route path="customers" element={<CustomerManagement />} />
                                 <Route path="staff" element={<StaffManagement />} />
                                 <Route path="analytics" element={<AnalyticsPage />} />

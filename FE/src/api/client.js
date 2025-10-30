@@ -2,8 +2,11 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8084/EVRentalSystem/api",
-  timeout: 10000,
+  timeout: 30000,
   withCredentials: false,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use((config) => {

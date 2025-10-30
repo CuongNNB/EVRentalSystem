@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./AdminDashboardNew.css";
 import "../staff/StaffLayout.css";
 import KpiCard from '../../components/admin/KpiCard'
@@ -34,6 +35,7 @@ export default function AdminDashboard() {
 export function AdminOverview() {
   const { data: m, loading, error, refetch } = useAdminMetrics();
   const { logout } = useAuth();
+  const navigate = useNavigate();
   
   // State để lưu tổng số xe từ vehicle stats API
   const [totalVehicles, setTotalVehicles] = React.useState(0);
@@ -89,7 +91,7 @@ export function AdminOverview() {
         </div>
         <div className="admin-page-header-actions">
           <ExportButtons />
-          <button className="admin-btn admin-btn-danger" onClick={() => logout()}>
+          <button className="admin-btn admin-btn-danger" onClick={() => { logout(); navigate('/'); }}>
             <i className="fas fa-sign-out-alt" /><span>Đăng xuất</span>
           </button>
         </div>

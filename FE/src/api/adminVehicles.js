@@ -2,147 +2,176 @@
  * Admin Vehicles API
  * 
  * NOTE: API endpoints cho trang quản lý xe
+ * - Pagination, filter, search
  * - Không hardcode data
- * - Chỉ gọi API thực từ backend
  */
 
 import api from './client'
 
-// Helper chuẩn hoá: luôn trả về array
-const asArray = (payload) => {
-  if (!payload) return []
-  if (Array.isArray(payload)) return payload
-  if (Array.isArray(payload.items)) return payload.items
-  if (Array.isArray(payload.vehicles)) return payload.vehicles
-  if (Array.isArray(payload.data)) return payload.data
-  if (Array.isArray(payload.content)) return payload.content
-  return []
+// Clean query params - remove undefined, null, empty strings
+const cleanParams = (params) => {
+  const cleaned = {}
+  Object.keys(params).forEach((key) => {
+    const value = params[key]
+    if (value !== undefined && value !== null && value !== '') {
+      cleaned[key] = value
+    }
+  })
+  return cleaned
 }
 
 /**
- * Get vehicle statistics (KPI metrics)
- * Endpoint: GET /admin/vehicles/stats
+ * Get paginated vehicle list with filters
+ * @param {object} query - { page, size, q, status, stationId, brand, model }
+ * @returns {Promise} { content: [], totalElements, totalPages, number, size }
  */
-// export const getVehicleStats = async (params = {}) => {
-//   try {
-//     const { data } = await api.get('/admin/vehicles/stats', { params })
-//     console.debug?.('[getVehicleStats] raw:', data)
-//     return data
-//   } catch (error) {
-//     console.error('[getVehicleStats] error:', error)
-//     throw error
-//   }
-// }
-// GET KPI theo trạm (0 = toàn hệ thống)
-export const getVehicleStats = async (params = {}) => {
+export const getVehicleList = async (query = {}) => {
   try {
-    const stationId = Number(params.stationId ?? 0)
-
-    // Backend 1 endpoint duy nhất
-    const { data } = await api.post('/vehicle', {
-      action: 'getStatsByStation',
-      stationId
+    const params = cleanParams({
+      page: query.page !== undefined ? query.page : 0,
+      size: query.size || 10,
+      q: query.q || undefined,
+      status: query.status || undefined,
+      stationId: query.stationId || undefined,
+      brand: query.brand || undefined,
+      model: query.model || undefined,
     })
 
-    // data: { total, available, rented, fixing }
+    console.log('[getVehicleList] Calling API with params:', params)
+    const { data } = await api.get('/vehicle/vehicles', { params })
+    console.log('[getVehicleList] Success:', data)
     return data
   } catch (error) {
-    console.error('[getVehicleStats] error:', error)
+    console.error('[getVehicleList] Error:', error)
     throw error
   }
 }
 
 /**
- * Get list of vehicles with filters
- * Endpoint: GET /admin/vehicles
+ * Get vehicle statistics by station
+ * @param {number} stationId - 0 for all stations
  */
-export const getVehicles = async (params = {}) => {
+export const getVehicleStats = async (params = {}) => {
   try {
-    const { data } = await api.get('/admin/vehicles', { params })
-    console.debug?.('[getVehicles] raw:', data)
-    return asArray(data)
+    const stationId = Number(params.stationId ?? 0)
+    const { data } = await api.post('/vehicle', {
+      action: 'getStatsByStation',
+      stationId,
+    })
+    return data
   } catch (error) {
-    console.error('[getVehicles] error:', error)
+    console.error('[getVehicleStats] Error:', error)
     throw error
   }
 }
 
 /**
  * Get vehicle by ID
- * Endpoint: GET /admin/vehicles/:id
  */
 export const getVehicleById = async (id) => {
   try {
-    const { data } = await api.get(`/admin/vehicles/${id}`)
+    const { data } = await api.get(`/vehicle/vehicles/${id}`)
     return data
   } catch (error) {
-    console.error('[getVehicleById] error:', error)
+    console.error('[getVehicleById] Error:', error)
     throw error
   }
 }
 
 /**
+ * Get list of unique vehicle models
+ */
+export const getVehicleModels = async () => {
+  try {
+    const { data } = await api.get('/vehicle/models')
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[getVehicleModels] fallback from /vehicle/models -> extracting from /vehicle/vehicles', error)
+    try {
+      const { data } = await api.get('/vehicle/vehicles', { params: { page: 0, size: 500 } })
+      const items = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : []
+      const unique = [...new Set(items.map(v => v?.model).filter(Boolean))]
+      return unique
+    } catch (e) {
+      console.error('[getVehicleModels] fallback error:', e)
+      return []
+    }
+  }
+}
+
+/**
+ * Get list of vehicle brands
+ */
+export const getVehicleBrands = async () => {
+  try {
+    const { data } = await api.get('/vehicle/brands')
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.warn('[getVehicleBrands] fallback from /vehicle/brands -> extracting from /vehicle/vehicles', error)
+    try {
+      const { data } = await api.get('/vehicle/vehicles', { params: { page: 0, size: 500 } })
+      const items = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : []
+      const unique = [...new Set(items.map(v => v?.brand).filter(Boolean))]
+      return unique
+    } catch (e) {
+      console.error('[getVehicleBrands] fallback error:', e)
+      return []
+    }
+  }
+}
+
+/**
  * Create new vehicle
- * Endpoint: POST /admin/vehicles
  */
 export const createVehicle = async (vehicleData) => {
   try {
-    const { data } = await api.post('/admin/vehicles', vehicleData)
+    const { data } = await api.post('/vehicle/vehicles', vehicleData)
     return data
   } catch (error) {
-    console.error('[createVehicle] error:', error)
+    console.error('[createVehicle] Error:', error)
     throw error
   }
 }
 
 /**
  * Update vehicle
- * Endpoint: PUT /admin/vehicles/:id
  */
 export const updateVehicle = async (id, vehicleData) => {
   try {
-    const { data } = await api.put(`/admin/vehicles/${id}`, vehicleData)
+    const { data } = await api.put(`/vehicle/vehicles/${id}`, vehicleData)
     return data
   } catch (error) {
-    console.error('[updateVehicle] error:', error)
+    console.error('[updateVehicle] Error:', error)
     throw error
   }
 }
 
 /**
  * Delete vehicle
- * Endpoint: DELETE /admin/vehicles/:id
  */
 export const deleteVehicle = async (id) => {
   try {
-    const { data } = await api.delete(`/admin/vehicles/${id}`)
+    const { data } = await api.delete(`/vehicle/vehicles/${id}`)
     return data
   } catch (error) {
-    console.error('[deleteVehicle] error:', error)
-    throw error
-  }
-}
-
-/**
- * Get list of unique vehicle models from database
- * Endpoint: GET /admin/vehicles/models
- * Returns: Array of distinct vehicle model names
- */
-export const getVehicleModels = async () => {
-  try {
-    const { data } = await api.get('/admin/vehicles/models')
-    console.debug?.('[getVehicleModels] raw:', data)
-    return asArray(data)
-  } catch (error) {
-    console.error('[getVehicleModels] error:', error)
+    console.error('[deleteVehicle] Error:', error)
     throw error
   }
 }
 
 /**
  * Export vehicles to Excel
- * Endpoint: GET /admin/vehicles/export
  */
-export const exportVehicles = (params = { format: 'xlsx' }) =>
-  api.get('/admin/vehicles/export', { params, responseType: 'blob' }).then(r => r.data)
-
+export const exportVehicles = async (query = {}) => {
+  try {
+    const params = cleanParams(query)
+    const { data } = await api.get('/vehicle/vehicles/export', {
+      params,
+      responseType: 'blob',
+    })
+    return data
+  } catch (error) {
+    console.error('[exportVehicles] Error:', error)
+    throw error
+  }
+}

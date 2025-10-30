@@ -11,5 +11,7 @@
 import AdminDashboard, { AdminOverview } from './AdminDashboard'
 import AdminGuard from './AdminGuard'
 import VehicleManagement from './VehicleManagement'
+import AdminVehicleDetail from './AdminVehicleDetail'
+import AdminVehicleEdit from './AdminVehicleEdit'
 
-export { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement }
+export { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement, AdminVehicleDetail, AdminVehicleEdit }

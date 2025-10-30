@@ -9,10 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.evrental.evrentalsystem.repository.projection.VehicleListProjection;
+import com.evrental.evrentalsystem.repository.projection.StationOptionProjection;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 
 public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, Integer> {
 
@@ -95,4 +100,39 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     List<VehicleDetail> findByStationStationId(Integer stationId);
 
     Optional<VehicleDetail> findById(Integer id);
+    @Query("""
+    select
+        v.id            as id,
+        v.licensePlate  as licensePlate,
+        vm.model        as model,
+        vm.brand        as brand,
+        v.status        as status,
+        s.stationId     as stationId,
+        s.stationName   as stationName,
+        v.odo           as odo
+    from VehicleDetail v
+    join v.vehicleModel vm
+    join v.station s
+    where (:status    is null or upper(v.status) = upper(:status))
+      and (:stationId is null or s.stationId = :stationId)
+      and (:brand     is null or lower(vm.brand) like lower(concat('%', :brand, '%')))
+      and (:model     is null or lower(vm.model) like lower(concat('%', :model, '%')))
+      and (
+         :q is null
+         or lower(v.licensePlate) like lower(concat('%', :q, '%'))
+         or lower(vm.model)       like lower(concat('%', :q, '%'))
+         or lower(vm.brand)       like lower(concat('%', :q, '%'))
+         or lower(s.stationName)  like lower(concat('%', :q, '%'))
+      )
+""")
+    Page<VehicleListProjection> searchVehicleList(
+            @Param("q")         String q,
+            @Param("status")    String status,
+            @Param("stationId") Integer stationId,
+            @Param("brand")     String brand,
+            @Param("model")     String model,
+            Pageable pageable
+    );
+
+
 }
