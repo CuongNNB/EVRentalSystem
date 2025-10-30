@@ -14,6 +14,7 @@ import useAdminMetrics from './hooks/useAdminMetrics'
 import { formatPercent, formatVND } from '../../utils/format'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { useAuth } from '../../contexts/AuthContext'
+import { getVehicleStats } from '../../api/adminVehicles'
 
 // AdminDashboard là layout component với sidebar và outlet cho các trang con
 export default function AdminDashboard() {
@@ -33,6 +34,24 @@ export default function AdminDashboard() {
 export function AdminOverview() {
   const { data: m, loading, error, refetch } = useAdminMetrics();
   const { logout } = useAuth();
+  
+  // State để lưu tổng số xe từ vehicle stats API
+  const [totalVehicles, setTotalVehicles] = React.useState(0);
+  
+  // Fetch tổng số xe từ vehicle stats API
+  React.useEffect(() => {
+    const fetchVehicleTotal = async () => {
+      try {
+        const stats = await getVehicleStats({ stationId: 0 });
+        console.log('[AdminOverview] Vehicle stats:', stats);
+        setTotalVehicles(stats?.total || 0);
+      } catch (err) {
+        console.error('[AdminOverview] Error fetching vehicle total:', err);
+        setTotalVehicles(0);
+      }
+    };
+    fetchVehicleTotal();
+  }, []);
 
   const num = (v) => (typeof v === "number" ? v : 0);
   const ymd = (d) => d.toLocaleDateString("en-CA");
@@ -93,7 +112,7 @@ export function AdminOverview() {
             <KpiCard title="LƯỢT THUÊ HÔM NAY" value={num(m?.rentalsToday)}
                      sub={m?.deltaRentalsDoD!=null && `So với hôm qua: ${formatPercent(m?.deltaRentalsDoD)}`}
                      icon="📋" gradient="linear-gradient(135deg,#f093fb,#f5576c)" />
-            <StationVehiclesCard totalAll={num(m?.vehiclesTotal)} />
+            <StationVehiclesCard totalAll={totalVehicles} />
             <KpiCard title="KHÁCH HÀNG" value={num(m?.customersTotal)}
                      sub={m?.deltaCustomersMoM!=null && `So với tháng trước: ${formatPercent(m?.deltaCustomersMoM)}`}
                      icon="👥" gradient="linear-gradient(135deg,#4facfe,#00f2fe)" />
