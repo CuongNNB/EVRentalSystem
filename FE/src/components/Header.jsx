@@ -7,7 +7,7 @@ const baseMenuItems = [
     { label: "Trang chủ", href: "/" },
     { label: "Xem xe có sẵn", href: "/cars" },
     { label: "Tìm xe theo trạm", href: "/map-stations" },
-    { label: "Ưu đãi", href: "#promotions" },
+    { label: "Ưu đãi", href: "/promo" },
 ];
 
 export default function Header() {

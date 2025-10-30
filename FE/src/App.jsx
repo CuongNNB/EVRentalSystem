@@ -26,6 +26,7 @@ import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 import Forbidden from "./pages/Forbidden";
+import PromoPage from "./pages/PromoList.jsx";
 
 // Admin pages
 import { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement } from "./pages/admin";
@@ -68,6 +69,7 @@ function App() {
                         hàng
                         <Route path="/station-cars" element={<StationCarView />} />
                         <Route path="/map-stations" element={<MapStationsDemo />} />
+                        <Route path="/promo" element={<PromoPage />} />
 
                         //Phần trang của Staff
                         <Route element={<StaffGuard />}>
