@@ -5,15 +5,16 @@ import com.evrental.evrentalsystem.entity.VehicleModel;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
+import com.evrental.evrentalsystem.response.staff.ModelWithDetailsDTO;
+import com.evrental.evrentalsystem.response.staff.VehicleDetailDTO;
+import com.evrental.evrentalsystem.response.staff.VehicleModelDTO;
 import com.evrental.evrentalsystem.response.vehicle.VehicleDetailResponse;
 import com.evrental.evrentalsystem.response.vehicle.VehicleWithIdResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 //ửa
 @Service
@@ -53,6 +54,51 @@ public class VehicleService {
                         vd.getStation().getAddress()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public List<ModelWithDetailsDTO> getModelsWithDetailsByStation(Integer stationId) {
+        // Lấy tất cả VehicleDetail thuộc stationId
+        List<VehicleDetail> details = vehicleDetailRepository.findByStationStationId(stationId);
+
+        // Nhóm theo vehicleModel
+        Map<VehicleModel, List<VehicleDetail>> grouped = details.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(VehicleDetail::getVehicleModel));
+
+        // Map sang DTO
+        List<ModelWithDetailsDTO> result = new ArrayList<>();
+        for (Map.Entry<VehicleModel, List<VehicleDetail>> entry : grouped.entrySet()) {
+            VehicleModel vm = entry.getKey();
+            List<VehicleDetail> detailList = entry.getValue();
+
+            VehicleModelDTO vmDto = new VehicleModelDTO(
+                    vm.getVehicleId(),
+                    vm.getBrand(),
+                    vm.getModel(),
+                    vm.getPrice(),
+                    vm.getSeats(),
+                    vm.getPicture()
+            );
+
+            List<VehicleDetailDTO> detailDtos = detailList.stream()
+                    .map(d -> new VehicleDetailDTO(
+                            d.getId(),
+                            d.getLicensePlate(),
+                            d.getBatteryCapacity(),
+                            d.getOdo(),
+                            d.getPicture(),
+                            d.getStatus(),
+                            d.getColor(),
+                            d.getStation() != null ? d.getStation().getStationId() : null
+                    ))
+                    .collect(Collectors.toList());
+
+            result.add(new ModelWithDetailsDTO(vmDto, detailDtos));
+        }
+
+        // Nếu muốn sắp xếp (ví dụ theo brand+model), có thể sort ở đây
+        result.sort(Comparator.comparing(o -> Optional.ofNullable(o.getModel().getBrand()).orElse("") + " " + Optional.ofNullable(o.getModel().getModel()).orElse("")));
+        return result;
     }
     //End code here
 }
