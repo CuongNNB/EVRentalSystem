@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import useRevenueSeries from '../../pages/admin/hooks/useRevenueSeries'
-import {
-  Chart, LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Filler, Tooltip, Legend,
-} from 'chart.js'
-Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Filler, Tooltip, Legend)
+import Chart from 'chart.js/auto'
 
 const mapRange = { '7d':7, '30d':30, '90d':90, '1y':365 }
 
