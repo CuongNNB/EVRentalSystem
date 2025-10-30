@@ -27,6 +27,12 @@ import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 import Forbidden from "./pages/Forbidden";
 
+// Admin pages
+import { AdminDashboard, AdminGuard, VehicleManagement } from "./pages/admin";
+import CustomerManagement from "./pages/admin/CustomerManagement";
+import StaffManagement from "./pages/admin/StaffManagement";
+import AnalyticsPage from "./pages/admin/AnalyticsPage";
+
 import StaffGuard from "./components/StaffGuard";
 function App() {
     console.log('App component is rendering...');
@@ -71,6 +77,15 @@ function App() {
                             <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
+                        </Route>
+
+                        //Phần trang của Admin
+                        <Route element={<AdminGuard />}>
+                            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                            <Route path="/admin/vehicles" element={<ProtectedRoute><VehicleManagement /></ProtectedRoute>} />
+                            <Route path="/admin/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
+                            <Route path="/admin/staff" element={<ProtectedRoute><StaffManagement /></ProtectedRoute>} />
+                            <Route path="/admin/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
                         </Route>
 
                         <Route path="/403" element={<Forbidden />} />

@@ -1,75 +1,153 @@
 /**
  * AnalyticsPage Component
  * 
- * Báo cáo & Phân tích
+ * Báo cáo & Phân tích - GỌI API THẬT
  * - Doanh thu theo điểm thuê
  * - Tỷ lệ sử dụng xe
  * - Giờ cao điểm
  * - Xu hướng thuê xe
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
+import { 
+  getRevenueByStation, 
+  getVehicleUsage, 
+  getPeakHours, 
+  getMonthlyTrend, 
+  getAnalyticsSummary 
+} from '../../api/adminAnalytics'
 import './AdminDashboardNew.css'
 import './AnalyticsPage.css'
-
-// Mock data for analytics
-const REVENUE_BY_STATION = [
-  { stationId: 'T001', name: 'Trạm Quận 1', revenue: 245000000, growth: 12.5, rentals: 156 },
-  { stationId: 'T002', name: 'Trạm Quận 3', revenue: 198000000, growth: 8.3, rentals: 132 },
-  { stationId: 'T003', name: 'Trạm Quận 7', revenue: 167000000, growth: -3.2, rentals: 98 },
-  { stationId: 'T004', name: 'Trạm Thủ Đức', revenue: 134000000, growth: 15.7, rentals: 87 }
-]
-
-const VEHICLE_USAGE = [
-  { model: 'VinFast VF 8', totalVehicles: 15, inUse: 12, utilizationRate: 80 },
-  { model: 'Tesla Model 3', totalVehicles: 10, inUse: 9, utilizationRate: 90 },
-  { model: 'Tesla Model Y', totalVehicles: 8, inUse: 6, utilizationRate: 75 },
-  { model: 'VinFast VF 5', totalVehicles: 12, inUse: 7, utilizationRate: 58 },
-  { model: 'Hyundai Ioniq 5', totalVehicles: 6, inUse: 5, utilizationRate: 83 }
-]
-
-const PEAK_HOURS = [
-  { hour: '06:00', rentals: 12, returns: 8 },
-  { hour: '07:00', rentals: 24, returns: 15 },
-  { hour: '08:00', rentals: 45, returns: 18 },
-  { hour: '09:00', rentals: 38, returns: 22 },
-  { hour: '10:00', rentals: 28, returns: 25 },
-  { hour: '11:00', rentals: 32, returns: 20 },
-  { hour: '12:00', rentals: 35, returns: 28 },
-  { hour: '13:00', rentals: 30, returns: 32 },
-  { hour: '14:00', rentals: 26, returns: 30 },
-  { hour: '15:00', rentals: 22, returns: 25 },
-  { hour: '16:00', rentals: 28, returns: 35 },
-  { hour: '17:00', rentals: 42, returns: 48 },
-  { hour: '18:00', rentals: 56, returns: 52 },
-  { hour: '19:00', rentals: 38, returns: 45 },
-  { hour: '20:00', rentals: 25, returns: 38 }
-]
-
-const MONTHLY_TREND = [
-  { month: 'T1', revenue: 580000000, rentals: 456 },
-  { month: 'T2', revenue: 620000000, rentals: 489 },
-  { month: 'T3', revenue: 595000000, rentals: 472 },
-  { month: 'T4', revenue: 680000000, rentals: 523 },
-  { month: 'T5', revenue: 720000000, rentals: 567 },
-  { month: 'T6', revenue: 744000000, rentals: 583 }
-]
 
 const AnalyticsPage = () => {
   const [dateRange, setDateRange] = useState('30days')
   const [selectedStation, setSelectedStation] = useState('all')
+  
+  // State for API data
+  const [revenueByStation, setRevenueByStation] = useState([])
+  const [vehicleUsage, setVehicleUsage] = useState([])
+  const [peakHours, setPeakHours] = useState([])
+  const [monthlyTrend, setMonthlyTrend] = useState([])
+  const [summary, setSummary] = useState({
+    totalRevenue: 0,
+    avgUtilization: 0,
+    peakHour: { hour: '--:--', rentals: 0 },
+    totalRentals: 0
+  })
+  
+  // Loading states
+  const [loadingRevenue, setLoadingRevenue] = useState(true)
+  const [loadingUsage, setLoadingUsage] = useState(true)
+  const [loadingPeakHours, setLoadingPeakHours] = useState(true)
+  const [loadingTrend, setLoadingTrend] = useState(true)
+  const [loadingSummary, setLoadingSummary] = useState(true)
 
-  const totalRevenue = REVENUE_BY_STATION.reduce((acc, s) => acc + s.revenue, 0)
-  const totalRentals = REVENUE_BY_STATION.reduce((acc, s) => acc + s.rentals, 0)
-  const avgUtilization = Math.round(
-    VEHICLE_USAGE.reduce((acc, v) => acc + v.utilizationRate, 0) / VEHICLE_USAGE.length
-  )
+  // Fetch revenue by station from API
+  useEffect(() => {
+    const fetchRevenue = async () => {
+      try {
+        setLoadingRevenue(true)
+        console.log('[AnalyticsPage] Fetching revenue by station...')
+        
+        const data = await getRevenueByStation({ dateRange, stationId: selectedStation })
+        setRevenueByStation(data)
+      } catch (error) {
+        console.error('[AnalyticsPage] Error loading revenue:', error)
+        setRevenueByStation([])
+      } finally {
+        setLoadingRevenue(false)
+      }
+    }
+    
+    fetchRevenue()
+  }, [dateRange, selectedStation])
 
-  const peakHour = PEAK_HOURS.reduce((max, h) => 
-    h.rentals > max.rentals ? h : max
-  )
+  // Fetch vehicle usage from API
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        setLoadingUsage(true)
+        console.log('[AnalyticsPage] Fetching vehicle usage...')
+        
+        const data = await getVehicleUsage({ dateRange })
+        setVehicleUsage(data)
+      } catch (error) {
+        console.error('[AnalyticsPage] Error loading usage:', error)
+        setVehicleUsage([])
+      } finally {
+        setLoadingUsage(false)
+      }
+    }
+    
+    fetchUsage()
+  }, [dateRange])
+
+  // Fetch peak hours from API
+  useEffect(() => {
+    const fetchPeakHours = async () => {
+      try {
+        setLoadingPeakHours(true)
+        console.log('[AnalyticsPage] Fetching peak hours...')
+        
+        const data = await getPeakHours({ dateRange })
+        setPeakHours(data)
+      } catch (error) {
+        console.error('[AnalyticsPage] Error loading peak hours:', error)
+        setPeakHours([])
+      } finally {
+        setLoadingPeakHours(false)
+      }
+    }
+    
+    fetchPeakHours()
+  }, [dateRange])
+
+  // Fetch monthly trend from API
+  useEffect(() => {
+    const fetchTrend = async () => {
+      try {
+        setLoadingTrend(true)
+        console.log('[AnalyticsPage] Fetching monthly trend...')
+        
+        const data = await getMonthlyTrend()
+        setMonthlyTrend(data)
+      } catch (error) {
+        console.error('[AnalyticsPage] Error loading trend:', error)
+        setMonthlyTrend([])
+      } finally {
+        setLoadingTrend(false)
+      }
+    }
+    
+    fetchTrend()
+  }, [])
+
+  // Fetch summary stats from API
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        setLoadingSummary(true)
+        console.log('[AnalyticsPage] Fetching summary stats...')
+        
+        const data = await getAnalyticsSummary({ dateRange })
+        setSummary(data)
+      } catch (error) {
+        console.error('[AnalyticsPage] Error loading summary:', error)
+        setSummary({
+          totalRevenue: 0,
+          avgUtilization: 0,
+          peakHour: { hour: '--:--', rentals: 0 },
+          totalRentals: 0
+        })
+      } finally {
+        setLoadingSummary(false)
+      }
+    }
+    
+    fetchSummary()
+  }, [dateRange])
 
   const getUtilizationColor = (rate) => {
     if (rate >= 80) return '#10b981'
@@ -78,8 +156,10 @@ const AnalyticsPage = () => {
     return '#ef4444'
   }
 
-  const maxRentals = Math.max(...PEAK_HOURS.map(h => h.rentals))
-  const maxReturns = Math.max(...PEAK_HOURS.map(h => h.returns))
+  const maxRentals = peakHours.length > 0 ? Math.max(...peakHours.map(h => h.rentals || 0)) : 1
+  const maxReturns = peakHours.length > 0 ? Math.max(...peakHours.map(h => h.returns || 0)) : 1
+  const maxRevenue = revenueByStation.length > 0 ? Math.max(...revenueByStation.map(s => s.revenue || 0)) : 1
+  const maxTrendRevenue = monthlyTrend.length > 0 ? Math.max(...monthlyTrend.map(m => m.revenue || 0)) : 1
 
   return (
     <ErrorBoundary>
@@ -117,7 +197,7 @@ const AnalyticsPage = () => {
 
               <select value={selectedStation} onChange={(e) => setSelectedStation(e.target.value)}>
                 <option value="all">Tất cả trạm</option>
-                {REVENUE_BY_STATION.map(station => (
+                {revenueByStation.map(station => (
                   <option key={station.stationId} value={station.stationId}>{station.name}</option>
                 ))}
               </select>
@@ -138,7 +218,13 @@ const AnalyticsPage = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">TỔNG DOANH THU</h3>
-                  <div className="kpi-value">{(totalRevenue / 1000000).toFixed(0)}M</div>
+                  <div className="kpi-value">
+                    {loadingSummary ? (
+                      <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                      `${(summary.totalRevenue / 1000000).toFixed(0)}M`
+                    )}
+                  </div>
                   <div className="kpi-subtitle">VNĐ (30 ngày)</div>
                 </div>
               </div>
@@ -151,7 +237,13 @@ const AnalyticsPage = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">TỶ LỆ SỬ DỤNG TB</h3>
-                  <div className="kpi-value">{avgUtilization}%</div>
+                  <div className="kpi-value">
+                    {loadingSummary ? (
+                      <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                      `${summary.avgUtilization}%`
+                    )}
+                  </div>
                   <div className="kpi-subtitle">Trung bình toàn hệ thống</div>
                 </div>
               </div>
@@ -164,8 +256,14 @@ const AnalyticsPage = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">GIỜ CAO ĐIỂM</h3>
-                  <div className="kpi-value">{peakHour.hour}</div>
-                  <div className="kpi-subtitle">{peakHour.rentals} lượt thuê</div>
+                  <div className="kpi-value">
+                    {loadingSummary ? (
+                      <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                      summary.peakHour.hour
+                    )}
+                  </div>
+                  <div className="kpi-subtitle">{summary.peakHour.rentals} lượt thuê</div>
                 </div>
               </div>
             </div>
@@ -177,7 +275,13 @@ const AnalyticsPage = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">TỔNG ĐƠN THUÊ</h3>
-                  <div className="kpi-value">{totalRentals}</div>
+                  <div className="kpi-value">
+                    {loadingSummary ? (
+                      <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                      summary.totalRentals
+                    )}
+                  </div>
                   <div className="kpi-subtitle">Đơn (30 ngày)</div>
                 </div>
               </div>
@@ -196,43 +300,55 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            <div className="revenue-cards-grid">
-              {REVENUE_BY_STATION.map((station) => (
-                <div key={station.stationId} className="revenue-card">
-                  <div className="revenue-card-header">
-                    <div className="station-name">{station.name}</div>
-                    <div className={`growth-badge ${station.growth >= 0 ? 'positive' : 'negative'}`}>
-                      <i className={`fas fa-arrow-${station.growth >= 0 ? 'up' : 'down'}`}></i>
-                      {Math.abs(station.growth)}%
+            {loadingRevenue ? (
+              <div className="empty-state">
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: '36px', color: '#3b82f6' }}></i>
+                <p>Đang tải dữ liệu doanh thu...</p>
+              </div>
+            ) : revenueByStation.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-chart-bar"></i>
+                <p>Không có dữ liệu doanh thu</p>
+              </div>
+            ) : (
+              <div className="revenue-cards-grid">
+                {revenueByStation.map((station) => (
+                  <div key={station.stationId} className="revenue-card">
+                    <div className="revenue-card-header">
+                      <div className="station-name">{station.name}</div>
+                      <div className={`growth-badge ${station.growth >= 0 ? 'positive' : 'negative'}`}>
+                        <i className={`fas fa-arrow-${station.growth >= 0 ? 'up' : 'down'}`}></i>
+                        {Math.abs(station.growth)}%
+                      </div>
+                    </div>
+                    <div className="revenue-amount">
+                      {(station.revenue / 1000000).toFixed(1)}M VNĐ
+                    </div>
+                    <div className="revenue-details">
+                      <div className="revenue-detail-item">
+                        <i className="fas fa-file-contract"></i>
+                        {station.rentals} đơn thuê
+                      </div>
+                      <div className="revenue-detail-item">
+                        <i className="fas fa-calculator"></i>
+                        {(station.revenue / station.rentals / 1000).toFixed(0)}K/đơn
+                      </div>
+                    </div>
+                    <div className="revenue-bar">
+                      <div 
+                        className="revenue-bar-fill"
+                        style={{ 
+                          width: `${(station.revenue / maxRevenue) * 100}%`,
+                          background: station.growth >= 0 
+                            ? 'linear-gradient(90deg, #10b981, #059669)' 
+                            : 'linear-gradient(90deg, #3b82f6, #2563eb)'
+                        }}
+                      ></div>
                     </div>
                   </div>
-                  <div className="revenue-amount">
-                    {(station.revenue / 1000000).toFixed(1)}M VNĐ
-                  </div>
-                  <div className="revenue-details">
-                    <div className="revenue-detail-item">
-                      <i className="fas fa-file-contract"></i>
-                      {station.rentals} đơn thuê
-                    </div>
-                    <div className="revenue-detail-item">
-                      <i className="fas fa-calculator"></i>
-                      {(station.revenue / station.rentals / 1000).toFixed(0)}K/đơn
-                    </div>
-                  </div>
-                  <div className="revenue-bar">
-                    <div 
-                      className="revenue-bar-fill"
-                      style={{ 
-                        width: `${(station.revenue / REVENUE_BY_STATION[0].revenue) * 100}%`,
-                        background: station.growth >= 0 
-                          ? 'linear-gradient(90deg, #10b981, #059669)' 
-                          : 'linear-gradient(90deg, #3b82f6, #2563eb)'
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Two Column Layout */}
@@ -249,32 +365,44 @@ const AnalyticsPage = () => {
                 </div>
               </div>
 
-              <div className="utilization-list">
-                {VEHICLE_USAGE.map((vehicle, index) => (
-                  <div key={index} className="utilization-item">
-                    <div className="utilization-info">
-                      <div className="vehicle-model-name">{vehicle.model}</div>
-                      <div className="vehicle-stats">
-                        {vehicle.inUse}/{vehicle.totalVehicles} xe đang sử dụng
+              {loadingUsage ? (
+                <div className="empty-state">
+                  <i className="fas fa-spinner fa-spin" style={{ fontSize: '36px', color: '#3b82f6' }}></i>
+                  <p>Đang tải dữ liệu...</p>
+                </div>
+              ) : vehicleUsage.length === 0 ? (
+                <div className="empty-state">
+                  <i className="fas fa-tachometer-alt"></i>
+                  <p>Không có dữ liệu sử dụng</p>
+                </div>
+              ) : (
+                <div className="utilization-list">
+                  {vehicleUsage.map((vehicle, index) => (
+                    <div key={index} className="utilization-item">
+                      <div className="utilization-info">
+                        <div className="vehicle-model-name">{vehicle.model}</div>
+                        <div className="vehicle-stats">
+                          {vehicle.inUse}/{vehicle.totalVehicles} xe đang sử dụng
+                        </div>
+                      </div>
+                      <div className="utilization-rate">
+                        <div className="utilization-percentage" style={{ color: getUtilizationColor(vehicle.utilizationRate) }}>
+                          {vehicle.utilizationRate}%
+                        </div>
+                      </div>
+                      <div className="utilization-bar-container">
+                        <div 
+                          className="utilization-bar-fill"
+                          style={{ 
+                            width: `${vehicle.utilizationRate}%`,
+                            background: getUtilizationColor(vehicle.utilizationRate)
+                          }}
+                        ></div>
                       </div>
                     </div>
-                    <div className="utilization-rate">
-                      <div className="utilization-percentage" style={{ color: getUtilizationColor(vehicle.utilizationRate) }}>
-                        {vehicle.utilizationRate}%
-                      </div>
-                    </div>
-                    <div className="utilization-bar-container">
-                      <div 
-                        className="utilization-bar-fill"
-                        style={{ 
-                          width: `${vehicle.utilizationRate}%`,
-                          background: getUtilizationColor(vehicle.utilizationRate)
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Monthly Trend */}
@@ -289,31 +417,42 @@ const AnalyticsPage = () => {
                 </div>
               </div>
 
-              <div className="trend-chart">
-                {MONTHLY_TREND.map((month, index) => {
-                  const maxRevenue = Math.max(...MONTHLY_TREND.map(m => m.revenue))
-                  const height = (month.revenue / maxRevenue) * 100
-                  
-                  return (
-                    <div key={index} className="trend-bar-item">
-                      <div className="trend-bar-container">
-                        <div 
-                          className="trend-bar"
-                          style={{ 
-                            height: `${height}%`,
-                            background: 'linear-gradient(180deg, #8b5cf6, #7c3aed)'
-                          }}
-                          title={`${(month.revenue / 1000000).toFixed(0)}M VNĐ`}
-                        >
-                          <div className="trend-value">{(month.revenue / 1000000).toFixed(0)}M</div>
+              {loadingTrend ? (
+                <div className="empty-state">
+                  <i className="fas fa-spinner fa-spin" style={{ fontSize: '36px', color: '#3b82f6' }}></i>
+                  <p>Đang tải dữ liệu...</p>
+                </div>
+              ) : monthlyTrend.length === 0 ? (
+                <div className="empty-state">
+                  <i className="fas fa-chart-line"></i>
+                  <p>Không có dữ liệu xu hướng</p>
+                </div>
+              ) : (
+                <div className="trend-chart">
+                  {monthlyTrend.map((month, index) => {
+                    const height = (month.revenue / maxTrendRevenue) * 100
+                    
+                    return (
+                      <div key={index} className="trend-bar-item">
+                        <div className="trend-bar-container">
+                          <div 
+                            className="trend-bar"
+                            style={{ 
+                              height: `${height}%`,
+                              background: 'linear-gradient(180deg, #8b5cf6, #7c3aed)'
+                            }}
+                            title={`${(month.revenue / 1000000).toFixed(0)}M VNĐ`}
+                          >
+                            <div className="trend-value">{(month.revenue / 1000000).toFixed(0)}M</div>
+                          </div>
                         </div>
+                        <div className="trend-label">{month.month}</div>
+                        <div className="trend-rentals">{month.rentals} đơn</div>
                       </div>
-                      <div className="trend-label">{month.month}</div>
-                      <div className="trend-rentals">{month.rentals} đơn</div>
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -329,38 +468,52 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            <div className="peak-hours-chart">
-              <div className="chart-legend">
-                <div className="legend-item">
-                  <span className="legend-dot" style={{ background: '#3b82f6' }}></span>
-                  Lượt thuê
-                </div>
-                <div className="legend-item">
-                  <span className="legend-dot" style={{ background: '#10b981' }}></span>
-                  Lượt trả
-                </div>
+            {loadingPeakHours ? (
+              <div className="empty-state">
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: '36px', color: '#3b82f6' }}></i>
+                <p>Đang tải dữ liệu...</p>
               </div>
-
-              <div className="peak-hours-bars">
-                {PEAK_HOURS.map((hour, index) => (
-                  <div key={index} className="peak-hour-item">
-                    <div className="peak-hour-bars-container">
-                      <div 
-                        className="peak-bar rentals"
-                        style={{ height: `${(hour.rentals / maxRentals) * 100}%` }}
-                        title={`${hour.rentals} lượt thuê`}
-                      ></div>
-                      <div 
-                        className="peak-bar returns"
-                        style={{ height: `${(hour.returns / maxReturns) * 100}%` }}
-                        title={`${hour.returns} lượt trả`}
-                      ></div>
-                    </div>
-                    <div className="peak-hour-label">{hour.hour}</div>
+            ) : peakHours.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-business-time"></i>
+                <p>Không có dữ liệu giờ cao điểm</p>
+              </div>
+            ) : (
+              <>
+                <div className="chart-legend">
+                  <div className="legend-item">
+                    <span className="legend-dot" style={{ background: '#3b82f6' }}></span>
+                    Lượt thuê
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="legend-item">
+                    <span className="legend-dot" style={{ background: '#10b981' }}></span>
+                    Lượt trả
+                  </div>
+                </div>
+
+                <div className="peak-hours-chart">
+                  <div className="peak-hours-bars">
+                    {peakHours.map((hour, index) => (
+                      <div key={index} className="peak-hour-item">
+                        <div className="peak-hour-bars-container">
+                          <div 
+                            className="peak-bar rentals"
+                            style={{ height: `${(hour.rentals / maxRentals) * 100}%` }}
+                            title={`${hour.rentals} lượt thuê`}
+                          ></div>
+                          <div 
+                            className="peak-bar returns"
+                            style={{ height: `${(hour.returns / maxReturns) * 100}%` }}
+                            title={`${hour.returns} lượt trả`}
+                          ></div>
+                        </div>
+                        <div className="peak-hour-label">{hour.hour}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>
@@ -369,4 +522,3 @@ const AnalyticsPage = () => {
 }
 
 export default AnalyticsPage
-

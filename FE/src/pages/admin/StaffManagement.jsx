@@ -1,138 +1,18 @@
 /**
  * StaffManagement Component
  * 
- * Quản lý nhân viên
+ * Quản lý nhân viên - GỌI API THẬT
  * - Danh sách nhân viên tại các điểm
- * - Theo dõi hiệu suất (số lượt giao/nhận, mức độ hài lòng khách hàng)
+ * - Quản lý thông tin nhân viên cơ bản
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import StaffDetailModal from '../../components/admin/StaffDetailModal'
+import { getStaff, getStaffStats, getStations } from '../../api/adminStaff'
 import './AdminDashboardNew.css'
 import './StaffManagement.css'
-
-// Mock data
-const MOCK_STAFF = [
-  {
-    id: 'NV001',
-    name: 'Nguyễn Văn Tài',
-    email: 'nguyenvantai@ev.com',
-    phone: '0901111111',
-    position: 'Quản lý điểm',
-    station: 'Trạm Quận 1',
-    stationId: 'T001',
-    joinDate: '2023-01-15',
-    status: 'active',
-    performance: {
-      handovers: 145,
-      avgRating: 4.8,
-      onTimeRate: 98,
-      customerSatisfaction: 96
-    },
-    shifts: {
-      thisMonth: 22,
-      total: 250
-    },
-    avatar: null
-  },
-  {
-    id: 'NV002',
-    name: 'Trần Thị Bích',
-    email: 'tranthibich@ev.com',
-    phone: '0902222222',
-    position: 'Nhân viên giao xe',
-    station: 'Trạm Quận 3',
-    stationId: 'T002',
-    joinDate: '2023-03-20',
-    status: 'active',
-    performance: {
-      handovers: 198,
-      avgRating: 4.9,
-      onTimeRate: 99,
-      customerSatisfaction: 98
-    },
-    shifts: {
-      thisMonth: 24,
-      total: 220
-    },
-    avatar: null
-  },
-  {
-    id: 'NV003',
-    name: 'Lê Văn Cường',
-    email: 'levancuong@ev.com',
-    phone: '0903333333',
-    position: 'Kỹ thuật viên',
-    station: 'Trạm Quận 1',
-    stationId: 'T001',
-    joinDate: '2023-05-10',
-    status: 'active',
-    performance: {
-      handovers: 87,
-      avgRating: 4.5,
-      onTimeRate: 94,
-      customerSatisfaction: 92
-    },
-    shifts: {
-      thisMonth: 20,
-      total: 180
-    },
-    avatar: null
-  },
-  {
-    id: 'NV004',
-    name: 'Phạm Thị Diễm',
-    email: 'phamthidiem@ev.com',
-    phone: '0904444444',
-    position: 'Nhân viên giao xe',
-    station: 'Trạm Quận 7',
-    stationId: 'T003',
-    joinDate: '2023-07-01',
-    status: 'active',
-    performance: {
-      handovers: 156,
-      avgRating: 4.7,
-      onTimeRate: 97,
-      customerSatisfaction: 95
-    },
-    shifts: {
-      thisMonth: 23,
-      total: 160
-    },
-    avatar: null
-  },
-  {
-    id: 'NV005',
-    name: 'Hoàng Văn Em',
-    email: 'hoangvanem@ev.com',
-    phone: '0905555555',
-    position: 'Hỗ trợ khách hàng',
-    station: 'Trạm Quận 3',
-    stationId: 'T002',
-    joinDate: '2023-09-15',
-    status: 'on-leave',
-    performance: {
-      handovers: 124,
-      avgRating: 4.6,
-      onTimeRate: 95,
-      customerSatisfaction: 93
-    },
-    shifts: {
-      thisMonth: 18,
-      total: 95
-    },
-    avatar: null
-  }
-]
-
-const STATIONS = [
-  { id: 'T001', name: 'Trạm Quận 1' },
-  { id: 'T002', name: 'Trạm Quận 3' },
-  { id: 'T003', name: 'Trạm Quận 7' },
-  { id: 'T004', name: 'Trạm Thủ Đức' }
-]
 
 const StaffManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -141,27 +21,103 @@ const StaffManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all')
   const [viewMode, setViewMode] = useState('grid') // grid or table
   const [selectedStaff, setSelectedStaff] = useState(null)
+  
+  // State for API data
+  const [staff, setStaff] = useState([])
+  const [stations, setStations] = useState([])
+  const [positions, setPositions] = useState([])
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    onLeave: 0
+  })
+  
+  // Loading states
+  const [loadingStaff, setLoadingStaff] = useState(true)
+  const [loadingStations, setLoadingStations] = useState(true)
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  // Fetch staff from API
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        setLoadingStaff(true)
+        console.log('[StaffManagement] Fetching staff...')
+        
+        const data = await getStaff()
+        setStaff(data)
+      } catch (error) {
+        console.error('[StaffManagement] Error loading staff:', error)
+        setStaff([])
+      } finally {
+        setLoadingStaff(false)
+      }
+    }
+    
+    fetchStaff()
+  }, [])
+
+  // Fetch stations from API
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        setLoadingStations(true)
+        console.log('[StaffManagement] Fetching stations...')
+        
+        const data = await getStations()
+        setStations(data)
+      } catch (error) {
+        console.error('[StaffManagement] Error loading stations:', error)
+        setStations([])
+      } finally {
+        setLoadingStations(false)
+      }
+    }
+    
+    fetchStations()
+  }, [])
+
+  // Fetch stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true)
+        console.log('[StaffManagement] Fetching stats...')
+        
+        const data = await getStaffStats()
+        setStats(data)
+      } catch (error) {
+        console.error('[StaffManagement] Error loading stats:', error)
+        setStats({ total: 0, active: 0, onLeave: 0 })
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+    
+    fetchStats()
+  }, [])
+
+  // Extract unique positions from staff data
+  useEffect(() => {
+    if (staff.length > 0) {
+      const uniquePositions = [...new Set(staff.map(s => s.position).filter(Boolean))]
+      setPositions(uniquePositions)
+    }
+  }, [staff])
 
   // Filter staff
-  const filteredStaff = MOCK_STAFF.filter(staff => {
+  const filteredStaff = staff.filter(staffMember => {
     const matchSearch = searchTerm === '' || 
-      staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.id.toLowerCase().includes(searchTerm.toLowerCase())
+      staffMember.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staffMember.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staffMember.id?.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchStation = stationFilter === 'all' || staff.stationId === stationFilter
-    const matchPosition = positionFilter === 'all' || staff.position === positionFilter
-    const matchStatus = statusFilter === 'all' || staff.status === statusFilter
+    const matchStation = stationFilter === 'all' || staffMember.stationId === stationFilter
+    const matchPosition = positionFilter === 'all' || staffMember.position === positionFilter
+    const matchStatus = statusFilter === 'all' || staffMember.status === statusFilter
 
     return matchSearch && matchStation && matchPosition && matchStatus
   })
-
-  const getPerformanceColor = (value) => {
-    if (value >= 95) return '#10b981'
-    if (value >= 85) return '#3b82f6'
-    if (value >= 70) return '#f59e0b'
-    return '#ef4444'
-  }
 
   const getStatusBadge = (status) => {
     switch(status) {
@@ -175,8 +131,6 @@ const StaffManagement = () => {
         return <span className="staff-status">{status}</span>
     }
   }
-
-  const positions = [...new Set(MOCK_STAFF.map(s => s.position))]
 
   return (
     <ErrorBoundary>
@@ -200,7 +154,7 @@ const StaffManagement = () => {
               </div>
               <div className="admin-page-title-group">
                 <h1 className="admin-page-title">Quản lý Nhân viên</h1>
-                <p className="admin-page-subtitle">Theo dõi danh sách và hiệu suất làm việc</p>
+                <p className="admin-page-subtitle">Quản lý danh sách nhân viên trong hệ thống</p>
               </div>
             </div>
             <button className="admin-btn admin-btn-primary">
@@ -210,7 +164,7 @@ const StaffManagement = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <div className="stat-card" style={{ borderTop: '4px solid #3b82f6' }}>
               <div className="kpi-card-content">
                 <span className="kpi-icon" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
@@ -218,7 +172,9 @@ const StaffManagement = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">TỔNG NHÂN VIÊN</h3>
-                  <div className="kpi-value">{MOCK_STAFF.length}</div>
+                  <div className="kpi-value">
+                    {loadingStats ? <i className="fas fa-spinner fa-spin"></i> : stats.total}
+                  </div>
                 </div>
               </div>
             </div>
@@ -230,7 +186,9 @@ const StaffManagement = () => {
                 </span>
                 <div className="kpi-info">
                   <h3 className="kpi-title">ĐANG LÀM VIỆC</h3>
-                  <div className="kpi-value">{MOCK_STAFF.filter(s => s.status === 'active').length}</div>
+                  <div className="kpi-value">
+                    {loadingStats ? <i className="fas fa-spinner fa-spin"></i> : stats.active}
+                  </div>
                 </div>
               </div>
             </div>
@@ -238,26 +196,12 @@ const StaffManagement = () => {
             <div className="stat-card" style={{ borderTop: '4px solid #f59e0b' }}>
               <div className="kpi-card-content">
                 <span className="kpi-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-                  <i className="fas fa-star" style={{ color: '#f59e0b' }}></i>
+                  <i className="fas fa-user-clock" style={{ color: '#f59e0b' }}></i>
                 </span>
                 <div className="kpi-info">
-                  <h3 className="kpi-title">ĐÁNH GIÁ TB</h3>
+                  <h3 className="kpi-title">NGHỈ PHÉP</h3>
                   <div className="kpi-value">
-                    {(MOCK_STAFF.reduce((acc, s) => acc + s.performance.avgRating, 0) / MOCK_STAFF.length).toFixed(1)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="stat-card" style={{ borderTop: '4px solid #8b5cf6' }}>
-              <div className="kpi-card-content">
-                <span className="kpi-icon" style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
-                  <i className="fas fa-handshake" style={{ color: '#8b5cf6' }}></i>
-                </span>
-                <div className="kpi-info">
-                  <h3 className="kpi-title">GIAO NHẬN (THÁNG)</h3>
-                  <div className="kpi-value">
-                    {MOCK_STAFF.reduce((acc, s) => acc + s.performance.handovers, 0)}
+                    {loadingStats ? <i className="fas fa-spinner fa-spin"></i> : stats.onLeave}
                   </div>
                 </div>
               </div>
@@ -277,9 +221,15 @@ const StaffManagement = () => {
             </div>
 
             <div className="staff-filters">
-              <select value={stationFilter} onChange={(e) => setStationFilter(e.target.value)}>
-                <option value="all">Tất cả trạm</option>
-                {STATIONS.map(station => (
+              <select 
+                value={stationFilter} 
+                onChange={(e) => setStationFilter(e.target.value)}
+                disabled={loadingStations}
+              >
+                <option value="all">
+                  {loadingStations ? 'Đang tải...' : 'Tất cả trạm'}
+                </option>
+                {stations.map(station => (
                   <option key={station.id} value={station.id}>{station.name}</option>
                 ))}
               </select>
@@ -323,69 +273,62 @@ const StaffManagement = () => {
           </div>
 
           {/* Content */}
-          {viewMode === 'grid' ? (
+          {loadingStaff ? (
+            <div className="empty-state">
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: '48px', color: '#3b82f6' }}></i>
+              <p>Đang tải danh sách nhân viên...</p>
+            </div>
+          ) : filteredStaff.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-user-tie"></i>
+              <p>Không tìm thấy nhân viên nào</p>
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="staff-grid">
-              {filteredStaff.map((staff) => (
-                <div key={staff.id} className="staff-card">
+              {filteredStaff.map((staffMember) => (
+                <div key={staffMember.id} className="staff-card">
                   <div className="staff-card-header">
                     <div className="staff-avatar-large">
-                      {staff.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      {staffMember.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
-                    {getStatusBadge(staff.status)}
+                    {getStatusBadge(staffMember.status)}
                   </div>
 
                   <div className="staff-card-body">
-                    <h3 className="staff-card-name">{staff.name}</h3>
-                    <p className="staff-card-id">ID: {staff.id}</p>
+                    <h3 className="staff-card-name">{staffMember.name}</h3>
+                    <p className="staff-card-id">ID: {staffMember.id}</p>
                     <p className="staff-card-position">
                       <i className="fas fa-briefcase"></i>
-                      {staff.position}
+                      {staffMember.position}
                     </p>
                     <p className="staff-card-station">
                       <i className="fas fa-map-marker-alt"></i>
-                      {staff.station}
+                      {staffMember.station}
                     </p>
-
-                    <div className="staff-card-divider"></div>
-
-                    <div className="staff-performance-grid">
-                      <div className="perf-item">
-                        <div className="perf-label">Giao nhận</div>
-                        <div className="perf-value">{staff.performance.handovers}</div>
-                      </div>
-                      <div className="perf-item">
-                        <div className="perf-label">Đánh giá</div>
-                        <div className="perf-value">
-                          <i className="fas fa-star" style={{ color: '#f59e0b', fontSize: '12px' }}></i>
-                          {staff.performance.avgRating}
-                        </div>
-                      </div>
-                      <div className="perf-item">
-                        <div className="perf-label">Đúng giờ</div>
-                        <div className="perf-value" style={{ color: getPerformanceColor(staff.performance.onTimeRate) }}>
-                          {staff.performance.onTimeRate}%
-                        </div>
-                      </div>
-                      <div className="perf-item">
-                        <div className="perf-label">Hài lòng</div>
-                        <div className="perf-value" style={{ color: getPerformanceColor(staff.performance.customerSatisfaction) }}>
-                          {staff.performance.customerSatisfaction}%
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="staff-card-divider"></div>
+                    <p className="staff-card-contact">
+                      <i className="fas fa-envelope"></i>
+                      {staffMember.email}
+                    </p>
+                    <p className="staff-card-contact">
+                      <i className="fas fa-phone"></i>
+                      {staffMember.phone}
+                    </p>
+                    <p className="staff-card-join-date">
+                      <i className="fas fa-calendar-alt"></i>
+                      Tham gia: {staffMember.joinDate ? new Date(staffMember.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
+                    </p>
 
                     <div className="staff-card-footer">
                       <button 
                         className="staff-btn-detail"
-                        onClick={() => setSelectedStaff(staff)}
+                        onClick={() => setSelectedStaff(staffMember)}
                       >
-                        <i className="fas fa-chart-line"></i>
+                        <i className="fas fa-eye"></i>
                         Xem chi tiết
                       </button>
                       <button className="staff-btn-edit">
                         <i className="fas fa-edit"></i>
+                        Chỉnh sửa
                       </button>
                     </div>
                   </div>
@@ -401,80 +344,49 @@ const StaffManagement = () => {
                     <th>Nhân viên</th>
                     <th>Vị trí</th>
                     <th>Điểm làm việc</th>
-                    <th>Giao nhận</th>
-                    <th>Đánh giá</th>
-                    <th>Đúng giờ</th>
-                    <th>Hài lòng</th>
-                    <th>Ca làm tháng</th>
+                    <th>Số điện thoại</th>
+                    <th>Ngày tham gia</th>
                     <th>Trạng thái</th>
                     <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStaff.map((staff) => (
-                    <tr key={staff.id}>
-                      <td className="staff-id">{staff.id}</td>
+                  {filteredStaff.map((staffMember) => (
+                    <tr key={staffMember.id}>
+                      <td className="staff-id">{staffMember.id}</td>
                       <td>
                         <div className="staff-info-table">
                           <div className="staff-avatar-small">
-                            {staff.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                            {staffMember.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </div>
                           <div>
-                            <div className="staff-name-table">{staff.name}</div>
+                            <div className="staff-name-table">{staffMember.name}</div>
                             <div className="staff-contact-table">
-                              <i className="fas fa-envelope"></i> {staff.email}
+                              <i className="fas fa-envelope"></i> {staffMember.email}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td>{staff.position}</td>
+                      <td>{staffMember.position}</td>
                       <td>
                         <div className="station-badge">
                           <i className="fas fa-map-marker-alt"></i>
-                          {staff.station}
+                          {staffMember.station}
                         </div>
                       </td>
-                      <td className="staff-handovers">{staff.performance.handovers}</td>
-                      <td>
-                        <div className="staff-rating-table">
-                          <i className="fas fa-star" style={{ color: '#f59e0b' }}></i>
-                          {staff.performance.avgRating}
-                        </div>
+                      <td className="staff-phone">{staffMember.phone}</td>
+                      <td className="staff-join-date">
+                        {staffMember.joinDate ? new Date(staffMember.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
                       </td>
-                      <td>
-                        <span 
-                          className="performance-badge"
-                          style={{ 
-                            background: `${getPerformanceColor(staff.performance.onTimeRate)}15`,
-                            color: getPerformanceColor(staff.performance.onTimeRate),
-                            border: `1px solid ${getPerformanceColor(staff.performance.onTimeRate)}30`
-                          }}
-                        >
-                          {staff.performance.onTimeRate}%
-                        </span>
-                      </td>
-                      <td>
-                        <span 
-                          className="performance-badge"
-                          style={{ 
-                            background: `${getPerformanceColor(staff.performance.customerSatisfaction)}15`,
-                            color: getPerformanceColor(staff.performance.customerSatisfaction),
-                            border: `1px solid ${getPerformanceColor(staff.performance.customerSatisfaction)}30`
-                          }}
-                        >
-                          {staff.performance.customerSatisfaction}%
-                        </span>
-                      </td>
-                      <td className="staff-shifts">{staff.shifts.thisMonth}/{staff.shifts.total}</td>
-                      <td>{getStatusBadge(staff.status)}</td>
+                      <td>{getStatusBadge(staffMember.status)}</td>
                       <td>
                         <div className="action-buttons">
                           <button 
                             className="btn-icon" 
                             title="Xem chi tiết"
-                            onClick={() => setSelectedStaff(staff)}
+                            onClick={() => setSelectedStaff(staffMember)}
                           >
-                            <i className="fas fa-chart-line"></i>
+                            <i className="fas fa-eye"></i>
                           </button>
                           <button className="btn-icon" title="Chỉnh sửa">
                             <i className="fas fa-edit"></i>
@@ -502,4 +414,3 @@ const StaffManagement = () => {
 }
 
 export default StaffManagement
-
