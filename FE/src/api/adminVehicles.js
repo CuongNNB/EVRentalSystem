@@ -23,10 +23,28 @@ const asArray = (payload) => {
  * Get vehicle statistics (KPI metrics)
  * Endpoint: GET /admin/vehicles/stats
  */
+// export const getVehicleStats = async (params = {}) => {
+//   try {
+//     const { data } = await api.get('/admin/vehicles/stats', { params })
+//     console.debug?.('[getVehicleStats] raw:', data)
+//     return data
+//   } catch (error) {
+//     console.error('[getVehicleStats] error:', error)
+//     throw error
+//   }
+// }
+// GET KPI theo trạm (0 = toàn hệ thống)
 export const getVehicleStats = async (params = {}) => {
   try {
-    const { data } = await api.get('/admin/vehicles/stats', { params })
-    console.debug?.('[getVehicleStats] raw:', data)
+    const stationId = Number(params.stationId ?? 0)
+
+    // Backend 1 endpoint duy nhất
+    const { data } = await api.post('/vehicle', {
+      action: 'getStatsByStation',
+      stationId
+    })
+
+    // data: { total, available, rented, fixing }
     return data
   } catch (error) {
     console.error('[getVehicleStats] error:', error)

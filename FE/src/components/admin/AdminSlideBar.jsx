@@ -1,18 +1,4 @@
-/**
- * AdminSlideBar Component
- * 
- * NOTE: File được tạo mới để cung cấp thanh điều hướng sidebar cho trang Admin
- * - Hiển thị menu điều hướng (chỉ active cho các trang đã có)
- * - Sử dụng react-router-dom để điều hướng giữa các trang
- * - Hỗ trợ active state để highlight menu đang được chọn
- * - Responsive design cho mobile và desktop
- * - Các menu chưa có route sẽ bị disabled
- * 
- * @param {string} activeKey - Key của menu item đang active (mặc định: "overview")
- */
-
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import "./AdminSlideBar.css";
 
 const MENU_ITEMS = [
@@ -23,16 +9,7 @@ const MENU_ITEMS = [
   { key: "analytics", label: "Báo cáo & Phân tích", icon: "📈", to: "/admin/analytics", enabled: true },
 ];
 
-const AdminSlideBar = ({ activeKey = "overview" }) => {
-  const navigate = useNavigate();
-
-  const handleNavigate = (item) => {
-    // Chỉ navigate nếu menu được enable
-    if (item.enabled && item.to) {
-      navigate(item.to);
-    }
-  };
-
+const AdminSlideBar = () => {
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar__logo">
@@ -41,33 +18,38 @@ const AdminSlideBar = ({ activeKey = "overview" }) => {
           <span className="admin-sidebar__logo-text">EV-Rental Admin</span>
         </h1>
       </div>
-      
+
       <nav className="admin-sidebar__nav">
-        {MENU_ITEMS.map((item) => {
-          const isActive = item.key === activeKey;
-          const isDisabled = !item.enabled;
-          return (
+        {MENU_ITEMS.map((item) =>
+          item.enabled === false ? (
             <button
               key={item.key}
               type="button"
-              className={`admin-sidebar__item${
-                isActive ? " admin-sidebar__item--active" : ""
-              }${isDisabled ? " admin-sidebar__item--disabled" : ""}`}
-              onClick={() => handleNavigate(item)}
-              disabled={isDisabled}
-              title={isDisabled ? "Tính năng đang phát triển" : item.label}
+              className="admin-sidebar__item admin-sidebar__item--disabled"
+              disabled
+              title="Tính năng đang phát triển"
             >
-              <span className="admin-sidebar__icon" aria-hidden="true">
-                {item.icon}
-              </span>
+              <span className="admin-sidebar__icon" aria-hidden="true">{item.icon}</span>
               <span className="admin-sidebar__label">{item.label}</span>
             </button>
-          );
-        })}
+          ) : (
+            <NavLink
+              key={item.key}
+              to={item.to}
+              end={item.to === "/admin"}
+              className={({ isActive }) =>
+                "admin-sidebar__item" + (isActive ? " admin-sidebar__item--active" : "")
+              }
+              title={item.label}
+            >
+              <span className="admin-sidebar__icon" aria-hidden="true">{item.icon}</span>
+              <span className="admin-sidebar__label">{item.label}</span>
+            </NavLink>
+          )
+        )}
       </nav>
     </aside>
   );
 };
 
 export default AdminSlideBar;
-
