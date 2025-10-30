@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import StaffDetailModal from '../../components/admin/StaffDetailModal'
 import { getStaff, getStaffStats, getStations } from '../../api/adminStaff'
@@ -134,12 +133,8 @@ const StaffManagement = () => {
 
   return (
     <ErrorBoundary>
-      <div className="admin-layout">
-        <AdminSlideBar activeKey="staff" />
-        
-        <main className="admin-main-content">
-          {/* Breadcrumb */}
-          <div className="admin-breadcrumb">
+      {/* Breadcrumb */}
+      <div className="admin-breadcrumb">
             <i className="fas fa-home"></i>
             <span>Quản trị</span>
             <i className="fas fa-chevron-right"></i>
@@ -399,8 +394,6 @@ const StaffManagement = () => {
               </table>
             </div>
           )}
-        </main>
-      </div>
 
       {/* Staff Detail Modal */}
       {selectedStaff && (

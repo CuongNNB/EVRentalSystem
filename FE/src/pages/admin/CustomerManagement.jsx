@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react'
-import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { getCustomers, getCustomerStats, getComplaints } from '../../api/adminCustomers'
 import './AdminDashboardNew.css'
@@ -121,12 +120,8 @@ const CustomerManagement = () => {
 
   return (
     <ErrorBoundary>
-      <div className="admin-layout">
-        <AdminSlideBar activeKey="customers" />
-        
-        <main className="admin-main-content">
-          {/* Breadcrumb */}
-          <div className="admin-breadcrumb">
+      {/* Breadcrumb */}
+      <div className="admin-breadcrumb">
             <i className="fas fa-home"></i>
             <span>Quản trị</span>
             <i className="fas fa-chevron-right"></i>
@@ -395,8 +390,6 @@ const CustomerManagement = () => {
               )}
             </div>
           )}
-        </main>
-      </div>
     </ErrorBoundary>
   )
 }
