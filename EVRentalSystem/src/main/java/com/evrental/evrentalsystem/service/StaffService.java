@@ -8,6 +8,7 @@ import com.evrental.evrentalsystem.response.staff.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -26,10 +27,13 @@ public class StaffService {
     private final BookingRepository bookingRepository;
     private final VehicleDetailRepository vehicleDetailRepository;
     private final UserRepository userRepository;
+    private final EmployeeDetailRepository employeeDetailRepository;
     private final InspectionRepository inspectionRepository;
     private final AdditionalFeeRepository additionalFeeRepository;
     private final ContractRepository contractRepository;
     private final RenterDetailRepository renterDetailRepository;
+    private final InspectionAfterRepository inspectionAfterRepository;
+    private final ReportRepository reportRepository;
     private final MailService mailService;
     private String encodeToBase64(MultipartFile file) {
         try {
@@ -371,6 +375,21 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
+    public List<InspectionDetailsByBookingResponse> getInspectionAfterDetailsByBookingId(int id){
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+        List<InspectionAfter> inspections = inspectionAfterRepository.findAllByBooking(booking);
+        return inspections.stream()
+                .map(inspection -> {
+                    InspectionDetailsByBookingResponse response = new InspectionDetailsByBookingResponse();
+                    response.setPartName(PartCarName.valueOf(inspection.getPartName()));
+                    response.setPic(inspection.getPicture());
+                    response.setDesc(inspection.getDescription());
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
     public void UpdateLicensePlateForBooking(int bookingId, String licensePlate){
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
@@ -392,5 +411,64 @@ public class StaffService {
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(booking.getVehicleDetail().getLicensePlate());
         vd.setStatus(VehicleStatus.AVAILABLE.name());
     }
+
+    public boolean createInspectionAfter(
+            Integer bookingId,
+            PartCarName partName,
+            MultipartFile picture,
+            String description,
+            Integer staffId,
+            String status
+    ) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
+
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new IllegalArgumentException("Staff ID không tồn tại: " + staffId));
+        try {
+
+
+            InspectionAfter inspection = new InspectionAfter();
+            inspection.setBooking(booking);
+
+            // ✅ Lưu tên phần xe bằng enum
+            inspection.setPartName(partName.name()); // hoặc .toString(), cả hai đều OK
+
+            String base64Picture = encodeToBase64(picture);
+            log.info("Base64 picture length: {}", base64Picture.length());
+            inspection.setPicture(base64Picture);
+            inspection.setDescription(description);
+            inspection.setStaff(staff);
+            inspection.setStatus(status);
+            inspection.setInspectedAt(LocalDateTime.now());
+            inspectionAfterRepository.save(inspection);
+            return true;
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo inspection: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public void createReport(Integer staffId,
+                             Integer vehicleDetailId,
+                             String description){
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
+        EmployeeDetail staffDetail = employeeDetailRepository.findByEmployee(staff)
+                .orElseThrow(() -> new RuntimeException("Staff detail not found with ID: " + staffId));
+        User admin = userRepository.findAdminByStationId(staffDetail.getStation().getStationId())
+                .orElseThrow(() -> new RuntimeException("Admin not found in this station"));
+        VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found with ID: " + vehicleDetailId));
+        Report r = new Report();
+        r.setStaff(staff);
+        r.setAdmin(admin);
+        r.setDescription(description);
+        r.setVehicleDetail(vd);
+        r.setCreatedAt(LocalDateTime.now());
+        r.setStatus(ReportStatusEnum.PENDING.toString());
+        reportRepository.save(r);
+    }
+
 }
 
