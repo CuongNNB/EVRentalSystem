@@ -2,12 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const MENU_ITEMS = [
-  { key: "overview", label: "Tổng quan", icon: "📊", to: "/staff" },
   { key: "orders", label: "Đơn hàng", icon: "🧾", to: "/staff/orders" },
-  { key: "customers", label: "Khách hàng", icon: "👥" },
-  { key: "cars", label: "Xe", icon: "🚘" },
-  { key: "payments", label: "Thanh toán", icon: "💳" },
-  { key: "reports", label: "Báo cáo", icon: "📈" },
+  { key: "reports", label: "Báo cáo", icon: "📈", to: "/staff/report" },
 ];
 
 const StaffSlideBar = ({ activeKey = "overview" }) => {

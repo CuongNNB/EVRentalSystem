@@ -1,0 +1,48 @@
+/* Styles specific to ReceiveCar page (overrides and small tweaks)
+   This file is intentionally lightweight and builds on CheckCar.css
+*/
+
+.return-check__header h1 {
+  /* Slightly different heading color for receive flow */
+  color: #0b5d3b; /* darker green */
+}
+
+.return-check__header p {
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* Make the main action button slightly different to indicate completion flow */
+.return-check__action--primary {
+  background: linear-gradient(135deg, #0ea5a4, #059669);
+  box-shadow: 0 16px 34px rgba(6, 95, 70, 0.18);
+}
+
+/* Tweak photo grid spacing for receive page */
+.return-check__photos {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+}
+
+/* Make vehicle info card slightly more prominent on receive */
+.return-check__vehicle-info {
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 8px 26px rgba(2, 6, 23, 0.06);
+}
+
+/* Ensure descriptions area looks clean and compact on receive page */
+.return-check__photo-description {
+  min-height: 44px;
+  font-size: 0.9rem;
+}
+
+/* Mobile tweak: reduce padding for receive flow */
+@media (max-width: 768px) {
+  .return-check {
+    padding: 20px 16px 28px;
+  }
+  .return-check__vehicle-info {
+    padding: 18px;
+  }
+}

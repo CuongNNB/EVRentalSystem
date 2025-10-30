@@ -560,3 +560,15 @@
     align-items: stretch;
   }
 }
+
+@media (max-width: 992px) {
+  /* On smaller screens, stretch content to full width */
+  .return-check {
+    align-items: stretch;
+  }
+  .return-check__layout {
+    max-width: none;
+    margin: 0;
+    padding: 0 8px;
+  }
+}

@@ -353,7 +353,7 @@ const CheckCar = () => {
                   <div className="return-check__vehicle-card">
                     <dl className="return-check__vehicle-specs">
                       <div>
-                        <dt>Họ tên</dt>
+                        <dt>Họ và tên</dt>
                         <dd>{renterDetails.fullName || "—"}</dd>
                       </div>
                       <div>
@@ -364,51 +364,7 @@ const CheckCar = () => {
                         <dt>Số điện thoại</dt>
                         <dd>{renterDetails.phoneNumber || "—"}</dd>
                       </div>
-                      <div>
-                        <dt>Giấy phép lái xe</dt>
-                        <dd>{renterDetails.drivingLicense || "—"}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* Thông tin booking */}
-            {bookingDetails && (
-              <section className="return-check__vehicle-info">
-                <header className="return-check__vehicle-header">
-                  <h2>Chi tiết đơn thuê</h2>
-                </header>
-                <div className="return-check__vehicle-details">
-                  <div className="return-check__vehicle-card">
-                    <dl className="return-check__vehicle-specs">
-                      <div>
-                        <dt>Mẫu xe</dt>
-                        <dd>{bookingDetails.vehicleModel || "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Ngày thuê</dt>
-                        <dd>
-                          {bookingDetails.pickupDate || "—"}
-                          {bookingDetails.pickupTime ? ` • ${bookingDetails.pickupTime}` : ""}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Ngày trả</dt>
-                        <dd>
-                          {bookingDetails.dropoffDate || "—"}
-                          {bookingDetails.dropoffTime ? ` • ${bookingDetails.dropoffTime}` : ""}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Trạng thái</dt>
-                        <dd>{bookingDetails.status || "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Tổng tiền</dt>
-                        <dd>{bookingDetails.totalPrice ? `${bookingDetails.totalPrice.toLocaleString('vi-VN')} ₫` : "—"}</dd>
-                      </div>
+                      
                     </dl>
                   </div>
                 </div>

@@ -483,8 +483,10 @@ const deriveActions = (statusKey) => {
     }
 };
 
+// Trạng thái chỉ được cập nhật ở trang ReceiveCar sau khi hoàn tất nhận xe.
+// Vì vậy 'invoice' không tự động đổi trạng thái ở đây nữa.
 const ACTION_STATUS_MAP = {
-    invoice: "vehicle_returned",
+    invoice: null,
     // revenue: không tự động đổi trạng thái, sẽ đổi trong trang Extra Fee khi nhấn "Gửi cho khách"
     confirm: "pending_contract_signing",
     handover: "currently_renting",
@@ -968,6 +970,7 @@ const OrdersList = () => {
                             orderSnapshot.raw?.vehicleModel?.vehicleId ||
                             null,
                     };
+                    // Handover UI removed — navigate to order detail instead
                     sessionStorage.setItem("handover-order", JSON.stringify(payload));
                     navigate(`/staff/orders/${order.id}/handover`, { state: payload });
                 } catch (storageError) {
@@ -1029,8 +1032,30 @@ const OrdersList = () => {
             }
                 break;
             case "invoice":
-                // Nhận xe: cập nhật trạng thái đơn + gọi API cập nhật thời gian trả và set xe AVAILABLE
+                // Nhận xe: chuyển sang trang nhận xe để staff thực hiện kiểm tra chi tiết
                 try {
+                    // Prepare payload and navigate to the ReceiveCar flow so staff can
+                    // upload inspection photos and finalize receiving.
+                    try {
+                        const payload = {
+                            order: orderSnapshot,
+                            stationId,
+                            bookingId: order.id,
+                            vehicleModelId:
+                                orderSnapshot.raw?.vehicleModelId ||
+                                orderSnapshot.raw?.vehicleModel?.vehicleId ||
+                                null,
+                        };
+                        sessionStorage.setItem("handover-order", JSON.stringify(payload));
+                        navigate(`/staff/orders/${order.id}/receive`, { state: payload });
+                    } catch (navErr) {
+                        console.warn("Unable to persist receive order payload", navErr);
+                        navigate(`/staff/orders/${order.id}/receive`);
+                    }
+
+                    // Continue with the existing server-side updates (update return time / set vehicle AVAILABLE)
+                    // so behavior remains compatible even if staff returns from the receive page.
+                    
                     // 1) Cập nhật thời gian trả
                     try {
                         await api.post(`/api/bookings/${order.id}/update-return-time`);
