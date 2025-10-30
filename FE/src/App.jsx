@@ -1,9 +1,8 @@
 ﻿import "./App.css";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CheckoutProvider } from "./contexts/CheckoutContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,7 +13,6 @@ import ContractPage from "./pages/ContractPage";
 import DepositPaymentPage from "./pages/DepositPaymentPage";
 import DashboardUser from "./pages/DashboardUser";
 import CustomerInfoPage from "./pages/CustomerInfoPage";
-
 import StaffLayout from "./pages/staff/StaffLayout";
 import OrdersList from "./pages/staff/Orders/OrdersList";
 import OrderDetail from "./pages/staff/Orders/OrderDetail";
@@ -23,15 +21,14 @@ import ExtraFee from "./pages/staff/Orders/ExtraFee";
 import StationCarView from "./pages/StationCarView";
 import MapStationsDemo from "./pages/MapStations";
 import CheckCar from "./pages/staff/Orders/CheckCar";
-
 import UserContract from "./pages/renter/UserContract";
 import MyBookings from "./pages/MyBookings";
 import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 import Forbidden from "./pages/Forbidden";
 
-import AdminDashboard, { AdminOverview } from "./pages/admin/AdminDashboard";
-import VehicleManagement from "./pages/admin/VehicleManagement";
+// Admin pages
+import { AdminDashboard, AdminGuard, VehicleManagement } from "./pages/admin";
 import CustomerManagement from "./pages/admin/CustomerManagement";
 import StaffManagement from "./pages/admin/StaffManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
@@ -45,7 +42,7 @@ function App() {
             <CheckoutProvider>
                 <Router>
                     <Routes>
-                        {/* Renter */}
+                        //Phần trang của Renter
                         <Route path="/user-contract" element={<UserContract />} /> //Trang Hợp đồng người thuê
                         <Route path="/" element={<Homepage />} /> //Trang Homepage
                         <Route path="/login" element={<Login />} /> //Trang Đăng nhập
@@ -55,7 +52,7 @@ function App() {
                         <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} /> //Trang
                         Đơn đặt xe của tôi
                         <Route path="/my-bookings/:id"
-                            element={<ProtectedRoute><BookingDetailHistory /></ProtectedRoute>} /> //Trang Chi tiết đơn
+                               element={<ProtectedRoute><BookingDetailHistory /></ProtectedRoute>} /> //Trang Chi tiết đơn
                         đặt xe
                         <Route path="/account" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} /> //Trang
                         Hồ sơ người dùng
@@ -64,15 +61,15 @@ function App() {
                         <Route path="/booking/:carId" element={<BookingPage />} /> //Trang Đặt xe
                         <Route path="/contract/:carId" element={<ContractPage />} /> //Trang Hợp đồng
                         <Route path="/deposit-payment"
-                            element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} /> //Trang Thanh toán đặt
+                               element={<ProtectedRoute><DepositPaymentPage /></ProtectedRoute>} /> //Trang Thanh toán đặt
                         cọc
                         <Route path="/customer-info"
-                            element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} /> //Trang Thông tin khách
+                               element={<ProtectedRoute><CustomerInfoPage /></ProtectedRoute>} /> //Trang Thông tin khách
                         hàng
                         <Route path="/station-cars" element={<StationCarView />} />
                         <Route path="/map-stations" element={<MapStationsDemo />} />
 
-                        {/* Staff */}
+                        //Phần trang của Staff
                         <Route element={<StaffGuard />}>
                             <Route path="/staff" element={<ProtectedRoute><StaffLayout /></ProtectedRoute>} />
                             <Route path="/staff/orders" element={<ProtectedRoute><OrdersList /></ProtectedRoute>} />
@@ -81,14 +78,16 @@ function App() {
                             <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
                         </Route>
-                        {/* Admin */}
-                        <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-                            <Route index element={<AdminOverview />} />     {/* <-- trang /admin */}
-                            <Route path="vehicles" element={<ProtectedRoute><VehicleManagement /></ProtectedRoute>} />
-                            <Route path="customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
-                            <Route path="staff" element={<ProtectedRoute><StaffManagement /></ProtectedRoute>} />
-                            <Route path="analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+
+                        //Phần trang của Admin
+                        <Route element={<AdminGuard />}>
+                            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                            <Route path="/admin/vehicles" element={<ProtectedRoute><VehicleManagement /></ProtectedRoute>} />
+                            <Route path="/admin/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
+                            <Route path="/admin/staff" element={<ProtectedRoute><StaffManagement /></ProtectedRoute>} />
+                            <Route path="/admin/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
                         </Route>
+
                         <Route path="/403" element={<Forbidden />} />
                     </Routes>
                 </Router>

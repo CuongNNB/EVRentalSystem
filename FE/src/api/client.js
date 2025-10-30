@@ -16,8 +16,21 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const message = err?.response?.data?.message || err?.message || "Unknown error";
-    return Promise.reject({ status: err?.response?.status, message });
+    // Log full error for debugging
+    console.error('[API Error]', {
+      url: err?.config?.url,
+      method: err?.config?.method,
+      status: err?.response?.status,
+      data: err?.response?.data,
+      message: err?.message
+    });
+    
+    const message = err?.response?.data?.message || err?.response?.data || err?.message || "Unknown error";
+    return Promise.reject({ 
+      status: err?.response?.status, 
+      message,
+      data: err?.response?.data 
+    });
   }
 );
 
