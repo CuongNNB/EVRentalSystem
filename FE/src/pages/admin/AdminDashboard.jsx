@@ -1,6 +1,6 @@
 
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './AdminDashboardNew.css'
 import '../staff/StaffLayout.css'
@@ -19,6 +19,7 @@ import useAdminMetrics from './hooks/useAdminMetrics'
 import { formatPercent, formatVND } from '../../utils/format'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { useAuth } from '../../contexts/AuthContext'
+import { getVehicleStats } from '../../api/adminVehicles'
 
 export default function AdminDashboard() {
   console.log('[AdminDashboard] Component is rendering...')
@@ -27,6 +28,34 @@ export default function AdminDashboard() {
   const { data: m, loading, error, refetch } = useAdminMetrics()
   const { logout } = useAuth()
   const navigate = useNavigate()
+  
+  // State cho tổng số xe
+  const [totalVehicles, setTotalVehicles] = useState(0)
+  
+  // Fetch tổng số xe từ API vehicle stats
+  useEffect(() => {
+
+    const fetchVehicleTotal = async () => {
+      try {
+        console.log('[AdminDashboard] Fetching vehicle stats...')
+        
+        // Gọi API với stationId = 0 để lấy tổng toàn hệ thống
+        const stats = await getVehicleStats(0)
+        console.log('[AdminDashboard] Vehicle stats:', stats)
+        
+        // Lấy tổng số xe từ stats
+        const total = stats?.total || 0
+        setTotalVehicles(total)
+        
+        console.log('[AdminDashboard] Total vehicles:', total)
+      } catch (err) {
+        console.error('[AdminDashboard] Error fetching vehicle total:', err)
+        setTotalVehicles(0)
+      }
+    }
+    
+    fetchVehicleTotal()
+  }, [])
 
   const num = (v) => (typeof v === 'number' ? v : 0)
   const params = new URLSearchParams(window.location.search)
@@ -152,7 +181,7 @@ export default function AdminDashboard() {
                 gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
               />
               {/* NOTE: StationVehiclesCard có dropdown 7 trạm, khi chọn trạm sẽ hiển thị số xe của trạm đó */}
-              <StationVehiclesCard totalAll={num(m?.vehiclesTotal)} />
+              <StationVehiclesCard totalAll={totalVehicles} />
               <KpiCard 
                 title="KHÁCH HÀNG" 
                 value={num(m?.customersTotal)} 

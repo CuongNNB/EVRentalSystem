@@ -18,7 +18,6 @@ import "./AdminSlideBar.css";
 const MENU_ITEMS = [
   { key: "overview", label: "Tổng quan", icon: "📊", to: "/admin", enabled: true },
   { key: "vehicles", label: "Quản lý xe", icon: "🚘", to: "/admin/vehicles", enabled: true },
-  { key: "stations", label: "Quản lý điểm thuê", icon: "📍", to: "/admin/stations", enabled: true },
   { key: "customers", label: "Quản lý khách hàng", icon: "👥", to: "/admin/customers", enabled: true },
   { key: "staff", label: "Quản lý nhân viên", icon: "👔", to: "/admin/staff", enabled: true },
   { key: "analytics", label: "Báo cáo & Phân tích", icon: "📈", to: "/admin/analytics", enabled: true },
