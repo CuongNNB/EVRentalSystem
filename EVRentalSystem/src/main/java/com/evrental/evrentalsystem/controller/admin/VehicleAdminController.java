@@ -26,13 +26,11 @@ public class VehicleAdminController {
         Map<String, Long> stats = new LinkedHashMap<>();
 
         if (stationId == null || stationId == 0) {
-            // Toàn hệ thống
             stats.put("total", vehicleDetailRepository.count());
             stats.put("available", vehicleDetailRepository.countByStatus("AVAILABLE"));
             stats.put("rented", vehicleDetailRepository.countByStatus("RENTED"));
             stats.put("fixing", vehicleDetailRepository.countByStatus("FIXING"));
         } else {
-            // Theo từng trạm
             stats.put("total", vehicleDetailRepository.countVehiclesByStationId(stationId));
             stats.put("available", vehicleDetailRepository.countByStationIdAndStatus(stationId, "AVAILABLE"));
             stats.put("rented", vehicleDetailRepository.countByStationIdAndStatus(stationId, "RENTED"));
