@@ -1,11 +1,12 @@
-import {useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 const stats = [
-    {value: "50+", label: "trạm thuê xe toàn quốc"},
-    {value: "200+", label: "xe điện sẵn sàng"},
-    {value: "10K+", label: "hành trình đã hoàn tất"},
-    {value: "95%", label: "khách hàng hài lòng"},
+    { value: "50+", label: "trạm thuê xe toàn quốc" },
+    { value: "200+", label: "xe điện sẵn sàng" },
+    { value: "10K+", label: "hành trình đã hoàn tất" },
+    { value: "95%", label: "khách hàng hài lòng" },
 ];
 
 // ✅ Hàm định dạng chuẩn cho input datetime-local
@@ -19,10 +20,11 @@ const formatDateTimeLocal = (date) => {
     return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 };
 
-export default function Hero({backgroundImage}) {
+export default function Hero({ backgroundImage }) {
     const [isLoading, setIsLoading] = useState(false);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
+    const navigate = useNavigate();
 
     // ✅ Khởi tạo giá trị mặc định: bây giờ & +1 ngày
     useEffect(() => {
@@ -45,32 +47,39 @@ export default function Hero({backgroundImage}) {
         setEndTime(formatDateTimeLocal(autoEnd));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setIsLoading(true);
 
-        // Giả lập API
-        setTimeout(() => {
-            setIsLoading(false);
-            alert(
-                `✅ Đặt xe thành công!\n\nThời gian thuê:\n- Bắt đầu: ${new Date(
-                    startTime
-                ).toLocaleString("vi-VN")}\n- Kết thúc: ${new Date(
-                    endTime
-                ).toLocaleString("vi-VN")}`
-            );
-        }, 1500);
+        // Nếu chưa chọn trạm -> báo
+        if (!selectedStation) {
+            alert('Vui lòng chọn trạm trước khi đặt.');
+            return;
+        }
+
+        // Tìm label tương ứng trong danh sách stations (mảng stations đã có trong file)
+        const stationObj = stations.find(s => s.id === selectedStation);
+        const districtLabel = stationObj ? stationObj.label : null;
+
+        if (!districtLabel) {
+            alert('Không tìm thấy trạm tương ứng. Vui lòng thử lại.');
+            return;
+        }
+
+        // navigate tới /map-stations?district=<encoded label>
+        const url = `/map-stations?district=${encodeURIComponent(districtLabel)}`;
+        navigate(url);
     };
+
 
     // Stations list (keep in sync with select options previously)
     const stations = [
-        { id: 'thu-duc', label: 'Thủ Đức' },
-        { id: 'binh-thanh', label: 'Bình Thạnh' },
-        { id: 'quan-7', label: 'Quận 7' },
-        { id: 'quan-1', label: 'Quận 1' },
-        { id: 'go-vap', label: 'Gò Vấp' },
-        { id: 'binh-tan', label: 'Bình Tân' },
-        { id: 'phu-nhuan', label: 'Phú Nhuận' }
+        { id: 'thu-duc', label: 'Thủ Đức' },  //http://localhost:5173/map-stations?district=Th%E1%BB%A7%20%C4%90%E1%BB%A9c
+        { id: 'binh-thanh', label: 'Bình Thạnh' }, //http://localhost:5173/map-stations?district=B%C3%ACnh%20Th%E1%BA%A1nh
+        { id: 'quan-7', label: 'Quận 7' }, //http://localhost:5173/map-stations?district=Qu%E1%BA%ADn%201
+        { id: 'quan-1', label: 'Quận 1' }, //http://localhost:5173/map-stations?district=Qu%E1%BA%ADn%207
+        { id: 'go-vap', label: 'Gò Vấp' }, //http://localhost:5173/map-stations?district=G%C3%B2%20V%E1%BA%A5p
+        { id: 'binh-tan', label: 'Bình Tân' }, //http://localhost:5173/map-stations?district=B%C3%ACnh%20T%C3%A2n
+        { id: 'phu-nhuan', label: 'Phú Nhuận' } //http://localhost:5173/map-stations?district=Ph%C3%BA%20Nhu%E1%BA%ADn
     ];
 
     const [selectedStation, setSelectedStation] = useState('');
@@ -132,9 +141,9 @@ export default function Hero({backgroundImage}) {
     return (
         <section
             className="hero-section"
-            style={{backgroundImage: `url(${backgroundImage})`}}
+            style={{ backgroundImage: `url(${backgroundImage})` }}
         >
-            <div className="hero-overlay"/>
+            <div className="hero-overlay" />
             <div className="hero-inner">
                 <div className="hero-copy">
                     <h1>
@@ -151,8 +160,8 @@ export default function Hero({backgroundImage}) {
                         <div className="rating-text">
                             <span className="rating-score">4.9/5</span>
                             <span className="rating-label">
-                đánh giá từ 2,500+ khách hàng
-              </span>
+                                đánh giá từ 2,500+ khách hàng
+                            </span>
                         </div>
                     </div>
 
@@ -179,80 +188,50 @@ export default function Hero({backgroundImage}) {
 
                     <form className="booking-form" onSubmit={handleSubmit}>
                         <label className="form-field">
-              <span className="field-label">
-                <span className="field-icon">📍</span>
-                Địa điểm nhận xe
-              </span>
-                                <div className="station-dropdown" ref={dropdownRef}>
-                                    <button
-                                        type="button"
-                                        className="station-dropdown__button"
-                                        aria-haspopup="listbox"
-                                        aria-expanded={dropdownOpen}
-                                        onClick={() => setDropdownOpen((v) => !v)}
-                                        ref={buttonRef}
-                                    >
-                                        {selectedStation ? (stations.find(s => s.id === selectedStation) || {}).label : 'Chọn trạm thuê xe'}
-                                        <span className="station-dropdown__chev">▾</span>
-                                    </button>
+                            <span className="field-label">
+                                <span className="field-icon">📍</span>
+                                Địa điểm nhận xe
+                            </span>
+                            <div className="station-dropdown" ref={dropdownRef}>
+                                <button
+                                    type="button"
+                                    className="station-dropdown__button"
+                                    aria-haspopup="listbox"
+                                    aria-expanded={dropdownOpen}
+                                    onClick={() => setDropdownOpen((v) => !v)}
+                                    ref={buttonRef}
+                                >
+                                    {selectedStation ? (stations.find(s => s.id === selectedStation) || {}).label : 'Chọn trạm thuê xe'}
+                                    <span className="station-dropdown__chev">▾</span>
+                                </button>
 
-                                    {dropdownOpen && (
-                                        <ul className="station-dropdown__menu" role="listbox">
-                                            {stations.map((s, idx) => (
-                                                <li
-                                                    key={s.id}
-                                                    role="option"
-                                                    tabIndex={0}
-                                                    ref={el => itemRefs.current[idx] = el}
-                                                    aria-selected={selectedStation === s.id}
-                                                    className={`station-dropdown__item ${selectedStation === s.id ? 'is-active' : ''}`}
-                                                    onClick={() => { setSelectedStation(s.id); setDropdownOpen(false); if (buttonRef.current) buttonRef.current.focus(); }}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            setSelectedStation(s.id);
-                                                            setDropdownOpen(false);
-                                                            if (buttonRef.current) buttonRef.current.focus();
-                                                        }
-                                                    }}
-                                                >
-                                                    {s.label}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
+                                {dropdownOpen && (
+                                    <ul className="station-dropdown__menu" role="listbox">
+                                        {stations.map((s, idx) => (
+                                            <li
+                                                key={s.id}
+                                                role="option"
+                                                tabIndex={0}
+                                                ref={el => itemRefs.current[idx] = el}
+                                                aria-selected={selectedStation === s.id}
+                                                className={`station-dropdown__item ${selectedStation === s.id ? 'is-active' : ''}`}
+                                                onClick={() => { setSelectedStation(s.id); setDropdownOpen(false); if (buttonRef.current) buttonRef.current.focus(); }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        setSelectedStation(s.id);
+                                                        setDropdownOpen(false);
+                                                        if (buttonRef.current) buttonRef.current.focus();
+                                                    }
+                                                }}
+                                            >
+                                                {s.label}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
 
-                                    <input type="hidden" name="station" value={selectedStation} />
-                                </div>
-                        </label>
-
-                        {/* === Thời gian bắt đầu === */}
-                        <label className="form-field">
-              <span className="field-label">
-                <span className="field-icon">⏰</span>
-                Thời gian bắt đầu
-              </span>
-                            <input
-                                type="datetime-local"
-                                required
-                                value={startTime}
-                                min={formatDateTimeLocal(new Date())}
-                                onChange={handleStartTimeChange}
-                            />
-                        </label>
-
-                        {/* === Thời gian kết thúc === */}
-                        <label className="form-field">
-              <span className="field-label">
-                <span className="field-icon">⏰</span>
-                Thời gian kết thúc
-              </span>
-                            <input
-                                type="datetime-local"
-                                required
-                                value={endTime}
-                                min={startTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                            />
+                                <input type="hidden" name="station" value={selectedStation} />
+                            </div>
                         </label>
 
                         <button
@@ -260,19 +239,19 @@ export default function Hero({backgroundImage}) {
                             className="btn primary-btn booking-submit"
                             disabled={isLoading}
                         >
-              <span
-                  className="btn-text"
-                  style={{display: isLoading ? "none" : "block"}}
-              >
-                Đặt ngay
-              </span>
+                            <span
+                                className="btn-text"
+                                style={{ display: isLoading ? "none" : "block" }}
+                            >
+                                Đặt ngay
+                            </span>
                             <span
                                 className="btn-loading"
-                                style={{display: isLoading ? "flex" : "none"}}
+                                style={{ display: isLoading ? "flex" : "none" }}
                             >
-                <span className="spinner"></span>
-                Đang xử lý...
-              </span>
+                                <span className="spinner"></span>
+                                Đang xử lý...
+                            </span>
                         </button>
                     </form>
                 </div>

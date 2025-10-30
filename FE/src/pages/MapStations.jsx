@@ -67,7 +67,7 @@ const centroidOf = (arr) => {
 
 const MapStations = () => {
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedDistrict, setSelectedDistrict] = useState("Tất cả");
+    const [selectedDistrict, setSelectedDistrict] = useState("Thủ Đức");
     const [selectedStationId, setSelectedStationId] = useState(
         stations.find(s => s.district === "Thủ Đức")?.id ?? stations[0].id
     );
@@ -86,17 +86,16 @@ const MapStations = () => {
 
     // Derived static districts for tabs
     const DISTRICTS = useMemo(() =>
-            ["Tất cả", ...Array.from(new Set(stations.map(s => s.district)))],
-        []
-    );
+            Array.from(new Set(stations.map(s => s.district))),
+        []);
+
 
     // stationsInDistrict from static list (used for map centering and station list UI)
     const stationsInDistrict = useMemo(
-        () => (selectedDistrict === "Tất cả"
-            ? stations
-            : stations.filter(s => s.district === selectedDistrict)),
+        () => stations.filter(s => s.district === selectedDistrict),
         [selectedDistrict]
     );
+
 
     const center = useMemo(
         () => centroidOf(stationsInDistrict),
@@ -105,15 +104,12 @@ const MapStations = () => {
 
     // Generate map URL (keeps previous logic)
     const mapUrl = useMemo(() => {
-        if (selectedStation && selectedDistrict !== "Tất cả") {
-            if (selectedStation.location) {
-                const { lat, lng } = parseLoc(selectedStation.location);
-                return buildEmbedUrl(lat, lng, selectedStation.name, 15);
-            }
+        if (selectedStation) {
+            const { lat, lng } = parseLoc(selectedStation.location);
+            return buildEmbedUrl(lat, lng, selectedStation.name, 15);
         }
         if (center) {
-            const label = selectedDistrict === "Tất cả" ? "TP. Hồ Chí Minh" : selectedDistrict;
-            return buildEmbedUrl(center.lat, center.lng, label, 12);
+            return buildEmbedUrl(center.lat, center.lng, selectedDistrict, 12);
         }
         return "https://www.google.com/maps?q=10.7769,106.7008&hl=vi&z=11&t=m&output=embed";
     }, [selectedStation, selectedDistrict, center]);
@@ -313,9 +309,8 @@ const MapStations = () => {
                 {/* Vehicles / Models Section */}
                 <section className="vehicles-section">
                     <h3 className="vehicles-section-title">
-                        {selectedDistrict === "Tất cả" ? "Tất cả xe khả dụng" : `Xe khả dụng tại ${selectedDistrict}`}
+                        Xe khả dụng tại {selectedDistrict}
                     </h3>
-
                     {loading ? (
                         <div className="vehicles-loading">Đang tải dữ liệu...</div>
                     ) : (
