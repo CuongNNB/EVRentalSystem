@@ -235,6 +235,23 @@ CREATE TABLE Report
     CONSTRAINT FK_Report_VDetail FOREIGN KEY (vehicle_detail_id) REFERENCES Vehicle_Detail (id)
 );
 
+-- ============================
+-- (17) Inspection_After
+-- ============================
+CREATE TABLE Inspection_After
+(
+    inspection_id INT IDENTITY (1,1) PRIMARY KEY,
+    booking_id    INT           NOT NULL,
+    part_name     NVARCHAR(100) NOT NULL,
+    picture       NVARCHAR(MAX) NULL,
+    [description] NVARCHAR(MAX) NULL,
+    staff_id      INT           NOT NULL,
+    inspected_at  DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME(),
+    [status]      NVARCHAR(50),
+    CONSTRAINT FK_Inspection_After_Booking FOREIGN KEY (booking_id) REFERENCES Booking (booking_id),
+    CONSTRAINT FK_Inspection_After_Staff FOREIGN KEY (staff_id) REFERENCES [User] (user_id)
+);
+
 
 -- ========================
 -- 1. User

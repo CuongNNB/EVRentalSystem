@@ -93,4 +93,6 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     long countByStatus(@Param("status") String status);
 
     List<VehicleDetail> findByStationStationId(Integer stationId);
+
+    Optional<VehicleDetail> findById(Integer id);
 }
