@@ -36,10 +36,7 @@ public class StaffAdminController {
         return staffAdminService.getStaffDetail(id);
     }
 
-    /**
-     * Export Excel theo filter hiện tại (dùng lại dữ liệu từ SP)
-     * GET /api/admin/staff/export?search=&stationId=&position=&status=
-     */
+// phần này export excel
     @GetMapping("/export")
     public ResponseEntity<byte[]> export(
             @RequestParam(required = false) String search,

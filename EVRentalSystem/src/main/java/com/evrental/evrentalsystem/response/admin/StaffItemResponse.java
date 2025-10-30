@@ -8,7 +8,9 @@ import java.util.List;
 public class StaffItemResponse {
 
     private List<StaffItem> data;
+
     private Kpis kpis;
+
     private int page;
     private int size;
     private long total;

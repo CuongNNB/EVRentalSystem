@@ -30,7 +30,6 @@ public class StaffAdminService {
         String normStatus   = normalize(status);
         if (normStatus != null) normStatus = normStatus.toUpperCase(); // DB đang lưu ACTIVE/...
 
-        // WHERE chung (escape identifiers)
         StringBuilder where = new StringBuilder(" WHERE u.[role] = 'STAFF' ");
         List<Object> params = new ArrayList<>();
         if (normSearch != null) {
