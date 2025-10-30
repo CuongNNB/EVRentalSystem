@@ -1,10 +1,3 @@
-/**
- * StaffManagement Component
- * 
- * Quản lý nhân viên - GỌI API THẬT
- * - Danh sách nhân viên tại các điểm
- * - Quản lý thông tin nhân viên cơ bản
- */
 
 import React, { useState, useEffect } from 'react'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'

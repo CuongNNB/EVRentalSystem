@@ -28,6 +28,9 @@ public class StaffItemResponse {
         private Integer stationId;
         private String stationName;
 
+        private String phone;
+        private java.time.LocalDateTime joinDate;
+
         private Integer handovers;
         private Double avgRating;
         private Integer onTimeRate;

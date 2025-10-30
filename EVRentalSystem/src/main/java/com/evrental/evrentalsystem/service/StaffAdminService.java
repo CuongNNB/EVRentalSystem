@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class StaffAdminService {
         String pageSql =
                 "WITH F AS ( " +
                         "  SELECT " +
-                        "    u.[user_id] AS id, u.[full_name] AS name, u.[email] AS email, u.[role] AS position, u.[status] AS emp_status, " +
+                        "    u.[user_id] AS id, u.[full_name] AS name, u.[email] AS email, u.[role] AS position, u.[status] AS emp_status, u.[phone] AS phone, u.[created_at] AS join_date," +
                         "    ed.[station_id] AS station_id, s.[station_name] AS station_name, " +
                         "    ISNULL((SELECT COUNT(*) FROM [Inspection] i WHERE i.[staff_id] = u.[user_id]), 0) AS handovers, " +
                         "    (SELECT AVG(CAST(r.[rating] AS FLOAT)) " +
@@ -136,9 +137,12 @@ public class StaffAdminService {
                         it.setName(rs.getString("name"));
                         it.setEmail(rs.getString("email"));
                         it.setPosition(rs.getString("position"));
-                        it.setStatus(rs.getString("emp_status")); // <— alias tránh đụng từ khóa
+                        it.setStatus(rs.getString("emp_status"));
                         it.setStationId(rs.getInt("station_id"));
                         it.setStationName(rs.getString("station_name"));
+                        it.setPhone(rs.getString("phone")); // ✅ thêm
+                        Timestamp ts = rs.getTimestamp("join_date");
+                        it.setJoinDate(ts != null ? ts.toLocalDateTime() : null);
                         it.setHandovers(getIntSafe(rs, "handovers"));
                         it.setAvgRating(getDoubleSafe(rs, "avg_rating"));
                         it.setOnTimeRate(getIntSafe(rs, "on_time_rate"));
@@ -189,6 +193,8 @@ public class StaffAdminService {
                         "  u.email         AS email, " +
                         "  u.role          AS position, " +
                         "  u.status        AS status, " +
+                        "  u.phone         AS phone, " +
+                        "  u.created_at    AS join_date, " +
                         "  ed.station_id   AS station_id, " +
                         "  s.station_name  AS station_name, " +
                         "  ISNULL((SELECT COUNT(*) FROM Inspection i WHERE i.staff_id = u.user_id), 0) AS handovers, " +
@@ -232,6 +238,9 @@ public class StaffAdminService {
                 it.setStatus(rs.getString("status"));
                 it.setStationId(rs.getInt("station_id"));
                 it.setStationName(rs.getString("station_name"));
+                it.setPhone(rs.getString("phone"));
+                Timestamp ts = rs.getTimestamp("join_date");
+                it.setJoinDate(ts != null ? ts.toLocalDateTime() : null);
                 it.setHandovers(getIntSafe(rs, "handovers"));
                 it.setAvgRating(getDoubleSafe(rs, "avg_rating"));
                 it.setOnTimeRate(getIntSafe(rs, "on_time_rate"));
