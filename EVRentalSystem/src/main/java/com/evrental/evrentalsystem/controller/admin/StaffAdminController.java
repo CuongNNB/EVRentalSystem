@@ -31,9 +31,6 @@ public class StaffAdminController {
         return staffAdminService.getStaffList(search, stationId, position, status, page, size);
     }
 
-    /**
-     * GET /api/admin/staff/{id}
-     */
     @GetMapping("/{id}")
     public StaffItemResponse.StaffItem detail(@PathVariable int id) {
         return staffAdminService.getStaffDetail(id);
