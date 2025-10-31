@@ -1,5 +1,7 @@
 package com.evrental.evrentalsystem.controller.admin;
 
+import com.evrental.evrentalsystem.request.CreateStaffRequest;
+import com.evrental.evrentalsystem.response.admin.CreateStaffResponse;
 import com.evrental.evrentalsystem.response.admin.StaffItemResponse;
 import com.evrental.evrentalsystem.service.StaffAdminService;
 import lombok.RequiredArgsConstructor;
@@ -132,5 +134,11 @@ public class StaffAdminController {
                 req.getStatus(),
                 null
         );
+    }
+
+    @PostMapping
+    public ResponseEntity<CreateStaffResponse> createStaff(@RequestBody CreateStaffRequest req) {
+        CreateStaffResponse created = staffAdminService.createStaff(req);
+        return ResponseEntity.ok(created);
     }
 }
