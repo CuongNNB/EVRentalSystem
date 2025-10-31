@@ -154,26 +154,6 @@ public class UserInspectionController {
     @PutMapping("/update-status")
     public ResponseEntity<UpdateStatusResponse> updateInspectionStatus(
             @RequestBody UserUpdateInspectionStatusRequest request) {
-//
-//        // Chuyển String -> Enum (nếu status là enum)
-//        InspectionStatusEnum status;
-//        try {
-//            status = InspectionStatusEnum.valueOf(request.getStatus().toUpperCase());
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest()
-//                    .body(new UpdateStatusResponse(request.getBookingId(), 0, "Invalid status value"));
-//        }
-//
-//        List<Inspection> updated = inspectionService.updateInspectionStatus(request.getBookingId(), status.toString());
-//
-//        if (updated.isEmpty()) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(new UpdateStatusResponse(request.getBookingId(), 0, "No inspections found for bookingId"));
-//        }
-//
-//        return ResponseEntity.ok(
-//                new UpdateStatusResponse(request.getBookingId(), updated.size(), "Status updated successfully")
-//        );
         // Validate bookingId
         if (request.getBookingId() == null) {
             return ResponseEntity.badRequest()
@@ -204,6 +184,54 @@ public class UserInspectionController {
                 // Gọi service để xóa; nếu bạn chưa có, hãy thêm phương thức này vào service
                 // Ví dụ service method: int deleteRejectedInspectionsByBookingId(Long bookingId)
                 deletedCount = inspectionService.deleteRejectedInspectionsByBookingId(request.getBookingId());
+            }
+
+            return ResponseEntity.ok(
+                    new UpdateStatusResponse(request.getBookingId(), updated.size(), deletedCount, "Status updated successfully")
+            );
+        } catch (Exception ex) {
+            // Log lỗi server (nên dùng logger thực tế)
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new UpdateStatusResponse(request.getBookingId(), 0, 0, "Internal server error: " + ex.getMessage()));
+        }
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/inspections/update-status-after
+    @PutMapping("/update-status-after")
+    public ResponseEntity<UpdateStatusResponse> updateInspectionAfterStatus(
+            @RequestBody UserUpdateInspectionStatusRequest request) {
+        // Validate bookingId
+        if (request.getBookingId() == null) {
+            return ResponseEntity.badRequest()
+                    .body(new UpdateStatusResponse(null, 0, 0, "Missing bookingId"));
+        }
+
+        // Chuyển String -> Enum (nếu status là enum)
+        InspectionStatusEnum status;
+        try {
+            status = InspectionStatusEnum.valueOf(request.getStatus().toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return ResponseEntity.badRequest()
+                    .body(new UpdateStatusResponse(request.getBookingId(), 0, 0, "Invalid status value"));
+        }
+
+        try {
+            // 1) Cập nhật inspections
+            List<InspectionAfter> updated = inspectionService.updateInspectionAfterStatus(request.getBookingId(), status.toString());
+
+            if (updated == null || updated.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new UpdateStatusResponse(request.getBookingId(), 0, 0, "No inspections found for bookingId"));
+            }
+
+            int deletedCount = 0;
+            // 2) Nếu REJECTED -> xóa (hoặc soft-delete) các inspection bị REJECTED
+            if (status == InspectionStatusEnum.REJECTED) {
+                // Gọi service để xóa; nếu bạn chưa có, hãy thêm phương thức này vào service
+                // Ví dụ service method: int deleteRejectedInspectionsByBookingId(Long bookingId)
+                deletedCount = inspectionService.deleteRejectedInspectionsAfterByBookingId(request.getBookingId());
+                int deletedAF = inspectionService.deleteRejectAdditionalFeesByBookingId(request.getBookingId());
             }
 
             return ResponseEntity.ok(
