@@ -3,10 +3,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { MOCK_BOOKINGS } from '../mocks/bookings';
+import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
 import './BookingDetailHistory.css';
 import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhúng vào modal
-import CreateReportForm from '../components/staff/CreateReportForm';
 
 const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
@@ -619,7 +618,7 @@ const BookingDetailHistory = () => {
                                                     Over_Mileage_Fee: 'Phí vượt quá odo quy định',
                                                     Late_Return_Fee: 'Phí trả trễ xe',
                                                     Cleaning_Fee: 'Phí vệ sinh xe',
-                                                    Fuel_Fee: 'Phí xăng dầu',
+                                                    Fuel_Fee: 'Phí nhiên liệu',
                                                     Other_Fee: 'Phí khác',
                                                 };
                                                 const label = feeNameMap[feeType] || feeType || fee.title || `Phụ phí ${idx + 1}`;
