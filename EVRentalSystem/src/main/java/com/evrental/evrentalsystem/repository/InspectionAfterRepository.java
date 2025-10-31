@@ -19,4 +19,6 @@ public interface InspectionAfterRepository extends JpaRepository<InspectionAfter
     @Transactional
     @Query("delete from InspectionAfter i where i.booking.bookingId = :bookingId and i.status = :status")
     int deleteByBookingIdAndStatus(Integer bookingId, String status);
+
+    List<InspectionAfter> findByBookingBookingId(Integer bookingId);
 }

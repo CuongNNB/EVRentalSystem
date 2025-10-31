@@ -1,6 +1,8 @@
 package com.evrental.evrentalsystem.controller.user;
 import com.evrental.evrentalsystem.entity.Inspection;
+import com.evrental.evrentalsystem.entity.InspectionAfter;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
+import com.evrental.evrentalsystem.repository.InspectionAfterRepository;
 import com.evrental.evrentalsystem.repository.InspectionRepository;
 import com.evrental.evrentalsystem.request.UserUpdateInspectionStatusRequest;
 import com.evrental.evrentalsystem.service.InspectionService;
@@ -21,6 +23,7 @@ import java.util.*;
 public class UserInspectionController {
     private final InspectionService inspectionService;
     private final InspectionRepository inspectionRepository;
+    private final InspectionAfterRepository inspectionAfterRepository;
     @Data
     public static class BookingIdRequest {
         private Integer bookingId;
@@ -45,6 +48,27 @@ public class UserInspectionController {
                     .body(Map.of("message", ex.getMessage()));
         }
     }
+
+    //API: http://localhost:8084/EVRentalSystem/api/inspections/inspection-after
+    @PostMapping("/inspection-after")
+    public ResponseEntity<?> getInspectionsAfterByBooking(@RequestBody BookingIdRequest request) {
+        if (request == null || request.getBookingId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "bookingId is required"));
+        }
+
+        try {
+            var list = inspectionService.getInspectionsAfter(request.getBookingId());
+            if (list.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "No inspection found for bookingId: " + request.getBookingId()));
+            }
+            return ResponseEntity.ok(list);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
 
     /**
      * GET /api/inspections/{inspectionId}/picture
@@ -80,6 +104,44 @@ public class UserInspectionController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"inspection-" + inspectionId + ".png\"")
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(imageBytes);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/{inspectionAfterId}/picture-after")
+    public ResponseEntity<?> getInspectionPictureAfter(@PathVariable Integer inspectionAfterId) {
+        try {
+            Optional<InspectionAfter> opt = inspectionAfterRepository.findById(inspectionAfterId);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "Inspection not found"));
+            }
+
+            InspectionAfter inspection = opt.get();
+            if (inspection.getPicture() == null || inspection.getPicture().isBlank()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                        .body(Map.of("message", "No picture available"));
+            }
+
+            // Tách phần base64 (nếu có prefix data:image/...)
+            String picBase64 = inspection.getPicture();
+            int commaIdx = picBase64.indexOf(',');
+            String base64Pure = commaIdx >= 0 ? picBase64.substring(commaIdx + 1) : picBase64;
+
+            byte[] imageBytes = Base64.getDecoder().decode(base64Pure);
+
+            // Xác định content type nếu có prefix data:image/png;base64,...
+            String contentType = "image/png";
+            if (picBase64.startsWith("data:image/jpeg")) {
+                contentType = "image/jpeg";
+            }
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"inspection-" + inspectionAfterId + ".png\"")
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(imageBytes);
         } catch (Exception ex) {

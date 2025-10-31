@@ -1,9 +1,11 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.Booking;
+import com.evrental.evrentalsystem.entity.InspectionAfter;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
 import com.evrental.evrentalsystem.repository.BookingRepository;
+import com.evrental.evrentalsystem.repository.InspectionAfterRepository;
 import com.evrental.evrentalsystem.response.vehicle.UserInspectionDetailResponse;
 import com.evrental.evrentalsystem.entity.Inspection;
 import com.evrental.evrentalsystem.repository.InspectionRepository;
@@ -20,14 +22,15 @@ import java.util.stream.Collectors;
 public class InspectionService {
 
     private final InspectionRepository inspectionRepository;
+    private final InspectionAfterRepository inspectionAfterRepository;
     private final BookingRepository bookingRepository;
 
     public List<UserInspectionDetailResponse> getInspectionsByBookingId(Integer bookingId) {
         List<Inspection> inspections = inspectionRepository.findByBooking_BookingId(bookingId);
-        return inspections.stream().map(this::toDto).collect(Collectors.toList());
+        return inspections.stream().map(this::toDtoBefore).collect(Collectors.toList());
     }
 
-    private UserInspectionDetailResponse toDto(Inspection insp) {
+    private UserInspectionDetailResponse toDtoBefore(Inspection insp) {
         UserInspectionDetailResponse dto = new UserInspectionDetailResponse();
 
         dto.setInspectionId(insp.getInspectionId());
@@ -47,6 +50,37 @@ public class InspectionService {
         // Trả URL ảnh thay vì dữ liệu ảnh
         dto.setPictureUrl(String.format(
                 "http://localhost:8084/EVRentalSystem/api/inspections/%d/picture",
+                insp.getInspectionId()
+        ));
+
+        return dto;
+    }
+
+    public List<UserInspectionDetailResponse> getInspectionsAfter(Integer bookingId) {
+        List<InspectionAfter> inspections = inspectionAfterRepository.findByBooking_BookingId(bookingId);
+        return inspections.stream().map(this::toDtoAfter).collect(Collectors.toList());
+    }
+
+    private UserInspectionDetailResponse toDtoAfter(InspectionAfter insp) {
+        UserInspectionDetailResponse dto = new UserInspectionDetailResponse();
+
+        dto.setInspectionId(insp.getInspectionId());
+        if (insp.getBooking() != null)
+            dto.setBookingId(insp.getBooking().getBookingId());
+
+        dto.setPartName(insp.getPartName());
+        dto.setDescription(insp.getDescription());
+        dto.setStatus(insp.getStatus());
+        dto.setInspectedAt(insp.getInspectedAt());
+
+        if (insp.getStaff() != null) {
+            dto.setStaffId(insp.getStaff().getUserId());
+            dto.setStaffName(insp.getStaff().getFullName());
+        }
+
+        // Trả URL ảnh thay vì dữ liệu ảnh
+        dto.setPictureUrl(String.format(
+                "http://localhost:8084/EVRentalSystem/api/inspections/%d/picture-after",
                 insp.getInspectionId()
         ));
 
@@ -86,5 +120,8 @@ public class InspectionService {
     public int deleteRejectedInspectionsByBookingId(Integer bookingId) {
         return inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
     }
+
+
+
     //End code here
 }
