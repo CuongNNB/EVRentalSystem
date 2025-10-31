@@ -545,15 +545,6 @@ const BookingDetailHistory = () => {
                         </div>
                     </motion.div>
 
-                    {/* Create Report (Staff) */}
-                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h2 className="section-header"><span className="section-title">Tạo báo cáo xe</span></h2>
-                        <CreateReportForm
-                            defaultVehicleDetailId={booking?.vehicleDetailId || ''}
-                            className="mt-2"
-                        />
-                    </motion.div>
-
                     {/* Station */}
                     <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         <h2 className="section-header"><span className="section-title">Địa điểm nhận xe</span></h2>
