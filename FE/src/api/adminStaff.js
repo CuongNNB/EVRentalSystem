@@ -99,3 +99,13 @@ export async function getStaffStats(filters = {}) {
 export async function getStations(filters = {}) {
   return getStationsForSelect(filters);
 }
+
+export async function createStaff(data) {
+  const res = await fetch(`/EVRentalSystem/api/admin/staff`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}

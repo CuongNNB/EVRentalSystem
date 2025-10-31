@@ -47,6 +47,7 @@ import CustomerManagement from "./pages/admin/CustomerManagement";
 import StaffManagement from "./pages/admin/StaffManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import StaffDetailPage from "./components/admin/StaffDetailPage";
+import AddStaffPage from "./components/admin/AddStaffPage";
 
 function App() {
   console.log("App component is rendering...");
@@ -105,6 +106,7 @@ function App() {
                 <Route path="staff" element={<StaffManagement />} />
                 <Route path="vehicles" element={<VehicleManagement />} />
                 <Route path="staff/:id" element={<StaffDetailPage />} />
+                <Route path="staff/new" element={<AddStaffPage />} />
               </Route>
             </Route>
 

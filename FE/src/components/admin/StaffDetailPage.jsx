@@ -222,9 +222,6 @@ export default function StaffDetailPage() {
               </div>
               <div className="spacer" />
               <div className="actions">
-                <button className="btn btn-outline" onClick={toggleStatus}>
-                  {edit.status === "ACTIVE" ? "Cho nghỉ tạm" : "Kích hoạt lại"}
-                </button>
                 <button className="btn" disabled={saving} onClick={onSave}>
                   {saving ? "Đang lưu…" : "Lưu"}
                 </button>

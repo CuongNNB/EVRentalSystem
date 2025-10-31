@@ -149,7 +149,10 @@ const StaffManagement = () => {
             <p className="admin-page-subtitle">Quản lý danh sách nhân viên trong hệ thống</p>
           </div>
         </div>
-        <button className="admin-btn admin-btn-primary">
+        <button
+          className="admin-btn admin-btn-primary"
+          onClick={() => navigate("/admin/staff/new")}
+        >
           <i className="fas fa-user-plus"></i>
           Thêm nhân viên
         </button>
@@ -282,10 +285,6 @@ const StaffManagement = () => {
                     <i className="fas fa-eye"></i>
                     Xem chi tiết
                   </button>
-                  <button className="staff-btn-edit">
-                    <i className="fas fa-edit"></i>
-                    Chỉnh sửa
-                  </button>
                 </div>
               </div>
             </div>
@@ -343,9 +342,6 @@ const StaffManagement = () => {
                         onClick={() => navigate(`/admin/staff/${staffMember.id}`)}
                       >
                         <i className="fas fa-eye"></i>
-                      </button>
-                      <button className="btn-icon" title="Chỉnh sửa">
-                        <i className="fas fa-edit"></i>
                       </button>
                     </div>
                   </td>
