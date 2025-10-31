@@ -1,19 +1,20 @@
 package com.evrental.evrentalsystem.service;
 
-import com.evrental.evrentalsystem.entity.Station;
-import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.response.admin.TopStationsResponse.StationRow;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
-import com.evrental.evrentalsystem.response.vehicle.VehicleDetailDTO;
 import com.evrental.evrentalsystem.response.vehicle.VehicleAtStationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class StationService {
     private final VehicleDetailRepository vehicleDetailRepository;
     private final VehicleModelRepository vehicleModelRepository;
 
+    private final DataSource dataSource;
 
     //Hàm tìm trạm theo quận
     public List<VehicleAtStationResponse> getModelsByStation(Integer stationId) {
@@ -45,6 +47,26 @@ public class StationService {
 
         return list;
     }
-    //End code here
+
+    public List<StationRow> getAllStationsBasic() {
+        String sql = "SELECT station_id, station_name FROM Station ORDER BY station_name ASC";
+        List<StationRow> list = new ArrayList<>();
+        try (Connection con = dataSource.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(StationRow.builder()
+                        .stationId(rs.getInt("station_id"))
+                        .stationName(rs.getString("station_name"))
+                        .rentals(0)
+                        .revenue(0)
+                        .utilizationRate(0)
+                        .build());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Query stations failed", e);
+        }
+        return list;
+    }
 }
 

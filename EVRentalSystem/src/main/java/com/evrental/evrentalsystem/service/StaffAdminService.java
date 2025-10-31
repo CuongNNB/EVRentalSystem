@@ -254,6 +254,234 @@ public class StaffAdminService {
         }
     }
 
+    public StaffItemResponse.StaffItem updateStaffStation(int staffId, Integer stationId) {
+        if (stationId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "stationId must not be null");
+        }
+
+        final String checkUserSql =
+                "SELECT COUNT(*) FROM [User] WHERE user_id = ? AND [role] = 'STAFF'";
+        final String checkStationSql =
+                "SELECT COUNT(*) FROM [Station] WHERE station_id = ?";
+        final String checkEmpSql =
+                "SELECT COUNT(*) FROM [Employee_Detail] WHERE employee_id = ?";
+        final String insertEmpSql =
+                "INSERT INTO [Employee_Detail](employee_id, station_id) VALUES(?, ?)";
+        final String updateEmpSql =
+                "UPDATE [Employee_Detail] SET station_id = ? WHERE employee_id = ?";
+
+        try (Connection con = dataSource.getConnection()) {
+            con.setAutoCommit(false);
+
+            // 1) kiểm tra staff có tồn tại không
+            try (PreparedStatement ps = con.prepareStatement(checkUserSql)) {
+                ps.setInt(1, staffId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    if (rs.getInt(1) == 0) {
+                        con.rollback();
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found: " + staffId);
+                    }
+                }
+            }
+
+            // 2) kiểm tra trạm
+            try (PreparedStatement ps = con.prepareStatement(checkStationSql)) {
+                ps.setInt(1, stationId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    if (rs.getInt(1) == 0) {
+                        con.rollback();
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Station not found: " + stationId);
+                    }
+                }
+            }
+
+            // 3) cập nhật hoặc tạo mới Employee_Detail
+            boolean exists;
+            try (PreparedStatement ps = con.prepareStatement(checkEmpSql)) {
+                ps.setInt(1, staffId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    exists = rs.getInt(1) > 0;
+                }
+            }
+
+            if (exists) {
+                try (PreparedStatement ps = con.prepareStatement(updateEmpSql)) {
+                    ps.setInt(1, stationId);
+                    ps.setInt(2, staffId);
+                    ps.executeUpdate();
+                }
+            } else {
+                try (PreparedStatement ps = con.prepareStatement(insertEmpSql)) {
+                    ps.setInt(1, staffId);
+                    ps.setInt(2, stationId);
+                    ps.executeUpdate();
+                }
+            }
+
+            con.commit();
+            return getStaffDetail(staffId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Update staff station failed", e);
+        }
+    }
+
+    // =============================
+    // (3) PATCH STAFF INFO
+    // =============================
+    public StaffItemResponse.StaffItem patchStaff(
+            int staffId,
+            String email,
+            String phone,
+            String status,
+            Integer stationId
+    ) {
+        final String checkUserSql =
+                "SELECT COUNT(*) FROM [User] WHERE user_id = ? AND [role] = 'STAFF'";
+
+        try (Connection con = dataSource.getConnection()) {
+            con.setAutoCommit(false);
+
+            // 1) kiểm tra nhân viên hợp lệ
+            try (PreparedStatement ps = con.prepareStatement(checkUserSql)) {
+                ps.setInt(1, staffId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    if (rs.getInt(1) == 0) {
+                        con.rollback();
+                        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff not found: " + staffId);
+                    }
+                }
+            }
+
+            // 2) cập nhật bảng User
+            StringBuilder sql = new StringBuilder("UPDATE [User] SET ");
+            List<Object> sets = new ArrayList<>();
+            if (email != null) { sql.append(" [email] = ?,"); sets.add(email.trim()); }
+            if (phone != null) { sql.append(" [phone] = ?,"); sets.add(phone.trim()); }
+            if (status != null) { sql.append(" [status] = ?,"); sets.add(status.trim().toUpperCase()); }
+
+            if (!sets.isEmpty()) {
+                sql.setLength(sql.length() - 1); // bỏ dấu phẩy cuối
+                sql.append(" WHERE user_id = ?");
+                try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
+                    int i = 1;
+                    for (Object v : sets) ps.setString(i++, v.toString());
+                    ps.setInt(i, staffId);
+                    ps.executeUpdate();
+                }
+            }
+
+            // 3) nếu FE gửi stationId thì đổi trạm luôn
+            if (stationId != null) {
+                final String checkStationSql =
+                        "SELECT COUNT(*) FROM [Station] WHERE station_id = ?";
+                final String checkEmpSql =
+                        "SELECT COUNT(*) FROM [Employee_Detail] WHERE employee_id = ?";
+                final String insertEmpSql =
+                        "INSERT INTO [Employee_Detail](employee_id, station_id) VALUES(?, ?)";
+                final String updateEmpSql =
+                        "UPDATE [Employee_Detail] SET station_id = ? WHERE employee_id = ?";
+
+                try (PreparedStatement ps = con.prepareStatement(checkStationSql)) {
+                    ps.setInt(1, stationId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        rs.next();
+                        if (rs.getInt(1) == 0) {
+                            con.rollback();
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Station not found: " + stationId);
+                        }
+                    }
+                }
+
+                boolean exists;
+                try (PreparedStatement ps = con.prepareStatement(checkEmpSql)) {
+                    ps.setInt(1, staffId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        rs.next();
+                        exists = rs.getInt(1) > 0;
+                    }
+                }
+
+                if (exists) {
+                    try (PreparedStatement ps = con.prepareStatement(updateEmpSql)) {
+                        ps.setInt(1, stationId);
+                        ps.setInt(2, staffId);
+                        ps.executeUpdate();
+                    }
+                } else {
+                    try (PreparedStatement ps = con.prepareStatement(insertEmpSql)) {
+                        ps.setInt(1, staffId);
+                        ps.setInt(2, stationId);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            con.commit();
+            return getStaffDetail(staffId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Patch staff failed", e);
+        }
+    }
+
+    public void transferStation(int employeeId, int newStationId) {
+        String checkStation = "SELECT 1 FROM Station WHERE station_id = ?";
+        String checkEmp     = "SELECT 1 FROM Employee_Detail WHERE employee_id = ?";
+        String updateSql    = "UPDATE Employee_Detail SET station_id = ? WHERE employee_id = ?";
+
+        try (Connection con = dataSource.getConnection()) {
+
+            // station tồn tại?
+            try (PreparedStatement ps = con.prepareStatement(checkStation)) {
+                ps.setInt(1, newStationId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Station not found: " + newStationId);
+                    }
+                }
+            }
+
+            // employee_detail tồn tại?
+            boolean hasEmpDetail;
+            try (PreparedStatement ps = con.prepareStatement(checkEmp)) {
+                ps.setInt(1, employeeId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    hasEmpDetail = rs.next();
+                }
+            }
+
+            if (!hasEmpDetail) {
+                // nếu cần auto-create dòng employee_detail:
+                try (PreparedStatement ps = con.prepareStatement(
+                        "INSERT INTO Employee_Detail(employee_id, station_id) VALUES (?, ?)")) {
+                    ps.setInt(1, employeeId);
+                    ps.setInt(2, newStationId);
+                    ps.executeUpdate();
+                    return;
+                }
+            }
+
+            try (PreparedStatement ps = con.prepareStatement(updateSql)) {
+                ps.setInt(1, newStationId);
+                ps.setInt(2, employeeId);
+                int updated = ps.executeUpdate();
+                if (updated == 0) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Employee not found: " + employeeId);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[transferStation] SQL error: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Transfer station failed", e);
+        }
+    }
+
     // ------------ helpers ------------
     private String normalize(String s) {
         if (s == null) return null;
