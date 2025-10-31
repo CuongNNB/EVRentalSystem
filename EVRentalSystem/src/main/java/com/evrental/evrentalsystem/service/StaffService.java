@@ -59,31 +59,57 @@ public class StaffService {
                     // Tạo đối tượng BookingsInStationResponse từ đối tượng Booking
                     BookingsInStationResponse response = new BookingsInStationResponse();
 
-                    int rentingDurationDay = countRentingDay(booking.getStartTime(),booking.getExpectedReturnTime());
+                    // --- Tính toán các giá trị ---
+                    int rentingDurationDay = countRentingDay(booking.getStartTime(), booking.getExpectedReturnTime());
                     double discountRate = booking.getPromotion() == null
                             ? 1.0
                             : (100 - booking.getPromotion().getDiscountPercent()) / 100.0;
 
-                    int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate) *1000;
-                    List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking) ;
-                    int additionalFee = afs.stream()
+                    int fee = (int) Math.round(rentingDurationDay * booking.getVehicleModel().getPrice() * discountRate) * 1000;
+                    List<AdditionalFee> afs = additionalFeeRepository.findAllByBooking(booking);
+                    long additionalFee = afs.stream()
                             .filter(af -> af.getAmount() != null)
-                            .mapToInt(af -> af.getAmount().intValue())
-                            .sum() * 1000;
+                            .mapToLong(af -> af.getAmount().longValue()) // dùng long thay vì int
+                            .sum(); // nhân với 1000L để giữ kiểu long
 
-                    // Gán các giá trị cho response từ booking
+
+
+                    // --- In ra console để debug ---
+                    System.out.println("============== DEBUG BOOKING ==============");
+                    System.out.println("Booking ID: " + booking.getBookingId());
+                    System.out.println("Customer: " + (booking.getRenter() != null ? booking.getRenter().getFullName() : "Unknown"));
+                    System.out.println("Phone: " + (booking.getRenter() != null ? booking.getRenter().getPhone() : "Unknown"));
+                    System.out.println("Vehicle Model ID: " + booking.getVehicleModel().getVehicleId());
+                    System.out.println("Vehicle Model: " + (booking.getVehicleModel() != null ? booking.getVehicleModel().getModel() : "Unknown"));
+                    System.out.println("Start Time: " + booking.getStartTime());
+                    System.out.println("Expected Return Time: " + booking.getExpectedReturnTime());
+                    System.out.println("Renting Duration (days): " + rentingDurationDay);
+                    System.out.println("Promotion: " + (booking.getPromotion() != null ? booking.getPromotion().getDiscountPercent() + "%" : "None"));
+                    System.out.println("Discount Rate: " + discountRate);
+                    System.out.println("Vehicle Price per day: " + booking.getVehicleModel().getPrice());
+                    System.out.println("Base Fee (before additional): " + fee);
+                    System.out.println("Additional Fees count: " + afs.size());
+                    afs.forEach(af -> System.out.println(" - Additional Fee: " + af.getFeeName() + " | Amount: " + af.getAmount()));
+                    System.out.println("Total Additional Fee: " + additionalFee);
+                    System.out.println("Total Amount (fee + additional): " + (fee + additionalFee));
+                    System.out.println("Status: " + booking.getStatus());
+                    System.out.println("===========================================\n");
+
+                    // --- Gán giá trị cho response ---
                     response.id = booking.getBookingId();
                     response.customerName = booking.getRenter() != null ? booking.getRenter().getFullName() : "Unknown";
-                    response.customerNumber = booking.getRenter() != null ? booking.getRenter().getPhone() : "Unknown"; // Giả sử có trường phoneNumber trong User
+                    response.customerNumber = booking.getRenter() != null ? booking.getRenter().getPhone() : "Unknown";
                     response.vehicleModelId = booking.getVehicleModel().getVehicleId();
-                    response.vehicleModel = booking.getVehicleModel() != null ? booking.getVehicleModel().getModel() : "Unknown"; // Giả sử có trường modelName trong VehicleModel
+                    response.vehicleModel = booking.getVehicleModel() != null ? booking.getVehicleModel().getModel() : "Unknown";
                     response.startDate = booking.getStartTime();
                     response.endDate = booking.getExpectedReturnTime();
-                    response.totalAmount = fee+additionalFee;
+                    response.totalAmount = fee + additionalFee;
                     response.status = booking.getStatus();
+
                     return response;
                 })
-                .collect(Collectors.toList()); // Thu thập các đối tượng vào danh sách
+                .collect(Collectors.toList());
+        // Thu thập các đối tượng vào danh sách
     }
 
     public boolean changeStatus(int id, String status) {
