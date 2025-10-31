@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
+import { MOCK_BOOKINGS } from '../mocks/bookings';
 import './BookingDetailHistory.css';
 import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhúng vào modal
 
@@ -89,6 +89,10 @@ const BookingDetailHistory = () => {
     const [loadingInsp, setLoadingInsp] = useState(true);
     const [errorInsp, setErrorInsp] = useState(null);
 
+    const [inspectionsAfter, setInspectionsAfter] = useState([]);
+    const [loadingInspAfter, setLoadingInspAfter] = useState(true);
+    const [errorInspAfter, setErrorInspAfter] = useState(null);
+
     const [additionalFees, setAdditionalFees] = useState([]);
     const [loadingFees, setLoadingFees] = useState(false);
     const [errorFees, setErrorFees] = useState(null);
@@ -146,6 +150,42 @@ const BookingDetailHistory = () => {
 
         fetchInspections();
     }, [booking, id]);
+
+    useEffect(() => {
+        const bookingIdToUse = booking?.bookingId ? booking.bookingId : (id ? parseInt(id) : null);
+        if (!bookingIdToUse) return;
+
+        const fetchInspectionsAfter = async () => {
+            try {
+                setLoadingInspAfter(true);
+                setErrorInspAfter(null);
+
+                const resp = await fetch(`${API_BASE}/inspections/inspection-after`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingId: bookingIdToUse }),
+                });
+
+                if (!resp.ok) {
+                    // try parse error body
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.message || `HTTP ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                // backend trả mảng các object như bạn mô tả — đảm bảo là mảng
+                setInspectionsAfter(Array.isArray(data) ? data : []);
+            } catch (err) {
+                setErrorInspAfter(err.message);
+                setInspectionsAfter([]);
+            } finally {
+                setLoadingInspAfter(false);
+            }
+        };
+
+        fetchInspectionsAfter();
+    }, [booking, id]);
+
 
     // 🔹 NEW: Fetch additional fees by bookingId on load, save to localStorage
     useEffect(() => {
@@ -320,6 +360,7 @@ const BookingDetailHistory = () => {
     };
     // hide action buttons if any inspection already CONFIRMED
     const hasConfirmed = inspections.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
+    const hasConfirmedAfter = inspectionsAfter.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
     const { durationText, daysForBilling, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
@@ -618,7 +659,7 @@ const BookingDetailHistory = () => {
                                                     Over_Mileage_Fee: 'Phí vượt quá odo quy định',
                                                     Late_Return_Fee: 'Phí trả trễ xe',
                                                     Cleaning_Fee: 'Phí vệ sinh xe',
-                                                    Fuel_Fee: 'Phí nhiên liệu',
+                                                    Fuel_Fee: 'Phí xăng dầu',
                                                     Other_Fee: 'Phí khác',
                                                 };
                                                 const label = feeNameMap[feeType] || feeType || fee.title || `Phụ phí ${idx + 1}`;
@@ -739,6 +780,83 @@ const BookingDetailHistory = () => {
                             )}
                         </div>
                     </motion.div>
+                    {/* Inspection After (mới) */}
+                    <motion.div className="detail-card inspection-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Kiểm tra sau khi trả xe</span></h2>
+
+                        {loadingInspAfter && <p>🔄 Đang tải thông tin kiểm tra sau...</p>}
+                        {errorInspAfter && <p className="text-error">Lỗi khi tải kiểm tra sau: {errorInspAfter}</p>}
+
+                        {!loadingInspAfter && !errorInspAfter && inspectionsAfter.length === 0 && (
+                            <p>Không có dữ liệu kiểm tra sau cho đơn này.</p>
+                        )}
+
+                        <div className="inspection-list">
+                            {inspectionsAfter.map((ia) => (
+                                <div key={ia.inspectionId} className="inspection-item">
+                                    <div className="inspection-info">
+                                        <div><strong>Phần:</strong> {ia.partName}</div>
+                                        <div>
+                                            <strong>Trạng thái:</strong>{' '}
+                                            {ia.status === 'CONFIRMED' ? 'Đã đồng ý' :
+                                                ia.status === 'PENDING' ? 'Đang chờ xác thực' :
+                                                    ia.status === 'REJECTED' ? 'Đã từ chối' :
+                                                        ia.status ?? 'Không xác định'}
+                                        </div>
+                                        <div><strong>Nhân viên:</strong> {ia.staffName ?? ia.staffId}</div>
+                                        <div><strong>Thời gian:</strong> {fmtDateTime(ia.inspectedAt)}</div>
+                                        <div><strong>Mô tả:</strong> {ia.description || '---'}</div>
+                                    </div>
+
+                                    {ia.pictureUrl && ia.pictureUrl.trim() !== '' ? (
+                                        <div className="inspection-image-box">
+                                            <img
+                                                src={ia.pictureUrl}
+                                                alt={ia.partName || 'Ảnh kiểm tra sau'}
+                                                className="inspection-image"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    const link = e.target.parentNode.querySelector('.document-view-link');
+                                                    if (link) link.style.display = 'none';
+                                                }}
+                                            />
+                                            <a
+                                                href={ia.pictureUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="document-view-link"
+                                            >
+                                                Xem ảnh lớn
+                                            </a>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            ))}
+                            {inspections.length > 0 && !hasConfirmed && (
+                                <div className="inspection-actions">
+                                    <button
+                                        className="btn-accept"
+                                        onClick={handleAcceptAll}
+                                        disabled={updating}
+                                        title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
+                                    >
+                                        {updating ? 'Đang xử lý...' : 'Chấp nhận'}
+                                    </button>
+
+                                    <button
+                                        className="btn-reject"
+                                        onClick={handleOpenRejectModal}
+                                        disabled={updating}
+                                        style={{ marginLeft: 12 }}
+                                        title={updating ? "Đang xử lý..." : "Từ chối"}
+                                    >
+                                        Từ chối
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+
                 </div>
             </div>
 
