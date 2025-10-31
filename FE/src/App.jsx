@@ -27,12 +27,9 @@ import BookingDetailHistory from "./pages/BookingDetailHistory.jsx";
 import UserProfilePage from "./pages/UserProfilePage";
 import Forbidden from "./pages/Forbidden";
 import PromoPage from "./pages/PromoList.jsx";
+import StaffReport from "./pages/staff/StaffReport.jsx";
+import ReceiveCar from "./pages/staff/Orders/ReceiveCar.jsx";
 
-// Admin pages
-import { AdminDashboard, AdminOverview, AdminGuard, VehicleManagement, AdminVehicleDetail, AdminVehicleEdit } from "./pages/admin";
-import CustomerManagement from "./pages/admin/CustomerManagement";
-import StaffManagement from "./pages/admin/StaffManagement";
-import AnalyticsPage from "./pages/admin/AnalyticsPage";
 
 import StaffGuard from "./components/StaffGuard";
 function App() {
@@ -79,20 +76,11 @@ function App() {
                             <Route path="/staff/orders/:orderId/handover" element={<ProtectedRoute><HandoverCar /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/handover/check" element={<ProtectedRoute><CheckCar /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
+                            <Route path="/staff/report" element={<ProtectedRoute><StaffReport /></ProtectedRoute>} />
+                            <Route path="/staff/orders/:orderId/receive" element={<ProtectedRoute><ReceiveCar /></ProtectedRoute>} />
                         </Route>
 
-                        //Phần trang của Admin
-                        <Route element={<AdminGuard />}>
-                            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
-                                <Route index element={<AdminOverview />} />
-                                <Route path="vehicles" element={<VehicleManagement />} />
-                                <Route path="vehicles/:id" element={<AdminVehicleDetail />} />
-                                <Route path="vehicles/:id/edit" element={<AdminVehicleEdit />} />
-                                <Route path="customers" element={<CustomerManagement />} />
-                                <Route path="staff" element={<StaffManagement />} />
-                                <Route path="analytics" element={<AnalyticsPage />} />
-                            </Route>
-                        </Route>
+                        
 
                         <Route path="/403" element={<Forbidden />} />
                     </Routes>

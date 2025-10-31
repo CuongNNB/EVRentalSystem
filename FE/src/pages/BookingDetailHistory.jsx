@@ -3,9 +3,10 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { MOCK_BOOKINGS, getStatusLabel } from '../mocks/bookings';
+import { MOCK_BOOKINGS } from '../mocks/bookings';
 import './BookingDetailHistory.css';
 import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhúng vào modal
+import CreateReportForm from '../components/staff/CreateReportForm';
 
 const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
@@ -475,7 +476,7 @@ const BookingDetailHistory = () => {
                         Over_Mileage_Fee: 'Phí vượt odo',
                         Late_Return_Fee: 'Phí trả trễ',
                         Cleaning_Fee: 'Phí vệ sinh',
-                        Fuel_Fee: 'Phí xăng dầu',
+                        Fuel_Fee: 'Phí nhiên liệu',
                         Other_Fee: 'Phí khác'
                     }[f.feeType])) || f.name || f.feeName || f.title || `Phụ phí ${i + 1}`;
                     const amount = Number(f.amount ?? f.feeAmount ?? f.value ?? f.total ?? 0) || 0;
@@ -542,6 +543,15 @@ const BookingDetailHistory = () => {
                                 <div className="info-row"><span className="info-label">Odo:</span><span className="info-value">{normalized.odo}</span></div>
                             </div>
                         </div>
+                    </motion.div>
+
+                    {/* Create Report (Staff) */}
+                    <motion.div className="detail-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        <h2 className="section-header"><span className="section-title">Tạo báo cáo xe</span></h2>
+                        <CreateReportForm
+                            defaultVehicleDetailId={booking?.vehicleDetailId || ''}
+                            className="mt-2"
+                        />
                     </motion.div>
 
                     {/* Station */}
