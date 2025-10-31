@@ -4,6 +4,7 @@ import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.InspectionAfter;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
+import com.evrental.evrentalsystem.repository.AdditionalFeeRepository;
 import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.repository.InspectionAfterRepository;
 import com.evrental.evrentalsystem.response.vehicle.UserInspectionDetailResponse;
@@ -23,6 +24,7 @@ public class InspectionService {
 
     private final InspectionRepository inspectionRepository;
     private final InspectionAfterRepository inspectionAfterRepository;
+    private final AdditionalFeeRepository additionalFeeRepository;
     private final BookingRepository bookingRepository;
 
     public List<UserInspectionDetailResponse> getInspectionsByBookingId(Integer bookingId) {
@@ -116,9 +118,44 @@ public class InspectionService {
         return inspectionRepository.saveAll(inspections);
     }
 
+
+    public List<InspectionAfter> updateInspectionAfterStatus(Integer bookingId, String status) {
+        List<InspectionAfter> inspections = inspectionAfterRepository.findByBooking_BookingId(bookingId);
+
+        if (inspections.isEmpty()) {
+            return inspections;
+        }
+
+        for (InspectionAfter inspection : inspections) {
+            inspection.setStatus(status);
+        }
+
+        Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
+        checkBooking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
+
+        if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
+            bookingRepository.findById(bookingId).ifPresent(booking -> {
+                booking.setStatus(BookingStatus.Currently_Renting.toString());
+                bookingRepository.save(booking);
+            });
+            int deleted = inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+        }
+        return inspectionAfterRepository.saveAll(inspections);
+    }
+
     @Transactional
     public int deleteRejectedInspectionsByBookingId(Integer bookingId) {
         return inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+    }
+
+    @Transactional
+    public int deleteRejectedInspectionsAfterByBookingId(Integer bookingId) {
+        return inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+    }
+
+    @Transactional
+    public int deleteRejectAdditionalFeesByBookingId(Integer bookingId) {
+        return additionalFeeRepository.deleteByBookingId(bookingId);
     }
 
 

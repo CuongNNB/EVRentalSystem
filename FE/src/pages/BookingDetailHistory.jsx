@@ -102,6 +102,9 @@ const BookingDetailHistory = () => {
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
+    const [acceptModalAfterOpen, setAcceptModalAfterOpen] = useState(false);
+    const [rejectModalAfterOpen, setRejectModalAfterOpen] = useState(false);
+
     // NEW: checkout modal state & payload
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [checkoutPayload, setCheckoutPayload] = useState(null);
@@ -360,7 +363,8 @@ const BookingDetailHistory = () => {
     };
     // hide action buttons if any inspection already CONFIRMED
     const hasConfirmed = inspections.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
-    const hasConfirmedAfter = inspectionsAfter.some(i => (i?.status ?? '').toString().toUpperCase() === 'CONFIRMED');
+    // Kiểm tra trạng thái inspection AFTER
+    const hasConfirmedAfter = inspectionsAfter.some(item => item.status === "CONFIRMED");
     const { durationText, daysForBilling, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
@@ -396,6 +400,76 @@ const BookingDetailHistory = () => {
             setUpdating(false);
         }
     };
+    // CALL API riêng cho "inspection after"
+    const callUpdateStatusAfterApi = async (bookingId, status) => {
+        setUpdating(true);
+        setUpdateError(null);
+        try {
+            const resp = await fetch(`${API_BASE}/inspections/update-status-after`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId, status }),
+            });
+
+            if (!resp.ok) {
+                const errBody = await resp.json().catch(() => ({}));
+                throw new Error(errBody.message || `HTTP ${resp.status}`);
+            }
+
+            // backend trả List<InspectionAfter> — cập nhật state inspectionsAfter nếu có
+            const data = await resp.json();
+            if (Array.isArray(data) && data.length > 0) {
+                setInspectionsAfter(data);
+            } else {
+                // fallback: đánh dấu tất cả mục inspectionsAfter local với status mới
+                setInspectionsAfter(prev => prev.map(i => ({ ...i, status })));
+            }
+
+            return { success: true };
+        } catch (err) {
+            setUpdateError(err.message);
+            return { success: false, message: err.message };
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    // Accept all for inspections after
+    const handleAcceptAllAfter = async () => {
+        if (!normalized.bookingId) return;
+        setAcceptModalAfterOpen(true);
+        await callUpdateStatusAfterApi(normalized.bookingId, 'CONFIRMED');
+    };
+
+    // Close accept modal after
+    const handleAcceptAfterClose = () => {
+        setAcceptModalAfterOpen(false);
+    };
+
+    // Open reject modal after
+    const handleOpenRejectModalAfter = () => {
+        setRejectModalAfterOpen(true);
+    };
+
+    // Cancel reject after
+    const handleRejectAfterCancel = () => {
+        setRejectModalAfterOpen(false);
+    };
+
+    // Confirm reject for inspections after
+    const handleRejectConfirmAfter = async () => {
+        setRejectModalAfterOpen(false);
+        if (!normalized.bookingId) return;
+
+        const result = await callUpdateStatusAfterApi(normalized.bookingId, "REJECTED");
+
+        if (result.success) {
+            window.location.reload();
+        } else {
+            alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
+        }
+    };
+
 
     // 🔹 ADD: handlers for Accept modal
     const handleAcceptAll = async () => {
@@ -780,12 +854,13 @@ const BookingDetailHistory = () => {
                             )}
                         </div>
                     </motion.div>
+
                     {/* Inspection After (mới) */}
                     <motion.div className="detail-card inspection-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         <h2 className="section-header"><span className="section-title">Kiểm tra sau khi trả xe</span></h2>
 
                         {loadingInspAfter && <p>🔄 Đang tải thông tin kiểm tra sau...</p>}
-                        {errorInspAfter && <p className="text-error">Lỗi khi tải kiểm tra sau: {errorInspAfter}</p>}
+                        {errorInspAfter && <p className="text-error">Đang cập nhật...</p>}
 
                         {!loadingInspAfter && !errorInspAfter && inspectionsAfter.length === 0 && (
                             <p>Không có dữ liệu kiểm tra sau cho đơn này.</p>
@@ -832,11 +907,11 @@ const BookingDetailHistory = () => {
                                     ) : null}
                                 </div>
                             ))}
-                            {inspections.length > 0 && !hasConfirmed && (
+                            {inspectionsAfter.length > 0 && !hasConfirmedAfter && (
                                 <div className="inspection-actions">
                                     <button
                                         className="btn-accept"
-                                        onClick={handleAcceptAll}
+                                        onClick={handleAcceptAllAfter}
                                         disabled={updating}
                                         title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
                                     >
@@ -845,7 +920,7 @@ const BookingDetailHistory = () => {
 
                                     <button
                                         className="btn-reject"
-                                        onClick={handleOpenRejectModal}
+                                        onClick={handleOpenRejectModalAfter}
                                         disabled={updating}
                                         style={{ marginLeft: 12 }}
                                         title={updating ? "Đang xử lý..." : "Từ chối"}
@@ -910,6 +985,61 @@ const BookingDetailHistory = () => {
                                 disabled={updating}
                             >
                                 {updating ? "Đang xử lý..." : "Xác nhận từ chối"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🔹 ACCEPT MODAL FOR INSPECTION AFTER */}
+            {acceptModalAfterOpen && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-card">
+                        <h3>Đã xác nhận kiểm tra sau khi trả xe</h3>
+                        <p>Kết quả kiểm tra sau cho đơn #{normalized.bookingId} đã được cập nhật. Cảm ơn bạn.</p>
+
+                        {updating && <p style={{ marginTop: 8 }}>Đang gửi yêu cầu...</p>}
+                        {updateError && <p className="text-error" style={{ marginTop: 8 }}>{updateError}</p>}
+
+                        <div className="modal-actions" style={{ marginTop: 12 }}>
+                            <button
+                                className="modal-btn modal-confirm"
+                                onClick={handleAcceptAfterClose}
+                                disabled={updating}
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🔹 REJECT CONFIRMATION MODAL FOR INSPECTION AFTER */}
+            {rejectModalAfterOpen && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-card">
+                        <h3>Bạn có chắc chắn muốn từ chối?</h3>
+                        <p>
+                            Nếu bạn từ chối chúng tôi sẽ tiến hành kiểm tra lại xe
+                        </p>
+
+                        {updating && <p style={{ marginTop: 8 }}>Đang gửi yêu cầu...</p>}
+                        {updateError && <p className="text-error" style={{ marginTop: 8 }}>{updateError}</p>}
+
+                        <div className="modal-actions" style={{ marginTop: 12 }}>
+                            <button
+                                className="modal-btn modal-cancel"
+                                onClick={handleRejectAfterCancel}
+                                disabled={updating}
+                            >
+                                Huỷ
+                            </button>
+                            <button
+                                className="modal-btn modal-confirm"
+                                onClick={handleRejectConfirmAfter}
+                                disabled={updating}
+                            >
+                                {updating ? "Đang xử lý..." : "Từ chối"}
                             </button>
                         </div>
                     </div>
