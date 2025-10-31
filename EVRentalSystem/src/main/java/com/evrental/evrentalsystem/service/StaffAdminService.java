@@ -140,7 +140,7 @@ public class StaffAdminService {
                         it.setStatus(rs.getString("emp_status"));
                         it.setStationId(rs.getInt("station_id"));
                         it.setStationName(rs.getString("station_name"));
-                        it.setPhone(rs.getString("phone")); // ✅ thêm
+                        it.setPhone(rs.getString("phone"));
                         Timestamp ts = rs.getTimestamp("join_date");
                         it.setJoinDate(ts != null ? ts.toLocalDateTime() : null);
                         it.setHandovers(getIntSafe(rs, "handovers"));
