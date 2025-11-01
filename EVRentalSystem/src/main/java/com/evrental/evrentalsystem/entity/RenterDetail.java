@@ -1,12 +1,16 @@
 package com.evrental.evrentalsystem.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "Renter_Detail")
 @Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class RenterDetail {
 

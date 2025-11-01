@@ -3,6 +3,7 @@ package com.evrental.evrentalsystem.controller.admin;
 
 import com.evrental.evrentalsystem.entity.RenterDetail;
 import com.evrental.evrentalsystem.entity.User;
+import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
 import com.evrental.evrentalsystem.response.admin.GetRenterDetailResponse;
 import com.evrental.evrentalsystem.service.AdminService;
@@ -30,7 +31,7 @@ public class UserManagementController {
         return adminService.getAllUsersByRole("RENTER");
     }
 
-    //API: http://localhost:8084/EVRentalSystem/api/users/{userId}/renter-detail
+    //API: http://localhost:8084/EVRentalSystem/api/user-management/{userId}/renter-detail
     @GetMapping("/{userId}/renter-detail")
     public ResponseEntity<?> getRenterDetail(@PathVariable Integer userId) {
         Optional<RenterDetail> opt = adminService.findByUserId(userId);
@@ -86,4 +87,25 @@ public class UserManagementController {
         return ImageUtil.buildImageResponse(bytes, mime);
     }
 
+
+    //API: http://localhost:8084/EVRentalSystem/api/user-management/{userId}/renter-detail
+    @PutMapping("/{userId}/renter-detail")
+    public ResponseEntity<?> updateRenterDetail(
+            @PathVariable Integer userId,
+            @RequestBody UpdateRenterDetailRequest request) {
+
+        // Đảm bảo path userId trùng với request.userId
+        if (!userId.equals(request.getUserId())) {
+            return ResponseEntity.badRequest().body("Path userId and request.userId must match.");
+        }
+
+        try {
+            adminService.updateRenterDetail(request);
+            return ResponseEntity.ok("Update renter detail successfully for userId: " + userId + "!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
 }

@@ -5,6 +5,7 @@ import com.evrental.evrentalsystem.repository.RenterDetailRepository;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.UserRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
+import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
 import com.evrental.evrentalsystem.response.admin.GetRenterDetailResponse;
 import com.evrental.evrentalsystem.response.admin.RentedVehicleResponse;
@@ -14,6 +15,7 @@ import com.evrental.evrentalsystem.response.vehicle.FixingVehicleResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +32,7 @@ public class AdminService {
     private final VehicleDetailRepository vehicleDetailRepository;
 
     private final UserRepository userRepository;
-    private RenterDetailRepository renterDetailRepository;
+    private final RenterDetailRepository renterDetailRepository;
 
 
     //Hàm lấy tổng số xe tại 1 trạm cụ thể cho admin.
@@ -120,5 +122,43 @@ public class AdminService {
     public String detectMime(byte[] bytes) {
         return ImageUtil.detectImageMimeType(bytes);
     }
+
+    @Transactional
+    public RenterDetail updateRenterDetail(UpdateRenterDetailRequest request) {
+        Integer userId = request.getUserId();
+
+        // 1️⃣ Lấy user từ DB
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        // 2️⃣ Cập nhật các thông tin cơ bản
+        if (request.getFullName() != null) user.setFullName(request.getFullName().trim());
+        if (request.getEmail() != null) user.setEmail(request.getEmail().trim());
+        if (request.getPhone() != null) user.setPhone(request.getPhone().trim());
+        if (request.getAddress() != null) user.setAddress(request.getAddress().trim());
+        if (request.getStatus() != null) user.setStatus(request.getStatus().trim().toUpperCase());
+
+        userRepository.save(user);
+
+        // 3️⃣ Lấy hoặc tạo mới renterDetail
+        RenterDetail renterDetail = renterDetailRepository.findByRenterId(userId)
+                .orElseGet(() -> RenterDetail.builder()
+                        .renterId(userId)
+                        .build());
+
+        // 4️⃣ Cập nhật renter detail
+        if (request.getIsRisky() != null) renterDetail.setIsRisky(request.getIsRisky());
+        if (request.getVerificationStatus() != null)
+            renterDetail.setVerificationStatus(request.getVerificationStatus().trim().toUpperCase());
+
+        // Nếu entity có quan hệ OneToOne tới User
+        try {
+            renterDetail.setRenter(user);
+        } catch (Exception ignored) {}
+
+        // 5️⃣ Lưu vào DB
+        return renterDetailRepository.save(renterDetail);
+    }
+
     //End code here
 }

@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface RenterDetailRepository extends JpaRepository<RenterDetail, Integer> {
     Optional<RenterDetail> findByRenterUserId(Integer userId);
+    Optional<RenterDetail> findByRenterId(Integer renterId);
+    boolean existsByRenterId(Integer renterId);
 }
