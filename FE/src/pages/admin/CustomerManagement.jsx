@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx' //npm install xlsx
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import './AdminDashboardNew.css'
 import './CustomerManagement.css'
