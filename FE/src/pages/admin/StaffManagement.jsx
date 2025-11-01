@@ -3,18 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import * as XLSX from 'xlsx'
 
-
 import { getStaff, getStaffStats, getStations, deleteStaff } from '../../api/adminStaff'
 import './AdminDashboardNew.css'
 import './StaffManagement.css'
 
 const stationLabel = (m) => {
-  const id = m?.stationId ?? m?.station_id;
-  const name = m?.stationName ?? m?.station_name ?? m?.station;
-  if (name) return name;
-  if (id != null) return `Trạm #${id}`;
-  return '—';
-};
+  const id = m?.stationId ?? m?.station_id
+  const name = m?.stationName ?? m?.station_name ?? m?.station
+  if (name) return name
+  if (id != null) return `Trạm #${id}`
+  return '—'
+}
 
 const toLower = (s) => (s ?? '').toString().trim().toLowerCase()
 
@@ -23,16 +22,13 @@ const StaffManagement = () => {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [stationFilter, setStationFilter] = useState('all')
-  const [positionFilter, setPositionFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState("active");
-  const [viewMode, setViewMode] = useState('grid')
-
+  const [statusFilter, setStatusFilter] = useState('active')
+  const [viewMode, setViewMode] = useState('table') // mặc định table cho ổn định
 
   // State for API data
   const [staff, setStaff] = useState([])
   const [stations, setStations] = useState([])
-  const [positions, setPositions] = useState([])
-  const [stats, setStats] = useState({ total: 0, active: 0 });
+  const [stats, setStats] = useState({ total: 0, active: 0 })
 
   // Loading states
   const [loadingStaff, setLoadingStaff] = useState(true)
@@ -44,7 +40,7 @@ const StaffManagement = () => {
       try {
         setLoadingStaff(true)
         const data = await getStaff()
-        setStaff(data)
+        setStaff(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('[StaffManagement] Error loading staff:', error)
         setStaff([])
@@ -60,7 +56,7 @@ const StaffManagement = () => {
       try {
         setLoadingStations(true)
         const data = await getStations()
-        setStations(data)
+        setStations(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('[StaffManagement] Error loading stations:', error)
         setStations([])
@@ -76,10 +72,12 @@ const StaffManagement = () => {
       try {
         setLoadingStats(true)
         const data = await getStaffStats()
-        setStats(data)
+        const total = Number(data?.total ?? 0)
+        const active = Number(data?.active ?? 0)
+        setStats({ total, active })
       } catch (error) {
         console.error('[StaffManagement] Error loading stats:', error)
-        setStats({ total: 0, active: 0, onLeave: 0 })
+        setStats({ total: 0, active: 0 })
       } finally {
         setLoadingStats(false)
       }
@@ -88,58 +86,39 @@ const StaffManagement = () => {
   }, [])
 
   useEffect(() => {
-    if (staff.length > 0) {
-      const uniquePositions = [...new Set(
-        staff.map(s => s.position).filter(Boolean)
-      )];
-      setPositions(uniquePositions);
-    }
-  }, [staff]);
-
-  useEffect(() => {
-    const norm = (s) => (s ?? "").toString().trim().toLowerCase();
-    setStats({
-      total: staff.length,
-      active: staff.filter(x => norm(x.status) === "active").length,
-    });
-  }, [staff]);
+    // fallback cập nhật nhanh từ list
+    const norm = (s) => (s ?? '').toString().trim().toLowerCase()
+    setStats((old) => ({
+      total: staff.length || old.total,
+      active: staff.filter(x => norm(x.status) === 'active').length || old.active
+    }))
+  }, [staff])
 
   const stationFilterNum = stationFilter === 'all' ? 'all' : Number(stationFilter)
 
-  const filteredStaff = staff.filter(staffMember => {
-    const matchSearch =
-      !searchTerm ||
-      toLower(staffMember.name).includes(toLower(searchTerm)) ||
-      toLower(staffMember.email).includes(toLower(searchTerm)) ||
-      String(staffMember.id).toLowerCase().includes(toLower(searchTerm))
+  const filteredStaff = staff.filter(s => {
+    const q = toLower(searchTerm)
+    const matchSearch = !q ||
+      toLower(s.name).includes(q) ||
+      toLower(s.email).includes(q) ||
+      String(s.id ?? '').toLowerCase().includes(q)
 
-    const thisStationId = Number(staffMember.stationId ?? staffMember.station_id)
-    const matchStation =
-      stationFilterNum === 'all' || thisStationId === stationFilterNum
+    const stId = Number(s.stationId ?? s.station_id)
+    const matchStation = stationFilterNum === 'all' || stId === stationFilterNum
 
-    const matchPosition =
-      positionFilter === 'all' ||
-      toLower(staffMember.position) === toLower(positionFilter);
+    const matchStatus = statusFilter === 'all' || toLower(s.status) === toLower(statusFilter)
 
-    const matchStatus =
-      statusFilter === 'all' || toLower(staffMember.status) === toLower(statusFilter)
-
-    return matchSearch && matchStation && matchPosition && matchStatus
+    return matchSearch && matchStation && matchStatus
   })
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <span className="staff-status active">Đang làm việc</span>;
-      case 'inactive':
-        return <span className="staff-status inactive">Ngưng làm</span>;
-      default:
-        return <span className="staff-status">{status}</span>;
-    }
-  };
-  // đặt trong component StaffManagement (cùng cấp với các handler khác)
+    const norm = toLower(status)
+    if (norm === 'active') return <span className="staff-status active" style={{ whiteSpace: 'nowrap' }}>ĐANG LÀM VIỆC</span>
+    if (norm === 'inactive') return <span className="staff-status inactive" style={{ whiteSpace: 'nowrap' }}>NGƯNG LÀM</span>
+    return <span className="staff-status" style={{ whiteSpace: 'nowrap' }}>{status}</span>
+  }
+
   const exportStaffExcel = () => {
-    // map dữ liệu gọn – chỉ vài cột cần thiết
     const rows = filteredStaff.map(s => ({
       ID: s.id ?? '',
       Name: s.name ?? '',
@@ -150,19 +129,11 @@ const StaffManagement = () => {
       JoinDate: s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '',
       Status: (s.status ?? '').toString()
     }))
-
-    // tạo worksheet & workbook
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Staff')
-
-    // auto width đơn giản
-    const header = Object.keys(rows[0] || {
-      ID: '', Name: '', Email: '', Position: '', Station: '', Phone: '', JoinDate: '', Status: ''
-    })
+    const header = Object.keys(rows[0] || { ID:'', Name:'', Email:'', Position:'', Station:'', Phone:'', JoinDate:'', Status:'' })
     ws['!cols'] = header.map(() => ({ wch: 18 }))
-
-    // file name
     const ts = new Date().toISOString().slice(0, 10)
     XLSX.writeFile(wb, `Staff-${ts}.xlsx`)
   }
@@ -186,10 +157,7 @@ const StaffManagement = () => {
             <p className="admin-page-subtitle">Quản lý danh sách nhân viên trong hệ thống</p>
           </div>
         </div>
-        <button
-          className="admin-btn admin-btn-primary"
-          onClick={() => navigate("/admin/staff/new")}
-        >
+        <button className="admin-btn admin-btn-primary" onClick={() => navigate('/admin/staff/new')}>
           <i className="fas fa-user-plus"></i>
           Thêm nhân viên
         </button>
@@ -240,29 +208,23 @@ const StaffManagement = () => {
             onChange={(e) => setStationFilter(e.target.value)}
             disabled={loadingStations}
           >
-            <option value="all">
-              {loadingStations ? 'Đang tải...' : 'Tất cả trạm'}
-            </option>
-            {stations.map((station) => (
-              <option key={station.id} value={station.id}>
-                {station.name}
-              </option>
+            <option value="all">{loadingStations ? 'Đang tải...' : 'Tất cả trạm'}</option>
+            {stations.map(st => (
+              <option key={st.id} value={st.id}>{st.name}</option>
             ))}
           </select>
 
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="active">Đang làm việc</option>
+            <option value="inactive">Ngưng làm</option>
+            <option value="all">Tất cả trạng thái</option>
+          </select>
+
           <div className="view-mode-toggle">
-            <button
-              className={viewMode === 'grid' ? 'active' : ''}
-              onClick={() => setViewMode('grid')}
-              title="Xem dạng lưới"
-            >
+            <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} title="Xem dạng lưới">
               <i className="fas fa-th-large"></i>
             </button>
-            <button
-              className={viewMode === 'table' ? 'active' : ''}
-              onClick={() => setViewMode('table')}
-              title="Xem dạng bảng"
-            >
+            <button className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')} title="Xem dạng bảng">
               <i className="fas fa-list"></i>
             </button>
           </div>
@@ -287,45 +249,40 @@ const StaffManagement = () => {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="staff-grid">
-          {filteredStaff.map((staffMember) => (
-            <div key={staffMember.id} className="staff-card">
+          {filteredStaff.map((s) => (
+            <div key={s.id} className="staff-card">
               <div className="staff-card-header">
                 <div className="staff-avatar-large">
-                  {staffMember.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  {s.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
-                {getStatusBadge(toLower(staffMember.status))}
+                {getStatusBadge(s.status)}
               </div>
 
               <div className="staff-card-body">
-                <h3 className="staff-card-name">{staffMember.name}</h3>
-                <p className="staff-card-id">ID: {staffMember.id}</p>
-                <p className="staff-card-position"><i className="fas fa-briefcase"></i>{staffMember.position}</p>
-                <p className="staff-card-station"><i className="fas fa-map-marker-alt"></i>{stationLabel(staffMember)}</p>
-                <p className="staff-card-contact"><i className="fas fa-envelope"></i>{staffMember.email}</p>
-                <p className="staff-card-contact"><i className="fas fa-phone"></i>{staffMember.phone}</p>
+                <h3 className="staff-card-name">{s.name}</h3>
+                <p className="staff-card-id">ID: {s.id}</p>
+                <p className="staff-card-position"><i className="fas fa-briefcase"></i>{s.position}</p>
+                <p className="staff-card-station"><i className="fas fa-map-marker-alt"></i>{stationLabel(s)}</p>
+                <p className="staff-card-contact"><i className="fas fa-envelope"></i>{s.email}</p>
+                <p className="staff-card-contact"><i className="fas fa-phone"></i>{s.phone}</p>
                 <p className="staff-card-join-date">
                   <i className="fas fa-calendar-alt"></i>
-                  Tham gia: {staffMember.joinDate ? new Date(staffMember.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
+                  Tham gia: {s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
                 </p>
 
                 <div className="staff-card-footer">
-                  <button
-                    className="staff-btn-detail"
-                    onClick={() => navigate(`/admin/staff/${staffMember.id}`)}
-                  >
-                    <i className="fas fa-eye"></i>
-                    Xem chi tiết
+                  <button className="staff-btn-detail" onClick={() => navigate(`/admin/staff/${s.id}`)}>
+                    <i className="fas fa-eye"></i> Xem chi tiết
                   </button>
-
                   <button
                     className="staff-btn-danger"
                     onClick={async () => {
-                      if (!window.confirm(`Xóa nhân viên "${staffMember.name}" (ID: ${staffMember.id})?`)) return;
+                      if (!window.confirm(`Xóa nhân viên "${s.name}" (ID: ${s.id})?`)) return
                       try {
-                        await deleteStaff(staffMember.id);
-                        setStaff(prev => prev.filter(s => s.id !== staffMember.id));
+                        await deleteStaff(s.id)
+                        setStaff(prev => prev.filter(x => x.id !== s.id))
                       } catch (e) {
-                        alert("❌ Không thể xóa nhân viên: " + (e?.message || "Lỗi không xác định"));
+                        alert('❌ Không thể xóa nhân viên: ' + (e?.message || 'Lỗi không xác định'))
                       }
                     }}
                   >
@@ -338,68 +295,83 @@ const StaffManagement = () => {
         </div>
       ) : (
         <div className="staff-table-container">
-          <table className="staff-table">
+          <table className="staff-table modern">
+            {/* Cố định độ rộng từng cột để thẳng hàng tuyệt đối */}
+            <colgroup>
+              <col style={{ width: '72px' }} />
+              <col style={{ width: '260px' }} />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '280px' }} />
+              <col style={{ width: '150px' }} />
+              <col style={{ width: '130px' }} />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '120px' }} />
+            </colgroup>
+
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Nhân viên</th>
-                <th>Vị trí</th>
-                <th>Điểm làm việc</th>
-                <th>Số điện thoại</th>
-                <th>Ngày tham gia</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+                <th className="col-id">ID</th>
+                <th className="col-name">Nhân viên</th>
+                <th className="col-position">Vị trí</th>
+                <th className="col-station">Điểm làm việc</th>
+                <th className="col-phone">Số điện thoại</th>
+                <th className="col-join">Ngày tham gia</th>
+                <th className="col-status">Trạng thái</th>
+                <th className="col-actions">Hành động</th>
               </tr>
             </thead>
+
             <tbody>
-              {filteredStaff.map((staffMember) => (
-                <tr key={staffMember.id}>
-                  <td className="staff-id">{staffMember.id}</td>
-                  <td>
-                    <div className="staff-info-table">
+              {filteredStaff.map((s) => (
+                <tr key={s.id}>
+                  <td className="col-id staff-id">{s.id}</td>
+
+                  <td className="col-name">
+                    <div className="staff-info-table" style={{ minWidth: 0 }}>
                       <div className="staff-avatar-small">
-                        {staffMember.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        {s.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
-                      <div>
-                        <div className="staff-name-table">{staffMember.name}</div>
-                        <div className="staff-contact-table">
-                          <i className="fas fa-envelope"></i> {staffMember.email}
+                      <div className="cell-two-line" style={{ minWidth: 0 }}>
+                        <div className="staff-name-table truncate">{s.name}</div>
+                        <div className="staff-contact-table truncate">
+                          <i className="fas fa-envelope"></i> {s.email}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>{staffMember.position}</td>
-                  <td>
-                    <div className="station-badge">
+
+                  <td className="col-position truncate">{s.position}</td>
+
+                  <td className="col-station">
+                    <span className="station-badge" style={{ whiteSpace: 'nowrap', maxWidth: '100%' }}>
                       <i className="fas fa-map-marker-alt"></i>
-                      {stationLabel(staffMember)}
-                    </div>
+                      {stationLabel(s)}
+                    </span>
                   </td>
-                  <td className="staff-phone">{staffMember.phone}</td>
-                  <td className="staff-join-date">
-                    {staffMember.joinDate ? new Date(staffMember.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
+
+                  <td className="col-phone truncate">{s.phone}</td>
+
+                  <td className="col-join">
+                    {s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : 'N/A'}
                   </td>
-                  <td>{getStatusBadge(toLower(staffMember.status))}</td>
-                  <td>
+
+                  <td className="col-status">{getStatusBadge(s.status)}</td>
+
+                  <td className="col-actions">
                     <div className="action-buttons">
-                      <button
-                        className="btn-icon"
-                        title="Xem chi tiết"
-                        onClick={() => navigate(`/admin/staff/${staffMember.id}`)}
-                      >
+                      <button className="btn-icon" title="Xem chi tiết" onClick={() => navigate(`/admin/staff/${s.id}`)}>
                         <i className="fas fa-eye"></i>
                       </button>
-
                       <button
                         className="btn-icon danger"
                         title="Xóa nhân viên"
                         onClick={async () => {
-                          if (!window.confirm(`Xác nhận xóa nhân viên "${staffMember.name}"?`)) return;
+                          if (!window.confirm(`Xác nhận xóa nhân viên "${s.name}"?`)) return
                           try {
-                            await deleteStaff(staffMember.id);
-                            setStaff(prev => prev.filter(s => s.id !== staffMember.id));
+                            await deleteStaff(s.id)
+                            setStaff(prev => prev.filter(x => x.id !== s.id))
                           } catch (err) {
-                            alert("❌ Không thể xóa nhân viên: " + err.message);
+                            alert('❌ Không thể xóa nhân viên: ' + (err?.message || 'Lỗi không xác định'))
                           }
                         }}
                       >
