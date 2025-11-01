@@ -830,48 +830,55 @@ public class StaffAdminService {
     }
 
     public CreateStaffResponse createStaff(CreateStaffRequest req) {
-        // Chuẩn hoá role
-        String role = (req.getPosition() == null) ? "STAFF" : req.getPosition().trim().toUpperCase();
-        if (!"STAFF".equals(role) && !"ADMIN".equals(role)) {
-            throw new IllegalArgumentException("position phải là STAFF hoặc ADMIN");
+        final String role = "STAFF";
+        final String username = req.getUsername() == null ? null : req.getUsername().trim();
+        final String password = req.getPassword() == null ? null : req.getPassword().trim();
+        final String fullName = req.getFullName() == null ? null : req.getFullName().trim();
+        final String email    = (req.getEmail() == null || req.getEmail().trim().isEmpty()) ? null : req.getEmail().trim();
+        final String phone    = req.getPhone() == null ? null : req.getPhone().trim();
+        final String address  = req.getAddress() == null ? null : req.getAddress().trim();
+
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username là bắt buộc");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Password là bắt buộc");
+        }
+        final int stationId = req.getStationId();
+        if (stationId <= 0) {
+            throw new IllegalArgumentException("Vui lòng chọn trạm (stationId)");
         }
 
-        // Kiểm tra trùng username/email (nếu có)
-        userRepository.findByUsername(req.getUsername()).ifPresent(u -> {
+        // Kiểm tra trùng
+        userRepository.findByUsername(username).ifPresent(u -> {
             throw new IllegalArgumentException("Username đã tồn tại");
         });
-        if (req.getEmail() != null) {
-            userRepository.findByEmail(req.getEmail()).ifPresent(u -> {
+        if (email != null) {
+            userRepository.findByEmail(email).ifPresent(u -> {
                 throw new IllegalArgumentException("Email đã tồn tại");
             });
         }
 
-        // Map vào entity User đúng theo DB (username/password bắt buộc)
+        Station station = stationRepository.findById(stationId)
+                .orElseThrow(() -> new IllegalArgumentException("Station không tồn tại"));
+
         User user = new User();
-        user.setUsername(req.getUsername());
-        user.setPassword(req.getPassword());
-        user.setFullName(req.getFullName());
-        user.setEmail(req.getEmail());
-        user.setPhone(req.getPhone());
-        user.setAddress(req.getAddress());
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setAddress(address);
         user.setRole(role);
         user.setStatus("ACTIVE");
 
         User saved = userRepository.save(user);
 
-        // Nếu là STAFF → gắn trạm (Employee_Detail: FK NOT NULL)
-        Station station = null;
-        if ("STAFF".equals(role)) {
-            station = stationRepository.findById(req.getStationId())
-                    .orElseThrow(() -> new IllegalArgumentException("Station không tồn tại"));
+        EmployeeDetail detail = new EmployeeDetail();
+        detail.setEmployee(saved);
+        detail.setStation(station);
+        employeeDetailRepository.save(detail);
 
-            EmployeeDetail detail = new EmployeeDetail();
-            detail.setEmployee(saved); // @MapsId → employee_id = user_id
-            detail.setStation(station);
-            employeeDetailRepository.save(detail);
-        }
-
-        // Trả về StaffItem (đơn giản, đúng với response bạn đã có)
         return CreateStaffResponse.builder()
                 .id(saved.getUserId())
                 .username(saved.getUsername())
@@ -881,8 +888,8 @@ public class StaffAdminService {
                 .address(saved.getAddress())
                 .position(saved.getRole())
                 .status(saved.getStatus())
-                .stationId(station != null ? station.getStationId() : null)
-                .stationName(station != null ? station.getStationName() : null)
+                .stationId(station.getStationId())
+                .stationName(station.getStationName())
                 .createdAt(saved.getCreatedAt())
                 .build();
     }
