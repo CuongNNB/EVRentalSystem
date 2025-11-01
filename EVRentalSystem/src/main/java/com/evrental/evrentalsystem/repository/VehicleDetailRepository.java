@@ -101,38 +101,70 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
 
     Optional<VehicleDetail> findById(Integer id);
     @Query("""
-    select
-        v.id            as id,
-        v.licensePlate  as licensePlate,
-        vm.model        as model,
-        vm.brand        as brand,
-        v.status        as status,
-        s.stationId     as stationId,
-        s.stationName   as stationName,
-        v.odo           as odo
-    from VehicleDetail v
-    join v.vehicleModel vm
-    join v.station s
-    where (:status    is null or upper(v.status) = upper(:status))
-      and (:stationId is null or s.stationId = :stationId)
-      and (:brand     is null or lower(vm.brand) like lower(concat('%', :brand, '%')))
-      and (:model     is null or lower(vm.model) like lower(concat('%', :model, '%')))
-      and (
-         :q is null
-         or lower(v.licensePlate) like lower(concat('%', :q, '%'))
-         or lower(vm.model)       like lower(concat('%', :q, '%'))
-         or lower(vm.brand)       like lower(concat('%', :q, '%'))
-         or lower(s.stationName)  like lower(concat('%', :q, '%'))
-      )
+select
+    v.id                            as id,
+    v.licensePlate                  as licensePlate,
+    vm.model                        as model,
+    vm.brand                        as brand,
+    v.status                        as status,
+    s.stationId                     as stationId,
+    s.stationName                   as stationName,
+    v.odo                           as odo,
+    coalesce(v.picture, vm.picture) as picture,
+    vm.vehicleId                    as vehicleId
+from VehicleDetail v
+join v.vehicleModel vm
+join v.station s
+where (:status    is null or upper(v.status) = upper(:status))
+  and (:stationId is null or s.stationId = :stationId)
+  and (:brand     is null or lower(vm.brand) like lower(concat('%', :brand, '%')))
+  and (:model     is null or lower(vm.model) like lower(concat('%', :model, '%')))
+  and (
+     :q is null
+     or lower(v.licensePlate) like lower(concat('%', :q, '%'))
+     or lower(vm.model)       like lower(concat('%', :q, '%'))
+     or lower(vm.brand)       like lower(concat('%', :q, '%'))
+     or lower(s.stationName)  like lower(concat('%', :q, '%'))
+  )
 """)
     Page<VehicleListProjection> searchVehicleList(
-            @Param("q")         String q,
-            @Param("status")    String status,
+            @Param("q") String q,
+            @Param("status") String status,
             @Param("stationId") Integer stationId,
-            @Param("brand")     String brand,
-            @Param("model")     String model,
+            @Param("brand") String brand,
+            @Param("model") String model,
             Pageable pageable
     );
 
+
+    // === ADD: Distinct brands (optional filter by status, station) ===
+    @Query("""
+    select distinct vm.brand
+    from VehicleDetail v
+    join v.vehicleModel vm
+    where (:status    is null or upper(v.status) = upper(:status))
+      and (:stationId is null or v.station.stationId = :stationId)
+    order by vm.brand
+""")
+    List<String> findDistinctBrands(
+            @Param("status") String status,
+            @Param("stationId") Integer stationId
+    );
+
+    // === ADD: Distinct models (optional filter by brand, status, station) ===
+    @Query("""
+    select distinct vm.model
+    from VehicleDetail v
+    join v.vehicleModel vm
+    where (:brand     is null or lower(vm.brand) like lower(concat('%', :brand, '%')))
+      and (:status    is null or upper(v.status) = upper(:status))
+      and (:stationId is null or v.station.stationId = :stationId)
+    order by vm.model
+""")
+    List<String> findDistinctModels(
+            @Param("brand") String brand,
+            @Param("status") String status,
+            @Param("stationId") Integer stationId
+    );
 
 }

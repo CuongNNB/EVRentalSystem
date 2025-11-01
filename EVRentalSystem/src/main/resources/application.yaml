@@ -4,15 +4,21 @@ spring:
     username: sa
     password: 12345
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
   servlet:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+
   jpa:
     hibernate:
       ddl-auto: none
     database-platform: org.hibernate.dialect.SQLServerDialect
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true   # in SQL có xuống dòng, dễ đọc
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -24,17 +30,20 @@ spring:
           auth: true
           starttls:
             enable: true
+
+  messages:
+    encoding: UTF-8
+
 server:
   port: 8084
   servlet:
     context-path: /EVRentalSystem
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
-vnpay:
-  tmnCode: "WWYAFHXG"                       # Mã Website (Terminal ID)
-  hashSecret: "CVUVWHGDBZLNQ7J6N7ZDJN1THFD2BHOV" # Chuỗi bí mật tạo checksum
-  payUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # URL thanh toán môi trường TEST
-  returnUrl: "http://localhost:8084/EVRentalSystem/api/vnpay/return"  # URL redirect sau khi thanh toán (client-side)
-  ipnUrl: "http://localhost:8084/EVRentalSystem/api/vnpay/ipn"        # URL nhận thông báo IPN (server-to-server)
-
-
-
+logging:
+  level:
+    org.hibernate.SQL: DEBUG                 # hiện câu SQL
+    org.hibernate.orm.jdbc.bind: TRACE      # hiện giá trị tham số bind

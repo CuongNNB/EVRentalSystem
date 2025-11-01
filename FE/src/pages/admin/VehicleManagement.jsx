@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getVehicleList, getVehicleStats, getVehicleModels, getVehicleBrands } from '../../api/adminVehicles'
+import { getVehicleStats, getVehicleModels, getVehicleBrands } from '../../api/adminVehicles'
 import { getStationOptions } from '../../api/adminDashboard'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import './AdminDashboardNew.css'
@@ -17,6 +17,10 @@ import './VehicleManagement.css'
 
 const VehicleManagement = () => {
   const navigate = useNavigate()
+  
+  // Backend URL cho ảnh
+  const BACKEND_BASE_URL = 'http://localhost:8084/EVRentalSystem'
+  
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -52,34 +56,83 @@ const VehicleManagement = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Fetch vehicles
+  // Fetch vehicles - Gọi API trực tiếp theo yêu cầu
   const fetchVehicles = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await getVehicleList({
-        page,
-        size,
-        q: debouncedSearch,
-        status: statusFilter,
-        stationId: stationFilter,
-        brand: brandFilter,
-        model: modelFilter,
-      })
+      // Build query params
+      const params = new URLSearchParams()
+      params.append('page', page.toString())
+      params.append('size', size.toString())
+      if (debouncedSearch) params.append('q', debouncedSearch)
+      if (statusFilter) params.append('status', statusFilter)
+      if (stationFilter) params.append('stationId', stationFilter.toString())
+      if (brandFilter) params.append('brand', brandFilter)
+      if (modelFilter) params.append('model', modelFilter)
+      
+      // Gọi API: GET http://localhost:8084/EVRentalSystem/api/vehicle/vehicles
+      const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?${params.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      // Xử lý response - có thể là paginated hoặc array
+      let processedData
+      if (data.content !== undefined) {
+        // Paginated format
+        processedData = data
+      } else if (Array.isArray(data)) {
+        // Array format - wrap vào paginated format
+        processedData = {
+          content: data,
+          totalElements: data.length,
+          totalPages: Math.ceil(data.length / size),
+          number: page,
+          size: size
+        }
+      } else {
+        // Invalid format
+        processedData = { content: [], totalElements: 0, totalPages: 0, number: page, size: size }
+      }
 
-      setVehicles(data.content || [])
-      setTotalPages(data.totalPages || 0)
-      setTotalElements(data.totalElements || 0)
+      setVehicles(processedData.content || [])
+      setTotalPages(processedData.totalPages || 0)
+      setTotalElements(processedData.totalElements || 0)
 
       // Fallback: if models/brands chưa có (API riêng lỗi), lấy từ danh sách
-      const list = Array.isArray(data?.content) ? data.content : []
+      const list = Array.isArray(processedData?.content) ? processedData.content : []
+      
+      // Debug: Kiểm tra dữ liệu từ API - CHI TIẾT
+      if (list.length > 0) {
+        console.log('[VehicleManagement] ===== API RESPONSE DEBUG =====')
+        console.log('[VehicleManagement] Sample vehicle data (full):', JSON.stringify(list[0], null, 2))
+        console.log('[VehicleManagement] Sample vehicle keys:', Object.keys(list[0] || {}))
+        console.log('[VehicleManagement] Sample picture value:', list[0]?.picture, '| type:', typeof list[0]?.picture)
+        console.log('[VehicleManagement] Sample vehicleId value:', list[0]?.vehicleId ?? list[0]?.vehicle_id, '| type:', typeof (list[0]?.vehicleId ?? list[0]?.vehicle_id))
+        console.log('[VehicleManagement] Total vehicles:', list.length)
+        console.log('[VehicleManagement] Vehicles with picture:', list.filter(v => v?.picture != null && v.picture !== '' && v.picture !== 'null').length, '/', list.length)
+        console.log('[VehicleManagement] Vehicles with vehicleId:', list.filter(v => (v?.vehicleId ?? v?.vehicle_id) != null).length, '/', list.length)
+        console.log('[VehicleManagement] First 3 vehicles image paths:', list.slice(0, 3).map(v => ({
+          id: v?.id,
+          licensePlate: v?.licensePlate,
+          picture: v?.picture,
+          vehicleId: v?.vehicleId ?? v?.vehicle_id,
+          calculatedPath: v?.picture ? `/carpic/${v.picture}` : ((v?.vehicleId ?? v?.vehicle_id) ? `/carpic/${v?.vehicleId ?? v?.vehicle_id}.jpg` : '/carpic/logo.png')
+        })))
+        console.log('[VehicleManagement] ===============================')
+      }
+      
       if (list.length) {
-        if (models.length === 0) {
-          const mset = [...new Set(list.map(v => v?.model).filter(Boolean))]
+        const mset = [...new Set(list.map(v => v?.model).filter(Boolean))]
+        const bset = [...new Set(list.map(v => v?.brand).filter(Boolean))]
+        if (mset.length > 0 && models.length === 0) {
           setModels(mset)
         }
-        if (brands.length === 0) {
-          const bset = [...new Set(list.map(v => v?.brand).filter(Boolean))]
+        if (bset.length > 0 && brands.length === 0) {
           setBrands(bset)
         }
       }
@@ -90,7 +143,7 @@ const VehicleManagement = () => {
     } finally {
       setLoading(false)
     }
-  }, [page, size, debouncedSearch, statusFilter, stationFilter, brandFilter, modelFilter])
+  }, [page, size, debouncedSearch, statusFilter, stationFilter, brandFilter, modelFilter, brands.length, models.length])
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
@@ -337,59 +390,145 @@ const VehicleManagement = () => {
           </div>
         ) : (
           <>
-            <div className={`vehicles-${viewMode}`}>
+            <div className={viewMode === 'grid' ? 'vehicles-grid' : `vehicles-${viewMode}`}>
               {viewMode === 'grid'
-                ? vehicles.map((v) => (
-                    <article key={v.id} className="car-card">
+                ? vehicles.map((v) => {
+                    // Null-safe values
+                    const vehicleId = v?.id ?? v?.vehicleId ?? v?.vehicle_id ?? 'N/A'
+                    const licensePlate = v?.licensePlate ?? 'N/A'
+                    const model = v?.model ?? 'N/A'
+                    const brand = v?.brand ?? 'VinFast'
+                    const status = v?.status ?? 'UNKNOWN'
+                    const odo = v?.odo ?? 0
+                    const stationName = v?.stationName ?? 'N/A'
+                    
+                    // Logic ảnh: ưu tiên FE public, fallback backend, cuối cùng default.jpg
+                    const picture = v?.picture
+                    const vehicleIdForImage = v?.vehicleId ?? v?.vehicle_id ?? vehicleId
+                    
+                    // Helper: normalize picture name (thêm .jpg nếu chưa có extension)
+                    const normalizePicture = (pic) => {
+                      if (!pic || pic === '' || pic === 'null') return null
+                      const picStr = String(pic).trim()
+                      // Nếu đã có extension, giữ nguyên
+                      if (picStr.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        return picStr
+                      }
+                      // Nếu chưa có extension, thêm .jpg
+                      return `${picStr}.jpg`
+                    }
+                    
+                    // Ưu tiên 1: picture từ FE public (vì backend có thể không serve được)
+                    const normalizedPic = normalizePicture(picture)
+                    let imageSrc = normalizedPic ? `/carpic/${normalizedPic}` : null
+                    
+                    // Ưu tiên 2: vehicleId từ FE public
+                    if (!imageSrc && vehicleIdForImage) {
+                      imageSrc = `/carpic/${vehicleIdForImage}.jpg`
+                    }
+                    
+                    // Ưu tiên 3: picture từ backend
+                    if (!imageSrc && normalizedPic) {
+                      imageSrc = `${BACKEND_BASE_URL}/carpic/${normalizedPic}`
+                    }
+                    
+                    // Ưu tiên 4: vehicleId từ backend
+                    if (!imageSrc && vehicleIdForImage) {
+                      imageSrc = `${BACKEND_BASE_URL}/carpic/${vehicleIdForImage}.jpg`
+                    }
+                    
+                    // Fallback cuối cùng: default.jpg từ FE
+                    if (!imageSrc) {
+                      imageSrc = '/carpic/default.jpg'
+                    }
+                    
+                    return (
+                    <article key={vehicleId} className="car-card">
                       <div className="car-card__media">
                         <img
-                          src={v.imageUrl || v.image || `http://localhost:8084/EVRentalSystem${v.imagePath}` || `/anhxe/${v.model}.jpg`}
-                          alt={v.model}
+                          src={imageSrc}
+                          alt={`${brand} ${model}`}
                           className="car-card__image"
                           loading="lazy"
                           onError={(e) => {
-                            if (!e.currentTarget.dataset.fallback) {
+                            const currentSrc = e.currentTarget.src
+                            const fallbackLevel = e.currentTarget.dataset.fallback || '0'
+                            
+                            console.error(`[Image Error] Failed: ${currentSrc} (fallback: ${fallbackLevel})`, {
+                              vehicleId,
+                              picture,
+                              vehicleIdForImage
+                            })
+                            
+                            // Fallback chain: thử tất cả các option
+                            const normalizedPic = picture && picture !== '' && picture !== 'null'
+                              ? (String(picture).trim().match(/\.(jpg|jpeg|png|gif|webp)$/i)
+                                  ? String(picture).trim()
+                                  : `${String(picture).trim()}.jpg`)
+                              : null
+                            
+                            // Thử 1: Nếu đang dùng FE path, thử backend
+                            if (fallbackLevel === '0' && currentSrc.startsWith('/carpic/')) {
                               e.currentTarget.dataset.fallback = '1'
-                              e.currentTarget.src = `/anhxe/${v.model}.jpg`
-                            } else if (e.currentTarget.dataset.fallback === '1') {
+                              if (normalizedPic) {
+                                e.currentTarget.src = `${BACKEND_BASE_URL}/carpic/${normalizedPic}`
+                                return
+                              }
+                              if (vehicleIdForImage) {
+                                e.currentTarget.src = `${BACKEND_BASE_URL}/carpic/${vehicleIdForImage}.jpg`
+                                return
+                              }
+                            }
+                            
+                            // Thử 2: Nếu đang dùng backend, thử lại FE với vehicleId
+                            if (fallbackLevel === '0' || fallbackLevel === '1') {
                               e.currentTarget.dataset.fallback = '2'
-                              e.currentTarget.src = '/carpic/logo.png'
+                              if (vehicleIdForImage) {
+                                e.currentTarget.src = `/carpic/${vehicleIdForImage}.jpg`
+                                return
+                              }
+                            }
+                            
+                            // Cuối cùng: default.jpg
+                            if (fallbackLevel !== '3') {
+                              e.currentTarget.dataset.fallback = '3'
+                              e.currentTarget.src = '/carpic/default.jpg'
                             }
                           }}
                         />
-                        <span className={`vehicle-status-badge ${getStatusBadgeClass(v.status)}`}>
-                          {getStatusLabel(v.status)}
+                        <span className={`vehicle-status-badge ${getStatusBadgeClass(status)}`}>
+                          {getStatusLabel(status)}
                         </span>
                       </div>
 
                       <div className="car-card__header">
                         <div>
-                          <h3 className="car-card__name">{v.model}</h3>
-                          <p className="car-card__subtitle">{v.brand || 'VinFast'}</p>
+                          <h3 className="car-card__name">{model}</h3>
+                          <p className="car-card__subtitle">{brand}</p>
                         </div>
                       </div>
 
                       <div className="car-card__license">
                         <i className="fas fa-id-card"></i>
-                        <span>{v.licensePlate}</span>
+                        <span>{licensePlate}</span>
                       </div>
 
                       <ul className="car-card__features">
                         <li className="car-card__feature">
                           <i className="fas fa-map-marker-alt car-card__feature-icon"></i>
-                          {v.stationName || 'N/A'}
+                          {stationName}
                         </li>
                         <li className="car-card__feature">
-                          <i className="fas fa-battery-three-quarters car-card__feature-icon"></i>
-                          Pin: {v.battery || 0}%
+                          <i className="fas fa-tachometer-alt car-card__feature-icon"></i>
+                          ODO: {odo.toLocaleString('vi-VN')} km
                         </li>
                       </ul>
 
                       <div className="car-card__actions">
                         <button
                           className="car-card__cta car-card__cta--primary"
-                          onClick={() => navigate(`/admin/vehicles/${v.id}`)}
-                          aria-label={`Xem chi tiết xe ${v.licensePlate || v.id}`}
+                          onClick={() => navigate(`/admin/vehicles/${vehicleId}`)}
+                          aria-label={`Xem chi tiết xe ${licensePlate}`}
                           title="Xem chi tiết"
                         >
                           <i className="fas fa-eye"></i>
@@ -397,8 +536,8 @@ const VehicleManagement = () => {
                         </button>
                         <button
                           className="car-card__cta car-card__cta--secondary"
-                          onClick={() => navigate(`/admin/vehicles/${v.id}/edit`)}
-                          aria-label={`Chỉnh sửa xe ${v.licensePlate || v.id}`}
+                          onClick={() => navigate(`/admin/vehicles/${vehicleId}/edit`)}
+                          aria-label={`Chỉnh sửa xe ${licensePlate}`}
                           title="Chỉnh sửa"
                         >
                           <i className="fas fa-pencil-alt"></i>
@@ -406,7 +545,8 @@ const VehicleManagement = () => {
                         </button>
                       </div>
                     </article>
-                  ))
+                    )
+                  })
                 : null}
 
               {viewMode === 'list' ? (
