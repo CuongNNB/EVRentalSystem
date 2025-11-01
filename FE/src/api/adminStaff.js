@@ -13,7 +13,8 @@ const asArray = (payload) => {
 /** GET /admin/staff (list nhân viên) */
 export async function getStaff(params = {}) {
   const { data } = await api.get("/admin/staff", { params });
-  return asArray(data);
+  const arr = asArray(data);
+  return arr.filter(x => String(x.status || "").toUpperCase() === "ACTIVE");
 }
 
 /** GET /admin/staff/:id */
@@ -62,23 +63,16 @@ export async function getStations(filters = {}) {
   return getStationsForSelect(filters);
 }
 
-export async function getStaffStats(filters = {}) {
-  try {
-    const list = await getStaff({ ...filters, page: 1, size: 10000 });
-    const norm = (s) => (s ?? "").toString().trim().toLowerCase();
-    const total = list.length;
-    const active = list.filter((x) => norm(x.status) === "active").length;
-    const onLeave = list.filter((x) => norm(x.status) === "on-leave").length;
-    return { total, active, onLeave };
-  } catch {
-    return { total: 0, active: 0, onLeave: 0 };
-  }
+export async function getStaffStats() {
+  const list = await getStaff({ page: 1, size: 10000 });
+  const total = list.length;
+  return { total, active: total };
 }
 
 export async function createStaff(payload) {
   const body = {
     username: payload.username?.trim(),
-    password: payload.password, 
+    password: payload.password,
     fullName: payload.fullName?.trim(),
     email: payload.email || null,
     phone: payload.phone || null,
@@ -87,4 +81,9 @@ export async function createStaff(payload) {
   };
   const { data } = await api.post("/admin/staff", body);
   return data;
+}
+
+export async function deleteStaff(id) {
+  const res = await api.delete(`/admin/staff/${id}`);
+  return res.status >= 200 && res.status < 300;
 }

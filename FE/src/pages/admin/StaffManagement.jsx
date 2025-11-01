@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 
 
-import { getStaff, getStaffStats, getStations } from '../../api/adminStaff'
+import { getStaff, getStaffStats, getStations, deleteStaff } from '../../api/adminStaff'
 import './AdminDashboardNew.css'
 import './StaffManagement.css'
 
@@ -23,15 +23,15 @@ const StaffManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [stationFilter, setStationFilter] = useState('all')
   const [positionFilter, setPositionFilter] = useState('all')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [viewMode, setViewMode] = useState('grid') // grid or table
+  const [statusFilter, setStatusFilter] = useState("active");
+  const [viewMode, setViewMode] = useState('grid')
 
 
   // State for API data
   const [staff, setStaff] = useState([])
   const [stations, setStations] = useState([])
   const [positions, setPositions] = useState([])
-  const [stats, setStats] = useState({ total: 0, active: 0, onLeave: 0 })
+  const [stats, setStats] = useState({ total: 0, active: 0 });
 
   // Loading states
   const [loadingStaff, setLoadingStaff] = useState(true)
@@ -95,7 +95,13 @@ const StaffManagement = () => {
     }
   }, [staff]);
 
-
+  useEffect(() => {
+    const norm = (s) => (s ?? "").toString().trim().toLowerCase();
+    setStats({
+      total: staff.length,
+      active: staff.filter(x => norm(x.status) === "active").length,
+    });
+  }, [staff]);
 
   const stationFilterNum = stationFilter === 'all' ? 'all' : Number(stationFilter)
 
@@ -120,15 +126,16 @@ const StaffManagement = () => {
     return matchSearch && matchStation && matchPosition && matchStatus
   })
 
-
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'active': return <span className="staff-status active">Đang làm việc</span>
-      case 'on-leave': return <span className="staff-status on-leave">Nghỉ phép</span>
-      case 'inactive': return <span className="staff-status inactive">Ngưng làm</span>
-      default: return <span className="staff-status">{status}</span>
+      case 'active':
+        return <span className="staff-status active">Đang làm việc</span>;
+      case 'inactive':
+        return <span className="staff-status inactive">Ngưng làm</span>;
+      default:
+        return <span className="staff-status">{status}</span>;
     }
-  }
+  };
 
   return (
     <ErrorBoundary>
@@ -159,7 +166,7 @@ const StaffManagement = () => {
       </div>
 
       {/* Stats */}
-      <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
         <div className="stat-card" style={{ borderTop: '4px solid #3b82f6' }}>
           <div className="kpi-card-content">
             <span className="kpi-icon" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
@@ -171,6 +178,7 @@ const StaffManagement = () => {
             </div>
           </div>
         </div>
+
         <div className="stat-card" style={{ borderTop: '4px solid #10b981' }}>
           <div className="kpi-card-content">
             <span className="kpi-icon" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
@@ -179,17 +187,6 @@ const StaffManagement = () => {
             <div className="kpi-info">
               <h3 className="kpi-title">ĐANG LÀM VIỆC</h3>
               <div className="kpi-value">{loadingStats ? <i className="fas fa-spinner fa-spin"></i> : stats.active}</div>
-            </div>
-          </div>
-        </div>
-        <div className="stat-card" style={{ borderTop: '4px solid #f59e0b' }}>
-          <div className="kpi-card-content">
-            <span className="kpi-icon" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
-              <i className="fas fa-user-clock" style={{ color: '#f59e0b' }}></i>
-            </span>
-            <div className="kpi-info">
-              <h3 className="kpi-title">NGHỈ PHÉP</h3>
-              <div className="kpi-value">{loadingStats ? <i className="fas fa-spinner fa-spin"></i> : stats.onLeave}</div>
             </div>
           </div>
         </div>
@@ -218,13 +215,6 @@ const StaffManagement = () => {
           <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}>
             <option value="all">Tất cả vị trí</option>
             {positions.map(pos => (<option key={pos} value={pos}>{pos}</option>))}
-          </select>
-
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">Tất cả trạng thái</option>
-            <option value="active">Đang làm việc</option>
-            <option value="on-leave">Nghỉ phép</option>
-            <option value="inactive">Ngưng làm</option>
           </select>
 
           <div className="view-mode-toggle">
@@ -285,6 +275,21 @@ const StaffManagement = () => {
                     <i className="fas fa-eye"></i>
                     Xem chi tiết
                   </button>
+
+                  <button
+                    className="staff-btn-danger"
+                    onClick={async () => {
+                      if (!window.confirm(`Xóa nhân viên "${staffMember.name}" (ID: ${staffMember.id})?`)) return;
+                      try {
+                        await deleteStaff(staffMember.id);
+                        setStaff(prev => prev.filter(s => s.id !== staffMember.id));
+                      } catch (e) {
+                        alert("❌ Không thể xóa nhân viên: " + (e?.message || "Lỗi không xác định"));
+                      }
+                    }}
+                  >
+                    <i className="fas fa-trash"></i> Xóa
+                  </button>
                 </div>
               </div>
             </div>
@@ -342,6 +347,22 @@ const StaffManagement = () => {
                         onClick={() => navigate(`/admin/staff/${staffMember.id}`)}
                       >
                         <i className="fas fa-eye"></i>
+                      </button>
+
+                      <button
+                        className="btn-icon danger"
+                        title="Xóa nhân viên"
+                        onClick={async () => {
+                          if (!window.confirm(`Xác nhận xóa nhân viên "${staffMember.name}"?`)) return;
+                          try {
+                            await deleteStaff(staffMember.id);
+                            setStaff(prev => prev.filter(s => s.id !== staffMember.id));
+                          } catch (err) {
+                            alert("❌ Không thể xóa nhân viên: " + err.message);
+                          }
+                        }}
+                      >
+                        <i className="fas fa-trash"></i>
                       </button>
                     </div>
                   </td>
