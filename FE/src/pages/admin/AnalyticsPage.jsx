@@ -84,6 +84,7 @@ const AnalyticsPage = () => {
 
       return matchKw && matchStation && matchStatus
     })
+    .sort((a, b) => Number(a.id) - Number(b.id))
   }, [staff, keyword, stationId, status])
 
   const exportExcel = () => {
@@ -98,7 +99,6 @@ const AnalyticsPage = () => {
         alert('Không có dữ liệu để xuất.');
         return;
       }
-
       const rows = source.map((s, idx) => ({
         STT: idx + 1,
         ID: s?.id ?? '',
