@@ -10,11 +10,35 @@ const asArray = (payload) => {
   return [];
 };
 
+/** Làm sạch params trước khi gửi */
+const buildParams = (params = {}) => {
+  const p = { ...params };
+
+  // status: 'active' | 'inactive' | 'all' -> BE nhận 'ACTIVE'/'INACTIVE' hoặc bỏ qua
+  if (p.status) {
+    if (String(p.status).toLowerCase() === "all") delete p.status;
+    else p.status = String(p.status).toUpperCase();
+  }
+
+  // stationId: 'all' -> bỏ, còn lại ép về number
+  if (p.stationId != null && p.stationId !== "all") {
+    p.stationId = Number(p.stationId);
+  } else {
+    delete p.stationId;
+  }
+
+  // search
+  if (p.search && !String(p.search).trim()) delete p.search;
+
+  return p;
+};
+
 /** GET /admin/staff (list nhân viên) */
 export async function getStaff(params = {}) {
-  const { data } = await api.get("/admin/staff", { params });
-  const arr = asArray(data);
-  return arr.filter(x => String(x.status || "").toUpperCase() === "ACTIVE");
+  const cleaned = buildParams(params);
+  const { data } = await api.get("/admin/staff", { params: cleaned });
+  // KHÔNG lọc cứng ACTIVE nữa
+  return asArray(data);
 }
 
 /** GET /admin/staff/:id */
@@ -37,6 +61,7 @@ export async function transferStation(staffId, stationId) {
   return data;
 }
 
+/** Lấy tất cả trạm (any shape) */
 export async function getAllStationsAny() {
   try {
     const { data } = await api.get("/stations");
@@ -50,7 +75,7 @@ export async function getAllStationsAny() {
   }
 }
 
-/** Dành cho dropdown chọn trạm (chuẩn hoá + sort) */
+/** Dropdown trạm */
 export async function getStationsForSelect() {
   const stations = await getAllStationsAny();
   return stations
@@ -63,10 +88,15 @@ export async function getStations(filters = {}) {
   return getStationsForSelect(filters);
 }
 
+/** Stats đơn giản – tính từ cả ACTIVE & INACTIVE */
 export async function getStaffStats() {
-  const list = await getStaff({ page: 1, size: 10000 });
-  const total = list.length;
-  return { total, active: total };
+  const [active, inactive] = await Promise.all([
+    getStaff({ status: "ACTIVE", page: 1, size: 10000 }),
+    getStaff({ status: "INACTIVE", page: 1, size: 10000 }),
+  ]);
+  const a = active.length;
+  const i = inactive.length;
+  return { total: a + i, active: a };
 }
 
 export async function createStaff(payload) {
