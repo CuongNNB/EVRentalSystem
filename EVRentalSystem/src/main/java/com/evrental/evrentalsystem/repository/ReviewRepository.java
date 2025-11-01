@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
     Optional<Review> findByBooking_BookingId(Integer bookingId);
+    boolean existsByBooking_BookingId(Integer bookingId);
 }
