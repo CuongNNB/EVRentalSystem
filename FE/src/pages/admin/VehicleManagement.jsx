@@ -526,22 +526,13 @@ const VehicleManagement = () => {
 
                       <div className="car-card__actions">
                         <button
-                          className="car-card__cta car-card__cta--primary"
+                          className="car-card__cta car-card__cta--primary car-card__cta--view-detail"
                           onClick={() => navigate(`/admin/vehicles/${vehicleId}`)}
                           aria-label={`Xem chi tiết xe ${licensePlate}`}
                           title="Xem chi tiết"
                         >
                           <i className="fas fa-eye"></i>
                           <span>Xem chi tiết</span>
-                        </button>
-                        <button
-                          className="car-card__cta car-card__cta--secondary"
-                          onClick={() => navigate(`/admin/vehicles/${vehicleId}/edit`)}
-                          aria-label={`Chỉnh sửa xe ${licensePlate}`}
-                          title="Chỉnh sửa"
-                        >
-                          <i className="fas fa-pencil-alt"></i>
-                          <span>Chỉnh sửa</span>
                         </button>
                       </div>
                     </article>

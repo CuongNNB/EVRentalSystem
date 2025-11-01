@@ -47,6 +47,8 @@ import CustomerManagement from "./pages/admin/CustomerManagement";
 import CustomerDetailManagement from './pages/admin/CustomerDetailManagement'
 import StaffManagement from "./pages/admin/StaffManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
+import AdminVehicleDetail from "./pages/admin/AdminVehicleDetail";
+import AdminVehicleEdit from "./pages/admin/AdminVehicleEdit";
 import StaffDetailPage from "./components/admin/StaffDetailPage";
 import AddStaffPage from "./components/admin/AddStaffPage";
 
@@ -106,6 +108,8 @@ function App() {
                                 <Route path="customers" element={<CustomerManagement/>}/>
                                 <Route path="staff" element={<StaffManagement/>}/>
                                 <Route path="vehicles" element={<VehicleManagement/>}/>
+                                <Route path="vehicles/:id" element={<AdminVehicleDetail/>}/>
+                                <Route path="vehicles/:id/edit" element={<AdminVehicleEdit/>}/>
                                 <Route path="staff/:id" element={<StaffDetailPage/>}/>
                                 <Route path="staff/new" element={<AddStaffPage/>}/>
                                 <Route path="/admin/customers/:userId" element={<CustomerDetailManagement/>}/>
