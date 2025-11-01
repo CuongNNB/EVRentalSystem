@@ -439,6 +439,7 @@ package com.evrental.evrentalsystem.service;
 import com.evrental.evrentalsystem.entity.EmployeeDetail;
 import com.evrental.evrentalsystem.entity.Station;
 import com.evrental.evrentalsystem.entity.User;
+import com.evrental.evrentalsystem.enums.StaffStatusEnum;
 import com.evrental.evrentalsystem.repository.EmployeeDetailRepository;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.UserRepository;
@@ -471,10 +472,10 @@ public class StaffAdminService {
                                           int page,
                                           int size) {
 
-        String normSearch   = normalize(search);
+        String normSearch = normalize(search);
         Integer normStation = stationId;
         String normPosition = normalize(position);
-        String normStatus   = normalize(status);
+        String normStatus = normalize(status);
         if (normStatus != null) normStatus = normStatus.toUpperCase();
 
         StringBuilder where = new StringBuilder(" WHERE u.[role] = 'STAFF' ");
@@ -483,7 +484,9 @@ public class StaffAdminService {
         if (normSearch != null) {
             where.append(" AND (u.[full_name] LIKE ? OR u.[email] LIKE ? OR CAST(u.[user_id] AS NVARCHAR(50)) LIKE ?) ");
             String like = "%" + normSearch + "%";
-            params.add(like); params.add(like); params.add(like);
+            params.add(like);
+            params.add(like);
+            params.add(like);
         }
         if (normStation != null) {
             where.append(" AND ed.[station_id] = ? ");
@@ -501,7 +504,7 @@ public class StaffAdminService {
 
         // Tính range phân trang
         int start = Math.max(1, (page <= 1 ? 1 : ((page - 1) * size + 1)));
-        int end   = start + Math.max(1, size) - 1;
+        int end = start + Math.max(1, size) - 1;
 
         // 1) Page data với ROW_NUMBER
         String pageSql =
@@ -626,7 +629,9 @@ public class StaffAdminService {
         return new StaffItemResponse(items, kpis, page, size, total);
     }
 
-    /** Detail 1 nhân viên (NO VIEW) */
+    /**
+     * Detail 1 nhân viên (NO VIEW)
+     */
     public StaffItemResponse.StaffItem getStaffDetail(int id) {
         String sql =
                 "SELECT " +
@@ -727,9 +732,18 @@ public class StaffAdminService {
             // 2) cập nhật bảng User
             StringBuilder sql = new StringBuilder("UPDATE [User] SET ");
             List<Object> sets = new ArrayList<>();
-            if (email != null) { sql.append(" [email] = ?,"); sets.add(email.trim()); }
-            if (phone != null) { sql.append(" [phone] = ?,"); sets.add(phone.trim()); }
-            if (status != null) { sql.append(" [status] = ?,"); sets.add(status.trim().toUpperCase()); }
+            if (email != null) {
+                sql.append(" [email] = ?,");
+                sets.add(email.trim());
+            }
+            if (phone != null) {
+                sql.append(" [phone] = ?,");
+                sets.add(phone.trim());
+            }
+            if (status != null) {
+                sql.append(" [status] = ?,");
+                sets.add(status.trim().toUpperCase());
+            }
 
             if (!sets.isEmpty()) {
                 sql.setLength(sql.length() - 1); // bỏ dấu phẩy cuối
@@ -834,9 +848,9 @@ public class StaffAdminService {
         final String username = req.getUsername() == null ? null : req.getUsername().trim();
         final String password = req.getPassword() == null ? null : req.getPassword().trim();
         final String fullName = req.getFullName() == null ? null : req.getFullName().trim();
-        final String email    = (req.getEmail() == null || req.getEmail().trim().isEmpty()) ? null : req.getEmail().trim();
-        final String phone    = req.getPhone() == null ? null : req.getPhone().trim();
-        final String address  = req.getAddress() == null ? null : req.getAddress().trim();
+        final String email = (req.getEmail() == null || req.getEmail().trim().isEmpty()) ? null : req.getEmail().trim();
+        final String phone = req.getPhone() == null ? null : req.getPhone().trim();
+        final String address = req.getAddress() == null ? null : req.getAddress().trim();
 
         if (username == null || username.isEmpty()) {
             throw new IllegalArgumentException("Username là bắt buộc");
@@ -892,5 +906,26 @@ public class StaffAdminService {
                 .stationName(station.getStationName())
                 .createdAt(saved.getCreatedAt())
                 .build();
+    }
+
+    public void deleteStaff(int userId) {
+        // 1) Tìm user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nhân viên không tồn tại"));
+
+        // 2) Chỉ cho phép xóa STAFF
+        String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
+        if (!"STAFF".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ được xóa tài khoản STAFF");
+        }
+
+        // 3) Nếu đã INACTIVE thì bỏ qua
+        if ("INACTIVE".equalsIgnoreCase(user.getStatus())) {
+            return;
+        }
+
+        // 4) Soft delete
+        user.setStatus(StaffStatusEnum.INACTIVE.name());
+        userRepository.save(user);
     }
 }

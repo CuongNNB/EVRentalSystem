@@ -141,4 +141,9 @@ public class StaffAdminController {
         CreateStaffResponse created = staffAdminService.createStaff(req);
         return ResponseEntity.ok(created);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStaff(@PathVariable int id) {
+        staffAdminService.deleteStaff(id);
+        return ResponseEntity.noContent().build();
+    }
 }
