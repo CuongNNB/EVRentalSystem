@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
+import * as XLSX from 'xlsx'
 
 
 import { getStaff, getStaffStats, getStations, deleteStaff } from '../../api/adminStaff'
@@ -136,6 +137,35 @@ const StaffManagement = () => {
         return <span className="staff-status">{status}</span>;
     }
   };
+  // đặt trong component StaffManagement (cùng cấp với các handler khác)
+  const exportStaffExcel = () => {
+    // map dữ liệu gọn – chỉ vài cột cần thiết
+    const rows = filteredStaff.map(s => ({
+      ID: s.id ?? '',
+      Name: s.name ?? '',
+      Email: s.email ?? '',
+      Position: s.position ?? '',
+      Station: stationLabel(s),
+      Phone: s.phone ?? '',
+      JoinDate: s.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '',
+      Status: (s.status ?? '').toString()
+    }))
+
+    // tạo worksheet & workbook
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Staff')
+
+    // auto width đơn giản
+    const header = Object.keys(rows[0] || {
+      ID: '', Name: '', Email: '', Position: '', Station: '', Phone: '', JoinDate: '', Status: ''
+    })
+    ws['!cols'] = header.map(() => ({ wch: 18 }))
+
+    // file name
+    const ts = new Date().toISOString().slice(0, 10)
+    XLSX.writeFile(wb, `Staff-${ts}.xlsx`)
+  }
 
   return (
     <ErrorBoundary>
@@ -205,29 +235,40 @@ const StaffManagement = () => {
         </div>
 
         <div className="staff-filters">
-          <select value={stationFilter} onChange={(e) => setStationFilter(e.target.value)} disabled={loadingStations}>
-            <option value="all">{loadingStations ? 'Đang tải...' : 'Tất cả trạm'}</option>
-            {stations.map(station => (
-              <option key={station.id} value={station.id}>{station.name}</option>
+          <select
+            value={stationFilter}
+            onChange={(e) => setStationFilter(e.target.value)}
+            disabled={loadingStations}
+          >
+            <option value="all">
+              {loadingStations ? 'Đang tải...' : 'Tất cả trạm'}
+            </option>
+            {stations.map((station) => (
+              <option key={station.id} value={station.id}>
+                {station.name}
+              </option>
             ))}
           </select>
 
-          <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)}>
-            <option value="all">Tất cả vị trí</option>
-            {positions.map(pos => (<option key={pos} value={pos}>{pos}</option>))}
-          </select>
-
           <div className="view-mode-toggle">
-            <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} title="Xem dạng lưới">
+            <button
+              className={viewMode === 'grid' ? 'active' : ''}
+              onClick={() => setViewMode('grid')}
+              title="Xem dạng lưới"
+            >
               <i className="fas fa-th-large"></i>
             </button>
-            <button className={viewMode === 'table' ? 'active' : ''} onClick={() => setViewMode('table')} title="Xem dạng bảng">
+            <button
+              className={viewMode === 'table' ? 'active' : ''}
+              onClick={() => setViewMode('table')}
+              title="Xem dạng bảng"
+            >
               <i className="fas fa-list"></i>
             </button>
           </div>
 
-          <button className="admin-btn admin-btn-primary">
-            <i className="fas fa-file-export"></i>
+          <button className="admin-btn admin-btn-primary" onClick={exportStaffExcel}>
+            <i className="fas fa-file-excel"></i>
             Xuất Excel
           </button>
         </div>
