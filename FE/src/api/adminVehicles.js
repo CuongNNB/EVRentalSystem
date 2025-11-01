@@ -1,11 +1,3 @@
-/**
- * Admin Vehicles API
- * 
- * NOTE: API endpoints cho trang quản lý xe
- * - Pagination, filter, search
- * - Không hardcode data
- */
-
 import api from './client'
 
 // Clean query params - remove undefined, null, empty strings
