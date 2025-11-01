@@ -110,7 +110,7 @@ const StaffManagement = () => {
 
     return matchSearch && matchStation && matchStatus
   })
-
+    .sort((a, b) => Number(a.id) - Number(b.id))
   const getStatusBadge = (status) => {
     const norm = toLower(status)
     if (norm === 'active') return <span className="staff-status active" style={{ whiteSpace: 'nowrap' }}>ĐANG LÀM VIỆC</span>
@@ -132,7 +132,7 @@ const StaffManagement = () => {
     const ws = XLSX.utils.json_to_sheet(rows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Staff')
-    const header = Object.keys(rows[0] || { ID:'', Name:'', Email:'', Position:'', Station:'', Phone:'', JoinDate:'', Status:'' })
+    const header = Object.keys(rows[0] || { ID: '', Name: '', Email: '', Position: '', Station: '', Phone: '', JoinDate: '', Status: '' })
     ws['!cols'] = header.map(() => ({ wch: 18 }))
     const ts = new Date().toISOString().slice(0, 10)
     XLSX.writeFile(wb, `Staff-${ts}.xlsx`)
