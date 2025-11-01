@@ -252,16 +252,29 @@
   min-height: 400px;
 }
 
-/* Grid View - CarPages Style */
+/* Grid View - 3 cột responsive */
 .vehicles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 300px));
+  grid-template-columns: repeat(3, 1fr);
   gap: 22px;
-  justify-content: center;
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding: 4px 4px 0;
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .vehicles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 640px) {
+  .vehicles-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .car-card {
@@ -277,8 +290,9 @@
   min-height: 460px; /* giữ chiều cao đồng đều */
 }
 
+/* Hover scale nhẹ */
 .car-card:hover {
-  transform: translateY(-4px);
+  transform: scale(1.02) translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   border-color: #0bb97f;
 }
@@ -351,21 +365,28 @@
   transform: scale(1.05);
 }
 
+/* Badge màu theo trạng thái */
 .vehicle-status--available {
-  background: rgba(16, 185, 129, 0.95);
+  background: rgba(16, 185, 129, 0.95); /* Xanh lá */
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .vehicle-status--rented {
-  background: rgba(245, 158, 11, 0.95);
+  background: rgba(245, 158, 11, 0.95); /* Cam */
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .vehicle-status--maintenance,
 .vehicle-status--fixing {
-  background: rgba(239, 68, 68, 0.95);
+  background: rgba(239, 68, 68, 0.95); /* Đỏ */
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.vehicle-status--unknown {
+  background: rgba(100, 116, 139, 0.95); /* Xám */
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
@@ -473,33 +494,77 @@
 
 .car-card__cta {
   border: none;
-  border-radius: 8px; /* hình chữ nhật bo nhẹ */
+  border-radius: 12px;
   font-weight: 700;
-  font-size: 0.9rem; /* nhỏ gọn */
-  padding: 8px 12px; /* chiều cao thấp hơn */
+  font-size: 15px;
+  padding: 14px 24px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-.car-card__cta--primary {
-  background: #16a34a; /* emerald-600 */
+.car-card__cta::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.car-card__cta:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.car-card__cta i {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.car-card__cta span {
+  position: relative;
+  z-index: 1;
+}
+
+.car-card__cta--primary,
+.car-card__cta--view-detail {
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25), 
+              0 2px 8px rgba(16, 185, 129, 0.15);
 }
 
-.car-card__cta--primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+.car-card__cta--primary:hover,
+.car-card__cta--view-detail:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35),
+              0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-.car-card__cta--primary:active {
-  transform: translateY(-1px) scale(0.99);
+.car-card__cta--primary:hover i,
+.car-card__cta--view-detail:hover i {
+  transform: scale(1.15);
+}
+
+.car-card__cta--primary:active,
+.car-card__cta--view-detail:active {
+  transform: translateY(-1px) scale(1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .car-card__cta--secondary {
