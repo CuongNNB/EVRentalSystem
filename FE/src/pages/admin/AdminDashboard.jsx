@@ -8,7 +8,6 @@ import RevenueChart from '../../components/admin/RevenueChart'
 import TopStations from '../../components/admin/TopStations'
 import RecentRentals from '../../components/admin/RecentRentals'
 import ActivityFeed from '../../components/admin/ActivityFeed'
-import ExportButtons from '../../components/admin/ExportButtons'
 import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import StationVehiclesCard from '../../components/admin/StationVehiclesCard'
 import useAdminMetrics from './hooks/useAdminMetrics'
@@ -90,7 +89,6 @@ export function AdminOverview() {
           </div>
         </div>
         <div className="admin-page-header-actions">
-          <ExportButtons />
           <button className="admin-btn admin-btn-danger" onClick={() => { logout(); navigate('/'); }}>
             <i className="fas fa-sign-out-alt" /><span>Đăng xuất</span>
           </button>
