@@ -3,7 +3,7 @@ import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import { getStaff, getStations } from '../../api/adminStaff'
 import './AdminDashboardNew.css'
 import './AnalyticsPage.css'
-
+import * as XLSX from 'xlsx';
 // helper
 const toLower = (s) => (s ?? '').toString().trim().toLowerCase()
 const stationLabel = (m) => {
@@ -86,47 +86,50 @@ const AnalyticsPage = () => {
     })
   }, [staff, keyword, stationId, status])
 
-  const exportExcel = async () => {
+  const exportExcel = () => {
     try {
-      setExporting(true)
-      if (!filtered.length) {
-        alert('Không có dữ liệu để xuất.')
-        return
+      // Ưu tiên dùng mảng đang hiển thị: filteredStaff -> staff -> []
+      const source =
+        (typeof filteredStaff !== 'undefined' && Array.isArray(filteredStaff) && filteredStaff) ||
+        (typeof staff !== 'undefined' && Array.isArray(staff) && staff) ||
+        [];
+
+      if (!source.length) {
+        alert('Không có dữ liệu để xuất.');
+        return;
       }
-      const XLSX = (await import('xlsx')).default
 
-      const rows = filtered.map(s => ({
-        ID: s.id ?? '',
-        Name: s.name ?? '',
-        Email: s.email ?? '',
-        Position: s.position ?? '',
-        Station: stationLabel(s),
-        Phone: s.phone ?? '',
-        JoinDate: s.joinDate
-          ? new Date(s.joinDate).toLocaleDateString('vi-VN')
-          : '',
-        Status: s.status ?? ''
-      }))
+      const rows = source.map((s, idx) => ({
+        STT: idx + 1,
+        ID: s?.id ?? '',
+        Name: s?.name ?? '',
+        Email: s?.email ?? '',
+        Position: s?.position ?? '',
+        Station:
+          s?.stationName ??
+          s?.station_name ??
+          s?.station ??
+          (s?.stationId != null ? `Trạm #${s.stationId}` : ''),
+        Phone: s?.phone ?? '',
+        JoinDate: s?.joinDate ? new Date(s.joinDate).toLocaleDateString('vi-VN') : '',
+        Status: (s?.status ?? '').toString().toUpperCase(),
+      }));
 
-      const ws = XLSX.utils.json_to_sheet(rows)
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, 'Staff')
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
 
-      // auto width cơ bản
-      const headers = Object.keys(rows[0] || {
-        ID: '', Name: '', Email: '', Position: '', Station: '', Phone: '', JoinDate: '', Status: ''
-      })
-      ws['!cols'] = headers.map(() => ({ wch: 20 }))
+      // auto width đơn giản
+      const headers = Object.keys(rows[0]);
+      ws['!cols'] = headers.map(() => ({ wch: 18 }));
 
-      const ts = new Date().toISOString().slice(0, 10)
-      XLSX.writeFile(wb, `Staff-Report-${ts}.xlsx`)
+      const ts = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `EVR-Employees-${ts}.xlsx`);
     } catch (e) {
-      console.error(e)
-      alert('Xuất Excel thất bại.')
-    } finally {
-      setExporting(false)
+      console.error('[AnalyticsPage] Export error:', e);
+      alert('Xuất Excel thất bại.\n' + (e?.message || ''));
     }
-  }
+  };
 
   return (
     <ErrorBoundary>
@@ -178,9 +181,8 @@ const AnalyticsPage = () => {
             <option value="inactive">Ngưng làm</option>
           </select>
 
-          <button className="admin-btn admin-btn-primary" onClick={exportExcel} disabled={exporting}>
-            <i className="fas fa-file-excel"></i>
-            {exporting ? 'Đang xuất...' : 'Xuất Excel'}
+          <button className="admin-btn admin-btn-primary" onClick={exportExcel}>
+            <i className="fas fa-file-excel"></i> Xuất danh sách ra Excel
           </button>
         </div>
       </div>
