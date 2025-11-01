@@ -88,6 +88,12 @@
   padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.4px;
   box-shadow:0 3px 8px rgba(16,185,129,.22);
 }
+/* Màu trạng thái INACTIVE (vàng nhạt cảnh báo) */
+.staff-card-header .staff-status.inactive {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+}
 
 .staff-card-body{flex:1;padding:20px 24px;display:flex;flex-direction:column;color:#1f2937;}
 .staff-card-name{font-size:16px;font-weight:700;color:#111827;margin-bottom:6px;text-align:center;}
@@ -171,7 +177,12 @@
   background:linear-gradient(180deg,#d1fae5 0%,#b7f7d6 100%);color:#065f46;border:1px solid var(--success-300);
   box-shadow:0 1px 0 rgba(5,150,105,.12);padding:7px 12px;border-radius:999px;font-weight:800;font-size:11.5px;
 }
-
+.col-status .staff-status.inactive {
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  box-shadow: 0 1px 0 rgba(217,119,6,.15);
+}
 /* Action icons */
 .col-actions .action-buttons{display:inline-flex;gap:10px;align-items:center;}
 .col-actions .btn-icon{
