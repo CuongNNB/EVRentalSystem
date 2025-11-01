@@ -7,9 +7,11 @@ import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.staff.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -495,6 +497,5 @@ public class StaffService {
         r.setStatus(ReportStatusEnum.PENDING.toString());
         reportRepository.save(r);
     }
-
 }
 
