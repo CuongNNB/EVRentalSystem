@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -66,5 +68,24 @@ public class ReviewService {
                 .comment(r.getComment())
                 .createdAt(r.getCreatedAt())
                 .build();
+    }
+
+    public List<CreateReviewResponse> getReviewsByCarModelId(Integer modelId) {
+        List<Review> reviews = reviewRepository.findByCarModelId(modelId);
+
+        return reviews.stream().map(r -> {
+            var booking = r.getBooking();
+            var renter = booking != null ? booking.getRenter() : null;
+
+            return CreateReviewResponse.builder()
+                    .reviewId(r.getReviewId())
+                    .bookingId(booking != null ? booking.getBookingId() : null)
+                    .renterId(renter != null ? renter.getUserId() : null)
+                    .renterName(renter != null ? renter.getFullName() : null)
+                    .rating(r.getRating())
+                    .comment(r.getComment())
+                    .createdAt(r.getCreatedAt())
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

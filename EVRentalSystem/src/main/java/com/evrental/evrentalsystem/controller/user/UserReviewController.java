@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,5 +31,12 @@ public class UserReviewController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));
         }
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/reviews/1
+    @GetMapping("/{modelId}")
+    public ResponseEntity<List<CreateReviewResponse>> getReviewsByCarModel(@PathVariable Integer modelId) {
+        List<CreateReviewResponse> list = reviewService.getReviewsByCarModelId(modelId);
+        return ResponseEntity.ok(list);
     }
 }
