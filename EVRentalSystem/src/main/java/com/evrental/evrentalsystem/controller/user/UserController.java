@@ -73,12 +73,14 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Login success", response));
     }
 
+    //API: http://localhost:8084/EVRentalSystem/api/users/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProfile(@PathVariable("id") Integer id,
                                            @RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userService.updateProfile(id, request));
     }
 
+    //API: http://localhost:8084/EVRentalSystem/api/users/{userId}/password
     @PutMapping("/{id}/password")
     public ResponseEntity<?> changePassword(@PathVariable("id") Integer id,
                                             @RequestBody ChangePasswordRequest request) {

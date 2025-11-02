@@ -20,14 +20,18 @@ const UserProfilePage = () => {
     });
 
     const [passwordData, setPasswordData] = useState({
-        currentPassword: '',
+        oldPassword: '',
         newPassword: '',
         confirmPassword: '',
     });
 
+
     // NEW: confirmation modal + API call state
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
+    // trạng thái khi lưu profile
+    const [savingProfile, setSavingProfile] = useState(false);
+
 
     const [notifications, setNotifications] = useState({
         bookingUpdates: true,
@@ -200,12 +204,60 @@ const UserProfilePage = () => {
     };
 
     // Save profile
-    const handleSaveProfile = (e) => {
+    const handleSaveProfile = async (e) => {
         e.preventDefault();
-        // For now we only mock client update — you can extend to call an API to persist changes.
-        setUserData(prev => ({ ...prev, fullName: formData.fullName, phone: formData.phone, address: formData.address }));
-        alert('Đã lưu thông tin cá nhân (mock)');
+
+        if (!userData || !userData.userId) {
+            alert('Không tìm thấy userId. Vui lòng đăng nhập lại.');
+            return;
+        }
+
+        const token = localStorage.getItem('ev_token');
+        if (!token) {
+            alert('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+            return;
+        }
+
+        // chuẩn payload theo yêu cầu backend
+        const payload = {
+            fullName: formData.fullName,
+            phone: formData.phone,
+            email: formData.email,
+            address: formData.address,
+        };
+
+        setSavingProfile(true);
+        try {
+            const resp = await fetch(`${API_BASE}/users/${userData.userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            // cố gắng parse response JSON (nếu server trả JSON)
+            const respBody = await resp.json().catch(() => ({}));
+
+            if (!resp.ok) {
+                // hiển thị lỗi server nếu có
+                const message = respBody?.message || `Cập nhật thất bại (status ${resp.status})`;
+                alert(message);
+            } else {
+                // cập nhật UI local
+                setUserData(prev => ({ ...prev, ...payload }));
+                // (tùy backend: có thể trả về updated user object, bạn có thể setUserData(respBody) nếu muốn)
+                alert(respBody?.message || 'Cập nhật thông tin cá nhân thành công.');
+            }
+        } catch (error) {
+            console.error('Save profile error:', error);
+            alert('Lỗi khi lưu thông tin. Vui lòng thử lại.');
+        } finally {
+            setSavingProfile(false);
+        }
     };
+
 
     // UPDATED: when user submits change-password form -> open confirm modal (do not call API yet)
     const handleChangePasswordSubmit = (e) => {
@@ -214,12 +266,10 @@ const UserProfilePage = () => {
             alert('Mật khẩu mới không khớp!');
             return;
         }
-        // Basic password length check
-        if (!passwordData.currentPassword || passwordData.newPassword.length < 6) {
+        if (!passwordData.oldPassword || passwordData.newPassword.length < 6) {
             alert('Vui lòng điền mật khẩu hiện tại và mật khẩu mới ít nhất 6 ký tự.');
             return;
         }
-        // Open confirmation modal
         setShowConfirmModal(true);
     };
 
@@ -241,11 +291,9 @@ const UserProfilePage = () => {
         setChangingPassword(true);
 
         try {
-            // Payload: include relevant fields. Backend ChangePasswordRequest should accept these (adjust if your backend expects different field names)
             const payload = {
-                currentPassword: passwordData.currentPassword,
+                oldPassword: passwordData.oldPassword,   // <-- field name backend mong muốn
                 newPassword: passwordData.newPassword,
-                confirmPassword: passwordData.confirmPassword,
             };
 
             const resp = await fetch(`${API_BASE}/users/${userData.userId}/password`, {
@@ -260,13 +308,11 @@ const UserProfilePage = () => {
             const respBody = await resp.json().catch(() => ({}));
 
             if (!resp.ok) {
-                // Try to display server message if present
                 const message = respBody?.message || `Đổi mật khẩu thất bại (status ${resp.status})`;
                 alert(message);
             } else {
                 alert(respBody?.message || 'Đổi mật khẩu thành công.');
-                // Clear inputs
-                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
             }
         } catch (error) {
             console.error('Change password error:', error);
@@ -276,6 +322,7 @@ const UserProfilePage = () => {
             setShowConfirmModal(false);
         }
     };
+
 
     // Cancel modal
     const cancelChangePassword = () => {
@@ -378,8 +425,8 @@ const UserProfilePage = () => {
                             <div className="user-name-row">
                                 <h1 className="user-name">{userData.fullName}</h1>
                                 <span className={kycBadge.class}>
-                  {kycBadge.text}
-                </span>
+                                    {kycBadge.text}
+                                </span>
                             </div>
                             <p className="user-email">{userData.email}</p>
                             <p className="user-joined">Tham gia từ {userData.joinedDate || (userData.createdAt ? formatDate(userData.createdAt) : '')}</p>
@@ -500,8 +547,8 @@ const UserProfilePage = () => {
                                         </div>
 
                                         <div className="form-actions">
-                                            <button type="submit" className="btn btn-primary">
-                                                <span>💾 Lưu chỉnh sửa</span>
+                                            <button type="submit" className="btn btn-primary" disabled={savingProfile}>
+                                                <span>{savingProfile ? 'Đang lưu...' : 'Lưu chỉnh sửa'}</span>
                                             </button>
                                         </div>
                                     </form>
@@ -653,8 +700,8 @@ const UserProfilePage = () => {
                                                 <label className="form-label">Mật khẩu hiện tại</label>
                                                 <input
                                                     type="password"
-                                                    name="currentPassword"
-                                                    value={passwordData.currentPassword}
+                                                    name="oldPassword"                      // <-- đổi từ currentPassword
+                                                    value={passwordData.oldPassword}        // <-- binding mới
                                                     onChange={handlePasswordChange}
                                                     required
                                                     className="form-input"
@@ -692,32 +739,12 @@ const UserProfilePage = () => {
 
                                             <div className="form-actions">
                                                 <button type="submit" className="btn btn-primary" disabled={changingPassword}>
-                                                    <span>{changingPassword ? 'Đang xử lý...' : '🔒 Cập nhật mật khẩu'}</span>
+                                                    <span>{changingPassword ? 'Đang xử lý...' : 'Cập nhật mật khẩu'}</span>
                                                 </button>
                                             </div>
                                         </form>
                                     </div>
 
-                                    {/* 2FA */}
-                                    <div className="security-card">
-                                        <h2 className="content-title">Xác thực 2 bước (2FA)</h2>
-
-                                        <div className="toggle-row">
-                                            <div className="toggle-info">
-                                                <h3 className="toggle-title">Bật xác thực 2 bước</h3>
-                                                <p className="toggle-description">Tăng cường bảo mật với OTP qua SMS/Email</p>
-                                            </div>
-
-                                            <label className="toggle-switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={twoFactorEnabled}
-                                                    onChange={(e) => setTwoFactorEnabled(e.target.checked)}
-                                                />
-                                                <span className="toggle-slider"></span>
-                                            </label>
-                                        </div>
-                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
