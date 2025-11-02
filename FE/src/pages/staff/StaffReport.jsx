@@ -65,30 +65,7 @@ function countFromVehicles(vehicles) {
   return { total, rented, reserved, needCharge };
 }
 
-function aggregateFromModels(models) {
-  let total = 0, rented = 0, reserved = 0, needCharge = 0;
-  for (const m of models) {
-    if (Array.isArray(m.vehicles)) {
-      const c = countFromVehicles(m.vehicles);
-      total += c.total;
-      rented += c.rented;
-      reserved += c.reserved;
-      needCharge += c.needCharge;
-    } else if (typeof m.count === 'number') {
-      total += m.count;
-    } else if (typeof m.available === 'number') {
-      total += m.available;
-    }
-  }
-  return { carsOnSite: total, carsRented: rented, carsReserved: reserved, carsNeedCharge: needCharge };
-}
-const mockSummary = {
-  carsOnSite: 24,
-  carsRented: 8,
-  carsReserved: 6,
-  carsNeedCharge: 5,
-  incidents: 2,
-};
+
 
 const mockCars = Array.from({ length: 12 }).map((_, i) => ({
   id: `CAR-${100 + i}`,
@@ -116,7 +93,6 @@ export default function StaffReport() {
   const [reportDesc, setReportDesc] = useState("");
   const [reportFile, setReportFile] = useState(null);
   const [toast, setToast] = useState(null);
-  const [dataRefreshKey, setDataRefreshKey] = useState(0);
   // sorting
   const [sortField, setSortField] = useState('id'); // 'id' | 'status'
   const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'
@@ -147,12 +123,7 @@ useEffect(() => {
     return () => clearInterval(t);
   }, []);
 
-  // auto refresh mock data every 2 minutes
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const id = setInterval(() => setDataRefreshKey((k) => k + 1), 120000);
-    return () => clearInterval(id);
-  }, [autoRefresh]);
+ 
 
   // simple toast auto-hide
   useEffect(() => {

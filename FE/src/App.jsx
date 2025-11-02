@@ -39,6 +39,7 @@ import ExtraFee from "./pages/staff/Orders/ExtraFee";
 import CheckCar from "./pages/staff/Orders/CheckCar";
 import StaffReport from "./pages/staff/StaffReport.jsx";
 import ReceiveCar from "./pages/staff/Orders/ReceiveCar.jsx";
+import CreateReportPage from "./pages/staff/CreateReportPage.jsx";
 
 // Admin area (/admin)
 import AdminDashboard, { AdminOverview } from "./pages/admin/AdminDashboard";
@@ -96,6 +97,7 @@ function App() {
                             <Route path="/staff/orders/:orderId/extra-fee" element={<ProtectedRoute><ExtraFee /></ProtectedRoute>} />
                             <Route path="/staff/report" element={<ProtectedRoute><StaffReport /></ProtectedRoute>} />
                             <Route path="/staff/orders/:orderId/receive" element={<ProtectedRoute><ReceiveCar /></ProtectedRoute>} />
+                            <Route path="/staff/report/create" element={<ProtectedRoute><CreateReportPage /></ProtectedRoute>} />
                         </Route>
 
 
