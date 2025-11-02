@@ -22,6 +22,12 @@ export default function CarDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isFading, setIsFading] = useState(false);
 
+    // Reviews state
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewsError, setReviewsError] = useState(null);
+
+
     const [loginOverlay, setLoginOverlay] = useState({
         visible: false,
         message: "Bạn cần đăng nhập để đặt xe.",
@@ -52,6 +58,29 @@ export default function CarDetail() {
         }, 5000);
         return () => clearInterval(interval);
     }, [carData, currentImageIndex]);
+
+    useEffect(() => {
+        if (!carData?.id) return;
+
+        const fetchReviews = async () => {
+            setReviewsLoading(true);
+            setReviewsError(null);
+            try {
+                const res = await fetch(`http://localhost:8084/EVRentalSystem/api/reviews/${carData.id}`);
+                if (!res.ok) throw new Error("Không thể tải đánh giá");
+                const data = await res.json();
+                setReviews(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Lỗi khi tải reviews:", err);
+                setReviewsError("Không thể tải đánh giá. Vui lòng thử lại sau.");
+            } finally {
+                setReviewsLoading(false);
+            }
+        };
+
+        fetchReviews();
+    }, [carData?.id]);
+
 
     // 🚗 Ưu tiên dữ liệu từ CarPages (location.state), fallback gọi API nếu vào link trực tiếp
     useEffect(() => {
@@ -153,6 +182,31 @@ export default function CarDetail() {
     const formatPrice = (price) =>
         new Intl.NumberFormat("vi-VN").format(price * 1000);
 
+    const formatDateTime = (isoString) => {
+        if (!isoString) return "";
+        try {
+            const d = new Date(isoString);
+            return d.toLocaleString("vi-VN"); // format theo local vi-VN
+        } catch {
+            return isoString;
+        }
+    };
+
+    // render stars (0-5)
+    const renderStars = (rating) => {
+        const max = rating;
+        const stars = [];
+        for (let i = 1; i <= max; i++) {
+            stars.push(
+                <span key={i} className={`star ${i <= rating ? "filled" : "empty"}`}>
+                    ★
+                </span>
+            );
+        }
+        return <span className="rating-stars">{stars}</span>;
+    };
+
+
     // ✅ Khi bấm "Đặt xe ngay"
     const handleBookCar = () => {
         if (!carData) return;
@@ -207,8 +261,7 @@ export default function CarDetail() {
                                 {carData.images.map((image, i) => (
                                     <button
                                         key={i}
-                                        className={`thumbnail ${
-                                            currentImageIndex === i ? "active" : ""
+                                        className={`thumbnail ${currentImageIndex === i ? "active" : ""
                                         }`}
                                         onClick={() => setCurrentImageIndex(i)}
                                     >
@@ -231,6 +284,33 @@ export default function CarDetail() {
                                     Đặt xe ngay
                                 </button>
                             </div>
+
+                            {/* === Reviews section (thêm mới, nằm dưới booking-section) === */}
+                            <div className="reviews-section">
+                                <h3 className="section-title">Đánh giá sản phẩm</h3>
+
+                                {reviewsLoading && <p>Đang tải đánh giá...</p>}
+                                {reviewsError && <p className="error-text">{reviewsError}</p>}
+
+                                {!reviewsLoading && reviews.length === 0 && !reviewsError && (
+                                    <p>Chưa có đánh giá nào cho mẫu xe này.</p>
+                                )}
+
+                                <div className="reviews-list">
+                                    {reviews.map((r) => (
+                                        <div key={r.reviewId} className="review-card">
+                                            <div className="review-header">
+                                                <div className="reviewer-name">{r.renterName}</div>
+                                                <div className="review-rating">{renderStars(r.rating)}</div>
+                                            </div>
+
+                                            <div className="review-comment">{r.comment}</div>
+                                            <div className="review-time">Tạo lúc: {formatDateTime(r.createdAt)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                         </div>
 
                         {/* 📋 Cột phải - thông tin xe */}
@@ -239,9 +319,9 @@ export default function CarDetail() {
                                 <div className="car-brand">{carData.brand}</div>
                                 <h1 className="car-name">{carData.name}</h1>
                                 <div className="car-price">
-                  <span className="price-amount">
-                    {formatPrice(carData.price)}
-                  </span>
+                                    <span className="price-amount">
+                                        {formatPrice(carData.price)}
+                                    </span>
                                     <span className="price-currency">VND</span>
                                     <span className="price-period">/ 1 ngày</span>
                                 </div>
@@ -253,54 +333,54 @@ export default function CarDetail() {
                                     <div className="spec-item">
                                         <div className="spec-icon">👥</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.seats}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.seats}
+                                            </span>
                                             <span className="spec-label">Chỗ ngồi</span>
                                         </div>
                                     </div>
                                     <div className="spec-item">
                                         <div className="spec-icon">⚙️</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.transmission}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.transmission}
+                                            </span>
                                             <span className="spec-label">Hộp số</span>
                                         </div>
                                     </div>
                                     <div className="spec-item">
                                         <div className="spec-icon">⚡</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.power}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.power}
+                                            </span>
                                             <span className="spec-label">Công suất pin</span>
                                         </div>
                                     </div>
                                     <div className="spec-item">
                                         <div className="spec-icon">🔋</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.range}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.range}
+                                            </span>
                                             <span className="spec-label">Tầm hoạt động</span>
                                         </div>
                                     </div>
                                     <div className="spec-item">
                                         <div className="spec-icon">💸</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.costPerKm}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.costPerKm}
+                                            </span>
                                             <span className="spec-label">Chi phí / km</span>
                                         </div>
                                     </div>
                                     <div className="spec-item">
                                         <div className="spec-icon">⏱️</div>
                                         <div className="spec-content">
-                      <span className="spec-value">
-                        {carData.specifications.chargeTime}
-                      </span>
+                                            <span className="spec-value">
+                                                {carData.specifications.chargeTime}
+                                            </span>
                                             <span className="spec-label">Thời gian sạc</span>
                                         </div>
                                     </div>
