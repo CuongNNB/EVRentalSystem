@@ -331,6 +331,15 @@ const VehicleManagement = () => {
             <p className="admin-page-subtitle">Quản lý và theo dõi toàn bộ đội xe trong hệ thống</p>
           </div>
         </div>
+        <div className="admin-page-header-right">
+          <button
+            className="admin-btn admin-btn-primary"
+            onClick={() => navigate('/admin/vehicles/add')}
+          >
+            <i className="fas fa-car"></i>
+            <span>Thêm xe</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

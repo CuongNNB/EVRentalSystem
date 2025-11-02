@@ -1,20 +1,19 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
-import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.projection.VehicleListProjection;
-import com.evrental.evrentalsystem.response.admin.VehicleDetailResponse;
+import com.evrental.evrentalsystem.request.CreateVehicleRequest;
 import com.evrental.evrentalsystem.request.UpdateVehicleRequest;
-import com.evrental.evrentalsystem.entity.VehicleDetail;
-
+import com.evrental.evrentalsystem.response.admin.VehicleDetailResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
 
 @Primary
 @Service
@@ -22,30 +21,21 @@ import jakarta.transaction.Transactional;
 public class VehicleAdminServiceImpl implements VehicleAdminService {
 
     private final VehicleDetailRepository repo;
-    // Cần cho update quan hệ (không dùng trong list)
-    private final StationRepository stationRepo;
-    private final VehicleModelRepository vehicleModelRepo;
+    private final StationRepository       stationRepo;       // dùng khi update / create quan hệ
+    private final VehicleModelRepository  vehicleModelRepo;  // dùng khi update / create quan hệ
 
-    // =========================
+    // =========================================================
     // LIST
-    // =========================
+    // =========================================================
     @Override
     public Page<VehicleListProjection> getVehicleList(
-            String q,
-            String status,
-            Integer stationId,
-            String brand,
-            String model,
-            Pageable pageable
-    ) {
-        System.out.println(">>> [VehicleAdminServiceImpl] searchVehicleList() CALLED <<<");
-        System.out.printf(
-                ">>> Params -> q=%s | status=%s | stationId=%s | brand=%s | model=%s | page=%d | size=%d%n",
-                q, status, stationId, brand, model, pageable.getPageNumber(), pageable.getPageSize()
-        );
+            String q, String status, Integer stationId, String brand, String model, Pageable pageable) {
 
-        // Gợi ý: để ẩn DELETED, thêm điều kiện vào query repo:
-        //   ... AND UPPER(v.status) <> 'DELETED'
+        System.out.println(">>> [VehicleAdminServiceImpl] searchVehicleList() CALLED <<<");
+        System.out.printf(">>> Params -> q=%s | status=%s | stationId=%s | brand=%s | model=%s | page=%d | size=%d%n",
+                q, status, stationId, brand, model, pageable.getPageNumber(), pageable.getPageSize());
+
+        // Gợi ý (nếu muốn ẩn xe đã xóa mềm): thêm điều kiện NOT DELETED vào query ở repository.
         return repo.searchVehicleList(
                 normalize(q),
                 normalize(status),
@@ -56,9 +46,9 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
         );
     }
 
-    // =========================
+    // =========================================================
     // DETAIL
-    // =========================
+    // =========================================================
     @Override
     public VehicleDetailResponse getVehicleById(Integer id) {
         var v = repo.findDetailWithModelAndStation(id)
@@ -79,11 +69,45 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
                 .build();
     }
 
-    // =========================
-    // UPDATE
-    // =========================
-    @Transactional
+    // =========================================================
+    // CREATE
+    // =========================================================
     @Override
+    @Transactional
+    public Integer createVehicle(CreateVehicleRequest r) {
+        if (r.getLicensePlate() == null || r.getLicensePlate().isBlank()) {
+            throw new RuntimeException("licensePlate is required");
+        }
+        // chống trùng biển số
+        if (repo.findByLicensePlate(r.getLicensePlate()) != null) {
+            throw new RuntimeException("License plate already exists: " + r.getLicensePlate());
+        }
+
+        var station = stationRepo.findById(r.getStationId())
+                .orElseThrow(() -> new RuntimeException("Station not found: " + r.getStationId()));
+
+        var model = vehicleModelRepo.findById(r.getVehicleModelId())
+                .orElseThrow(() -> new RuntimeException("VehicleModel not found: " + r.getVehicleModelId()));
+
+        var v = new VehicleDetail();
+        v.setLicensePlate(r.getLicensePlate().trim());
+        v.setVehicleModel(model);
+        v.setStation(station);
+        v.setColor( normalize(r.getColor()) );
+        v.setBatteryCapacity( normalize(r.getBatteryCapacity()) );
+        v.setOdo(r.getOdo() == null ? 0 : r.getOdo());
+        v.setPicture( normalize(r.getPicture()) );
+        v.setStatus( normalize(r.getStatus()) == null ? "AVAILABLE" : r.getStatus().trim() );
+
+        repo.save(v);
+        return v.getId();
+    }
+
+    // =========================================================
+    // UPDATE
+    // =========================================================
+    @Override
+    @Transactional
     public void updateVehicle(Integer id, UpdateVehicleRequest r) {
         VehicleDetail v = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
@@ -104,7 +128,6 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
                     .orElseThrow(() -> new RuntimeException("Station not found: " + r.getStationId()));
             v.setStation(s);
         }
-
         if (r.getVehicleModelId() != null) {
             var vm = vehicleModelRepo.findById(r.getVehicleModelId())
                     .orElseThrow(() -> new RuntimeException("VehicleModel not found: " + r.getVehicleModelId()));
@@ -114,39 +137,35 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
         repo.save(v);
     }
 
-    // =========================
+    // =========================================================
     // SOFT DELETE
-    // =========================
-    @Transactional
+    // =========================================================
     @Override
+    @Transactional
     public void deleteVehicle(Integer id) {
         VehicleDetail v = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
 
-        // Không cho xoá khi đang RENTED
         if ("RENTED".equalsIgnoreCase(v.getStatus())) {
             throw new RuntimeException("Cannot delete vehicle while RENTED.");
         }
 
-        // Đánh dấu xoá mềm → KHÔNG DELETE vật lý (tránh lỗi FK)
+        // Đánh dấu xoá mềm để tránh lỗi FK
         v.setStatus("DELETED");
 
-        // Ghi dấu biển số để tránh unique-key (nếu có)
+        // Tránh đụng unique biển số (nếu có)
         if (v.getLicensePlate() != null) {
             String plate = v.getLicensePlate();
             if (!plate.endsWith("#" + v.getId())) {
                 v.setLicensePlate(plate + "#" + v.getId());
             }
         }
-
-        // Có thể thêm các cờ/dấu khác nếu bạn muốn (ví dụ archivedAt…)
-
         repo.save(v);
     }
 
-    // =========================
+    // =========================================================
     // Utils
-    // =========================
+    // =========================================================
     private String normalize(String s) {
         return (s == null || s.isBlank()) ? null : s.trim();
     }

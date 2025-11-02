@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.request.CreateVehicleRequest;
 import com.evrental.evrentalsystem.request.UpdateVehicleRequest;
 import com.evrental.evrentalsystem.response.admin.VehicleDetailResponse;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,6 @@ public interface VehicleAdminService {
     VehicleDetailResponse getVehicleById(Integer id);
 
     void updateVehicle(Integer id, UpdateVehicleRequest req);
-
+    Integer createVehicle(CreateVehicleRequest r);
     void deleteVehicle(Integer id); // sẽ tuỳ chọn soft/hard bên impl
 }

@@ -67,6 +67,7 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     @Query("UPDATE VehicleDetail v SET v.status = :status WHERE v.id = :id")
     int updateVehicleStatusById(@Param("id") Integer id, @Param("status") String status);
 
+    Optional<VehicleDetail> findFirstByVehicleModelAndStatus(VehicleModel vehicleModel, String status);
 
     @Query("""
         SELECT v FROM VehicleDetail v

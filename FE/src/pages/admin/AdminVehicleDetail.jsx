@@ -121,18 +121,34 @@ const AdminVehicleDetail = () => {
     const picture = v?.picture
     const vehicleId = v?.vehicleId ?? v?.vehicle_id ?? v?.id
     
+    console.log('[AdminVehicleDetail] getImageSrc called with:', { 
+      picture, 
+      vehicleId,
+      hasPicture: !!(picture && picture !== '' && picture !== 'null')
+    })
+    
     if (picture && picture !== '' && picture !== 'null') {
       const picStr = String(picture).trim()
-      const hasExtension = picStr.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-      return hasExtension 
+      const hasExtension = picStr.match(/\.(jpg|jpeg|png|gif|webp|webm)$/i)
+      
+      // Try backend first (where uploaded images are stored)
+      const backendSrc = hasExtension 
         ? `${BACKEND_BASE_URL}/carpic/${picStr}`
         : `${BACKEND_BASE_URL}/carpic/${picStr}.jpg`
+      
+      // Return backend path first (since images are uploaded there)
+      // Frontend fallback is handled in onError handler
+      console.log('[AdminVehicleDetail] Using picture:', picStr, '→', backendSrc)
+      return backendSrc
     }
     
     if (vehicleId) {
-      return `${BACKEND_BASE_URL}/carpic/${vehicleId}.jpg`
+      const vehicleIdSrc = `${BACKEND_BASE_URL}/carpic/${vehicleId}.jpg`
+      console.log('[AdminVehicleDetail] Using vehicleId:', vehicleId, '→', vehicleIdSrc)
+      return vehicleIdSrc
     }
     
+    console.log('[AdminVehicleDetail] Using default image')
     return '/carpic/default.jpg'
   }
 
@@ -471,15 +487,64 @@ const AdminVehicleDetail = () => {
                   alt={`${currentVehicle.brand} ${currentVehicle.model}`}
                   className="vehicle-detail-image"
                   onError={(e) => {
-                    if (!e.currentTarget.dataset.fallback) {
+                    const fallbackLevel = e.currentTarget.dataset.fallback || '0'
+                    const picture = currentVehicle?.picture
+                    const vehicleId = currentVehicle?.vehicleId ?? currentVehicle?.vehicle_id ?? currentVehicle?.id
+                    const currentSrc = e.currentTarget.src
+                    
+                    console.log('[AdminVehicleDetail] Image error, trying fallback:', {
+                      fallbackLevel,
+                      currentSrc,
+                      picture,
+                      vehicleId
+                    })
+                    
+                    // Try 1: Frontend public folder with picture name
+                    if (fallbackLevel === '0' && picture && picture !== '' && picture !== 'null') {
+                      const picStr = String(picture).trim()
+                      const hasExt = picStr.match(/\.(jpg|jpeg|png|gif|webp|webm)$/i)
+                      const frontendSrc = hasExt ? `/carpic/${picStr}` : `/carpic/${picStr}.jpg`
                       e.currentTarget.dataset.fallback = '1'
-                      const fallbackId = currentVehicle?.vehicleId ?? currentVehicle?.vehicle_id ?? currentVehicle?.id
-                      if (fallbackId) {
-                        e.currentTarget.src = `/carpic/${fallbackId}.jpg`
-                        return
-                      }
+                      e.currentTarget.src = frontendSrc
+                      console.log('[AdminVehicleDetail] Trying frontend public with picture:', frontendSrc)
+                      return
+                    }
+                    
+                    // Try 2: Backend with picture name (retry with different extension)
+                    if ((fallbackLevel === '0' || fallbackLevel === '1') && picture && picture !== '' && picture !== 'null') {
+                      const picStr = String(picture).trim()
+                      const hasExt = picStr.match(/\.(jpg|jpeg|png|gif|webp|webm)$/i)
+                      // Try with .jpg if current path failed
+                      const backendSrc = hasExt 
+                        ? `${BACKEND_BASE_URL}/carpic/${picStr.replace(/\.(jpeg|png|gif|webp|webm)$/i, '.jpg')}`
+                        : `${BACKEND_BASE_URL}/carpic/${picStr}.jpg`
                       e.currentTarget.dataset.fallback = '2'
+                      e.currentTarget.src = backendSrc
+                      console.log('[AdminVehicleDetail] Trying backend with modified extension:', backendSrc)
+                      return
+                    }
+                    
+                    // Try 3: Frontend public folder with vehicleId
+                    if (fallbackLevel !== '3' && vehicleId) {
+                      e.currentTarget.dataset.fallback = '3'
+                      e.currentTarget.src = `/carpic/${vehicleId}.jpg`
+                      console.log('[AdminVehicleDetail] Trying frontend public with vehicleId:', `/carpic/${vehicleId}.jpg`)
+                      return
+                    }
+                    
+                    // Try 4: Backend with vehicleId (retry)
+                    if (fallbackLevel === '3' && vehicleId) {
+                      e.currentTarget.dataset.fallback = '4'
+                      e.currentTarget.src = `${BACKEND_BASE_URL}/carpic/${vehicleId}.jpg`
+                      console.log('[AdminVehicleDetail] Trying backend with vehicleId:', `${BACKEND_BASE_URL}/carpic/${vehicleId}.jpg`)
+                      return
+                    }
+                    
+                    // Final fallback: default.jpg
+                    if (fallbackLevel !== '5') {
+                      e.currentTarget.dataset.fallback = '5'
                       e.currentTarget.src = '/carpic/default.jpg'
+                      console.log('[AdminVehicleDetail] Using default image')
                     }
                   }}
                 />

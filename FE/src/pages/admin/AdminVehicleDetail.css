@@ -790,6 +790,185 @@
   cursor: not-allowed;
 }
 
+/* Form Actions for Add/Edit */
+.vehicle-add-form-actions,
+.vehicle-edit-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px;
+}
+
+.vehicle-add-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicle-add-form .vehicle-info-card-body {
+  padding: 24px;
+}
+
+/* Image Upload Card */
+.vehicle-image-upload-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.vehicle-image-upload-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vehicle-image-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vehicle-image-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.vehicle-image-upload-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.vehicle-image-upload-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-image-upload-badge i {
+  font-size: 8px;
+}
+
+.vehicle-image-upload-badge.vehicle-status--available {
+  background: rgba(255, 247, 237, 0.95);
+  color: #d97706;
+}
+
+.vehicle-image-upload-badge.vehicle-status--available i {
+  color: #f59e0b;
+}
+
+.vehicle-image-upload-badge.vehicle-status--rented {
+  background: rgba(255, 247, 237, 0.95);
+  color: #d97706;
+}
+
+.vehicle-image-upload-badge.vehicle-status--rented i {
+  color: #f59e0b;
+}
+
+.vehicle-image-upload-badge.vehicle-status--fixing {
+  background: rgba(254, 226, 226, 0.95);
+  color: #dc2626;
+}
+
+.vehicle-image-upload-badge.vehicle-status--fixing i {
+  color: #ef4444;
+}
+
+.vehicle-image-upload-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.vehicle-image-upload-input {
+  display: none;
+}
+
+.vehicle-image-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.vehicle-image-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vehicle-image-upload-btn i {
+  font-size: 16px;
+}
+
+.vehicle-image-upload-btn--upload {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.vehicle-image-upload-btn--upload:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.vehicle-image-upload-btn--upload.uploading {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  cursor: wait;
+}
+
+.vehicle-image-upload-btn--remove {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+}
+
+.vehicle-image-upload-btn--remove:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  border-color: #fca5a5;
+}
+
 /* Alerts */
 .vehicle-detail-alert {
   margin: 0 32px 24px;

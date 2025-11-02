@@ -117,10 +117,17 @@ export const getVehicleBrands = async () => {
  */
 export const createVehicle = async (vehicleData) => {
   try {
+    console.log('[createVehicle] Creating vehicle with data:', vehicleData)
     const { data } = await api.post('/vehicle/vehicles', vehicleData)
+    console.log('[createVehicle] Success:', data)
     return data
   } catch (error) {
     console.error('[createVehicle] Error:', error)
+    // Sử dụng userMessage từ interceptor hoặc tạo message mặc định
+    if (!error.userMessage) {
+      error.userMessage = error.response?.data?.message || 
+                         `Không thể tạo xe mới: ${error.message}`
+    }
     throw error
   }
 }
@@ -160,6 +167,71 @@ export const deleteVehicle = async (id) => {
     if (!error.userMessage) {
       error.userMessage = error.response?.data?.message || 
                          `Không thể xóa xe: ${error.message}`
+    }
+    throw error
+  }
+}
+
+/**
+ * Upload vehicle image
+ * Returns filename or throws error
+ */
+export const uploadVehicleImage = async (file) => {
+  try {
+    console.log('[uploadVehicleImage] Uploading image:', file.name)
+    const formData = new FormData()
+    formData.append('picture', file)
+    
+    const { data } = await api.post('/vehicle/vehicles/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    
+    console.log('[uploadVehicleImage] Success:', data)
+    // Backend có thể trả về { filename: '...', url: '...' } hoặc chỉ filename
+    return data.filename || data.url || data.picture || file.name
+  } catch (error) {
+    console.error('[uploadVehicleImage] Error:', error)
+    
+    // Helper: Sanitize filename but preserve extension
+    const sanitizeFilename = (originalName) => {
+      // Get extension
+      const lastDot = originalName.lastIndexOf('.')
+      const ext = lastDot > 0 ? originalName.substring(lastDot) : ''
+      // Get name without extension
+      const nameWithoutExt = lastDot > 0 ? originalName.substring(0, lastDot) : originalName
+      // Sanitize name (keep alphanumeric, dots, dashes, underscores)
+      const sanitized = nameWithoutExt.replace(/[^a-zA-Z0-9._-]/g, '_')
+      // Return sanitized name with original extension
+      return sanitized + ext
+    }
+    
+    // Check if it's CORS error
+    if (error.message?.includes('CORS') || 
+        error.code === 'ERR_NETWORK' ||
+        (error.response === undefined && error.message?.includes('Network'))) {
+      console.warn('[uploadVehicleImage] CORS or Network error detected, using sanitized filename as fallback')
+      // Return sanitized filename with preserved extension
+      return sanitizeFilename(file.name)
+    }
+    
+    // Fallback: nếu API không có (404), trả về tên file gốc đã sanitize
+    if (error.response?.status === 404 || error.response?.status === 405) {
+      console.warn('[uploadVehicleImage] Upload endpoint not found (404/405), using sanitized filename as fallback')
+      return sanitizeFilename(file.name)
+    }
+    
+    // For other errors (500, etc), still return filename but with warning
+    if (error.response?.status >= 500) {
+      console.warn('[uploadVehicleImage] Server error, using sanitized filename as fallback')
+      return sanitizeFilename(file.name)
+    }
+    
+    // Sử dụng userMessage từ interceptor hoặc tạo message mặc định
+    if (!error.userMessage) {
+      error.userMessage = error.response?.data?.message || 
+                         `Không thể upload ảnh: ${error.message}`
     }
     throw error
   }
