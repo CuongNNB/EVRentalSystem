@@ -33,7 +33,7 @@ public class UserReviewController {
         }
     }
 
-    //API: http://localhost:8084/EVRentalSystem/api/reviews/1
+    //API: http://localhost:8084/EVRentalSystem/api/reviews/{modelId}
     @GetMapping("/{modelId}")
     public ResponseEntity<List<CreateReviewResponse>> getReviewsByCarModel(@PathVariable Integer modelId) {
         List<CreateReviewResponse> list = reviewService.getReviewsByCarModelId(modelId);
