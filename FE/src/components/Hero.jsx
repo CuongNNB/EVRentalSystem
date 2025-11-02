@@ -179,7 +179,7 @@ export default function Hero({ backgroundImage }) {
                         ))}
                     </div>
 
-                    <button type="button" className="btn primary-btn hero-cta">
+                    <button type="button" className="btn primary-btn hero-cta" onClick={() => navigate('/cars')}>
                         Xem danh sách xe
                     </button>
                 </div>
