@@ -1,0 +1,136 @@
+/* CreateReportForm.css - tasteful, clean staff form styles */
+
+.crf-card {
+  background: #ffffff;
+  
+  max-width: 1040px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.crf-title {
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0f172a; /* slate-900 */
+}
+
+.crf-subtitle {
+  margin: 0 0 16px 0;
+  color: #64748b; /* slate-500 */
+  font-size: 13px;
+}
+
+.crf-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: end; /* balance row alignment */
+}
+@media (min-width: 768px) {
+  .crf-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.crf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crf-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569; /* slate-600 */
+}
+
+.crf-input,
+.crf-textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+  min-height: 42px; /* keep height consistent */
+}
+
+.crf-input::placeholder,
+.crf-textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+
+.crf-input:focus,
+.crf-textarea:focus {
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.crf-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.crf-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end; /* move action button to the right */
+}
+
+.crf-btn {
+  appearance: none;
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 80ms ease, box-shadow 160ms ease, opacity 120ms ease;
+}
+
+.crf-btn.primary {
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+.crf-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+}
+
+.crf-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.crf-btn.ghost {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.crf-msg {
+  margin-top: 10px;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.crf-msg.success {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+}
+
+.crf-msg.error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}

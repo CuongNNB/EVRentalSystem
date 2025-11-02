@@ -1,0 +1,67 @@
+/* Shared button styles for staff and renter UI */
+
+.btn {
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 80ms ease, box-shadow 160ms ease, background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.btn:disabled,
+.btn[aria-busy="true"] {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+/* Sizes */
+.btn-sm { padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+.btn-lg { padding: 12px 18px; font-size: 15px; }
+
+/* Variants */
+.btn-primary { background: #2563eb; color: #fff; box-shadow: 0 6px 16px rgba(37,99,235,.25); }
+.btn-primary:hover { background: #1d4ed8; box-shadow: 0 10px 22px rgba(37,99,235,.35); }
+
+.btn-danger { background: #ef4444; color: #fff; box-shadow: 0 6px 16px rgba(239,68,68,.25); }
+.btn-danger:hover { background: #dc2626; box-shadow: 0 10px 22px rgba(239,68,68,.35); }
+
+.btn-success { background: #10b981; color: #fff; box-shadow: 0 6px 16px rgba(16,185,129,.25); }
+.btn-success:hover { background: #059669; box-shadow: 0 10px 22px rgba(16,185,129,.35); }
+
+.btn-warning { background: #f59e0b; color: #111827; box-shadow: 0 6px 16px rgba(245,158,11,.25); }
+.btn-warning:hover { background: #d97706; }
+
+.btn-outline { background: #fff; color: #334155; border-color: #cbd5e1; }
+.btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
+
+.btn-ghost { background: #fff; color: #0f172a; border-color: #cbd5e1; }
+.btn-ghost:hover { background: #f8fafc; }
+
+/* Icon holder */
+.btn .icon { width: 16px; height: 16px; display: inline-block; }
+
+/* Simple spinner for loading */
+.btn[aria-busy="true"]::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.6);
+  border-top-color: rgba(255,255,255,1);
+  margin-left: 6px;
+  animation: btnspin .8s linear infinite;
+}
+
+@keyframes btnspin { to { transform: rotate(360deg); } }

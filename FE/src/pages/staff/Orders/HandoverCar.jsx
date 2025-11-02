@@ -73,7 +73,7 @@ const HandoverCar = () => {
     const order = payload?.order || null;
     const stationId =
         payload?.stationId ||
-        window.localStorage.getItem("ev_staff_station_id") ||
+        (globalThis?.localStorage?.getItem("ev_staff_station_id") ?? null) ||
         "";
     const vehicleModelId = order?.raw?.vehicleModelId;
 
@@ -379,10 +379,6 @@ const HandoverCar = () => {
                                                 {bookingDetails.dropoffDate || order.dropoff?.date || "—"}
                                                 {bookingDetails.dropoffTime || order.dropoff?.time ? ` • ${bookingDetails.dropoffTime || order.dropoff.time}` : ""}
                                             </dd>
-                                        </div>
-                                        <div>
-                                            <dt>Trạng thái</dt>
-                                            <dd>{bookingDetails.status || "—"}</dd>
                                         </div>
                                         <div>
                                             <dt>Tổng tiền</dt>

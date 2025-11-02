@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import "./Orders/Orders.css"; // reuse Orders page styling for consistent staff sidebar/layout
 import "./StaffReport.css";
@@ -14,19 +15,24 @@ const STATUS_COLORS = {
   red: "bg-rose-50 text-rose-800",
 };
 
-const batteryColorClass = (p) => {
-  if (p < 30) return "bg-rose-50 text-rose-700"; // red-ish
-  if (p <= 70) return "bg-amber-50 text-amber-700"; // yellow
-  return "bg-emerald-50 text-emerald-700"; // green
+// Basic color resolver to display vehicle color consistently (VN/EN)
+const COLOR_MAP = {
+  // Vietnamese
+  'đỏ': '#ef4444', 'xanh dương': '#3b82f6', 'xanh lá': '#10b981', 'trắng': '#f8fafc', 'đen': '#111827',
+  'bạc': '#c0c0c0', 'xám': '#94a3b8', 'vàng': '#f59e0b', 'cam': '#f97316', 'nâu': '#92400e',
+  // English
+  'red': '#ef4444', 'blue': '#3b82f6', 'green': '#10b981', 'white': '#f8fafc', 'black': '#111827',
+  'silver': '#c0c0c0', 'gray': '#94a3b8', 'grey': '#94a3b8', 'yellow': '#f59e0b', 'orange': '#f97316', 'brown': '#92400e',
 };
-
-// Helpers to avoid nested ternaries and make testable logic
-function getCondition(i) {
-  const mod = i % 3;
-  if (mod === 0) return 'OK';
-  if (mod === 1) return 'Minor';
-  return 'Major';
+function resolveColor(raw) {
+  if (!raw) return { label: '—', hex: '#e5e7eb' };
+  const label = String(raw).trim();
+  const key = label.toLowerCase();
+  const hex = COLOR_MAP[key] || '#e5e7eb';
+  return { label, hex };
 }
+
+
 
 function getTech(i) {
   const mod = i % 4;
@@ -42,16 +48,7 @@ function getStatus(i) {
   return 'Reserved';
 }
 
-function batteryStatusLabel(pct) {
-  if (pct < 30) return 'Yếu';
-  if (pct <= 70) return 'TB';
-  return 'Tốt';
-}
-function batteryBadgeClass(pct) {
-  if (pct < 30) return 'red';
-  if (pct <= 70) return 'yellow';
-  return 'green';
-}
+// battery helpers kept for potential future use; not used in current table
 
 // Aggregate counts from models/vehicles returned by API
 function countFromVehicles(vehicles) {
@@ -91,19 +88,7 @@ const mockSummary = {
   carsReserved: 6,
   carsNeedCharge: 5,
   incidents: 2,
-  revenueToday: 4520000,
 };
-
-const mockTransactions = Array.from({ length: 8 }).map((_, i) => ({
-  id: `TR-${20251029}-${100 + i}`,
-  customer: ["Nguyễn A", "Trần B", "Lê C", "Phạm D"][i % 4],
-  car: ["Model S - A1", "Model 3 - B2", "Eagle - C3"][i % 3],
-  timeOut: `${7 + (i % 8)}:00`,
-  timeIn: `${10 + (i % 8)}:00`,
-  condition: getCondition(i),
-  signed: i % 2 === 0 ? "Đã ký" : "Chưa ký",
-  amount: (400000 + i * 120000),
-}));
 
 const mockCars = Array.from({ length: 12 }).map((_, i) => ({
   id: `CAR-${100 + i}`,
@@ -122,90 +107,19 @@ const mockIncidents = Array.from({ length: 4 }).map((_, i) => ({
   status: i % 2 === 0 ? "Mới" : "Đang xử lý",
 }));
 
-const revenue7days = [
-  { day: "23/10", value: 2000000 },
-  { day: "24/10", value: 1500000 },
-  { day: "25/10", value: 2400000 },
-  { day: "26/10", value: 1800000 },
-  { day: "27/10", value: 2100000 },
-  { day: "28/10", value: 3000000 },
-  { day: "29/10", value: 4520000 },
-];
-
-const donutData = [
-  { name: "Thuê", value: 68 },
-  { name: "Trả", value: 25 },
-  { name: "Sự cố", value: 7 },
-];
-
-const COLORS = ["#2563EB", "#06B6D4", "#F59E0B"]; // blue, teal, amber
-
-// Simple SVG bar chart (small, dependency-free)
-function SimpleBarChart({ data, width = '100%', height = 240 }) {
-  const max = Math.max(...data.map(d => d.value));
-  const bars = data.map((d, i) => ({
-    ...d,
-    pct: d.value / max
-  }));
-  const barGap = 8;
-  const barWidth = Math.max(12, Math.floor((300 - (data.length - 1) * barGap) / data.length));
-  return (
-    <div style={{width, height}} className="recharts-wrapper">
-      <svg viewBox={`0 0 ${data.length * (barWidth + barGap)} ${height}`} preserveAspectRatio="none" width="100%" height="100%">
-        {bars.map((b, i) => {
-          const x = i * (barWidth + barGap);
-          const barH = Math.max(4, Math.round(b.pct * (height - 40)));
-          const y = (height - 20) - barH;
-          return (
-            <g key={b.day}>
-              <rect x={x} y={y} width={barWidth} height={barH} fill={COLORS[i % COLORS.length]} rx="4" />
-              <text x={x + barWidth/2} y={height - 4} fontSize="10" textAnchor="middle" fill="#475569">{b.day}</text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-// Simple SVG donut chart
-function SimpleDonut({ data, colors = COLORS, size = 160, stroke = 26 }){
-  const total = data.reduce((s, d) => s + d.value, 0) || 1;
-  const radius = (size - stroke) / 2;
-  const cx = size/2, cy = size/2;
-  const circumference = 2 * Math.PI * radius;
-  let offset = 0;
-  return (
-    <div style={{width: size, height: size}}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {data.map((d, i) => {
-          const portion = d.value / total;
-          const dash = portion * circumference;
-          const dashArray = `${dash} ${circumference - dash}`;
-          const rotation = (offset / circumference) * 360;
-          offset += dash;
-          return (
-            <g key={d.name} transform={`rotate(${rotation} ${cx} ${cy})`}>
-              <circle cx={cx} cy={cy} r={radius} fill="none" stroke={colors[i % colors.length]} strokeWidth={stroke} strokeDasharray={dashArray} strokeLinecap="butt" transform={`translate(0,0)`} />
-            </g>
-          );
-        })}
-        <circle cx={cx} cy={cy} r={radius - stroke/2} fill="#fff" />
-        <text x={cx} y={cy} textAnchor="middle" dy="4" fontSize="14" fill="#0f172a">{total}</text>
-      </svg>
-    </div>
-  );
-}
 
 export default function StaffReport() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("Xe tại Trạm");
   const [now, setNow] = useState(new Date());
   const [reportType, setReportType] = useState("Sự cố");
   const [reportDesc, setReportDesc] = useState("");
   const [reportFile, setReportFile] = useState(null);
   const [toast, setToast] = useState(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [dataRefreshKey, setDataRefreshKey] = useState(0);
+  // sorting
+  const [sortField, setSortField] = useState('id'); // 'id' | 'status'
+  const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'
   // station/manual setup state (allow staff to enter station code like Orders page)
   const [manualInput, setManualInput] = useState("");
   const [manualError, setManualError] = useState("");
@@ -257,38 +171,142 @@ useEffect(() => {
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState("");
 
+  // small helpers
+  // battery extraction removed from table usage; can be reintroduced if needed
+
   // Derive display lists from models with safe fallbacks to mocks
   const vehiclesFromModels = useMemo(() => {
     if (!Array.isArray(models) || models.length === 0) return [];
     const out = [];
-    for (const m of models) {
-      const list = Array.isArray(m?.vehicles) ? m.vehicles : [];
-      for (const v of list) {
-        out.push({
-          id: v?.id ?? v?.vehicleId ?? v?.code ?? v?.licensePlate ?? `CAR-${out.length + 1}`,
-          plate: v?.plate ?? v?.plateNumber ?? v?.licensePlate ?? v?.registrationNumber ?? `--` ,
-          battery: typeof v?.batteryPercent === 'number' ? v.batteryPercent : (typeof v?.battery === 'number' ? v.battery : (typeof v?.charge === 'number' ? v.charge : Math.floor(Math.random()*50)+30)),
-          tech: v?.technicalStatus ?? v?.techStatus ?? 'OK',
-          status: v?.status ?? v?.vehicleStatus ?? 'Available',
-        });
+
+    const pickList = (m) => {
+      if (Array.isArray(m?.vehicles)) return m.vehicles;
+      if (Array.isArray(m?.vehicleDetails)) return m.vehicleDetails;
+      if (Array.isArray(m?.vehicleDetailResponses)) return m.vehicleDetailResponses;
+      if (Array.isArray(m?.vehicleDetailList)) return m.vehicleDetailList;
+      if (Array.isArray(m?.items)) return m.items;
+      if (Array.isArray(m?.list)) return m.list;
+      // Fallback: find the first array-like field that contains objects with plate/id
+      const arrays = Object.values(m).filter(Array.isArray);
+      for (const arr of arrays) {
+        if (arr.length && typeof arr[0] === 'object') return arr;
       }
+      return [];
+    };
+
+    const normalize = (raw) => {
+      const node = raw?.vehicleDetail || raw?.vehicle || raw; // common nesting
+      const id = node?.code ?? node?.vehicleCode ?? node?.detailCode ?? node?.licensePlate ?? node?.id ?? node?.vehicleId ?? `CAR-${out.length + 1}`;
+      const vehicleDetailId = node?.vehicleDetailId ?? (Number.isInteger(node?.id) ? node.id : null);
+      const plate = node?.plate ?? node?.plateNumber ?? node?.licensePlate ?? node?.registrationNumber ?? '--';
+      const status = node?.status ?? node?.vehicleStatus ?? node?.state ?? node?.currentStatus ?? 'Available';
+      const colorRaw = node?.color ?? node?.vehicleColor ?? node?.colorName ?? node?.exteriorColor ?? node?.paint ?? null;
+      const { label: color, hex: colorHex } = resolveColor(colorRaw);
+      return { id, vehicleDetailId, plate, color, colorHex, status };
+    };
+
+    for (const m of models) {
+      const list = pickList(m);
+      for (const v of list) out.push(normalize(v));
     }
     return out;
   }, [models]);
 
   const cars = useMemo(() => {
-    return vehiclesFromModels.length > 0 ? vehiclesFromModels : mockCars;
+    if (vehiclesFromModels.length > 0) return vehiclesFromModels;
+    // Enrich mocks with sample colors so UI looks complete if API is empty
+    return mockCars.map((c, i) => {
+      const colors = ['Trắng','Đỏ','Xanh dương','Đen','Bạc','Xám','Vàng','Cam','Nâu','Xanh lá'];
+      const { label, hex } = resolveColor(colors[i % colors.length]);
+      return { ...c, color: label, colorHex: hex, status: c.status };
+    });
   }, [vehiclesFromModels, dataRefreshKey]);
 
-  const incidents = mockIncidents; // placeholder until backend incidents wiring
-  const transactions = mockTransactions; // placeholder for recent transactions
+  // Count vehicleDetailId occurrences for overview display
+  const vehicleDetailsCount = useMemo(() => {
+    if (vehiclesFromModels.length > 0) {
+      return vehiclesFromModels.reduce((acc, v) => acc + (v?.vehicleDetailId ? 1 : 0), 0);
+    }
+    // fallback when using mocks (no vehicleDetailId in mocks): use total cars length
+    return cars.length;
+  }, [vehiclesFromModels, cars]);
 
-  const summary = useMemo(() => {
-  if (models && models.length > 0) {
-    return { ...aggregateFromModels(models), ...mockSummary };
-  }
-  return mockSummary;
-}, [models, dataRefreshKey]);
+  // Count AVAILABLE vehicles for overview
+  const availableCount = useMemo(() => {
+    const countAvail = (list) => list.reduce((acc, v) => {
+      const st = String(v?.status ?? '').toLowerCase();
+      return acc + (st.includes('avail') ? 1 : 0);
+    }, 0);
+    if (vehiclesFromModels.length > 0) return countAvail(vehiclesFromModels);
+    return countAvail(cars);
+  }, [vehiclesFromModels, cars]);
+
+  // Count RENTED vehicles for overview
+  const rentedCount = useMemo(() => {
+    const countRented = (list) => list.reduce((acc, v) => {
+      const st = String(v?.status ?? '').toLowerCase();
+      // Prefer exact 'rented' match but allow broader 'rent' includes to be robust
+      return acc + ((st === 'rented' || st.includes('rent')) ? 1 : 0);
+    }, 0);
+    if (vehiclesFromModels.length > 0) return countRented(vehiclesFromModels);
+    return countRented(cars);
+  }, [vehiclesFromModels, cars]);
+
+  // Count FIXING/maintenance/repair vehicles for overview (Xe sự cố)
+  const incidentCount = useMemo(() => {
+    const countFixing = (list) => list.reduce((acc, v) => {
+      const st = String(v?.status ?? '').toLowerCase();
+      // Match common variants: fixing, repair, maintenance, under_maintenance, broken
+      return acc + (
+        st.includes('fix') ||
+        st.includes('repair') ||
+        st.includes('maint') ||
+        st.includes('broken')
+          ? 1
+          : 0
+      );
+    }, 0);
+    if (vehiclesFromModels.length > 0) return countFixing(vehiclesFromModels);
+    return countFixing(cars);
+  }, [vehiclesFromModels, cars]);
+
+  // helpers for sorting
+  const extractCodeNumber = (code) => {
+    const m = String(code ?? '').match(/(\d+)/g);
+    if (!m || m.length === 0) return Number.MAX_SAFE_INTEGER;
+    return Number.parseInt(m.at(-1), 10);
+  };
+  const statusRank = (s) => {
+    const k = String(s ?? '').toLowerCase();
+    // customizable order: Available < Reserved < Rented
+    if (k.includes('avail')) return 0;
+    if (k.includes('reserv')) return 1;
+    if (k.includes('rent')) return 2;
+    return 99;
+  };
+  const sortedCars = useMemo(() => {
+    const arr = [...cars];
+    if (sortField === 'id') {
+      const getSortId = (c) => (Number.isInteger(c?.vehicleDetailId) ? c.vehicleDetailId : extractCodeNumber(c?.id));
+      arr.sort((a, b) => getSortId(a) - getSortId(b));
+    } else if (sortField === 'status') {
+      arr.sort((a, b) => statusRank(a.status) - statusRank(b.status));
+    }
+    if (sortDir === 'desc') arr.reverse();
+    return arr;
+  }, [cars, sortField, sortDir]);
+
+  const handleSort = (field) => {
+    if (field === sortField) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const incidents = mockIncidents; // placeholder until backend incidents wiring
+  // revenue/transactions removed
 
  
 
@@ -384,7 +402,7 @@ const handleManualSubmit = async (e) => {
             <div className="staff-content__heading">
               <p className="staff-content__eyebrow">Báo cáo</p>
               <h1>Báo cáo nhân viên tại điểm thuê xe</h1>
-              <p className="staff-content__intro">Trạm quản lý & báo cáo vận hành — {stationName ? stationName : 'Chưa chọn trạm'} | Ca: {shift} | {now.toLocaleTimeString()}</p>
+              <p className="staff-content__intro">Trạm quản lý & báo cáo vận hành — {stationName || 'Chưa chọn trạm'} | Ca: {shift} | {now.toLocaleTimeString()}</p>
             </div>
 
             {/* Station not found / manual setup (copied behavior from Orders page) */}
@@ -436,14 +454,8 @@ const handleManualSubmit = async (e) => {
           )}
 {/* 🔹 Hiển thị trạng thái kết nối trạm */}
 {connectionState.status !== "idle" && (
-  <div
-    className="staff-orders__connection"
-    style={{
-      ...(connectionState.status === "success"
-        ? { backgroundColor: "#ecfdf5", color: "#047857", border: "1px solid #6ee7b7" }
-        : connectionState.status === "error"
-        ? { backgroundColor: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" }
-        : { backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fcd34d" }),
+  (() => {
+    const base = {
       marginTop: "12px",
       marginBottom: "12px",
       padding: "10px 14px",
@@ -451,10 +463,16 @@ const handleManualSubmit = async (e) => {
       fontSize: "14px",
       fontWeight: 500,
       display: "inline-block",
-    }}
-  >
-    {connectionState.message}
-  </div>
+    };
+    let tone = { backgroundColor: "#fef3c7", color: "#92400e", border: "1px solid #fcd34d" };
+    if (connectionState.status === "success") tone = { backgroundColor: "#ecfdf5", color: "#047857", border: "1px solid #6ee7b7" };
+    if (connectionState.status === "error") tone = { backgroundColor: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" };
+    return (
+      <div className="staff-orders__connection" style={{ ...base, ...tone }}>
+        {connectionState.message}
+      </div>
+    );
+  })()
 )}
 
 {/* 🔹 Khi đã có trạm, hiển thị trạng thái và nút đổi */}
@@ -609,10 +627,10 @@ const handleManualSubmit = async (e) => {
               </div>
               <div className="orders-card__body">
                 <section className="staff-overview">
-                  <Card title="Xe tại điểm" value={summary.carsOnSite} emoji="🚗" accent="green" />
-                  <Card title="Xe đang cho thuê" value={summary.carsRented} emoji="🔑" accent="yellow" />
-                  <Card title="Xe sự cố" value={summary.incidents} emoji="⚠️" accent="red" />
-                  <Card title="Doanh thu" value={new Intl.NumberFormat('vi-VN').format(summary.revenueToday) + ' ₫'} emoji="💸" accent="green" />
+                  <Card title="Xe tại điểm" value={vehicleDetailsCount} emoji="🚗" accent="green" />
+                  <Card title="Xe sẵn sàng" value={availableCount} emoji="✅" accent="green" />
+                  <Card title="Xe đang cho thuê" value={rentedCount} emoji="🔑" accent="yellow" />
+                  <Card title="Xe sự cố" value={incidentCount} emoji="⚠️" accent="red" />
                 </section>
               </div>
             </div>
@@ -627,10 +645,7 @@ const handleManualSubmit = async (e) => {
                   <Tabs tab={tab} onChange={setTab} />
                   <p className="staff-content__intro">Cập nhật nhanh các giao dịch, xe và sự cố</p>
                 </div>
-                <div className="auto-refresh-wrap">
-                  <label className="small-muted auto-refresh-label"><input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} /> Auto-refresh</label>
-                  <button className="staff-table__cta">Xuất PDF</button>
-                </div>
+                
               </div>
 
               {/* detailed models list removed — counts reflected in overview cards */}
@@ -642,30 +657,36 @@ const handleManualSubmit = async (e) => {
                 <table className="sr-table">
                   <thead>
                     <tr className="text-left text-slate-600 border-b">
-                      <th className="py-2">Mã xe</th>
+                      <th className="py-2 sr-sortable" onClick={() => handleSort('id')}>
+                        Mã xe {sortField==='id' && <span className="sr-sort-ind">{sortDir==='asc' ? '▲' : '▼'}</span>}
+                      </th>
                       <th>Biển số</th>
-                      <th>Pin (%)</th>
-                      <th>Tình trạng kỹ thuật</th>
-                      <th>Trạng thái</th>
+                      <th>Màu xe</th>
+                      <th className="sr-sortable" onClick={() => handleSort('status')}>
+                        Trạng thái {sortField==='status' && <span className="sr-sort-ind">{sortDir==='asc' ? '▲' : '▼'}</span>}
+                      </th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody> 
-                    {cars.map((c) => (
+                    {sortedCars.map((c) => (
                       <tr key={c.id} className="odd:bg-slate-50">
-                        <td className="py-2 font-medium">{c.id}</td>
+                        <td className="py-2 font-medium">{Number.isInteger(c?.vehicleDetailId) ? c.vehicleDetailId : c.id}</td>
                         <td>{c.plate}</td>
                         <td>
-                          <span className={`sr-badge ${batteryBadgeClass(c.battery)}`}>
-                            <strong>{c.battery}%</strong>
-                            <span style={{opacity:0.6}}>|</span>
-                            <small className="small-muted">{batteryStatusLabel(c.battery)}</small>
+                          <span className="sr-color-chip">
+                            <span className="sr-color-dot" style={{ backgroundColor: c.colorHex }} aria-hidden="true" />
+                            <span>{c.color || '—'}</span>
                           </span>
                         </td>
-                        <td>{c.tech}</td>
                         <td>{c.status}</td>
                         <td>
-                          <button className="text-sm px-3 py-1 bg-rose-500 text-white rounded hover:bg-rose-600">Báo sự cố</button>
+                          <button
+                            className="sr-btn sr-btn--danger sr-btn--sm"
+                            onClick={() => navigate('/staff/report/create', { state: { vehicleDetailId: c.vehicleDetailId, plate: c.plate, id: c.id } })}
+                          >
+                            Báo sự cố
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -699,7 +720,7 @@ const handleManualSubmit = async (e) => {
                         <td>{inc.desc}</td>
                         <td>{inc.img ? <img src={inc.img} alt="inc" className="w-16 h-12 object-cover rounded" /> : <span className="text-slate-400">—</span>}</td>
                         <td>{inc.status}</td>
-                        <td><button className="px-2 py-1 bg-sky-600 text-white rounded text-sm hover:bg-sky-700">Cập nhật trạng thái</button></td>
+                        <td><button className="sr-btn sr-btn--primary sr-btn--sm">Cập nhật trạng thái</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -708,44 +729,7 @@ const handleManualSubmit = async (e) => {
             </div>
           )}
 
-          {tab === "Doanh thu" && (
-              <div className="sr-charts">
-              <div className="col-span-2">
-                <h3 className="text-sm font-medium mb-2">Doanh thu 7 ngày</h3>
-                <SimpleBarChart data={revenue7days} />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium mb-2">Tỷ lệ</h3>
-                <SimpleDonut data={donutData} colors={COLORS} />
-              </div>
-
-              <div className="col-span-3" style={{marginTop:12}}>
-                <h3 className="text-sm font-medium mb-2">Giao dịch gần nhất</h3>
-                <div style={{overflowX:'auto'}}>
-                  <table className="sr-table">
-                    <thead>
-                      <tr className="text-left text-slate-600 border-b">
-                        <th className="py-2">Mã</th>
-                        <th>Khách</th>
-                        <th>Xe</th>
-                        <th>Số tiền</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.slice(0, 6).map((t) => (
-                        <tr key={t.id} className="odd:bg-slate-50">
-                          <td className="py-2 font-medium">{t.id}</td>
-                          <td>{t.customer}</td>
-                          <td>{t.car}</td>
-                          <td>{new Intl.NumberFormat('vi-VN').format(t.amount)} ₫</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Revenue tab removed */}
         </div>
       </div>
 
@@ -775,8 +759,8 @@ const handleManualSubmit = async (e) => {
             </div>
 
             <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
-              <button type="submit" className="sr-button">Gửi báo cáo</button>
-              <button type="button" onClick={() => { setReportDesc(''); setReportFile(null); }} className="sr-button ghost">Hủy</button>
+              <button type="submit" className="sr-btn sr-btn--primary">Gửi báo cáo</button>
+              <button type="button" onClick={() => { setReportDesc(''); setReportFile(null); }} className="sr-btn sr-btn--ghost">Hủy</button>
             </div>
           </form>
         </div>
@@ -801,11 +785,11 @@ function Card({ title, value, emoji = "", accent = "green" }) {
 }
 
 function Tabs({ tab, onChange }) {
-  const tabs = ["Xe tại Trạm", "Sự cố", "Doanh thu"];
+  const tabs = ["Xe tại Trạm", "Sự cố"]; // removed Doanh thu
   return (
-    <nav className="flex items-center gap-2">
+    <nav className="sr-tabs">
       {tabs.map((t) => (
-        <button key={t} onClick={() => onChange(t)} className={`px-3 py-1 rounded ${tab === t ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+        <button key={t} onClick={() => onChange(t)} className={`sr-tab ${tab === t ? 'active' : ''}`}>
           {t}
         </button>
       ))}
@@ -825,15 +809,4 @@ Tabs.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-SimpleBarChart.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({ day: PropTypes.string, value: PropTypes.number })).isRequired,
-  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  height: PropTypes.number,
-};
-
-SimpleDonut.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string, value: PropTypes.number })).isRequired,
-  colors: PropTypes.arrayOf(PropTypes.string),
-  size: PropTypes.number,
-  stroke: PropTypes.number,
-};
+// charts removed

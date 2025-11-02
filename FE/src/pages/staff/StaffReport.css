@@ -45,19 +45,44 @@ html, body, #root { height: 100%; }
 .sr-panel{ background:var(--bg); border-radius:12px; padding:16px; box-shadow:var(--card-shadow); width:100% }
 .sr-panel .panel-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px }
 
-.sr-tabs{display:flex;gap:8px}
-.sr-tab{padding:8px 12px;border-radius:8px;background:transparent;color:var(--muted);border:none;cursor:pointer;font-weight:600}
-.sr-tab.active{background:var(--primary);color:white}
+.sr-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.sr-tab{padding:8px 14px;border-radius:10px;background:#f8fafc;color:#334155;border:1px solid #e2e8f0;cursor:pointer;font-weight:700;line-height:1;transition:all .15s ease}
+.sr-tab:hover{background:#eef2f7}
+.sr-tab:active{transform:translateY(1px)}
+.sr-tab.active{background:linear-gradient(180deg,#2563eb,#1d4ed8);color:white;border-color:#1d4ed8;box-shadow:0 8px 18px rgba(37,99,235,0.22)}
 
 .sr-actions{display:flex;gap:8px;align-items:center}
 .sr-button{background:var(--primary);color:#fff;padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
 .r-button.ghost,.sr-button.ghost{background:transparent;border:1px solid #e6e6e6;color:var(--muted)}
+
+/* New generic buttons for StaffReport */
+.sr-btn{appearance:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;transition:box-shadow .16s ease,transform .06s ease,opacity .12s ease;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.sr-btn:active{transform:translateY(1px)}
+.sr-btn:disabled{opacity:.6;cursor:not-allowed}
+.sr-btn--sm{padding:6px 10px;font-size:13px;border-radius:8px}
+.sr-btn--ghost{background:#ffffff;border-color:#e2e8f0;color:#334155}
+.sr-btn--ghost:hover{background:#f8fafc}
+.sr-btn--primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.25)}
+.sr-btn--primary:hover{box-shadow:0 10px 22px rgba(37,99,235,.35)}
+.sr-btn--danger{background:linear-gradient(180deg,#dc2626,#b91c1c);color:#fff;box-shadow:0 6px 16px rgba(239,68,68,.25)}
+.sr-btn--danger:hover{box-shadow:0 10px 22px rgba(239,68,68,.35)}
+.sr-btn--success{background:linear-gradient(180deg,#047857,#065f46);color:#fff;box-shadow:0 6px 16px rgba(16,185,129,.25)}
+.sr-btn--success:hover{box-shadow:0 10px 22px rgba(16,185,129,.35)}
 
 .sr-table{width:100%;border-collapse:collapse;font-size:14px}
 .sr-table th{color:var(--muted);text-align:left;border-bottom:1px solid #eef2f6;padding:10px}
 .sr-table td{padding:10px;border-bottom:1px solid #f3f4f6}
 .sr-table tr:nth-child(odd){background:#fbfdff}
 .sr-table .muted{color:var(--muted);font-size:13px}
+
+/* Color chip for vehicle color */
+.sr-color-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0;color:#334155;font-weight:600}
+.sr-color-dot{width:12px;height:12px;border-radius:999px;box-shadow:0 0 0 2px #ffffff inset, 0 0 0 1px rgba(15,23,42,0.08)}
+
+/* Sortable headers */
+.sr-sortable{cursor:pointer;user-select:none}
+.sr-sortable:hover{background:#f8fafc}
+.sr-sort-ind{font-size:11px;margin-left:6px;color:#64748b}
 
 .sr-badge{display:inline-flex;align-items:center;gap:8px;padding:6px;border-radius:999px;font-size:13px;font-weight:600}
 .sr-badge.green{background:#ecfdf5;color:#065f46}
@@ -100,8 +125,9 @@ html, body, #root { height: 100%; }
   display:flex;
   gap:16px;
   align-items:stretch;
-  flex-wrap:nowrap;
-  overflow-x:auto;
+  flex-wrap:wrap;
+  justify-content:center;
+  overflow:visible;
   padding-bottom:6px;
 }
 .orders-card .staff-overview .staff-card{
@@ -140,6 +166,7 @@ html, body, #root { height: 100%; }
 
 /* responsive tweaks: reduce card width on small screens */
 @media(max-width:980px){
+  .orders-card .staff-overview{ flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto }
   .orders-card .staff-overview .staff-card{ flex:0 0 190px; min-width:150px }
   .orders-card .staff-overview .staff-card__value{ font-size:22px }
 }
