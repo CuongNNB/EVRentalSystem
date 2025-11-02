@@ -52,8 +52,10 @@ import StaffManagement from "./pages/admin/StaffManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import StaffDetailPage from "./components/admin/StaffDetailPage";
 import AddStaffPage from "./components/admin/AddStaffPage";
-
+import AdminVehicleDetail from "./pages/admin/AdminVehicleDetail";
+import AdminVehicleEdit from "./pages/admin/AdminVehicleEdit";
 function App() {
+
     console.log("App component is rendering...");
 
     return (
@@ -113,6 +115,7 @@ function App() {
                                 <Route path="customers" element={<CustomerManagement />} />
                                 <Route path="staff" element={<StaffManagement />} />
                                 <Route path="vehicles" element={<VehicleManagement />} />
+                                <Route path="vehicles/:id" element={<AdminVehicleDetail />} />
                                 <Route path="staff/:id" element={<StaffDetailPage />} />
                                 <Route path="staff/new" element={<AddStaffPage />} />
                                 <Route path="/admin/customers/:userId" element={<CustomerDetailManagement />} />

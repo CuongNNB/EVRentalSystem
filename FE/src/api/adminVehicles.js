@@ -130,10 +130,17 @@ export const createVehicle = async (vehicleData) => {
  */
 export const updateVehicle = async (id, vehicleData) => {
   try {
+    console.log(`[updateVehicle] Updating vehicle ${id} with data:`, vehicleData)
     const { data } = await api.put(`/vehicle/vehicles/${id}`, vehicleData)
+    console.log('[updateVehicle] Success:', data)
     return data
   } catch (error) {
     console.error('[updateVehicle] Error:', error)
+    // Sử dụng userMessage từ interceptor hoặc tạo message mặc định
+    if (!error.userMessage) {
+      error.userMessage = error.response?.data?.message || 
+                         `Không thể cập nhật xe: ${error.message}`
+    }
     throw error
   }
 }
@@ -143,10 +150,17 @@ export const updateVehicle = async (id, vehicleData) => {
  */
 export const deleteVehicle = async (id) => {
   try {
+    console.log(`[deleteVehicle] Deleting vehicle ${id}`)
     const { data } = await api.delete(`/vehicle/vehicles/${id}`)
+    console.log('[deleteVehicle] Success:', data)
     return data
   } catch (error) {
     console.error('[deleteVehicle] Error:', error)
+    // Sử dụng userMessage từ interceptor hoặc tạo message mặc định
+    if (!error.userMessage) {
+      error.userMessage = error.response?.data?.message || 
+                         `Không thể xóa xe: ${error.message}`
+    }
     throw error
   }
 }

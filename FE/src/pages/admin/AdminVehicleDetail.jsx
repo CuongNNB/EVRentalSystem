@@ -139,6 +139,7 @@ const AdminVehicleDetail = () => {
   const handleEdit = () => {
     setIsEditing(true)
     setSuccess(false)
+    setError(null)
   }
 
   const handleCancel = () => {
@@ -178,7 +179,12 @@ const AdminVehicleDetail = () => {
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
       console.error('Error updating vehicle:', err)
-      setError(err.message || 'Không thể cập nhật thông tin xe')
+      // Sử dụng userMessage từ interceptor nếu có, không thì dùng message mặc định
+      const errorMessage = err.userMessage || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'Không thể cập nhật thông tin xe'
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }
@@ -190,10 +196,23 @@ const AdminVehicleDetail = () => {
       setError(null)
       
       await deleteVehicle(id)
-      navigate('/admin/vehicles')
+      
+      // Thêm delay nhỏ để đảm bảo backend xử lý xong
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Navigate về danh sách và trigger refresh bằng cách reload
+      navigate('/admin/vehicles', { replace: true })
+      
+      // Trigger custom event để VehicleManagement biết cần refresh
+      window.dispatchEvent(new CustomEvent('vehicleDeleted'))
     } catch (err) {
       console.error('Error deleting vehicle:', err)
-      setError(err.message || 'Không thể xóa xe')
+      // Sử dụng userMessage từ interceptor nếu có, không thì dùng message mặc định
+      const errorMessage = err.userMessage || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'Không thể xóa xe'
+      setError(errorMessage)
       setShowDeleteConfirm(false)
     } finally {
       setDeleting(false)

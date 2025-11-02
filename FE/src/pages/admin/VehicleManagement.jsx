@@ -99,9 +99,26 @@ const VehicleManagement = () => {
         processedData = { content: [], totalElements: 0, totalPages: 0, number: page, size: size }
       }
 
-      setVehicles(processedData.content || [])
-      setTotalPages(processedData.totalPages || 0)
-      setTotalElements(processedData.totalElements || 0)
+      // Filter out deleted vehicles
+      const allVehicles = processedData.content || []
+      const activeVehicles = allVehicles.filter(v => {
+        // Loại bỏ xe đã bị xóa - kiểm tra nhiều cách có thể
+        const isDeleted = v?.deleted === true || 
+                         v?.isDeleted === true || 
+                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
+                         String(v?.status || '').toUpperCase() === 'DELETED' ||
+                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
+        return !isDeleted
+      })
+      
+      setVehicles(activeVehicles)
+      // Cập nhật totalElements sau khi filter
+      setTotalPages(Math.ceil(activeVehicles.length / size))
+      setTotalElements(activeVehicles.length)
+      
+      // Lưu ý: Stats (TỔNG SỐ XE) phải lấy từ API, không phải từ danh sách trong trang hiện tại
+      // Danh sách vehicles chỉ hiển thị 1 trang (pagination), không phải tổng số xe
+      // Stats sẽ được fetch từ API riêng biệt ở fetchStats()
 
       // Fallback: if models/brands chưa có (API riêng lỗi), lấy từ danh sách
       const list = Array.isArray(processedData?.content) ? processedData.content : []
@@ -145,13 +162,69 @@ const VehicleManagement = () => {
     }
   }, [page, size, debouncedSearch, statusFilter, stationFilter, brandFilter, modelFilter, brands.length, models.length])
 
-  // Fetch stats
+  // Fetch stats - Tính stats từ danh sách xe đã filter (loại bỏ xe đã xóa)
   const fetchStats = useCallback(async () => {
     try {
-      const data = await getVehicleStats({ stationId: stationFilter || 0 })
-      setStats(data)
+      // Fetch toàn bộ danh sách xe để tính stats chính xác (không pagination)
+      // Điều này đảm bảo tính đúng tổng số xe, không bị ảnh hưởng bởi pagination
+      const params = new URLSearchParams()
+      params.append('page', '0')
+      params.append('size', '10000') // Lấy tất cả xe
+      if (stationFilter) params.append('stationId', stationFilter.toString())
+      
+      console.log('[VehicleManagement] Fetching all vehicles for stats calculation...')
+      const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?${params.toString()}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      const allVehicles = data?.content || (Array.isArray(data) ? data : [])
+      
+      // Filter out deleted vehicles - KHÔNG tính xe đã xóa
+      const activeVehicles = allVehicles.filter(v => {
+        const isDeleted = v?.deleted === true || 
+                         v?.isDeleted === true || 
+                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
+                         String(v?.status || '').toUpperCase() === 'DELETED' ||
+                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
+        return !isDeleted
+      })
+      
+      // Tính stats từ danh sách xe đã filter (không tính xe đã xóa)
+      const calculatedStats = {
+        total: activeVehicles.length,
+        available: activeVehicles.filter(v => String(v?.status || '').toUpperCase() === 'AVAILABLE').length,
+        rented: activeVehicles.filter(v => String(v?.status || '').toUpperCase() === 'RENTED').length,
+        fixing: activeVehicles.filter(v => 
+          String(v?.status || '').toUpperCase() === 'FIXING' || 
+          String(v?.status || '').toUpperCase() === 'MAINTENANCE'
+        ).length
+      }
+      
+      console.log('[VehicleManagement] Stats calculated from active vehicles:', calculatedStats)
+      console.log('[VehicleManagement] Total vehicles (including deleted):', allVehicles.length)
+      console.log('[VehicleManagement] Active vehicles (excluding deleted):', activeVehicles.length)
+      
+      setStats(calculatedStats)
     } catch (err) {
-      console.error('Error fetching stats:', err)
+      console.error('[VehicleManagement] Error calculating stats from vehicle list:', err)
+      // Fallback: Thử dùng API stats (nhưng có thể vẫn đếm xe đã xóa)
+      try {
+        const stationId = stationFilter || 0
+        const data = await getVehicleStats({ stationId })
+        console.warn('[VehicleManagement] Using API stats as fallback (may include deleted vehicles):', data)
+        setStats({
+          total: data?.total || 0,
+          available: data?.available || 0,
+          rented: data?.rented || 0,
+          fixing: data?.fixing || data?.maintenance || 0
+        })
+      } catch (fallbackErr) {
+        console.error('[VehicleManagement] Fallback API stats also failed:', fallbackErr)
+        // Giữ nguyên stats hiện tại nếu cả 2 cách đều lỗi
+      }
     }
   }, [stationFilter])
 
@@ -170,6 +243,22 @@ const VehicleManagement = () => {
   useEffect(() => {
     fetchVehicles()
     fetchStats()
+  }, [fetchVehicles, fetchStats])
+  
+  // Listen for vehicle deletion event và refresh stats
+  useEffect(() => {
+    const handleVehicleDeleted = () => {
+      console.log('[VehicleManagement] Vehicle deleted event received, refreshing stats...')
+      // Refresh cả vehicles và stats
+      fetchVehicles()
+      fetchStats()
+    }
+    
+    window.addEventListener('vehicleDeleted', handleVehicleDeleted)
+    
+    return () => {
+      window.removeEventListener('vehicleDeleted', handleVehicleDeleted)
+    }
   }, [fetchVehicles, fetchStats])
 
   // Handlers

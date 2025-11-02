@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.controller.admin;
 
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
+import com.evrental.evrentalsystem.request.UpdateVehicleRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,6 +61,19 @@ public class VehicleAdminController {
         var result = service.getVehicleList(q, status, stationId, brand, model, pageable);
         return ResponseEntity.ok(result);
     }
+    @PutMapping("/vehicles/{id}")
+    public ResponseEntity<Map<String, Object>> updateVehicle(
+            @PathVariable Integer id, @RequestBody UpdateVehicleRequest body) {
+        service.updateVehicle(id, body);
+        return ResponseEntity.ok(Map.of("success", true, "id", id));
+    }
+
+    @DeleteMapping("/vehicles/{id}")
+    public ResponseEntity<Map<String, Object>> deleteVehicle(@PathVariable Integer id) {
+        service.deleteVehicle(id);
+        return ResponseEntity.ok(Map.of("success", true, "id", id));
+    }
+
     @GetMapping("/ping")
     public String ping() { return "OK"; }
 

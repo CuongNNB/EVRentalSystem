@@ -9,7 +9,7 @@
  * @param {number} totalAll - Tổng số xe toàn hệ thống (khi chọn "Tất cả trạm")
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { getStationOptions, getStationTotalVehicles } from '../../api/adminDashboard';
 import './StationVehiclesCard.css';
 
@@ -34,32 +34,76 @@ const StationVehiclesCard = ({ totalAll = 0 }) => {
     fetchStations();
   }, []);
 
-  // Fetch số xe của trạm được chọn
-  useEffect(() => {
+  // Fetch số xe của trạm được chọn - Tính từ danh sách xe thực tế (không tính xe đã xóa)
+  const fetchStationVehicles = useCallback(async () => {
     if (selectedStationId === 'all') {
       setStationVehicleCount(null);
       return;
     }
 
-    const fetchStationVehicles = async () => {
-      setLoading(true);
+    setLoading(true);
+    try {
+      // Fetch toàn bộ danh sách xe của trạm để tính chính xác (không tính xe đã xóa)
+      const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?page=0&size=10000&stationId=${selectedStationId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const allVehicles = data?.content || (Array.isArray(data) ? data : []);
+      
+      // Filter out deleted vehicles - KHÔNG tính xe đã xóa
+      const activeVehicles = allVehicles.filter(v => {
+        const isDeleted = v?.deleted === true || 
+                         v?.isDeleted === true || 
+                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
+                         String(v?.status || '').toUpperCase() === 'DELETED' ||
+                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE';
+        return !isDeleted;
+      });
+      
+      // Đếm số xe của trạm (không tính xe đã xóa)
+      const count = activeVehicles.length;
+      console.log(`[StationVehiclesCard] Station ${selectedStationId} vehicles (excluding deleted):`, count);
+      setStationVehicleCount(count);
+    } catch (error) {
+      console.error('[StationVehiclesCard] Error fetching station vehicles from list:', error);
+      // Fallback: Thử dùng API getStationTotalVehicles
       try {
         const data = await getStationTotalVehicles(selectedStationId);
-        // Backend có thể trả về { total: 10 } hoặc { totalVehicles: 10 } hoặc số trực tiếp
         const count = typeof data === 'number' 
           ? data 
           : (data?.total ?? data?.totalVehicles ?? data?.total_vehicles ?? 0);
+        console.warn('[StationVehiclesCard] Using API as fallback (may include deleted vehicles):', count);
         setStationVehicleCount(count);
-      } catch (error) {
-        console.error('[StationVehiclesCard] Error fetching station vehicles:', error);
+      } catch (fallbackErr) {
+        console.error('[StationVehiclesCard] Fallback API also failed:', fallbackErr);
         setStationVehicleCount(0);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchStationVehicles();
+    } finally {
+      setLoading(false);
+    }
   }, [selectedStationId]);
+
+  // Fetch số xe khi selectedStationId thay đổi
+  useEffect(() => {
+    fetchStationVehicles();
+  }, [fetchStationVehicles]);
+
+  // Listen for vehicle deletion event để refresh số xe của trạm
+  useEffect(() => {
+    const handleVehicleDeleted = () => {
+      console.log(`[StationVehiclesCard] Vehicle deleted event received, refreshing station ${selectedStationId} vehicles...`);
+      fetchStationVehicles();
+    };
+    
+    window.addEventListener('vehicleDeleted', handleVehicleDeleted);
+    
+    return () => {
+      window.removeEventListener('vehicleDeleted', handleVehicleDeleted);
+    };
+  }, [fetchStationVehicles, selectedStationId]);
 
   // Số xe hiển thị: nếu chọn "Tất cả" thì dùng totalAll, không thì dùng stationVehicleCount
   const displayCount = useMemo(() => {

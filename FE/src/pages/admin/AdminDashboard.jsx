@@ -40,20 +40,66 @@ export function AdminOverview() {
   // State để lưu tổng số xe từ vehicle stats API
   const [totalVehicles, setTotalVehicles] = React.useState(0);
 
-  // Fetch tổng số xe từ vehicle stats API
-  React.useEffect(() => {
-    const fetchVehicleTotal = async () => {
+  // Fetch tổng số xe từ danh sách xe thực tế (không tính xe đã xóa)
+  const fetchVehicleTotal = React.useCallback(async () => {
+    try {
+      // Fetch toàn bộ danh sách xe để tính stats chính xác (không pagination)
+      const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?page=0&size=10000`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const allVehicles = data?.content || (Array.isArray(data) ? data : []);
+      
+      // Filter out deleted vehicles - KHÔNG tính xe đã xóa
+      const activeVehicles = allVehicles.filter(v => {
+        const isDeleted = v?.deleted === true || 
+                         v?.isDeleted === true || 
+                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
+                         String(v?.status || '').toUpperCase() === 'DELETED' ||
+                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE';
+        return !isDeleted;
+      });
+      
+      // Tính tổng số xe từ danh sách đã filter (không tính xe đã xóa)
+      const total = activeVehicles.length;
+      console.log('[AdminOverview] Total vehicles (excluding deleted):', total);
+      console.log('[AdminOverview] Total vehicles (including deleted):', allVehicles.length);
+      setTotalVehicles(total);
+    } catch (err) {
+      console.error('[AdminOverview] Error fetching vehicle total from list:', err);
+      // Fallback: Thử dùng API stats
       try {
         const stats = await getVehicleStats({ stationId: 0 });
-        console.log('[AdminOverview] Vehicle stats:', stats);
+        console.warn('[AdminOverview] Using API stats as fallback (may include deleted vehicles):', stats);
         setTotalVehicles(stats?.total || 0);
-      } catch (err) {
-        console.error('[AdminOverview] Error fetching vehicle total:', err);
+      } catch (fallbackErr) {
+        console.error('[AdminOverview] Fallback API stats also failed:', fallbackErr);
         setTotalVehicles(0);
       }
-    };
-    fetchVehicleTotal();
+    }
   }, []);
+
+  // Fetch tổng số xe khi component mount
+  React.useEffect(() => {
+    fetchVehicleTotal();
+  }, [fetchVehicleTotal]);
+
+  // Listen for vehicle deletion event để refresh total vehicles
+  React.useEffect(() => {
+    const handleVehicleDeleted = () => {
+      console.log('[AdminOverview] Vehicle deleted event received, refreshing total vehicles...');
+      fetchVehicleTotal();
+    };
+    
+    window.addEventListener('vehicleDeleted', handleVehicleDeleted);
+    
+    return () => {
+      window.removeEventListener('vehicleDeleted', handleVehicleDeleted);
+    };
+  }, [fetchVehicleTotal]);
 
   const num = (v) => (typeof v === "number" ? v : 0);
   const ymd = (d) => d.toLocaleDateString("en-CA");

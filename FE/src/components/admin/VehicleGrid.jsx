@@ -21,14 +21,28 @@ const VehicleGrid = () => {
       
       // Handle paginated response
       const data = response.data
+      let allVehicles = []
+      
       if (data.content && Array.isArray(data.content)) {
-        setVehicles(data.content)
+        allVehicles = data.content
         setTotalPages(data.totalPages || 0)
       } else if (Array.isArray(data)) {
-        setVehicles(data)
+        allVehicles = data
       } else {
-        setVehicles([])
+        allVehicles = []
       }
+      
+      // Filter out deleted vehicles
+      const activeVehicles = allVehicles.filter(v => {
+        const isDeleted = v?.deleted === true || 
+                         v?.isDeleted === true || 
+                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
+                         String(v?.status || '').toUpperCase() === 'DELETED' ||
+                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
+        return !isDeleted
+      })
+      
+      setVehicles(activeVehicles)
     } catch (err) {
       console.error('Error fetching vehicles:', err)
       setError(err.message || 'Không thể tải danh sách xe')
