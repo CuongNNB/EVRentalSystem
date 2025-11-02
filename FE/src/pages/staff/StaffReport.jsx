@@ -32,57 +32,11 @@ function resolveColor(raw) {
   return { label, hex };
 }
 
-
-
-function getTech(i) {
-  const mod = i % 4;
-  if (mod === 0) return 'OK';
-  if (mod === 1) return 'Minor';
-  return 'Needs Service';
-}
-
-function getStatus(i) {
-  const mod = i % 3;
-  if (mod === 0) return 'Available';
-  if (mod === 1) return 'Rented';
-  return 'Reserved';
-}
-
 // battery helpers kept for potential future use; not used in current table
 
-// Aggregate counts from models/vehicles returned by API
-function countFromVehicles(vehicles) {
-  let total = vehicles.length;
-  let rented = 0, reserved = 0, needCharge = 0;
-  for (const v of vehicles) {
-    const st = (v.status || v.vehicleStatus || v.state || '') + '';
-    const stl = st.toLowerCase();
-    if (stl.includes('rent')) rented += 1;
-    if (stl.includes('reserved') || stl.includes('reserve') || stl.includes('book')) reserved += 1;
-    const battery = v.battery ?? v.batteryPercent ?? v.charge ?? null;
-    if (typeof battery === 'number' && battery < 30) needCharge += 1;
-  }
-  return { total, rented, reserved, needCharge };
-}
 
 
-
-const mockCars = Array.from({ length: 12 }).map((_, i) => ({
-  id: `CAR-${100 + i}`,
-  plate: `30A-${100 + i}`,
-  battery: Math.max(10, 100 - i * 6),
-  tech: getTech(i),
-  status: getStatus(i),
-}));
-
-const mockIncidents = Array.from({ length: 4 }).map((_, i) => ({
-  id: `INC-${300 + i}`,
-  carId: mockCars[i]?.id || `CAR-${300 + i}`,
-  time: `2025-10-2${8 + i} 0${8 + i}:12`,
-  desc: ["Vỡ đèn", "Trầy xước cửa", "Lỗi phanh", "Pin giảm bất thường"][i],
-  img: null,
-  status: i % 2 === 0 ? "Mới" : "Đang xử lý",
-}));
+// No mock data — rely solely on backend responses
 
 
 export default function StaffReport() {
@@ -183,15 +137,7 @@ useEffect(() => {
     return out;
   }, [models]);
 
-  const cars = useMemo(() => {
-    if (vehiclesFromModels.length > 0) return vehiclesFromModels;
-    // Enrich mocks with sample colors so UI looks complete if API is empty
-    return mockCars.map((c, i) => {
-      const colors = ['Trắng','Đỏ','Xanh dương','Đen','Bạc','Xám','Vàng','Cam','Nâu','Xanh lá'];
-      const { label, hex } = resolveColor(colors[i % colors.length]);
-      return { ...c, color: label, colorHex: hex, status: c.status };
-    });
-  }, [vehiclesFromModels, dataRefreshKey]);
+  const cars = useMemo(() => vehiclesFromModels, [vehiclesFromModels]);
 
   // Count vehicleDetailId occurrences for overview display
   const vehicleDetailsCount = useMemo(() => {
@@ -276,7 +222,7 @@ useEffect(() => {
     }
   };
 
-  const incidents = mockIncidents; // placeholder until backend incidents wiring
+  const [incidents] = useState([]); // placeholder for future backend incidents wiring
   // revenue/transactions removed
 
  
@@ -301,11 +247,13 @@ const handleManualSubmit = async (e) => {
   setConnectionState({ status: "loading", message: "Đang tải dữ liệu trạm..." });
 
   try {
-    const data = await getModelsByStation(manualInput.trim());
+  const data = await getModelsByStation(manualInput.trim());
     setModels(data);
     setManualStationValue(manualInput.trim());
     setManualError("");
-    localStorage.setItem("staff_station_id", manualInput.trim());
+  // Persist under both keys to keep other screens in sync
+  localStorage.setItem("staff_station_id", manualInput.trim());
+  localStorage.setItem("ev_staff_station_id", manualInput.trim());
     setConnectionState({
       status: "success",
       message: `Đã tải ${data?.length || 0} xe của trạm ${manualInput.trim()}.`,
@@ -325,6 +273,7 @@ const handleManualSubmit = async (e) => {
 
   const handleManualReset = () => {
   localStorage.removeItem("staff_station_id");
+  localStorage.removeItem("ev_staff_station_id");
   setManualStationValue(null);
   setManualInput("");
   setIsEditingStation(true);
@@ -683,17 +632,23 @@ const handleManualSubmit = async (e) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {incidents.map((inc) => (
-                      <tr key={inc.id} className="odd:bg-slate-50">
-                        <td className="py-2 font-medium">{inc.id}</td>
-                        <td>{inc.carId}</td>
-                        <td>{inc.time}</td>
-                        <td>{inc.desc}</td>
-                        <td>{inc.img ? <img src={inc.img} alt="inc" className="w-16 h-12 object-cover rounded" /> : <span className="text-slate-400">—</span>}</td>
-                        <td>{inc.status}</td>
-                        <td><button className="sr-btn sr-btn--primary sr-btn--sm">Cập nhật trạng thái</button></td>
+                    {incidents.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-3 text-center text-slate-400">Chưa có sự cố</td>
                       </tr>
-                    ))}
+                    ) : (
+                      incidents.map((inc) => (
+                        <tr key={inc.id} className="odd:bg-slate-50">
+                          <td className="py-2 font-medium">{inc.id}</td>
+                          <td>{inc.carId}</td>
+                          <td>{inc.time}</td>
+                          <td>{inc.desc}</td>
+                          <td>{inc.img ? <img src={inc.img} alt="inc" className="w-16 h-12 object-cover rounded" /> : <span className="text-slate-400">—</span>}</td>
+                          <td>{inc.status}</td>
+                          <td><button className="sr-btn sr-btn--primary sr-btn--sm">Cập nhật trạng thái</button></td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
