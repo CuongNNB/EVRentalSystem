@@ -21,6 +21,8 @@ import MapStationsDemo from "./pages/MapStations";
 import UserContract from "./pages/renter/UserContract";
 import PromoPage from "./pages/PromoList.jsx";
 import Forbidden from "./pages/Forbidden";
+import ReviewPage from "./pages/renter/CustomerCreateReviewPage.jsx";
+
 
 // Auth-required (renter)
 import DepositPaymentPage from "./pages/DepositPaymentPage";
@@ -86,6 +88,7 @@ function App() {
                         <Route path="/station-cars" element={<StationCarView />} />
                         <Route path="/map-stations" element={<MapStationsDemo />} />
                         <Route path="/promo" element={<PromoPage />} />
+                        <Route path="/create-review" element={<ReviewPage />} />
 
                         {/* STAFF AREA (/staff) */}
                         <Route element={<StaffGuard />}>
