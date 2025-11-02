@@ -6,9 +6,6 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import './CheckoutPage.css'; // CSS mới của bạn
 
-// NOTE: This component now supports two optional props:
-// - forwardedFromParent: object passed when embedded (if provided, it takes precedence over location.state)
-// - embedded: boolean; if true, Header/Footer are not rendered (useful when rendering inside a modal)
 const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const { contractId } = useParams();
     const navigate = useNavigate();
@@ -465,10 +462,17 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                 // đóng modal QR nếu có
                 setShowQRModal && setShowQRModal(false);
 
-                // chuyển hướng hoặc reload — tuỳ bạn. Mình để navigate(-1)
+                // → CHUYỂN HƯỚNG SANG TRANG TẠO REVIEW, TRUYỀN bookingId QUA state
+                // Giữ delay nhỏ để user kịp thấy toast/modal
                 setTimeout(() => {
-                    if (typeof navigate === 'function') navigate(-1);
-                    else window.location.reload();
+                    try {
+                        navigate('/create-review', { state: { bookingId: bookingIdParsed } });
+                    } catch (navErr) {
+                        console.error('Navigate to create-review failed:', navErr);
+                        // fallback: quay lại trang trước
+                        if (typeof navigate === 'function') navigate(-1);
+                        else window.location.reload();
+                    }
                 }, 700);
             } else {
                 // hiển thị lỗi chi tiết để debug
@@ -489,6 +493,7 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
             setPaying(false);
         }
     };
+
 
     // If there's no summary (shouldn't happen, but safe guard)
     if (!summary) {
