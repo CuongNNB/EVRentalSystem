@@ -1,8 +1,8 @@
 :root {
-    --primary: #0bb97f;
-    --primary-dark: #089067;
-    --text: #0f172a;
-    --muted: #64748b;
+    --primary: #0bb97f !important;
+    --primary-dark: #089067!important;
+    --text: #0f172a!important;
+    --muted: #64748b!important;
     --surface: #ffffff;
     --surface-alt: #f4f8f6;
     --border: #e2e8f0;
@@ -158,13 +158,13 @@ body {
     flex: 1; /* Chiếm không gian còn lại */
 }
 
-.nav-link {
+.homepage .nav-link {
     color: var(--muted);
     position: relative;
     transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-link::after {
+.homepage .nav-link::after {
     content: "";
     position: absolute;
     left: 0;
@@ -178,13 +178,13 @@ body {
     transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-link:hover,
-.nav-link:focus-visible {
+.homepage.nav-link:hover,
+.homepage .nav-link:focus-visible {
     color: var(--text);
 }
 
-.nav-link:hover::after,
-.nav-link:focus-visible::after {
+.homepage .nav-link:hover::after,
+.homepage .nav-link:focus-visible::after {
     opacity: 1;
     transform: scaleX(1);
 }
@@ -212,7 +212,7 @@ body {
     font-weight: 600;
 }
 
-.btn {
+.homepage .btn {
     border-radius: 12px;
     border: 1px solid transparent;
     padding: 0.65rem 1.3rem;
@@ -232,7 +232,7 @@ body {
     outline-offset: 2px;
 }
 
-.primary-btn {
+.homepage .primary-btn {
     background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
     color: #fff;
     box-shadow:
@@ -272,7 +272,7 @@ body {
     animation: gentlePress 0.2s ease-out;
 }
 
-.text-btn {
+.homepage .text-btn {
     background: transparent;
     color: var(--text);
     border-color: transparent;
@@ -1184,7 +1184,7 @@ body {
     z-index: 10;
 }
 
-.control-btn {
+.homepage .control-btn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -1951,11 +1951,11 @@ body {
     animation: fadeInScale 0.6s ease-out;
 }
 
-.primary-btn {
+.homepage .primary-btn {
     animation: subtleGlow 3s ease-in-out infinite;
 }
 
-.primary-btn:hover {
+.homepage .primary-btn:hover {
     animation: gentleScale 0.4s ease-out;
 }
 
@@ -2126,7 +2126,7 @@ body {
         right: 10px;
     }
 
-    .control-btn {
+    .homepage .control-btn {
         width: 35px;
         height: 35px;
         font-size: 14px;
@@ -2480,7 +2480,7 @@ body {
     z-index: 10;
 }
 
-.control-btn {
+.homepage .control-btn {
     background: rgba(255, 255, 255, 0.95);
     border: 2px solid rgba(11, 185, 127, 0.2);
     border-radius: 50%;
@@ -2607,7 +2607,7 @@ body {
         right: 15px;
     }
 
-    .control-btn {
+    .homepage .control-btn {
         width: 40px;
         height: 40px;
     }

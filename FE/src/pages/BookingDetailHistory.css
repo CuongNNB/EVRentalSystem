@@ -110,6 +110,19 @@
     white-space: nowrap;
 }
 
+.detail-page .status-badge {
+    padding: 0.5rem 1rem !important;
+    border-radius: 9999px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    white-space: nowrap !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: none !important;
+    max-width: 200px !important;
+}
+
 /* Status Badge Variants */
 .status-pending {
     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
