@@ -1,6 +1,6 @@
 ﻿# Maven build output
 /EVRentalSystem/target/
-
+/EVRentalSystem/src//main/resources/application.yaml
 # IntelliJ IDEA project files
 /.idea/
 /out/
