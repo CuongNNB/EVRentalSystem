@@ -28,4 +28,10 @@ public interface VehicleModelRepository extends JpaRepository<VehicleModel, Inte
         HAVING COUNT(vd.id) > 0
         """, nativeQuery = true)
     List<Object[]> findVehicleModelsByStation(@Param("stationId") Integer stationId);
+
+
+    @Query("SELECT DISTINCT vm FROM VehicleModel vm " +
+            "LEFT JOIN FETCH vm.vehicleDetails vd " +
+            "LEFT JOIN FETCH vd.station s")
+    List<VehicleModel> findAllWithDetailsAndStation();
 }
