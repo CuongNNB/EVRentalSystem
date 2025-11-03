@@ -22,7 +22,7 @@ public class ImageUtil {
         try {
             return Base64.getDecoder().decode(raw);
         } catch (IllegalArgumentException ex) {
-            return null;
+            return raw.getBytes();
         }
     }
 
@@ -52,5 +52,28 @@ public class ImageUtil {
         headers.setContentLength(bytes.length);
         headers.setCacheControl(CacheControl.maxAge(3600, TimeUnit.SECONDS).cachePublic());
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+    }
+
+    public static String parseBase64(String base64Data) {
+        if (base64Data == null || base64Data.trim().isEmpty()) {
+            return base64Data; // trả về chính chuỗi gốc nếu null/empty
+        }
+
+        String cleanBase64 = base64Data.trim();
+
+        // Nếu có header (ví dụ: data:image/png;base64,...)
+        if (cleanBase64.contains(",")) {
+            cleanBase64 = cleanBase64.substring(cleanBase64.indexOf(",") + 1);
+        }
+
+        try {
+            // Kiểm tra decode được hay không
+            Base64.getDecoder().decode(cleanBase64);
+            // Nếu decode thành công, trả lại phần base64 sạch
+            return cleanBase64;
+        } catch (IllegalArgumentException e) {
+            // Nếu decode thất bại (ví dụ "1.jpg"), trả lại chuỗi gốc
+            return base64Data;
+        }
     }
 }
