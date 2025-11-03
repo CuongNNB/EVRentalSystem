@@ -4,6 +4,7 @@ import com.evrental.evrentalsystem.enums.PartCarName;
 import com.evrental.evrentalsystem.response.ApiResponse;
 import com.evrental.evrentalsystem.response.staff.InspectionDetailsByBookingResponse;
 import com.evrental.evrentalsystem.response.staff.VehicleDetailsByBookingResponse;
+import com.evrental.evrentalsystem.response.user.GetAllAdminResponse;
 import com.evrental.evrentalsystem.service.StaffService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +24,23 @@ public class ReportController {
     private StaffService staffService;
 
 
+
     // API tạo mới report cho admin cùng trạm
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Boolean>> createReport(
             @RequestParam Integer staffId,
             @RequestParam Integer vehicleDetailId,
-            @RequestParam String description
+            @RequestParam String description,
+            @RequestParam Integer adminId
 
     ) {
-        staffService.createReport(staffId, vehicleDetailId,description);
+        staffService.createReport(staffId, vehicleDetailId,description, adminId);
         return ResponseEntity.ok(ApiResponse.success("Report created successfully", true));
+    }
+
+    @GetMapping("/all-admins")
+    public ResponseEntity<List<GetAllAdminResponse>> getAllAdmins() {
+        List<GetAllAdminResponse> response = staffService.getAllAdmins();
+        return ResponseEntity.ok(response);
     }
 }

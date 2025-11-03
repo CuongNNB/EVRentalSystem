@@ -5,6 +5,7 @@ import com.evrental.evrentalsystem.enums.*;
 import com.evrental.evrentalsystem.enums.Enum;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.staff.*;
+import com.evrental.evrentalsystem.response.user.GetAllAdminResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -479,12 +480,13 @@ public class StaffService {
 
     public void createReport(Integer staffId,
                              Integer vehicleDetailId,
-                             String description){
+                             String description,
+                             Integer adminId){
         User staff = userRepository.findById(staffId)
                 .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
         EmployeeDetail staffDetail = employeeDetailRepository.findByEmployee(staff)
                 .orElseThrow(() -> new RuntimeException("Staff detail not found with ID: " + staffId));
-        User admin = userRepository.findAdminByStationId(staffDetail.getStation().getStationId())
+        User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin not found in this station"));
         VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with ID: " + vehicleDetailId));
@@ -497,5 +499,21 @@ public class StaffService {
         r.setStatus(ReportStatusEnum.PENDING.toString());
         reportRepository.save(r);
     }
+
+
+
+
+    public List<GetAllAdminResponse> getAllAdmins() {
+        return userRepository.findByRole("ADMIN")
+                .stream()
+                .map(u -> new GetAllAdminResponse(
+                        u.getUserId(),
+                        u.getUsername(),
+                        u.getFullName(),
+                        u.getRole()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }
 

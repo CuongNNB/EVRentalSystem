@@ -540,7 +540,7 @@ const handleManualSubmit = async (e) => {
 )}
 
             {/* Overview (framed like the table card below) */}
-            <div className="orders-card">
+            <div className="orders-card orders-card--narrow">
               <div className="orders-card__header">
                 <h2>Tổng quan</h2>
                 <div />

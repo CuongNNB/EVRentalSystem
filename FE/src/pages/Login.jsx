@@ -13,7 +13,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login, loginWithSession, loading } = useAuth();
+  const {  loginWithSession, loading } = useAuth();
 
   useEffect(() => {
     initializeStyle();
@@ -72,7 +72,7 @@ export default function Login() {
 
     // store and update context
     localStorage.setItem('ev_user', JSON.stringify(userObj))
-    localStorage.setItem('ev_token', tokenStr)
+    localStorage.setItem('ev_token', tokenStr);
     loginWithSession && loginWithSession(userObj, tokenStr)
 
     alert(`Xin chào ${userObj.fullName || userObj.username || userObj.name || 'người dùng'}!`)
@@ -81,6 +81,19 @@ export default function Login() {
     const roles = Array.isArray(userObj?.roles) ? userObj.roles : (userObj?.role ? [userObj.role] : [])
     const rolesNorm = roles.map(r => String(r).toUpperCase())
     console.debug('Login roles normalized:', rolesNorm)
+    if (rolesNorm.includes('STAFF')) {
+      const staffIdCandidate =
+        userObj?.staffId ||
+        userObj?.userId ||
+        userObj?.id ||
+        userObj?.staff?.staffId ||
+        userObj?.staff?.id;
+      if (staffIdCandidate != null) {
+        localStorage.setItem('ev_staff_id', String(staffIdCandidate));
+      }
+    } else {
+      try { localStorage.removeItem('ev_staff_id'); } catch {}
+    }
     if (rolesNorm.includes('ADMIN')) {
       navigate('/admin', { replace: true })
     } else if (rolesNorm.includes('STAFF')) {
@@ -255,6 +268,20 @@ export default function Login() {
 
                     const roles = Array.isArray(userObj?.roles) ? userObj.roles : (userObj?.role ? [userObj.role] : [])
                     const rolesNorm = roles.map(r => String(r).toUpperCase())
+                    // Save staff id for STAFF logins (Google SSO path)
+                    if (rolesNorm.includes('STAFF')) {
+                      const staffIdCandidate =
+                        userObj?.staffId ||
+                        userObj?.userId ||
+                        userObj?.id ||
+                        userObj?.staff?.staffId ||
+                        userObj?.staff?.id;
+                      if (staffIdCandidate != null) {
+                        localStorage.setItem('ev_staff_id', String(staffIdCandidate));
+                      }
+                    } else {
+                      try { localStorage.removeItem('ev_staff_id'); } catch {}
+                    }
                     if (rolesNorm.includes('ADMIN')) {
                       navigate('/admin', { replace: true })
                     } else if (rolesNorm.includes('STAFF')) {

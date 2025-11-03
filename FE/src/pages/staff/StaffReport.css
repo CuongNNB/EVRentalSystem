@@ -106,13 +106,19 @@ html, body, #root { height: 100%; }
 .sr-charts h3{margin:0 0 8px 0}
 
 /* Make overview fit visually into an orders-card frame */
-.orders-card__body{ padding: 8px 6px 14px; }
-
+.orders-card__body{ 
+  padding: 8px 6px 14px; 
+}
 /* --- Visual balance tweaks for overview cards --- */
 /* Make the overview container match the orders-card look (rounded, airy) */
 .orders-card {
   border-radius: 18px;
   padding: 20px 22px 18px;
+}
+.orders-card--narrow {
+  max-width: 980px; /* giảm tổng chiều rộng phần tổng quan */
+  margin-left: auto;
+  margin-right: auto;
 }
 .orders-card__header h2{
   font-size: 20px;
@@ -126,7 +132,7 @@ html, body, #root { height: 100%; }
   gap:16px;
   align-items:stretch;
   flex-wrap:wrap;
-  justify-content:center;
+  justify-content:flex-start;
   overflow:visible;
   padding-bottom:6px;
 }
@@ -169,6 +175,13 @@ html, body, #root { height: 100%; }
   .orders-card .staff-overview{ flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto }
   .orders-card .staff-overview .staff-card{ flex:0 0 190px; min-width:150px }
   .orders-card .staff-overview .staff-card__value{ font-size:22px }
+}
+
+/* Khi áp dụng khung hẹp, thu nhỏ card thêm một chút để cân đối */
+.orders-card--narrow .staff-overview .staff-card{
+  flex: 0 0 170px;
+  min-width: 140px;
+  max-width: 200px;
 }
 
 /* manual station input active state (green) */
