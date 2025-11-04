@@ -16,30 +16,26 @@ html, body, #root { height: 100%; }
 .sr-aside { width:240px; position:sticky; top:var(--staff-header-height); height:calc(100vh - var(--staff-header-height)); overflow-y:auto; padding:16px }
 .sr-main { flex:1; overflow:auto; padding:28px }
 
-@media(max-width:768px){ .sr-layout{ grid-template-columns: 1fr } .sr-aside{ position:static; height:auto; padding:8px } .sr-main{ padding:16px } }
+/* media queries removed per request */
 
-.sr-header{ display:flex; flex-direction:column; gap:10px; margin-bottom:20px }
-@media(min-width:640px){ .sr-header{ flex-direction:row; align-items:center; justify-content:space-between } }
+/* make header a row by default */
+.sr-header{ display:flex; flex-direction:row; gap:10px; margin-bottom:20px; align-items:center; justify-content:space-between }
 .sr-title{ font-size:22px; font-weight:700 }
 .sr-sub{ font-size:13px; color:var(--muted) }
 
 .sr-topline{ display:flex; gap:8px; align-items:center }
 
-/* ===== SUMMARY CARDS - target both sr-summary (old) and staff-overview (jsx) ===== */
-.sr-summary, .staff-overview { display:flex; gap:14px; margin-bottom:20px; align-items:stretch; flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px }
-.sr-summary::-webkit-scrollbar, .staff-overview::-webkit-scrollbar{ height:8px }
-.sr-summary::-webkit-scrollbar-thumb, .staff-overview::-webkit-scrollbar-thumb{ background:rgba(15,23,42,0.06); border-radius:8px }
+/* ===== SUMMARY CARDS (legacy .sr-summary only; .staff-overview moved to component CSS) ===== */
+.sr-summary { display:flex; gap:14px; margin-bottom:20px; align-items:stretch; flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px }
+.sr-summary::-webkit-scrollbar{ height:8px }
+.sr-summary::-webkit-scrollbar-thumb{ background:rgba(15,23,42,0.06); border-radius:8px }
 
-.staff-overview .staff-card, .sr-summary .sr-card, .sr-summary .staff-card { background: linear-gradient(180deg,#ffffff,#fbfdff); border-radius:12px; padding:12px; box-shadow:var(--card-shadow); display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; border:1px solid rgba(15,23,42,0.04); flex:0 0 180px; min-width:140px; max-width:220px }
-.staff-main .staff-content .staff-overview { display:flex !important; gap:14px; margin-bottom:20px; align-items:stretch; flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px }
-.staff-main .staff-content .staff-overview .staff-card { flex:0 0 170px !important; min-width:130px !important; max-width:210px !important; padding:12px !important }
-.staff-main .staff-content .staff-overview .staff-card h3 { margin:0; font-size:0.95rem }
-.staff-main .staff-content .staff-overview .staff-card__value { font-size:1.6rem; font-weight:800 }
-.staff-overview .staff-card .title, .sr-summary .sr-card .title { font-size:12px; color:var(--muted) }
-.staff-overview .staff-card .value, .sr-summary .sr-card .value { font-size:20px; font-weight:800 }
-.staff-overview .staff-card .emoji, .sr-summary .sr-card .emoji { font-size:18px }
+.sr-summary .sr-card, .sr-summary .staff-card { background: linear-gradient(180deg,#ffffff,#fbfdff); border-radius:12px; padding:12px; box-shadow:var(--card-shadow); display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; border:1px solid rgba(15,23,42,0.04); flex:0 0 180px; min-width:140px; max-width:220px }
+.sr-summary .sr-card .title { font-size:12px; color:var(--muted) }
+.sr-summary .sr-card .value { font-size:20px; font-weight:800 }
+.sr-summary .sr-card .emoji { font-size:18px }
 
-@media(min-width:1200px){ .staff-overview .staff-card, .sr-summary .sr-card { flex:0 0 160px; min-width:140px } }
+/* media queries removed per request */
 
 /* Panels / cards */
 .sr-panel{ background:var(--bg); border-radius:12px; padding:16px; box-shadow:var(--card-shadow); width:100% }
@@ -89,100 +85,19 @@ html, body, #root { height: 100%; }
 .sr-badge.yellow{background:#fffbeb;color:#92400e}
 .sr-badge.red{background:#fff1f2;color:#9f1239}
 
-.sr-charts{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:1024px){.sr-charts{grid-template-columns:2fr 1fr;align-items:start}}
+.sr-charts{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start}
 .recharts-wrapper{width:100% !important;height:260px !important;min-height:180px}
 
-.sr-form{display:grid;grid-template-columns:1fr;gap:12px}
-@media(min-width:640px){.sr-form{grid-template-columns:1fr 2fr}}
+.sr-form{display:grid;grid-template-columns:1fr 2fr;gap:12px}
 .sr-input,.sr-textarea,.sr-select{width:100%;padding:10px;border:1px solid #eef2f6;border-radius:8px}
 
 .small-muted{font-size:13px;color:var(--muted)}
-
-@media(max-width:640px){.sr-panel{padding:12px}}
 
 .sr-main .sr-table{max-width:100%}
 
 .sr-charts h3{margin:0 0 8px 0}
 
-/* Make overview fit visually into an orders-card frame */
-.orders-card__body{ 
-  padding: 8px 6px 14px; 
-}
-/* --- Visual balance tweaks for overview cards --- */
-/* Make the overview container match the orders-card look (rounded, airy) */
-.orders-card {
-  border-radius: 18px;
-  padding: 20px 22px 18px;
-}
-.orders-card--narrow {
-  max-width: 980px; /* giảm tổng chiều rộng phần tổng quan */
-  margin-left: auto;
-  margin-right: auto;
-}
-.orders-card__header h2{
-  font-size: 20px;
-  margin: 0 0 12px 0;
-  color: #07103a;
-}
-
-/* Cards: larger numbers, lighter shadow, subtle rounded icon */
-.orders-card .staff-overview{
-  display:flex;
-  gap:16px;
-  align-items:stretch;
-  flex-wrap:wrap;
-  justify-content:flex-start;
-  overflow:visible;
-  padding-bottom:6px;
-}
-.orders-card .staff-overview .staff-card{
-  flex: 0 0 220px;
-  min-width: 180px;
-  max-width: 260px;
-  padding:18px 18px;
-  border-radius:12px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.04);
-  border: 1px solid rgba(15,23,42,0.03);
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-}
-.orders-card .staff-overview .staff-card h3{ font-size:14px; color:#475569; margin:0 0 8px 0 }
-.orders-card .staff-overview .staff-card__value{
-  font-size:28px;
-  font-weight:800;
-  color:#0f172a;
-  line-height:1.05;
-}
-
-/* small icon / emoji styling similar to the screenshot */
-.orders-card .staff-overview .staff-card__icon{
-  width:44px;
-  height:44px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background: rgba(99,102,241,0.06);
-  font-size:20px;
-  margin-top:8px;
-}
-
-/* responsive tweaks: reduce card width on small screens */
-@media(max-width:980px){
-  .orders-card .staff-overview{ flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto }
-  .orders-card .staff-overview .staff-card{ flex:0 0 190px; min-width:150px }
-  .orders-card .staff-overview .staff-card__value{ font-size:22px }
-}
-
-/* Khi áp dụng khung hẹp, thu nhỏ card thêm một chút để cân đối */
-.orders-card--narrow .staff-overview .staff-card{
-  flex: 0 0 170px;
-  min-width: 140px;
-  max-width: 200px;
-}
+/* StaffOverview component styles moved out; keep StaffReport page specific styles below */
 
 /* manual station input active state (green) */
 .manual-station--active{ background: #ecfdf5; border-color: rgba(16,185,129,0.25) !important }

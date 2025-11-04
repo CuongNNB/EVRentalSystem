@@ -5,6 +5,7 @@ import "./Orders/Orders.css"; // reuse Orders page styling for consistent staff 
 import "./StaffReport.css";
 import StaffHeader from "../../components/staff/StaffHeader";
 import StaffSlideBar from "../../components/staff/StaffSlideBar";
+import StaffOverview from "../../components/staff/StaffOverview";
 import { getModelsByStation } from "../../api/vehicles";
 // StaffReport: Station Staff Report Page
 // Uses TailwindCSS classes. Mock data used for display.
@@ -539,21 +540,13 @@ const handleManualSubmit = async (e) => {
   </form>
 )}
 
-            {/* Overview (framed like the table card below) */}
-            <div className="orders-card orders-card--narrow">
-              <div className="orders-card__header">
-                <h2>Tổng quan</h2>
-                <div />
-              </div>
-              <div className="orders-card__body">
-                <section className="staff-overview">
-                  <Card title="Xe tại điểm" value={vehicleDetailsCount} emoji="🚗" accent="green" />
-                  <Card title="Xe sẵn sàng" value={availableCount} emoji="✅" accent="green" />
-                  <Card title="Xe đang cho thuê" value={rentedCount} emoji="🔑" accent="yellow" />
-                  <Card title="Xe sự cố" value={incidentCount} emoji="⚠️" accent="red" />
-                </section>
-              </div>
-            </div>
+            {/* Overview moved to component */}
+            <StaffOverview
+              vehicleDetailsCount={vehicleDetailsCount}
+              availableCount={availableCount}
+              rentedCount={rentedCount}
+              incidentCount={incidentCount}
+            />
 
             {/* models detail section removed — counts are aggregated into the overview cards */}
 
@@ -698,17 +691,7 @@ const handleManualSubmit = async (e) => {
   );
 }
 
-function Card({ title, value, emoji = "", accent = "green" }) {
-  return (
-    <article className={`staff-card staff-card--${accent}`}>
-      <div>
-        <h3 style={{margin:0,color:'#475569'}}>{title}</h3>
-        <div className="staff-card__value">{value}</div>
-      </div>
-      <div className="staff-card__icon" aria-hidden="true">{emoji}</div>
-    </article>
-  );
-}
+// Card moved to StaffOverview component
 
 function Tabs({ tab, onChange }) {
   const tabs = ["Xe tại Trạm", "Sự cố"]; // removed Doanh thu
@@ -723,12 +706,7 @@ function Tabs({ tab, onChange }) {
   );
 }
 
-Card.propTypes = {
-  title: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  emoji: PropTypes.string,
-  accent: PropTypes.string,
-};
+// Card propTypes defined within StaffOverview component
 
 Tabs.propTypes = {
   tab: PropTypes.string.isRequired,
