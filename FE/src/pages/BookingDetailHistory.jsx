@@ -733,7 +733,7 @@ const BookingDetailHistory = () => {
                                                     Over_Mileage_Fee: 'Phí vượt quá odo quy định',
                                                     Late_Return_Fee: 'Phí trả trễ xe',
                                                     Cleaning_Fee: 'Phí vệ sinh xe',
-                                                    Fuel_Fee: 'Phí xăng dầu',
+                                                    Fuel_Fee: 'Phí pin',
                                                     Other_Fee: 'Phí khác',
                                                 };
                                                 const label = feeNameMap[feeType] || feeType || fee.title || `Phụ phí ${idx + 1}`;

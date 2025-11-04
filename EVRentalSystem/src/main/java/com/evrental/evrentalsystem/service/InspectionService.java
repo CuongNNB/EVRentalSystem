@@ -131,7 +131,7 @@ public class InspectionService {
         }
 
         Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
-        checkBooking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
+        checkBooking.setStatus(BookingStatus.Completed.toString());
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
