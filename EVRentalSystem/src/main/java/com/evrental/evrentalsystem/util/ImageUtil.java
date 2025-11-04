@@ -1,6 +1,9 @@
 package com.evrental.evrentalsystem.util;
 
 import org.springframework.http.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
@@ -11,6 +14,19 @@ import java.util.concurrent.TimeUnit;
  * - buildImageResponse: tạo ResponseEntity<byte[]> với header phù hợp.
  */
 public class ImageUtil {
+
+    public static String encodeToBase64(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("File upload bị trống!");
+        }
+        try {
+            byte[] bytes = file.getBytes();
+            return Base64.getEncoder().encodeToString(bytes);
+        } catch (IOException e) {
+            String name = file.getOriginalFilename();
+            throw new RuntimeException("Không thể đọc file: " + (name != null ? name : "unknown"), e);
+        }
+    }
 
     public static byte[] decodeBase64(String base64) {
         if (base64 == null || base64.trim().isEmpty()) return null;
@@ -54,26 +70,4 @@ public class ImageUtil {
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }
 
-    public static String parseBase64(String base64Data) {
-        if (base64Data == null || base64Data.trim().isEmpty()) {
-            return base64Data; // trả về chính chuỗi gốc nếu null/empty
-        }
-
-        String cleanBase64 = base64Data.trim();
-
-        // Nếu có header (ví dụ: data:image/png;base64,...)
-        if (cleanBase64.contains(",")) {
-            cleanBase64 = cleanBase64.substring(cleanBase64.indexOf(",") + 1);
-        }
-
-        try {
-            // Kiểm tra decode được hay không
-            Base64.getDecoder().decode(cleanBase64);
-            // Nếu decode thành công, trả lại phần base64 sạch
-            return cleanBase64;
-        } catch (IllegalArgumentException e) {
-            // Nếu decode thất bại (ví dụ "1.jpg"), trả lại chuỗi gốc
-            return base64Data;
-        }
-    }
 }

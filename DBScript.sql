@@ -74,7 +74,7 @@ CREATE TABLE Vehicle_Model
     model      NVARCHAR(100)  NOT NULL,
     price      DECIMAL(10, 2) NOT NULL,
     seats      INT            NOT NULL,
-    picture    NVARCHAR(50),
+    picture    NVARCHAR(MAX),
 );
 
 -- ============================
@@ -89,7 +89,7 @@ CREATE TABLE Vehicle_Detail
     [color]          NVARCHAR(50),
     battery_capacity NVARCHAR(50),
     odo              INT,
-    picture          NVARCHAR(50),
+    picture          NVARCHAR(MAX),
     [status]         NVARCHAR(50),
     CONSTRAINT FK_VDetail_Vehicle FOREIGN KEY (vehicle_id) REFERENCES Vehicle_Model (vehicle_id),
     CONSTRAINT FK_VDetail_Station FOREIGN KEY (station_id) REFERENCES Station (station_id)

@@ -104,7 +104,6 @@ public class UserController {
     }
 
     // --- Image endpoints: decode base64 and return bytes with proper Content-Type ---
-
     @GetMapping("/{userId}/renter-detail/cccd-front")
     public ResponseEntity<byte[]> getCccdFront(@PathVariable Integer userId) {
         return buildImageResponse(userService.getCccdFrontBase64(userId));
@@ -183,6 +182,7 @@ public class UserController {
         } catch (IOException ignored) {}
         return null;
     }
+
 //API http://localhost:8084/EVRentalSystem/api/users/{userId}/profile
 @PutMapping("/{userId}/profile")
 public ResponseEntity<UpdateUserProfile> updateProfile(

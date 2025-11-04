@@ -6,16 +6,16 @@ import com.evrental.evrentalsystem.entity.VehicleModel;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
+import com.evrental.evrentalsystem.request.AdminCreateVehicleDetailRequest;
 import com.evrental.evrentalsystem.request.AdminUpdateVehicleDetailRequest;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +24,7 @@ public class VehicleManagementService {
     private final VehicleModelRepository vehicleModelRepository;
     private final VehicleDetailRepository vehicleDetailRepository;
     private final StationRepository stationRepository;
+    ImageUtil imageUtil = new ImageUtil();
     public List<AdminVehicleModelResponse> getAllVehiclesGroupedByModel() {
         List<VehicleModel> models = vehicleModelRepository.findAllWithDetailsAndStation();
 
@@ -81,41 +82,41 @@ public class VehicleManagementService {
         return "Vehicle detail status updated successfully.";
     }
 
+    public String createVehicleDetail(AdminCreateVehicleDetailRequest req, MultipartFile detailPicture) {
+        VehicleModel vm = vehicleModelRepository.findById(req.getVehicleModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found with id: " + req.getVehicleModelId()));
+        Station station = stationRepository.findById(req.getStationId())
+                .orElseThrow(() -> new RuntimeException("Station not found with id: " + req.getStationId()));
 
-    public String updateVehicleDetail(Integer vehicleDetailId, AdminUpdateVehicleDetailRequest req) {
-        VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
-                .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
-
-        // Cập nhật các trường cơ bản nếu không null
-        if (req.getLicensePlate() != null) vd.setLicensePlate(req.getLicensePlate());
-        if (req.getBatteryCapacity() != null) vd.setBatteryCapacity(req.getBatteryCapacity());
-        if (req.getOdo() != null) vd.setOdo(req.getOdo());
-        if (req.getStatus() != null) vd.setStatus(req.getStatus());
-        if (req.getColor() != null) vd.setColor(req.getColor());
-
-        // Xử lý ảnh base64 nếu có
-        if (req.getPicture() != null) {
-            String parsedBase64 = ImageUtil.parseBase64(req.getPicture());
-            vd.setPicture(parsedBase64);
-        }
-
-        // Cập nhật VehicleModel nếu có
-        if (req.getVehicleId() != null) {
-            VehicleModel vm = vehicleModelRepository.findById(req.getVehicleId())
-                    .orElseThrow(() -> new RuntimeException("VehicleModel not found with id: " + req.getVehicleId()));
-            vd.setVehicleModel(vm);
-        }
-
-        // Cập nhật Station nếu có
-        if (req.getStationId() != null) {
-            Station st = stationRepository.findById(req.getStationId())
-                    .orElseThrow(() -> new RuntimeException("Station not found with id: " + req.getStationId()));
-            vd.setStation(st);
-        }
-
+        VehicleDetail vd = new VehicleDetail();
+        vd.setLicensePlate(req.getLicensePlate());
+        vd.setBatteryCapacity(req.getBatteryCapacity());
+        vd.setOdo(req.getOdo());
+        vd.setColor(req.getColor());
+        vd.setStatus("AVAILABLE");
+        vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        vd.setStation(station);
+        vd.setVehicleModel(vm);
         vehicleDetailRepository.save(vd);
-
-        return "Vehicle detail updated successfully.";
+        return "Vehicle detail created successfully.";
     }
 
+    public String updateVehicleDetail(AdminUpdateVehicleDetailRequest req, MultipartFile detailPicture) {
+        VehicleDetail vd = vehicleDetailRepository.findById(req.getDetailId())
+                .orElseThrow(() -> new RuntimeException("Vehicle detail not found with id: " + req.getDetailId()));
+        VehicleModel vm = vehicleModelRepository.findById(req.getVehicleModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found with id: " + req.getVehicleModelId()));
+        Station station = stationRepository.findById(req.getStationId())
+                .orElseThrow(() -> new RuntimeException("Station not found with id: " + req.getStationId()));
+
+        vd.setLicensePlate(req.getLicensePlate());
+        vd.setBatteryCapacity(req.getBatteryCapacity());
+        vd.setOdo(req.getOdo());
+        vd.setColor(req.getColor());
+        vd.setStatus("AVAILABLE");
+        vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        vd.setStation(station);
+        vd.setVehicleModel(vm);
+        return "Vehicle update created successfully.";
+    }
 }

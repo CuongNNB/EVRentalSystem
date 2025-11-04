@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdminUpdateVehicleDetailRequest {
-    private Integer detailId;
+public class AdminCreateVehicleDetailRequest {
     private String licensePlate;
     private String batteryCapacity;
     private Integer odo;
