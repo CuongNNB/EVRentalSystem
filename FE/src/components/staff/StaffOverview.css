@@ -1,0 +1,122 @@
+/* StaffOverview component-scoped styles */
+
+/* Limit orders-card tweaks to this component via .staff-overview-card wrapper */
+.staff-overview-card.orders-card {
+  border-radius: 18px;
+  padding: 20px 22px 18px;
+}
+
+.staff-overview-card .orders-card__body {
+  padding: 8px 6px 14px;
+}
+
+.staff-overview-card .orders-card__header h2 {
+  font-size: 20px;
+  margin: 0 0 12px 0;
+  color: #07103a;
+}
+
+/* KPI grid to mimic Admin Dashboard */
+.staff-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Stat card (scoped) */
+.staff-stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.staff-stat-card:nth-child(1)::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+.staff-stat-card:nth-child(2)::before { background: linear-gradient(90deg, #10b981, #059669); }
+.staff-stat-card:nth-child(3)::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+.staff-stat-card:nth-child(4)::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+.staff-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.staff-stat-card > * {
+  padding: 20px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* KPI inner elements (scoped under staff-overview-card to avoid global bleed) */
+.staff-overview-card .kpi-card__header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 100%;
+}
+
+.staff-overview-card .kpi-card__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.staff-stat-card:hover .kpi-card__icon {
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.staff-overview-card .kpi-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+.staff-overview-card .kpi-card__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1.2;
+}
+
+.staff-overview-card .kpi-card__value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 6px 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
