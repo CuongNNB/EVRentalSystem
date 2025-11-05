@@ -1,10 +1,13 @@
 package com.evrental.evrentalsystem.controller.admin;
 
+import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.request.AdminCreateVehicleDetailRequest;
 import com.evrental.evrentalsystem.request.AdminUpdateVehicleDetailRequest;
 import com.evrental.evrentalsystem.request.AdminUpdateVehicleStatusRequest;
+import com.evrental.evrentalsystem.response.admin.AdminGetAllVehicleDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
 import com.evrental.evrentalsystem.service.VehicleManagementService;
+import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,23 @@ public class VehicleManagementController {
         return ResponseEntity.ok(results);
     }
 
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/details/{vehicleDetailId}
+    @GetMapping("/details/{vehicleDetailId}")
+    public ResponseEntity<AdminGetAllVehicleDetailResponse> getVehicleDetailById(
+            @PathVariable Integer vehicleDetailId) {
+
+        AdminGetAllVehicleDetailResponse resp = vehicleManagementService.getVehicleDetailById(vehicleDetailId);
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/image/{vehicleDetailId}")
+    public ResponseEntity<byte[]> getVehicleDetailImage(@PathVariable Integer vehicleDetailId) {
+        VehicleDetail vd = vehicleManagementService.findVehicleDetailEntity(vehicleDetailId);
+        byte[] bytes = ImageUtil.decodeBase64(vd.getPicture());
+        String mimeType = ImageUtil.detectImageMimeType(bytes);
+        return ImageUtil.buildImageResponse(bytes, mimeType);
+    }
+
     //API: http://localhost:8084/EVRentalSystem/api/vehicle-management/{vehicleDetailId}/status
     @PutMapping("/{vehicleDetailId}/status")
     public ResponseEntity<Map<String, String>> updateVehicleDetailStatus(
@@ -43,7 +63,8 @@ public class VehicleManagementController {
         return ResponseEntity.ok(response);
     }
     //Update xe
-    @PutMapping(name = "/update-vehicle/{detailId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/update-vehicle/{detailId}
+    @PutMapping(value = "/update-vehicle/{detailId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> updateVehicleDetail(
             @PathVariable Integer detailId,
             @RequestParam("licensePlate") String licensePlate,
@@ -69,6 +90,7 @@ public class VehicleManagementController {
         response.put("message", message);
         return ResponseEntity.ok(response);
     }
+
     //Thêm xe
     //API: http://localhost:8084/EVRentalSystem/api/vehicle-management/create-vehicle
     @PostMapping(value = "/create-vehicle", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

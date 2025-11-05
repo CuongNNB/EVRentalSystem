@@ -8,11 +8,15 @@ import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
 import com.evrental.evrentalsystem.request.AdminCreateVehicleDetailRequest;
 import com.evrental.evrentalsystem.request.AdminUpdateVehicleDetailRequest;
+import com.evrental.evrentalsystem.response.admin.AdminGetAllVehicleDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
@@ -117,6 +121,41 @@ public class VehicleManagementService {
         vd.setPicture(imageUtil.encodeToBase64(detailPicture));
         vd.setStation(station);
         vd.setVehicleModel(vm);
+        vehicleDetailRepository.save(vd);
         return "Vehicle update created successfully.";
+    }
+    public AdminGetAllVehicleDetailResponse getVehicleDetailById(Integer vehicleDetailId) {
+        VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
+                .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
+
+        AdminGetAllVehicleDetailResponse resp = AdminGetAllVehicleDetailResponse.builder()
+                .detailId(vd.getId())
+                .licensePlate(vd.getLicensePlate())
+                .batteryCapacity(vd.getBatteryCapacity())
+                .odo(vd.getOdo())
+                // Trả URL ảnh (backend tự phục vụ ở endpoint image/{id})
+                .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId())
+                .status(vd.getStatus())
+                .color(vd.getColor())
+                .build();
+
+        VehicleModel vm = vd.getVehicleModel();
+        if (vm != null) {
+            resp.setModelId(vm.getVehicleId());
+            resp.setBrand(vm.getBrand());
+            resp.setModel(vm.getModel());
+        }
+
+        if (vd.getStation() != null) {
+            resp.setStationId(vd.getStation().getStationId());
+            resp.setStationName(vd.getStation().getStationName());
+        }
+
+        return resp;
+    }
+
+    public VehicleDetail findVehicleDetailEntity(Integer vehicleDetailId) {
+        return vehicleDetailRepository.findById(vehicleDetailId)
+                .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
     }
 }
