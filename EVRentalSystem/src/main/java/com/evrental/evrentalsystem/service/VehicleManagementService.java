@@ -118,7 +118,9 @@ public class VehicleManagementService {
         vd.setOdo(req.getOdo());
         vd.setColor(req.getColor());
         vd.setStatus("AVAILABLE");
-        vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        if (detailPicture != null) {
+            vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        }
         vd.setStation(station);
         vd.setVehicleModel(vm);
         vehicleDetailRepository.save(vd);

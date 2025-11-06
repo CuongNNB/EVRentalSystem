@@ -73,7 +73,7 @@ public class VehicleManagementController {
             @RequestParam("color") String color,
             @RequestParam("stationId") Integer stationId,
             @RequestParam("vehicleModelId") Integer vehicleModelId,
-            @RequestParam("picture")MultipartFile picture) {
+            @RequestParam(value = "picture", required = false)MultipartFile picture) {
 
         AdminUpdateVehicleDetailRequest req = new AdminUpdateVehicleDetailRequest();
         req.setDetailId(detailId);
