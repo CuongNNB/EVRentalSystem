@@ -199,64 +199,6 @@ public class AdminService {
             return b.build();
         }).collect(Collectors.toList());
     }
-//    ///
-//    public List<AdminGetAllReportResponse> getReportsByAdminId(Integer adminId) {
-//        if (adminId == null) throw new IllegalArgumentException("adminId must not be null");
-//
-//        List<Report> reports = reportRepository.findByAdmin_UserId(adminId);
-//        log.debug("[getReportsByAdminId] adminId={}, totalReports={}", adminId, reports.size());
-//
-//        return reports.stream().map(r -> {
-//            try {
-//                var b = AdminGetAllReportResponse.builder()
-//                        .reportId(r.getReportId())
-//                        .description(r.getDescription())
-//                        .status(r.getStatus())
-//                        .createdAt(r.getCreatedAt());
-//
-//                // Staff
-//                if (r.getStaff() != null) {
-//                    b.staffId(r.getStaff().getUserId());
-//                    b.staffName(r.getStaff().getFullName());
-//                }
-//
-//                // Vehicle
-//                VehicleDetail vd = r.getVehicleDetail();
-//                if (vd != null) {
-//                    b.vehicleDetailId(vd.getId());
-//                    b.licensePlate(vd.getLicensePlate());
-//                } else {
-//                    b.licensePlate("N/A");
-//                }
-//
-//                // Station (safe lookup)
-//                String stationName = null;
-//                if (r.getStaff() != null) {
-//                    Integer staffId = r.getStaff().getUserId();
-//                    var optEd = employeeDetailRepository.findByEmployee_UserId(staffId);
-//                    if (optEd != null && optEd.isPresent() && optEd.get().getStation() != null) {
-//                        stationName = optEd.get().getStation().getStationName();
-//                    }
-//                }
-//                b.stationName(stationName);
-//
-//                return b.build();
-//            } catch (Exception ex) {
-//                log.warn("[getReportsByAdminId] map reportId={} failed: {}", r.getReportId(), ex.getMessage());
-//                // Trả về tối thiểu để không làm hỏng toàn bộ response
-//                return AdminGetAllReportResponse.builder()
-//                        .reportId(r.getReportId())
-//                        .description(r.getDescription())
-//                        .status(r.getStatus())
-//                        .createdAt(r.getCreatedAt())
-//                        .staffId(r.getStaff() != null ? r.getStaff().getUserId() : null)
-//                        .staffName(r.getStaff() != null ? r.getStaff().getFullName() : null)
-//                        .build();
-//            }
-//        }).collect(Collectors.toList());
-//    }
-
-    /// //
     public String updateReportStatus(UpdateReportStatusRequest request) {
         if (request.getReportId() == null || request.getStatus() == null || request.getStatus().isBlank()) {
             return "Invalid request data";
