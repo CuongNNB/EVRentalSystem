@@ -192,6 +192,188 @@
 .col-actions .btn-icon i{color:#475569;font-size:14px;}
 .col-actions .btn-icon:hover{background:#eef2ff;border-color:#c7d2fe;transform:translateY(-1px);}
 .col-actions .btn-icon.danger:hover{background:#fee2e2;border-color:var(--danger-200);}
+/* ===== STAFF PAGE – Polished v2 ===== */
+
+/* khung trang rộng & thoáng */
+.staff-page{
+  max-width:1380px;
+  margin:24px auto;
+  padding:0 24px 40px;
+}
+
+/* khối control gộp */
+.staff-controls{
+  background:#fff;
+  border:1px solid #e6ebf2;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(17,24,39,.06);
+  padding:14px;
+  margin:14px 0 18px;
+}
+
+/* thanh công cụ: 4 cột thích nghi */
+.staff-toolbar{
+  display:grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr auto;
+  gap:12px;
+  align-items:center;
+}
+@media (max-width:1100px){ .staff-toolbar{ grid-template-columns:1fr 1fr; } }
+@media (max-width:640px){  .staff-toolbar{ grid-template-columns:1fr; } }
+
+/* search có icon trái */
+.staff-search{ position:relative; }
+.staff-search i{
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  color:#94a3b8; font-size:14px;
+}
+.staff-search input{
+  width:100%; height:42px; padding:0 12px 0 38px;
+  border:2px solid #e2e8f0; border-radius:12px; background:#fff;
+  font-size:14px; transition:.2s;
+}
+.staff-search input:focus{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none; }
+
+/* 2 select */
+.staff-filters{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.staff-filters select{
+  height:42px; padding:0 12px; min-width:170px;
+  border:2px solid #e2e8f0; border-radius:12px; background:#fff;
+  font-size:14px; transition:.2s;
+}
+.staff-filters select:focus{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); outline:none; }
+
+/* toggle grid/table */
+.view-mode-toggle{ display:inline-flex; gap:6px; background:#f1f5f9; border-radius:12px; padding:4px; }
+.view-mode-toggle button{
+  width:42px; height:42px; border:none; border-radius:10px;
+  background:transparent; color:#64748b; cursor:pointer; transition:.18s;
+}
+.view-mode-toggle button:hover,
+.view-mode-toggle button.active{ background:#fff; color:#2563eb; box-shadow:0 2px 5px rgba(0,0,0,.08); }
+
+/* nút chính xanh – chữ trắng (nếu dùng) */
+.btn-primary-solid{
+  height:42px; padding:0 16px; border:0; border-radius:12px;
+  background:#2563eb; color:#fff; font-weight:800; letter-spacing:.2px; white-space:nowrap;
+  box-shadow:0 8px 22px rgba(37,99,235,.18); cursor:pointer; transition:transform .12s, filter .12s;
+}
+.btn-primary-solid:hover{ transform:translateY(-1px); filter:brightness(1.05); }
+
+/* === GRID / CARD view === */
+.staff-grid{
+  display:grid; gap:20px;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+}
+.staff-card{
+  background:#fff; border:1px solid #e5e9f0; border-radius:20px; overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  transition:transform .18s, box-shadow .18s, border-color .18s;
+  display:flex; flex-direction:column; min-height:360px;
+}
+.staff-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 16px 34px rgba(37,99,235,.18);
+  border-color:#bfdbfe;
+}
+.staff-card-header{
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
+  height:150px; display:flex; align-items:center; justify-content:center;
+  position:relative; flex-direction:column; gap:10px; padding-bottom:36px;
+}
+.staff-avatar-large{
+  width:88px; height:88px; border-radius:50%;
+  background:#fff; color:#3b82f6; display:grid; place-items:center;
+  font-weight:800; font-size:30px; border:5px solid rgba(255,255,255,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+}
+.staff-card-header .staff-status{
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  padding:7px 12px; border-radius:999px; font-size:11.5px; font-weight:800;
+  color:#065f46; background:linear-gradient(180deg,#d1fae5 0,#b7f7d6 100%);
+  border:1px solid #86efac; box-shadow:0 3px 10px rgba(16,185,129,.25);
+}
+.staff-card-header .staff-status.inactive{
+  color:#92400e; background:linear-gradient(180deg,#fef3c7 0,#fde68a 100%);
+  border:1px solid #fbbf24; box-shadow:0 3px 10px rgba(217,119,6,.22);
+}
+.staff-card-body{ padding:18px 20px; display:flex; flex-direction:column; color:#1f2937; }
+.staff-card-name{ text-align:center; font-size:16px; font-weight:800; margin:6px 0 2px; }
+.staff-card-id{ text-align:center; font-size:13px; color:#3b82f6; font-weight:700; }
+.staff-card-position,.staff-card-station,.staff-card-contact,.staff-card-join-date{
+  display:flex; align-items:center; gap:8px; font-size:14px; color:#4b5563; margin:6px 0;
+}
+.staff-card-station,.staff-card-contact{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.staff-card-footer{ margin-top:auto; display:flex; gap:10px; padding:0 20px 16px; }
+.staff-btn-detail,.staff-btn-danger{
+  flex:1; border-radius:10px; font-weight:800; font-size:13px; padding:10px 0;
+  border:2px solid transparent; transition:.18s;
+}
+.staff-btn-detail{ background:#f8fafc; color:#2563eb; border-color:#dbeafe; }
+.staff-btn-detail:hover{ background:#2563eb; color:#fff; border-color:#2563eb; transform:translateY(-2px); }
+.staff-btn-danger{ background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+.staff-btn-danger:hover{ background:#ef4444; color:#fff; border-color:#ef4444; transform:translateY(-2px); }
+
+/* === TABLE view === */
+.staff-table-container{
+  background:#fff; border:1px solid #e9eef5; border-radius:16px;
+  box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden;
+}
+.staff-table.modern{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+.staff-table.modern thead{
+  background:linear-gradient(180deg,#f9fafb 0%,#f3f4f6 100%);
+  border-bottom:1px solid #e5e7eb;
+}
+.staff-table.modern thead th{
+  padding:18px 16px; font-size:12px; font-weight:800; color:#475569;
+  text-transform:uppercase; letter-spacing:.9px; position:sticky; top:0; z-index:1;
+}
+.staff-table.modern th,.staff-table.modern td{
+  padding:18px 16px; border-bottom:1px solid #e2e8f0; vertical-align:middle;
+}
+.staff-table.modern tbody tr:nth-child(even){ background:#fbfdff; }
+.staff-table.modern tbody tr:hover{ background:#f1f5ff; }
+
+/* cell “nhân viên” */
+.staff-info-table{ display:flex; align-items:center; gap:14px; min-width:0; }
+.staff-avatar-small{
+  width:40px; height:40px; border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
+  box-shadow:0 2px 8px rgba(59,130,246,.25);
+}
+.truncate{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.cell-two-line{ min-width:0; }
+
+/* chip trạm + trạng thái */
+.station-badge{
+  display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px;
+  background:#e7f0ff; border:1px solid #c9dcff; color:#1e40af; font-size:12px; font-weight:700;
+  max-width:100%; white-space:nowrap; box-shadow:0 1px 0 rgba(30,64,175,.08);
+}
+.station-badge i{ color:#2563eb; font-size:12px; }
+
+.col-status .staff-status{
+  display:inline-flex; align-items:center; justify-content:center; line-height:1;
+  padding:7px 12px; border-radius:999px; font-weight:800; font-size:11.5px; white-space:nowrap;
+  background:linear-gradient(180deg,#d1fae5 0,#b7f7d6 100%); color:#065f46; border:1px solid #86efac;
+  box-shadow:0 1px 0 rgba(5,150,105,.12);
+}
+.col-status .staff-status.inactive{
+  background:linear-gradient(180deg,#fef3c7 0,#fde68a 100%); color:#92400e; border:1px solid #fbbf24;
+  box-shadow:0 1px 0 rgba(217,119,6,.15);
+}
+/* nút icon trong bảng */
+.col-actions .action-buttons{ display:inline-flex; gap:10px; align-items:center; }
+.btn-icon{
+  width:36px; height:36px; border-radius:50%;
+  background:#f8fafc; border:1px solid #e5e7eb;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:transform .12s, background .15s, border-color .15s;
+}
+.btn-icon i{ color:#475569; font-size:14px; }
+.btn-icon:hover{ background:#eef2ff; border-color:#c7d2fe; transform:translateY(-1px); }
+.btn-icon.danger:hover{ background:#fee2e2; border-color:#fecaca; }
 
 /* =========================================================
    RESPONSIVE
