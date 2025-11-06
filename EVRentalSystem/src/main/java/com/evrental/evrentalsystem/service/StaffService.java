@@ -38,6 +38,7 @@ public class StaffService {
     private final InspectionAfterRepository inspectionAfterRepository;
     private final ReportRepository reportRepository;
     private final MailService mailService;
+
     private String encodeToBase64(MultipartFile file) {
         try {
             if (file != null && !file.isEmpty()) {
@@ -74,7 +75,6 @@ public class StaffService {
                             .filter(af -> af.getAmount() != null)
                             .mapToLong(af -> af.getAmount().longValue()) // dùng long thay vì int
                             .sum(); // nhân với 1000L để giữ kiểu long
-
 
 
                     // --- In ra console để debug ---
@@ -131,8 +131,8 @@ public class StaffService {
         }
     }
 
-    public List<VehicleIdAndLicensePlateResponse> getAllAvailableVehiclesInStationAndModel(int modelId, int stationId){
-        List<VehicleDetail> vehicles = vehicleDetailRepository.findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(modelId,stationId,"AVAILABLE");
+    public List<VehicleIdAndLicensePlateResponse> getAllAvailableVehiclesInStationAndModel(int modelId, int stationId) {
+        List<VehicleDetail> vehicles = vehicleDetailRepository.findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(modelId, stationId, "AVAILABLE");
         return vehicles.stream()
                 .map(vehicle -> new VehicleIdAndLicensePlateResponse(
                         vehicle.getId(),
@@ -142,11 +142,10 @@ public class StaffService {
     }
 
 
-
     public VehicleDetailsResponse getVehicleDetailById(int id) {
         VehicleDetailsResponse response = new VehicleDetailsResponse();
         VehicleDetail vehicleDetail = vehicleDetailRepository.findById(id).orElse(null);
-        if(vehicleDetail != null) {
+        if (vehicleDetail != null) {
             response.setId(vehicleDetail.getId());
             response.setModelName(vehicleDetail.getVehicleModel().getModel());
             response.setLicensePlate(vehicleDetail.getLicensePlate());
@@ -209,11 +208,11 @@ public class StaffService {
     ) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
-        if(feeName == AdditionalFeeEnum.Late_Return_Fee){
+        if (feeName == AdditionalFeeEnum.Late_Return_Fee) {
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
-            double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
-            if(minutes >= 0){
+            double pricePerHour = booking.getVehicleModel().getPrice() * 1000 / 24;
+            if (minutes >= 0) {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
@@ -227,25 +226,25 @@ public class StaffService {
                     log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
                     return false;
                 }
-            }else{
+            } else {
                 return false;
             }
 
         }
-        if(feeName == AdditionalFeeEnum.Over_Mileage_Fee){
-            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Odometer.toString());
-            int odoBefore =  Integer.parseInt(i.getDescription().replaceAll("[^0-9]", "")) ;
+        if (feeName == AdditionalFeeEnum.Over_Mileage_Fee) {
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Odometer.toString());
+            int odoBefore = Integer.parseInt(i.getDescription().replaceAll("[^0-9]", ""));
             int odoAfter = amount;
             long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
             int totalAllowedOdo = odoBefore + Enum.Allowed_distance_per_hour.getValue() * rentingHours;
-            double pricePerHour =  booking.getVehicleModel().getPrice()*1000/24;
-            if(totalAllowedOdo < odoAfter){
+            double pricePerHour = booking.getVehicleModel().getPrice() * 1000 / 24;
+            if (totalAllowedOdo < odoAfter) {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
                     af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
-                    double cost = (odoAfter - totalAllowedOdo) * (pricePerHour/Enum.Allowed_distance_per_hour.getValue());
+                    double cost = (odoAfter - totalAllowedOdo) * (pricePerHour / Enum.Allowed_distance_per_hour.getValue());
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);
@@ -256,18 +255,18 @@ public class StaffService {
                     log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
                     return false;
                 }
-            }else{
+            } else {
                 return false;
             }
         }
-        if(feeName == AdditionalFeeEnum.Fuel_Fee){
-            Inspection i = inspectionRepository.findByBookingAndPartName(booking,PartCarName.Battery.toString());
-            if(amount < Integer.parseInt(i.getDescription())){
+        if (feeName == AdditionalFeeEnum.Fuel_Fee) {
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Battery.toString());
+            if (amount < Integer.parseInt(i.getDescription())) {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
                     af.setFeeName(feeName.name());
-                    int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", "")) ;
+                    int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", ""));
                     double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
                     af.setAmount(cost);
                     af.setDescription(desc);
@@ -277,7 +276,7 @@ public class StaffService {
                     log.error("Lỗi khi tạo additional fee: {}", e.getMessage(), e);
                     return false;
                 }
-            }else{
+            } else {
                 return false;
             }
         }
@@ -295,7 +294,7 @@ public class StaffService {
         }
     }
 
-    public RenterDetailsByBookingResponse getRenterDetailsByBooking(int bookingId){
+    public RenterDetailsByBookingResponse getRenterDetailsByBooking(int bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
         RenterDetailsByBookingResponse response = new RenterDetailsByBookingResponse();
@@ -308,10 +307,10 @@ public class StaffService {
         return response;
     }
 
-    public BookingDetailsByBookingResponse getBookingDetailsByBooking(int bookingId){
+    public BookingDetailsByBookingResponse getBookingDetailsByBooking(int bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
-        int rentingDurationDay = countRentingDay(booking.getStartTime(),booking.getExpectedReturnTime());
+        int rentingDurationDay = countRentingDay(booking.getStartTime(), booking.getExpectedReturnTime());
 
         double discountRate = booking.getPromotion() == null
                 ? 1.0
@@ -331,7 +330,7 @@ public class StaffService {
         response.setFee(fee);
         response.setDeposit(((int) Math.round(booking.getDeposit())));
         response.setStationName(booking.getStation().getStationName());
-        response.setTotalAmount(fee+additionalFee);
+        response.setTotalAmount(fee + additionalFee);
         response.setEndDate(booking.getExpectedReturnTime());
         response.setAdditionalFee(additionalFee);
         response.setStartDate(booking.getStartTime());
@@ -344,10 +343,10 @@ public class StaffService {
 
     public int countRentingDay(LocalDateTime start, LocalDateTime end) {
         int days = (int) ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate());
-        return Math.max(1,days);
+        return Math.max(1, days);
     }
 
-    public void createContractByBookingId(int id, int staffId){
+    public void createContractByBookingId(int id, int staffId) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         User staff = userRepository.findById(staffId)
@@ -362,7 +361,7 @@ public class StaffService {
         mailService.sendContractCreatedMail(renterEmail);
     }
 
-    public void verifyRenterDetailStatusByBookingId(int id){
+    public void verifyRenterDetailStatusByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         RenterDetail rd = new RenterDetail();
@@ -371,14 +370,14 @@ public class StaffService {
         renterDetailRepository.save(rd);
     }
 
-    public RenterDetailVerificationStatusEnum getVerificationStatusByBookingId(int id){
+    public RenterDetailVerificationStatusEnum getVerificationStatusByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         String status = booking.getRenter().getRenterDetail().getVerificationStatus();
         return RenterDetailVerificationStatusEnum.valueOf(status);
     }
 
-    public VehicleDetailsByBookingResponse getVehicleDetailsByBookingId(int id){
+    public VehicleDetailsByBookingResponse getVehicleDetailsByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         VehicleDetailsByBookingResponse response = new VehicleDetailsByBookingResponse();
@@ -389,7 +388,7 @@ public class StaffService {
         return response;
     }
 
-    public List<InspectionDetailsByBookingResponse> getInspectionDetailsByBookingId(int id){
+    public List<InspectionDetailsByBookingResponse> getInspectionDetailsByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         List<Inspection> inspections = inspectionRepository.findAllByBooking(booking);
@@ -404,7 +403,7 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
-    public List<InspectionDetailsByBookingResponse> getInspectionAfterDetailsByBookingId(int id){
+    public List<InspectionDetailsByBookingResponse> getInspectionAfterDetailsByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         List<InspectionAfter> inspections = inspectionAfterRepository.findAllByBooking(booking);
@@ -419,7 +418,7 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
-    public void UpdateLicensePlateForBooking(int bookingId, String licensePlate){
+    public void UpdateLicensePlateForBooking(int bookingId, String licensePlate) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(licensePlate);
@@ -427,14 +426,14 @@ public class StaffService {
         bookingRepository.save(booking);
     }
 
-    public void updateActualReturnTimeOfBooking(int bookingId){
+    public void updateActualReturnTimeOfBooking(int bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         booking.setActualReturnTime(LocalDateTime.now());
         bookingRepository.save(booking);
     }
 
-    public void updateStatusOfVehicleToAvailableByBookingId(int bookingId){
+    public void updateStatusOfVehicleToAvailableByBookingId(int bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(booking.getVehicleDetail().getLicensePlate());
@@ -481,7 +480,7 @@ public class StaffService {
     public void createReport(Integer staffId,
                              Integer vehicleDetailId,
                              String description,
-                             Integer adminId){
+                             Integer adminId) {
         User staff = userRepository.findById(staffId)
                 .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
         EmployeeDetail staffDetail = employeeDetailRepository.findByEmployee(staff)
@@ -500,9 +499,6 @@ public class StaffService {
         reportRepository.save(r);
     }
 
-
-
-
     public List<GetAllAdminResponse> getAllAdmins() {
         return userRepository.findByRole("ADMIN")
                 .stream()
@@ -515,5 +511,14 @@ public class StaffService {
                 .collect(Collectors.toList());
     }
 
+    public String GetStationId(Integer userId) {
+        EmployeeDetail emp = employeeDetailRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        Station station = emp.getStation();
+        if (station != null) {
+            return station.getStationId().toString();
+        }
+        return "No station found!";
+    }
 }
 

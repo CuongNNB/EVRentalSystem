@@ -23,8 +23,6 @@ public class ReportController {
     @Autowired
     private StaffService staffService;
 
-
-
     // API tạo mới report cho admin cùng trạm
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Boolean>> createReport(
@@ -42,5 +40,12 @@ public class ReportController {
     public ResponseEntity<List<GetAllAdminResponse>> getAllAdmins() {
         List<GetAllAdminResponse> response = staffService.getAllAdmins();
         return ResponseEntity.ok(response);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/report/{staffId}/get-station
+    @GetMapping("/{staffId}/get-station")
+    public ResponseEntity<String> getStaffStationId(@PathVariable Integer staffId) {
+        String stationId = staffService.GetStationId(staffId);
+        return ResponseEntity.ok("Station ID: " + stationId);
     }
 }
