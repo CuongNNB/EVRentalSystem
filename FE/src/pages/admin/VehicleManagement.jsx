@@ -11,16 +11,17 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getVehicleStats, getVehicleModels, getVehicleBrands } from '../../api/adminVehicles'
 import { getStationOptions } from '../../api/adminDashboard'
+import * as XLSX from 'xlsx'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import './AdminDashboardNew.css'
 import './VehicleManagement.css'
 
 const VehicleManagement = () => {
   const navigate = useNavigate()
-  
+
   // Backend URL cho ảnh
   const BACKEND_BASE_URL = 'http://localhost:8084/EVRentalSystem'
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -28,11 +29,86 @@ const VehicleManagement = () => {
   const [brandFilter, setBrandFilter] = useState('')
   const [stationFilter, setStationFilter] = useState('')
 
+
+
+  // helper functions (từ VehicleManagement-Test)
+  function formatStatusText(status) {
+    if (!status) return 'Không rõ'
+    const s = status.toString().toUpperCase()
+    if (s === 'AVAILABLE') return 'Có sẵn'
+    if (s === 'RENTED') return 'Đang thuê'
+    if (s === 'FIXING') return 'Đang bảo trì'
+    return s
+  }
+
+  function statusBadgeClass(status) {
+    if (!status) return 'unknown'
+    return status.toString().toLowerCase()
+  }
+
+  // (tuỳ chọn) station / brand demo arrays từ Test (nếu bạn muốn mặc định)
+  const stationOptions = [
+    { id: 'all', name: 'Tất cả trạm' },
+    { id: 1, name: 'Thảo Điền' },
+    { id: 2, name: 'Tân Cảng' },
+    { id: 3, name: 'Quận 1' },
+    { id: 4, name: 'Quận 7' },
+    { id: 5, name: 'Gò Vấp' },
+    { id: 6, name: 'Phú Nhuận' }
+  ]
+  const brandOptions = ['All', 'Vinfast', 'Tesla', 'Hyundai', 'Kia', 'Nissan', 'BMW', 'Mercedes-Benz', 'Porsche']
+
+
   // Pagination
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
-  const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
+
+  const [vehiclesRaw, setVehiclesRaw] = useState([])    // thay thế / song song với vehicles nếu muốn
+  const [detailsFlat, setDetailsFlat] = useState([])    // mảng flat mỗi row tương ứng 1 detail (dễ hiển thị bảng)
+  const [currentPage, setCurrentPage] = useState(1)     // pagination client-side
+  const pageSize = 10
+
+  // ====== Pagination & Filter logic (copy từ VehicleManagement-Test) ======
+
+  // Lọc danh sách theo filter & search
+  const filtered = detailsFlat.filter(row => {
+    if (brandFilter && brandFilter !== 'All' && row.brand.toLowerCase() !== brandFilter.toLowerCase()) return false;
+    if (stationFilter && stationFilter !== 'all' && String(row.stationId) !== String(stationFilter)) return false;
+    if (searchTerm && searchTerm.trim() !== '') {
+      const q = searchTerm.trim().toLowerCase();
+      const match =
+        (row.licensePlate || '').toLowerCase().includes(q) ||
+        (row.brand || '').toLowerCase().includes(q) ||
+        (row.model || '').toLowerCase().includes(q) ||
+        (row.stationName || '').toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  const handleNavigateDetail = (detailId) => {
+    navigate(`/admin/vehicles/${detailId}`)
+  }
+
+    const handleNavigateModel = (modelId) => {
+    if (!modelId) return
+    navigate(`/admin/vehicles/model/${modelId}`)
+  }
+
+  // Reset trang khi bộ lọc hoặc search thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, brandFilter, stationFilter]);
+
+  // Pagination client-side
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRows = filtered.slice(startIndex, endIndex);
+
 
   // Data
   const [vehicles, setVehicles] = useState([])
@@ -41,10 +117,19 @@ const VehicleManagement = () => {
   const [models, setModels] = useState([])
   const [brands, setBrands] = useState([])
 
+  // --- NEW: toggle to view models instead of vehicles
+  const [isViewModel, setIsViewModel] = useState(false)
+
+  // Data for models-table (from /vehicle-management/models)
+  const [modelsTableData, setModelsTableData] = useState([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [modelsError, setModelsError] = useState(null)
+
+
   // UI
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [viewMode, setViewMode] = useState('grid')
+  const [viewMode, setViewMode] = useState('list')
 
   // Debounce search
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -57,111 +142,219 @@ const VehicleManagement = () => {
   }, [searchTerm])
 
   // Fetch vehicles - Gọi API trực tiếp theo yêu cầu
+  // Thay thế toàn bộ body của fetchVehicles bằng đoạn này
   const fetchVehicles = useCallback(async () => {
-    setLoading(true)
-    setError(null)
     try {
-      // Build query params
-      const params = new URLSearchParams()
-      params.append('page', page.toString())
-      params.append('size', size.toString())
-      if (debouncedSearch) params.append('q', debouncedSearch)
-      if (statusFilter) params.append('status', statusFilter)
-      if (stationFilter) params.append('stationId', stationFilter.toString())
-      if (brandFilter) params.append('brand', brandFilter)
-      if (modelFilter) params.append('model', modelFilter)
-      
-      // Gọi API: GET http://localhost:8084/EVRentalSystem/api/vehicle/vehicles
-      const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?${params.toString()}`)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      
-      // Xử lý response - có thể là paginated hoặc array
-      let processedData
-      if (data.content !== undefined) {
-        // Paginated format
-        processedData = data
-      } else if (Array.isArray(data)) {
-        // Array format - wrap vào paginated format
-        processedData = {
-          content: data,
-          totalElements: data.length,
-          totalPages: Math.ceil(data.length / size),
-          number: page,
-          size: size
-        }
+      setLoading(true)
+      setError(null)
+
+      // Nếu bạn có constant API, dùng nó, ví dụ VEHICLES_API; 
+      // nếu không, thay trực tiếp URL phù hợp với backend bạn.
+      const res = await fetch('http://localhost:8084/EVRentalSystem/vehicle-management/vehicles')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      console.log('[VehicleManagement] raw response:', json)
+
+      // ===== Normalize response to an array (handles many shapes) =====
+      let vehiclesArray = []
+      if (Array.isArray(json)) {
+        vehiclesArray = json
+      } else if (json && Array.isArray(json.vehicles)) {
+        vehiclesArray = json.vehicles
+      } else if (json && Array.isArray(json.data)) {
+        vehiclesArray = json.data
       } else {
-        // Invalid format
-        processedData = { content: [], totalElements: 0, totalPages: 0, number: page, size: size }
+        // fallback: find any key in root object that is an array
+        const possibleKey = Object.keys(json || {}).find(k => Array.isArray(json[k]))
+        vehiclesArray = possibleKey ? json[possibleKey] : []
       }
 
-      // Filter out deleted vehicles
-      const allVehicles = processedData.content || []
-      const activeVehicles = allVehicles.filter(v => {
-        // Loại bỏ xe đã bị xóa - kiểm tra nhiều cách có thể
-        const isDeleted = v?.deleted === true || 
-                         v?.isDeleted === true || 
-                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
-                         String(v?.status || '').toUpperCase() === 'DELETED' ||
-                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
-        return !isDeleted
+      setVehiclesRaw(vehiclesArray) // lưu raw để debug / reuse
+
+      // ===== Flatten vehicleDetails into a row-per-detail array =====
+      const flat = []
+      vehiclesArray.forEach(v => {
+        // Null-safe vehicle id / brand / model / price / seats
+        const vehicleId = v.vehicleId ?? v.id ?? null
+        const brand = v.brand || ''
+        const model = v.model || ''
+        const price = v.price ?? ''
+        const seats = v.seats ?? ''
+        // vehicleDetails có thể là [] hoặc undefined
+        const details = Array.isArray(v.vehicleDetails) ? v.vehicleDetails : []
+
+        if (details.length === 0) {
+          // nếu không có detail, vẫn tạo 1 dòng đại diện để hiển thị
+          flat.push({
+            vehicleId,
+            detailId: null,
+            brand,
+            model,
+            price,
+            seats,
+            licensePlate: '',
+            batteryCapacity: '',
+            odo: '',
+            status: 'UNKNOWN',
+            color: '',
+            stationId: '',
+            stationName: ''
+          })
+        } else {
+          details.forEach(d => {
+            flat.push({
+              vehicleId,
+              detailId: d.id ?? null,
+              brand,
+              model,
+              price,
+              seats,
+              licensePlate: d.licensePlate || '',
+              batteryCapacity: d.batteryCapacity || '',
+              odo: d.odo ?? '',
+              // normalize status to uppercase for consistent filtering
+              status: (d.status || 'UNKNOWN').toString().toUpperCase(),
+              color: d.color || '',
+              stationId: d.stationId ?? '',
+              stationName: d.stationName || ''
+            })
+          })
+        }
       })
-      
-      setVehicles(activeVehicles)
-      // Cập nhật totalElements sau khi filter
-      setTotalPages(Math.ceil(activeVehicles.length / size))
-      setTotalElements(activeVehicles.length)
-      
-      // Lưu ý: Stats (TỔNG SỐ XE) phải lấy từ API, không phải từ danh sách trong trang hiện tại
-      // Danh sách vehicles chỉ hiển thị 1 trang (pagination), không phải tổng số xe
-      // Stats sẽ được fetch từ API riêng biệt ở fetchStats()
 
-      // Fallback: if models/brands chưa có (API riêng lỗi), lấy từ danh sách
-      const list = Array.isArray(processedData?.content) ? processedData.content : []
-      
-      // Debug: Kiểm tra dữ liệu từ API - CHI TIẾT
-      if (list.length > 0) {
-        console.log('[VehicleManagement] ===== API RESPONSE DEBUG =====')
-        console.log('[VehicleManagement] Sample vehicle data (full):', JSON.stringify(list[0], null, 2))
-        console.log('[VehicleManagement] Sample vehicle keys:', Object.keys(list[0] || {}))
-        console.log('[VehicleManagement] Sample picture value:', list[0]?.picture, '| type:', typeof list[0]?.picture)
-        console.log('[VehicleManagement] Sample vehicleId value:', list[0]?.vehicleId ?? list[0]?.vehicle_id, '| type:', typeof (list[0]?.vehicleId ?? list[0]?.vehicle_id))
-        console.log('[VehicleManagement] Total vehicles:', list.length)
-        console.log('[VehicleManagement] Vehicles with picture:', list.filter(v => v?.picture != null && v.picture !== '' && v.picture !== 'null').length, '/', list.length)
-        console.log('[VehicleManagement] Vehicles with vehicleId:', list.filter(v => (v?.vehicleId ?? v?.vehicle_id) != null).length, '/', list.length)
-        console.log('[VehicleManagement] First 3 vehicles image paths:', list.slice(0, 3).map(v => ({
-          id: v?.id,
-          licensePlate: v?.licensePlate,
-          picture: v?.picture,
-          vehicleId: v?.vehicleId ?? v?.vehicle_id,
-          calculatedPath: v?.picture ? `/carpic/${v.picture}` : ((v?.vehicleId ?? v?.vehicle_id) ? `/carpic/${v?.vehicleId ?? v?.vehicle_id}.jpg` : '/carpic/logo.png')
-        })))
-        console.log('[VehicleManagement] ===============================')
-      }
-      
-      if (list.length) {
-        const mset = [...new Set(list.map(v => v?.model).filter(Boolean))]
-        const bset = [...new Set(list.map(v => v?.brand).filter(Boolean))]
-        if (mset.length > 0 && models.length === 0) {
-          setModels(mset)
-        }
-        if (bset.length > 0 && brands.length === 0) {
-          setBrands(bset)
-        }
-      }
+      setDetailsFlat(flat)
     } catch (err) {
-      console.error('Error fetching vehicles:', err)
-      setError(err.message || 'Không thể tải danh sách xe')
-      setVehicles([])
+      console.error('[VehicleManagement] fetch error', err)
+      setError(err.message || 'Lỗi khi tải dữ liệu')
+      setVehiclesRaw([])
+      setDetailsFlat([])
     } finally {
       setLoading(false)
     }
-  }, [page, size, debouncedSearch, statusFilter, stationFilter, brandFilter, modelFilter, brands.length, models.length])
+  }, [])
 
+  // --- NEW: fetch models list from the provided endpoint
+  const fetchModelsFromEndpoint = useCallback(async () => {
+    try {
+      setModelsLoading(true)
+      setModelsError(null)
+
+      const res = await fetch('http://localhost:8084/EVRentalSystem/vehicle-management/models')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+
+      // Normalize: nếu response trực tiếp là array thì dùng luôn
+      let arr = []
+      if (Array.isArray(json)) {
+        arr = json
+      } else if (json && Array.isArray(json.data)) {
+        arr = json.data
+      } else {
+        // fallback: tìm array trong root object
+        const key = Object.keys(json || {}).find(k => Array.isArray(json[k]))
+        arr = key ? json[key] : []
+      }
+
+      // map/normalize fields to consistent keys (modelId, brand, model, price, seats)
+      const normalized = arr.map(item => ({
+        modelId: item.modelId ?? item.id ?? null,
+        brand: item.brand ?? item.make ?? '',
+        model: item.model ?? item.name ?? '',
+        price: item.price ?? '',
+        seats: item.seats ?? ''
+      }))
+
+      setModelsTableData(normalized)
+      setIsViewModel(true) // bật view models
+    } catch (err) {
+      console.error('fetchModelsFromEndpoint error', err)
+      setModelsError(err.message || 'Lỗi khi tải danh sách model')
+      setModelsTableData([])
+    } finally {
+      setModelsLoading(false)
+    }
+  }, [])
+
+  // --- đưa vào component, ví dụ ngay dưới các helper functions ---
+  const formatVND = (value) => {
+    // nếu null/undefined/chuỗi rỗng -> trả dấu '-' (hoặc tùy bạn)
+    if (value === null || value === undefined || value === '') return '-'
+
+    // chuyển sang number an toàn (loại bỏ dấu phẩy / dấu chấm nếu có)
+    const cleaned = String(value).replace(/[^\d.-]/g, '')
+    const num = Number(cleaned)
+    if (Number.isNaN(num)) return String(value)
+
+    // nhân 1000 theo yêu cầu
+    const v = num * 1000
+
+    // format không có thập phân, locale vi-VN dùng dấu '.' cho phân nghìn
+    return v.toLocaleString('vi-VN', { maximumFractionDigits: 0 })
+  }
+  const exportVehiclesExcel = () => {
+    try {
+      // Lấy dữ liệu từ state/biến filtered (sửa tên nếu file bạn dùng khác)
+      // rowsToExport nên là array of objects, mỗi object là 1 hàng
+      const rowsToExport = (filtered || []).map((r, idx) => {
+        // Giá số (số nguyên VND) để Excel hiểu là số
+        const rawPriceNumber = (r.price === null || r.price === undefined || r.price === '')
+          ? null
+          : Math.round(Number(String(r.price).replace(/[^\d.-]/g, '')) * 1000)
+
+        return {
+          'STT': startIndex + idx + 1,            // nếu bạn có startIndex cho phân trang
+          'ID': r.id ?? r.vehicleId ?? '',
+          'Biển số': r.licensePlate ?? '',
+          'Thương hiệu': r.brand ?? '',
+          'Model': r.model ?? '',
+          'Trạm': r.stationName ?? '',
+          'Dung lượng pin': r.batteryCapacity ?? '',
+          'Số km (odo)': r.odo ?? '',
+          // Giá xuất 2 cột: 1 numeric (VND) cho Excel, 1 string đã format
+          'Giá (VND) - Số': rawPriceNumber,
+          'Giá (VND) - Hiển thị': rawPriceNumber != null ? rawPriceNumber.toLocaleString('vi-VN') : '-',
+          'Màu': r.color ?? '',
+          'Trạng thái': formatStatusText ? formatStatusText(r.status) : (r.status ?? '')
+        }
+      })
+
+      if (!rowsToExport.length) {
+        alert('Không có dữ liệu để xuất.')
+        return
+      }
+
+      // Tạo worksheet từ JSON
+      const ws = XLSX.utils.json_to_sheet(rowsToExport, { skipHeader: false })
+
+      // Optionally: set column widths (ví dụ)
+      const wscols = [
+        { wpx: 40 },  // STT
+        { wpx: 70 },  // ID
+        { wpx: 100 }, // Biển số
+        { wpx: 140 }, // Thương hiệu
+        { wpx: 160 }, // Model
+        { wpx: 160 }, // Trạm
+        { wpx: 100 }, // Dung lượng pin
+        { wpx: 90 },  // Odo
+        { wpx: 120 }, // Giá số
+        { wpx: 160 }, // Giá hiển thị
+        { wpx: 100 }, // Màu
+        { wpx: 120 }  // Trạng thái
+      ]
+      ws['!cols'] = wscols
+
+      // Tạo workbook và append sheet
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Vehicles')
+
+      // Ghi file: tên có ngày
+      const filename = `vehicles_${new Date().toISOString().slice(0, 10)}.xlsx`
+      XLSX.writeFile(wb, filename)
+    } catch (err) {
+      console.error('Export to Excel failed', err)
+      alert('Xuất file thất bại — kiểm tra console để biết thêm.')
+    }
+  }
   // Fetch stats - Tính stats từ danh sách xe đã filter (loại bỏ xe đã xóa)
   const fetchStats = useCallback(async () => {
     try {
@@ -171,42 +364,42 @@ const VehicleManagement = () => {
       params.append('page', '0')
       params.append('size', '10000') // Lấy tất cả xe
       if (stationFilter) params.append('stationId', stationFilter.toString())
-      
+
       console.log('[VehicleManagement] Fetching all vehicles for stats calculation...')
       const response = await fetch(`http://localhost:8084/EVRentalSystem/api/vehicle/vehicles?${params.toString()}`)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       const data = await response.json()
       const allVehicles = data?.content || (Array.isArray(data) ? data : [])
-      
+
       // Filter out deleted vehicles - KHÔNG tính xe đã xóa
       const activeVehicles = allVehicles.filter(v => {
-        const isDeleted = v?.deleted === true || 
-                         v?.isDeleted === true || 
-                         v?.deletedAt !== null && v?.deletedAt !== undefined ||
-                         String(v?.status || '').toUpperCase() === 'DELETED' ||
-                         String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
+        const isDeleted = v?.deleted === true ||
+          v?.isDeleted === true ||
+          v?.deletedAt !== null && v?.deletedAt !== undefined ||
+          String(v?.status || '').toUpperCase() === 'DELETED' ||
+          String(v?.status || '').toUpperCase() === 'SOFT_DELETE'
         return !isDeleted
       })
-      
+
       // Tính stats từ danh sách xe đã filter (không tính xe đã xóa)
       const calculatedStats = {
         total: activeVehicles.length,
         available: activeVehicles.filter(v => String(v?.status || '').toUpperCase() === 'AVAILABLE').length,
         rented: activeVehicles.filter(v => String(v?.status || '').toUpperCase() === 'RENTED').length,
-        fixing: activeVehicles.filter(v => 
-          String(v?.status || '').toUpperCase() === 'FIXING' || 
+        fixing: activeVehicles.filter(v =>
+          String(v?.status || '').toUpperCase() === 'FIXING' ||
           String(v?.status || '').toUpperCase() === 'MAINTENANCE'
         ).length
       }
-      
+
       console.log('[VehicleManagement] Stats calculated from active vehicles:', calculatedStats)
       console.log('[VehicleManagement] Total vehicles (including deleted):', allVehicles.length)
       console.log('[VehicleManagement] Active vehicles (excluding deleted):', activeVehicles.length)
-      
+
       setStats(calculatedStats)
     } catch (err) {
       console.error('[VehicleManagement] Error calculating stats from vehicle list:', err)
@@ -244,7 +437,7 @@ const VehicleManagement = () => {
     fetchVehicles()
     fetchStats()
   }, [fetchVehicles, fetchStats])
-  
+
   // Listen for vehicle deletion event và refresh stats
   useEffect(() => {
     const handleVehicleDeleted = () => {
@@ -253,9 +446,9 @@ const VehicleManagement = () => {
       fetchVehicles()
       fetchStats()
     }
-    
+
     window.addEventListener('vehicleDeleted', handleVehicleDeleted)
-    
+
     return () => {
       window.removeEventListener('vehicleDeleted', handleVehicleDeleted)
     }
@@ -339,6 +532,13 @@ const VehicleManagement = () => {
             <i className="fas fa-car"></i>
             <span>Thêm xe</span>
           </button>
+          <button
+            className="admin-btn admin-btn-primary"
+            onClick={() => navigate('/admin/vehicles/add-model')}
+          >
+            <i className="fas fa-car"></i>
+            <span>Thêm model</span>
+          </button>
         </div>
       </div>
 
@@ -406,6 +606,22 @@ const VehicleManagement = () => {
         </div>
 
         <div className="vehicle-filters">
+          <button
+            className={`admin-btn-toggle ${!isViewModel ? 'active' : ''}`}
+            onClick={() => { setIsViewModel(false); setModelsTableData([]); }}
+            title="Hiển thị các xe"
+          >
+            <i className="fas fa-list"></i>
+            <span>Hiển thị các chi tiết xe</span>
+          </button>
+          <button
+            className={`admin-btn-toggle ${isViewModel ? 'active' : ''}`}
+            onClick={() => fetchModelsFromEndpoint()}
+            title="Hiển thị các model xe"
+          >
+            <i className="fas fa-car"></i>
+            <span>Hiển thị các model xe</span>
+          </button>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">Tất cả trạng thái</option>
             <option value="AVAILABLE">Khả dụng</option>
@@ -421,16 +637,6 @@ const VehicleManagement = () => {
               </option>
             ))}
           </select>
-
-          <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)}>
-            <option value="">Tất cả dòng xe</option>
-            {models.map((model, i) => (
-              <option key={i} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
-
           <select value={stationFilter} onChange={(e) => setStationFilter(e.target.value)}>
             <option value="">Tất cả trạm</option>
             {stations.map((s) => (
@@ -439,18 +645,6 @@ const VehicleManagement = () => {
               </option>
             ))}
           </select>
-
-          <div className="view-toggle">
-            <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}>
-              <i className="fas fa-th"></i>
-            </button>
-            <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}>
-              <i className="fas fa-list"></i>
-            </button>
-          </div>
-        </div>
-
-        <div className="vehicle-actions">
           <button className="admin-btn admin-btn-secondary" onClick={handleResetFilters}>
             <i className="fas fa-redo"></i>
             <span>Reset</span>
@@ -459,264 +653,192 @@ const VehicleManagement = () => {
             <i className="fas fa-sync-alt"></i>
             <span>Làm mới</span>
           </button>
+          <button className="admin-btn admin-btn-primary" onClick={exportVehiclesExcel}>
+            <i className="fas fa-file-excel"></i>
+            <span>Xuất danh sách ra Excel</span>
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="vehicles-container">
-        {loading ? (
-          <div className="loading-state">
-            <i className="fas fa-spinner fa-spin"></i>
-            <p>Đang tải dữ liệu xe...</p>
-          </div>
-        ) : error ? (
-          <div className="error-state">
-            <i className="fas fa-exclamation-triangle"></i>
-            <p>Lỗi: {error}</p>
-            <button className="admin-btn admin-btn-primary" onClick={handleRefresh}>
-              <i className="fas fa-redo"></i>
-              Thử lại
-            </button>
-          </div>
-        ) : vehicles.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-inbox"></i>
-            <p>Không tìm thấy xe nào</p>
-            <button className="admin-btn admin-btn-secondary" onClick={handleResetFilters}>
-              Xóa bộ lọc
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className={viewMode === 'grid' ? 'vehicles-grid' : `vehicles-${viewMode}`}>
-              {viewMode === 'grid'
-                ? vehicles.map((v) => {
-                    // Null-safe values
-                    const vehicleId = v?.id ?? v?.vehicleId ?? v?.vehicle_id ?? 'N/A'
-                    const licensePlate = v?.licensePlate ?? 'N/A'
-                    const model = v?.model ?? 'N/A'
-                    const brand = v?.brand ?? 'VinFast'
-                    const status = v?.status ?? 'UNKNOWN'
-                    const odo = v?.odo ?? 0
-                    const stationName = v?.stationName ?? 'N/A'
-                    
-                    // Logic ảnh: ưu tiên FE public, fallback backend, cuối cùng default.jpg
-                    const picture = v?.picture
-                    const vehicleIdForImage = v?.vehicleId ?? v?.vehicle_id ?? vehicleId
-                    
-                    // Helper: normalize picture name (thêm .jpg nếu chưa có extension)
-                    const normalizePicture = (pic) => {
-                      if (!pic || pic === '' || pic === 'null') return null
-                      const picStr = String(pic).trim()
-                      // Nếu đã có extension, giữ nguyên
-                      if (picStr.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        return picStr
-                      }
-                      // Nếu chưa có extension, thêm .jpg
-                      return `${picStr}.jpg`
-                    }
-                    
-                    // Ưu tiên 1: picture từ FE public (vì backend có thể không serve được)
-                    const normalizedPic = normalizePicture(picture)
-                    let imageSrc = normalizedPic ? `/carpic/${normalizedPic}` : null
-                    
-                    // Ưu tiên 2: vehicleId từ FE public
-                    if (!imageSrc && vehicleIdForImage) {
-                      imageSrc = `/carpic/${vehicleIdForImage}.jpg`
-                    }
-                    
-                    // Ưu tiên 3: picture từ backend
-                    if (!imageSrc && normalizedPic) {
-                      imageSrc = `${BACKEND_BASE_URL}/carpic/${normalizedPic}`
-                    }
-                    
-                    // Ưu tiên 4: vehicleId từ backend
-                    if (!imageSrc && vehicleIdForImage) {
-                      imageSrc = `${BACKEND_BASE_URL}/carpic/${vehicleIdForImage}.jpg`
-                    }
-                    
-                    // Fallback cuối cùng: default.jpg từ FE
-                    if (!imageSrc) {
-                      imageSrc = '/carpic/default.jpg'
-                    }
-                    
-                    return (
-                    <article key={vehicleId} className="car-card">
-                      <div className="car-card__media">
-                        <img
-                          src={imageSrc}
-                          alt={`${brand} ${model}`}
-                          className="car-card__image"
-                          loading="lazy"
-                          onError={(e) => {
-                            const currentSrc = e.currentTarget.src
-                            const fallbackLevel = e.currentTarget.dataset.fallback || '0'
-                            
-                            console.error(`[Image Error] Failed: ${currentSrc} (fallback: ${fallbackLevel})`, {
-                              vehicleId,
-                              picture,
-                              vehicleIdForImage
-                            })
-                            
-                            // Fallback chain: thử tất cả các option
-                            const normalizedPic = picture && picture !== '' && picture !== 'null'
-                              ? (String(picture).trim().match(/\.(jpg|jpeg|png|gif|webp)$/i)
-                                  ? String(picture).trim()
-                                  : `${String(picture).trim()}.jpg`)
-                              : null
-                            
-                            // Thử 1: Nếu đang dùng FE path, thử backend
-                            if (fallbackLevel === '0' && currentSrc.startsWith('/carpic/')) {
-                              e.currentTarget.dataset.fallback = '1'
-                              if (normalizedPic) {
-                                e.currentTarget.src = `${BACKEND_BASE_URL}/carpic/${normalizedPic}`
-                                return
-                              }
-                              if (vehicleIdForImage) {
-                                e.currentTarget.src = `${BACKEND_BASE_URL}/carpic/${vehicleIdForImage}.jpg`
-                                return
-                              }
-                            }
-                            
-                            // Thử 2: Nếu đang dùng backend, thử lại FE với vehicleId
-                            if (fallbackLevel === '0' || fallbackLevel === '1') {
-                              e.currentTarget.dataset.fallback = '2'
-                              if (vehicleIdForImage) {
-                                e.currentTarget.src = `/carpic/${vehicleIdForImage}.jpg`
-                                return
-                              }
-                            }
-                            
-                            // Cuối cùng: default.jpg
-                            if (fallbackLevel !== '3') {
-                              e.currentTarget.dataset.fallback = '3'
-                              e.currentTarget.src = '/carpic/default.jpg'
-                            }
-                          }}
-                        />
-                        <span className={`vehicle-status-badge ${getStatusBadgeClass(status)}`}>
-                          {getStatusLabel(status)}
-                        </span>
-                      </div>
-
-                      <div className="car-card__header">
-                        <div>
-                          <h3 className="car-card__name">{model}</h3>
-                          <p className="car-card__subtitle">{brand}</p>
+      {/* ===================== VEHICLES-TABLE-CONTAINER ===================== */}
+      <div className="vehicles-table-container">
+        {isViewModel ? (
+          // === MODELS TABLE VIEW ===
+          modelsLoading ? (
+            <div className="empty-state">
+              <i
+                className="fas fa-spinner fa-spin"
+                style={{ fontSize: '48px', color: '#06b6d4' }}
+              ></i>
+              <p>Đang tải danh sách model...</p>
+            </div>
+          ) : modelsError ? (
+            <div className="empty-state">
+              <i className="fas fa-exclamation-triangle"></i>
+              <p>Lỗi tải dữ liệu: {modelsError}</p>
+            </div>
+          ) : modelsTableData.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-list"></i>
+              <p>Không tìm thấy model phù hợp</p>
+            </div>
+          ) : (
+            <>
+              <table className="vehicles-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Hãng</th>
+                    <th>Model</th>
+                    <th>Chỗ ngồi</th>
+                    <th>Giá (VND)</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {modelsTableData.map((m, idx) => (
+                    <tr key={m.modelId ?? idx}>
+                      <td>{idx + 1}</td>
+                      <td>{m.brand || '-'}</td>
+                      <td>{m.model || '-'}</td>
+                      <td>{m.seats ?? '-'}</td>
+                      <td>{formatVND(m.price)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="btn-icon"
+                            title="Xem chi tiết model"
+                            onClick={() => handleNavigateModel(m.modelId)}
+                          >
+                            <i className="fas fa-eye"></i>
+                          </button>
                         </div>
-                      </div>
-
-                      <div className="car-card__license">
-                        <i className="fas fa-id-card"></i>
-                        <span>{licensePlate}</span>
-                      </div>
-
-                      <ul className="car-card__features">
-                        <li className="car-card__feature">
-                          <i className="fas fa-map-marker-alt car-card__feature-icon"></i>
-                          {stationName}
-                        </li>
-                        <li className="car-card__feature">
-                          <i className="fas fa-tachometer-alt car-card__feature-icon"></i>
-                          ODO: {odo.toLocaleString('vi-VN')} km
-                        </li>
-                      </ul>
-
-                      <div className="car-card__actions">
-                        <button
-                          className="car-card__cta car-card__cta--primary car-card__cta--view-detail"
-                          onClick={() => navigate(`/admin/vehicles/${vehicleId}`)}
-                          aria-label={`Xem chi tiết xe ${licensePlate}`}
-                          title="Xem chi tiết"
-                        >
-                          <i className="fas fa-eye"></i>
-                          <span>Xem chi tiết</span>
-                        </button>
-                      </div>
-                    </article>
-                    )
-                  })
-                : null}
-
-              {viewMode === 'list' ? (
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )
+        ) : (
+          // === VEHICLES TABLE VIEW ===
+          <>
+            {loading ? (
+              <div className="empty-state">
+                <i
+                  className="fas fa-spinner fa-spin"
+                  style={{ fontSize: '48px', color: '#06b6d4' }}
+                ></i>
+                <p>Đang tải danh sách xe...</p>
+              </div>
+            ) : error ? (
+              <div className="empty-state">
+                <i className="fas fa-exclamation-triangle"></i>
+                <p>Lỗi tải dữ liệu: {error}</p>
+              </div>
+            ) : detailsFlat.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-car"></i>
+                <p>Không tìm thấy xe phù hợp</p>
+              </div>
+            ) : (
+              <>
                 <table className="vehicles-table">
                   <thead>
                     <tr>
+                      <th>#</th>
+                      <th>Tên xe</th>
+                      <th>Chỗ ngồi</th>
                       <th>Biển số</th>
-                      <th>Model</th>
-                      <th>Hãng</th>
                       <th>Trạm</th>
-                      <th>Pin</th>
+                      <th>Dung lượng pin</th>
+                      <th>ODO</th>
+                      <th>Giá (VND)</th>
+                      <th>Màu</th>
                       <th>Trạng thái</th>
                       <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {vehicles.map((v) => (
-                      <tr key={v.id}>
-                        <td className="vehicle-license-cell">{v.licensePlate}</td>
-                        <td>{v.model}</td>
-                        <td>{v.brand}</td>
-                        <td>{v.stationName || 'N/A'}</td>
+                    {paginatedRows.map((r, idx) => (
+                      <tr key={`${r.vehicleId}-${r.detailId ?? 'vn'}`}>
+                        <td className="vehicle-id">{startIndex + idx + 1}</td>
                         <td>
-                          <span className="battery-indicator">
-                            <i className="fas fa-battery-three-quarters"></i>
-                            {v.battery || 0}%
+                          <div className="vehicle-name-cell">
+                            <div className="vehicle-name">
+                              {r.brand} {r.model}
+                            </div>
+                          </div>
+                        </td>
+                        <td>{r.seats ?? '-'}</td>
+                        <td>{r.licensePlate || '-'}</td>
+                        <td>{r.stationName || '-'}</td>
+                        <td>{r.batteryCapacity || '-'}</td>
+                        <td>{r.odo ?? '-'}</td>
+                        <td>{formatVND(r.price)}</td>
+                        <td>{r.color || '-'}</td>
+                        <td>
+                          <span className={`status-badge ${statusBadgeClass(r.status)}`}>
+                            {formatStatusText(r.status)}
                           </span>
                         </td>
                         <td>
-                          <span className={`vehicle-status ${getStatusBadgeClass(v.status)}`}>
-                            {getStatusLabel(v.status)}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="btn-icon" title="Xem chi tiết">
-                            <i className="fas fa-eye"></i>
-                          </button>
-                          <button className="btn-icon" title="Chỉnh sửa">
-                            <i className="fas fa-edit"></i>
-                          </button>
+                          <div className="action-buttons">
+                            <button
+                              className="btn-icon"
+                              title="Xem chi tiết"
+                              onClick={() => handleNavigateDetail(r.detailId)}
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              ) : null}
-            </div>
 
-            {/* Pagination */}
-            <div className="pagination">
-              <div className="pagination-info">
-                Hiển thị {page * size + 1}-{Math.min((page + 1) * size, totalElements)} / {totalElements} xe
-              </div>
-              <div className="pagination-controls">
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page === 0}
-                >
-                  <i className="fas fa-chevron-left"></i>
-                </button>
-                <span className="pagination-current">
-                  Trang {page + 1} / {totalPages || 1}
-                </span>
-                <button
-                  className="pagination-btn"
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page >= totalPages - 1}
-                >
-                  <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-              <select className="pagination-size" value={size} onChange={(e) => setSize(Number(e.target.value))}>
-                <option value="10">10 / trang</option>
-                <option value="20">20 / trang</option>
-                <option value="50">50 / trang</option>
-              </select>
-            </div>
+                {/* Pagination */}
+                <div className="table-footer">
+                  <div className="pagination-info">
+                    Hiển thị {startIndex + 1}-{Math.min(endIndex, totalItems)} / {totalItems}
+                  </div>
+                  <div className="pagination-controls">
+                    <button
+                      className="page-btn"
+                      onClick={() => setCurrentPage(safeCurrentPage - 1)}
+                      disabled={safeCurrentPage <= 1}
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }).map((_, i) => {
+                      const pageNum = i + 1
+                      return (
+                        <button
+                          key={pageNum}
+                          className={`page-btn page-num ${pageNum === safeCurrentPage ? 'active' : ''}`}
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                    <button
+                      className="page-btn"
+                      onClick={() => setCurrentPage(safeCurrentPage + 1)}
+                      disabled={safeCurrentPage >= totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
+      {/* ===================== END VEHICLES-TABLE-CONTAINER ===================== */}
     </ErrorBoundary>
   )
 }

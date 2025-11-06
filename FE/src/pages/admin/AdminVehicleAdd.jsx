@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createVehicle, uploadVehicleImage, getVehicleModels } from '../../api/adminVehicles'
+import { useNavigate, useParams } from 'react-router-dom'
+import { uploadVehicleImage, getVehicleModels } from '../../api/adminVehicles'
 import { getStationOptions } from '../../api/adminDashboard'
 import ErrorBoundary from '../../components/admin/ErrorBoundary'
 import './VehicleManagement.css'
 import './AdminVehicleDetail.css'
+import './AdminVehicleAdd.css'
+
 
 const AdminVehicleAdd = () => {
   const navigate = useNavigate()
@@ -17,6 +19,7 @@ const AdminVehicleAdd = () => {
   const [loadingOptions, setLoadingOptions] = useState(true)
   const [imagePreview, setImagePreview] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const { detailId } = useParams()
 
   const [formData, setFormData] = useState({
     licensePlate: '',
@@ -24,10 +27,32 @@ const AdminVehicleAdd = () => {
     stationId: '',
     color: '',
     batteryCapacity: '',
-    odo: 0,
+    odo: "",
     picture: '',
     status: 'AVAILABLE'
   })
+
+  const [pictureFile, setPictureFile] = useState(null)
+
+  const handleBatteryCapacityChange = (e) => {
+    // Lấy raw value
+    let val = e.target.value;
+
+    // Loại bỏ mọi ký tự không phải số hoặc dấu chấm
+    // Nếu bạn chỉ muốn số nguyên, dùng /[^0-9]/g
+    val = val.replace(/[^0-9.]/g, '');
+
+    // Chỉ cho 1 dấu chấm duy nhất
+    if ((val.match(/\./g) || []).length > 1) {
+      const first = val.indexOf('.');
+      val = val.slice(0, first + 1) + val.slice(first + 1).replace(/\./g, '');
+    }
+
+    // Nếu bắt đầu bằng "0" tiếp ký tự khác ngoài ".", có thể trim leading zeros (tùy ý)
+    // val = val.replace(/^0+(\d)/, '$1');
+
+    setFormData(prev => ({ ...prev, batteryCapacity: val }));
+  };
 
   // Fetch dropdown options
   useEffect(() => {
@@ -37,22 +62,22 @@ const AdminVehicleAdd = () => {
         const [stationsData] = await Promise.all([
           getStationOptions()
         ])
-        
+
         setStations(stationsData || [])
-        
+
         // Fetch vehicle models - try multiple methods
         let modelsFetched = false
-        
+
         // Try 1: Using adminVehicles API
         try {
           const modelsFromAPI = await getVehicleModels()
           if (Array.isArray(modelsFromAPI) && modelsFromAPI.length > 0) {
             // If API returns array of strings, convert to objects
             if (typeof modelsFromAPI[0] === 'string') {
-              setVehicleModels(modelsFromAPI.map((name, index) => ({ 
-                id: index + 1, 
+              setVehicleModels(modelsFromAPI.map((name, index) => ({
+                id: index + 1,
                 name: name,
-                model: name 
+                model: name
               })))
             } else {
               // If already objects, use as is
@@ -64,7 +89,7 @@ const AdminVehicleAdd = () => {
         } catch (apiErr) {
           console.warn('[AdminVehicleAdd] Could not fetch models from API:', apiErr)
         }
-        
+
         // Try 2: Direct fetch as fallback
         if (!modelsFetched) {
           try {
@@ -74,17 +99,17 @@ const AdminVehicleAdd = () => {
                 'Accept': 'application/json',
               },
             })
-            
+
             if (response.ok) {
               const modelsData = await response.json()
               if (Array.isArray(modelsData) && modelsData.length > 0) {
                 if (typeof modelsData[0] === 'object' && modelsData[0].id) {
                   setVehicleModels(modelsData)
                 } else if (typeof modelsData[0] === 'string') {
-                  setVehicleModels(modelsData.map((name, index) => ({ 
-                    id: index + 1, 
+                  setVehicleModels(modelsData.map((name, index) => ({
+                    id: index + 1,
                     name: name,
-                    model: name 
+                    model: name
                   })))
                 }
                 modelsFetched = true
@@ -97,7 +122,7 @@ const AdminVehicleAdd = () => {
             console.warn('[AdminVehicleAdd] Direct fetch failed:', fetchErr)
           }
         }
-        
+
         // Fallback: Use default models if all methods fail
         if (!modelsFetched) {
           console.warn('[AdminVehicleAdd] All methods failed, using default models')
@@ -124,155 +149,40 @@ const AdminVehicleAdd = () => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'vehicleModelId' || name === 'stationId' || name === 'odo' 
-        ? (Number(value) || (name === 'odo' ? 0 : '')) 
+      [name]: name === 'vehicleModelId' || name === 'stationId' || name === 'odo'
+        ? (Number(value) || (name === 'odo' ? 0 : ''))
         : value
     }))
   }
 
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
-    if (!file) {
-      console.log('[AdminVehicleAdd] No file selected')
-      return
-    }
-
-    console.log('[AdminVehicleAdd] File selected:', file.name, file.type, file.size)
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Vui lòng chọn file ảnh hợp lệ')
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Kích thước ảnh không được vượt quá 5MB')
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      return
-    }
-
-    // Clear previous error
-    setError(null)
-
-    // Preview image FIRST (immediately, before upload) - THIS MUST WORK
+    if (!file) return
+    // validate type & size as you had
     const reader = new FileReader()
-    
-    // Set up FileReader event handlers
     reader.onloadend = () => {
       if (reader.result) {
-        console.log('[AdminVehicleAdd] Image preview loaded successfully')
         setImagePreview(reader.result)
       } else {
-        console.error('[AdminVehicleAdd] FileReader result is empty')
-        setError('Không thể đọc file ảnh. Vui lòng chọn file khác.')
+        setError('Không thể đọc file ảnh.')
         setImagePreview(null)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
+        if (fileInputRef.current) fileInputRef.current.value = ''
       }
     }
-    
-    reader.onerror = () => {
-      console.error('[AdminVehicleAdd] FileReader error:', reader.error)
-      setError('Không thể đọc file ảnh. Vui lòng chọn file khác.')
-      setImagePreview(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-    
-    reader.onabort = () => {
-      console.warn('[AdminVehicleAdd] FileReader aborted')
-      setError('Đọc file ảnh bị hủy. Vui lòng thử lại.')
-      setImagePreview(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-    
-    // Start reading file
-    try {
-      reader.readAsDataURL(file)
-      console.log('[AdminVehicleAdd] FileReader started')
-    } catch (readErr) {
-      console.error('[AdminVehicleAdd] Error starting FileReader:', readErr)
-      setError('Không thể đọc file ảnh. Vui lòng thử lại.')
-      setImagePreview(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      return
-    }
+    reader.readAsDataURL(file)
 
-    // Upload image to server (in background, after preview is loaded)
-    // Don't wait for preview - just start upload immediately
-    setUploadingImage(true)
-    
-    uploadVehicleImage(file)
-      .then((filename) => {
-        console.log('[AdminVehicleAdd] Image uploaded successfully:', filename)
-        
-        // Update form data with uploaded filename
-        setFormData(prev => ({
-          ...prev,
-          picture: filename
-        }))
-      })
-      .catch((err) => {
-        console.error('[AdminVehicleAdd] Error uploading image:', err)
-        
-        // Use filename as fallback if upload fails (preserve extension)
-        const lastDot = file.name.lastIndexOf('.')
-        const ext = lastDot > 0 ? file.name.substring(lastDot) : ''
-        const nameWithoutExt = lastDot > 0 ? file.name.substring(0, lastDot) : file.name
-        const sanitizedName = nameWithoutExt.replace(/[^a-zA-Z0-9._-]/g, '_')
-        const fallbackFilename = sanitizedName + ext
-        console.warn('[AdminVehicleAdd] Using fallback filename:', fallbackFilename)
-        
-        setFormData(prev => ({
-          ...prev,
-          picture: fallbackFilename
-        }))
-        
-        // Show warning but don't block - preview is already shown
-        // Only show error if it's not a CORS/404 issue (these are expected if backend not configured)
-        const isCORSor404 = err.message?.includes('CORS') || 
-                           err.code?.includes('CORS') ||
-                           err.code === 'ERR_NETWORK' ||
-                           err.response?.status === 404 ||
-                           err.response?.status === 405
-                           
-        if (!isCORSor404 && err.response?.status !== 500) {
-          // Only show error for unexpected errors, not CORS/404/500
-          const errorMessage = err.userMessage || 
-                              err.response?.data?.message || 
-                              `Không thể upload ảnh lên server. Ảnh vẫn có thể được hiển thị tạm thời với tên: ${fallbackFilename}`
-          setError(errorMessage)
-        } else {
-          // CORS or 404/500 - this is expected if endpoint not available, just log
-          console.info('[AdminVehicleAdd] Upload endpoint not available (CORS/404/500), using filename:', fallbackFilename)
-        }
-      })
-      .finally(() => {
-        setUploadingImage(false)
-      })
+    // save file object for multipart submit
+    setPictureFile(file)
+
+    // optional: keep filename in formData.picture for compatibility
+    setFormData(prev => ({ ...prev, picture: file.name }))
   }
 
   const handleRemoveImage = () => {
-    setFormData(prev => ({
-      ...prev,
-      picture: ''
-    }))
+    setFormData(prev => ({ ...prev, picture: '' }))
     setImagePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    setPictureFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const getStatusBadgeClass = (status) => {
@@ -308,70 +218,65 @@ const AdminVehicleAdd = () => {
       setError('Biển số không được để trống')
       return false
     }
-    
+
     if (!formData.vehicleModelId || formData.vehicleModelId <= 0) {
       setError('Vui lòng chọn model xe')
       return false
     }
-    
+
     if (!formData.stationId || formData.stationId <= 0) {
       setError('Vui lòng chọn trạm')
       return false
     }
-    
+
     return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+    if (!validateForm()) return
     try {
-      setSaving(true)
-      setError(null)
-      setSuccess(false)
-      
-      // Prepare data for API
-      const vehicleData = {
-        licensePlate: formData.licensePlate.trim(),
-        vehicleModelId: Number(formData.vehicleModelId),
-        stationId: Number(formData.stationId),
-        color: formData.color || '',
-        batteryCapacity: formData.batteryCapacity || '',
-        odo: Number(formData.odo) || 0,
-        picture: formData.picture || '',
-        status: formData.status || 'AVAILABLE'
+      setSaving(true); setError(null); setSuccess(false)
+
+      const form = new FormData()
+      form.append('licensePlate', formData.licensePlate.trim())
+      form.append('batteryCapacity', formData.batteryCapacity ? `${formData.batteryCapacity} kWh` : '')
+      form.append('odo', String(Number(formData.odo) || 0))
+      form.append('color', formData.color || '')
+      form.append('vehicleModelId', String(Number(formData.vehicleModelId) || ''))
+      form.append('stationId', String(Number(formData.stationId) || ''))
+
+      if (pictureFile) {
+        form.append('picture', pictureFile, pictureFile.name)
+      } else if (formData.picture) {
+        form.append('picture', formData.picture)
       }
-      
-      console.log('[AdminVehicleAdd] Submitting vehicle data:', vehicleData)
-      
-      const result = await createVehicle(vehicleData)
-      
-      console.log('[AdminVehicleAdd] Vehicle created successfully:', result)
-      
+
+      const effectiveDetailId = detailId || formData.vehicleModelId || ''
+      const url = `http://localhost:8084/EVRentalSystem/vehicle-management/create-vehicle`
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: form
+      })
+
+      const respBody = await resp.json().catch(() => ({}))
+      if (!resp.ok) {
+        const serverMsg = respBody?.message || respBody?.error || `Lỗi server: ${resp.status}`
+        setError(serverMsg)
+        return
+      }
       setSuccess(true)
-      
-      // Dispatch event để refresh stats
+      setError(null)
       window.dispatchEvent(new CustomEvent('vehicleDeleted'))
-      
-      // Navigate về danh sách sau 1.5s
-      setTimeout(() => {
-        navigate('/admin/vehicles')
-      }, 1500)
+      setTimeout(() => navigate('/admin/vehicles'), 1500)
     } catch (err) {
-      console.error('Error creating vehicle:', err)
-      const errorMessage = err.userMessage || 
-                          err.response?.data?.message || 
-                          err.message || 
-                          'Không thể tạo xe mới'
-      setError(errorMessage)
+      setError(err?.message || 'Không thể tạo xe mới')
     } finally {
       setSaving(false)
     }
   }
+
 
   return (
     <ErrorBoundary>
@@ -439,7 +344,7 @@ const AdminVehicleAdd = () => {
             <i className="fas fa-car"></i>
             <h2 className="vehicle-info-card-title">Thông tin xe</h2>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="vehicle-add-form">
             <div className="vehicle-info-card-body">
               <div className="vehicle-info-row">
@@ -455,32 +360,10 @@ const AdminVehicleAdd = () => {
                     className="vehicle-info-input"
                     value={formData.licensePlate}
                     onChange={handleChange}
-                    placeholder="Ví dụ: 51A-12345"
+                    placeholder="Nhập biển số"
                     required
                   />
                 </div>
-
-                {/* Status */}
-                <div className="vehicle-info-item">
-                  <span className="vehicle-info-label">
-                    <i className="fas fa-circle"></i>
-                    Trạng thái <span style={{ color: 'red' }}>*</span>
-                  </span>
-                  <select
-                    name="status"
-                    className="vehicle-info-select"
-                    value={formData.status}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="AVAILABLE">Khả dụng</option>
-                    <option value="FIXING">Bảo trì</option>
-                    <option value="MAINTENANCE">Bảo dưỡng</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="vehicle-info-row">
                 {/* Vehicle Model */}
                 <div className="vehicle-info-item">
                   <span className="vehicle-info-label">
@@ -495,7 +378,7 @@ const AdminVehicleAdd = () => {
                     required
                     disabled={loadingOptions}
                   >
-                    <option value="">-- Chọn model --</option>
+                    <option value="">Chọn model</option>
                     {vehicleModels.map((model) => (
                       <option key={model.id} value={model.id}>
                         {model.name || model.model || `Model ${model.id}`}
@@ -503,7 +386,9 @@ const AdminVehicleAdd = () => {
                     ))}
                   </select>
                 </div>
+              </div>
 
+              <div className="vehicle-info-row">
                 {/* Station */}
                 <div className="vehicle-info-item">
                   <span className="vehicle-info-label">
@@ -518,7 +403,7 @@ const AdminVehicleAdd = () => {
                     required
                     disabled={loadingOptions}
                   >
-                    <option value="">-- Chọn trạm --</option>
+                    <option value="">Chọn trạm</option>
                     {stations.map((station) => (
                       <option key={station.id} value={station.id}>
                         {station.name}
@@ -526,14 +411,12 @@ const AdminVehicleAdd = () => {
                     ))}
                   </select>
                 </div>
-              </div>
 
-              <div className="vehicle-info-row">
                 {/* Color */}
                 <div className="vehicle-info-item">
                   <span className="vehicle-info-label">
                     <i className="fas fa-palette"></i>
-                    Màu sắc
+                    Màu của xe
                   </span>
                   <input
                     type="text"
@@ -541,28 +424,30 @@ const AdminVehicleAdd = () => {
                     className="vehicle-info-input"
                     value={formData.color}
                     onChange={handleChange}
-                    placeholder="Ví dụ: Đen, Trắng, Xám"
+                    placeholder="Nhập màu cho xe"
                   />
                 </div>
+              </div>
+
+              <div className="vehicle-info-row">
+
 
                 {/* Battery Capacity */}
                 <div className="vehicle-info-item">
                   <span className="vehicle-info-label">
                     <i className="fas fa-battery-three-quarters"></i>
-                    Dung lượng pin
+                    Dung lượng pin (kWh)
                   </span>
                   <input
                     type="text"
                     name="batteryCapacity"
                     className="vehicle-info-input"
                     value={formData.batteryCapacity}
-                    onChange={handleChange}
-                    placeholder="Ví dụ: 42 kWh"
+                    pattern="[0-9]*"
+                    onChange={handleBatteryCapacityChange}
+                    placeholder="Nhập số dung lượng pin"
                   />
                 </div>
-              </div>
-
-              <div className="vehicle-info-row">
                 {/* ODO */}
                 <div className="vehicle-info-item">
                   <span className="vehicle-info-label">
@@ -570,13 +455,13 @@ const AdminVehicleAdd = () => {
                     Số km
                   </span>
                   <input
-                    type="number"
+                    type="text"
                     name="odo"
                     className="vehicle-info-input"
                     value={formData.odo}
+                    pattern="[0-9]*"
                     onChange={handleChange}
-                    min="0"
-                    placeholder="0"
+                    placeholder='Nhập số odo'
                   />
                 </div>
               </div>
@@ -587,7 +472,7 @@ const AdminVehicleAdd = () => {
                   <i className="fas fa-image"></i>
                   Ảnh xe
                 </span>
-                
+
                 <div className="vehicle-image-upload-card">
                   <div className="vehicle-image-upload-container">
                     {imagePreview ? (
@@ -602,16 +487,9 @@ const AdminVehicleAdd = () => {
                         <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>Chưa có ảnh</p>
                       </div>
                     )}
-                    {formData.status && (
-                      <div className="vehicle-image-upload-overlay">
-                        <span className={`vehicle-image-upload-badge ${getStatusBadgeClass(formData.status)}`}>
-                          <i className="fas fa-circle"></i>
-                          {getStatusLabel(formData.status)}
-                        </span>
-                      </div>
-                    )}
+
                   </div>
-                  
+
                   <div className="vehicle-image-upload-actions">
                     <input
                       ref={fileInputRef}
@@ -643,7 +521,7 @@ const AdminVehicleAdd = () => {
                         </>
                       )}
                     </label>
-                    
+
                     {imagePreview && (
                       <button
                         type="button"
@@ -662,15 +540,6 @@ const AdminVehicleAdd = () => {
 
             {/* Form Actions */}
             <div className="vehicle-add-form-actions">
-              <button
-                type="button"
-                className="vehicle-detail-action-btn vehicle-detail-action-btn--secondary"
-                onClick={() => navigate('/admin/vehicles')}
-                disabled={saving}
-              >
-                <i className="fas fa-times"></i>
-                <span>Hủy</span>
-              </button>
               <button
                 type="submit"
                 className="vehicle-detail-action-btn vehicle-detail-action-btn--primary"
