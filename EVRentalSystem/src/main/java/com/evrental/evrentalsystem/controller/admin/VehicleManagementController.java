@@ -117,5 +117,4 @@ public class VehicleManagementController {
         response.put("message", message);
         return ResponseEntity.ok(response);
     }
-
 }
