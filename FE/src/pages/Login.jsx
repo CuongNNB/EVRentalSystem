@@ -5,6 +5,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import StyleSwitcher from '../components/StyleSwitcher';
 import { initializeStyle } from '../utils/styleSwitcher';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchStaffStation } from '../api/vehicles';
 import api from '../utils/api';
 
 export default function Login() {
@@ -13,7 +14,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const {  loginWithSession, loading } = useAuth();
+  const {  loginWithSession, loading, setStationId } = useAuth();
 
   useEffect(() => {
     initializeStyle();
@@ -97,6 +98,19 @@ export default function Login() {
     if (rolesNorm.includes('ADMIN')) {
       navigate('/admin', { replace: true })
     } else if (rolesNorm.includes('STAFF')) {
+      // Fetch stationId by staffId and persist
+      try {
+        const staffId = localStorage.getItem('ev_staff_id');
+        if (staffId) {
+          const station = await fetchStaffStation(staffId);
+          if (station) {
+            localStorage.setItem('ev_station_id', String(station));
+            try { setStationId && setStationId(String(station)); } catch {}
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to fetch station for staff:', e?.message || e);
+      }
       navigate('/staff/orders', { replace: true })
     } else {
       navigate('/dashboard', { replace: true })
@@ -285,6 +299,18 @@ export default function Login() {
                     if (rolesNorm.includes('ADMIN')) {
                       navigate('/admin', { replace: true })
                     } else if (rolesNorm.includes('STAFF')) {
+                      try {
+                        const staffId = localStorage.getItem('ev_staff_id');
+                        if (staffId) {
+                          const station = await fetchStaffStation(staffId);
+                          if (station) {
+                            localStorage.setItem('ev_station_id', String(station));
+                            try { setStationId && setStationId(String(station)); } catch {}
+                          }
+                        }
+                      } catch (e) {
+                        console.warn('Unable to fetch station for staff (Google):', e?.message || e);
+                      }
                       navigate('/staff/orders', { replace: true })
                     } else {
                       navigate('/dashboard', { replace: true })

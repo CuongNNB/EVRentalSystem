@@ -408,6 +408,12 @@ const determineInitialStationId = (authUser) => {
     const tokenCandidate = extractStationIdFromToken(firstStoredValue(STORAGE_KEYS.TOKEN));
     if (tokenCandidate) return tokenCandidate;
 
+    // Prefer stationId saved at login
+    if (typeof window !== 'undefined') {
+        const savedStation = window.localStorage.getItem('ev_station_id');
+        if (savedStation && savedStation.trim()) return savedStation.trim();
+    }
+
     const manualCandidate = getManualStationId();
     if (manualCandidate) return manualCandidate;
 
@@ -738,7 +744,7 @@ const OrdersList = () => {
     const [error, setError] = useState("");
     const [connectionState, setConnectionState] = useState({
         status: stationId ? "idle" : "error",
-        message: stationId ? "" : "Chưa tìm thấy trạm. Vui lòng thiết lập thủ công.",
+        message: stationId ? "" : "Chưa tìm thấy trạm.",
     });
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -1299,147 +1305,13 @@ const OrdersList = () => {
                             </div>
                         )}
 
-                        {stationId && !isEditingStation && (
-                            <div
-                                style={{
-                                    marginBottom: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "12px",
-                                    flexWrap: "wrap",
-                                    backgroundColor: "#ecfdf5",
-                                    border: "1px solid #6ee7b7",
-                                    borderRadius: "10px",
-                                    padding: "10px 14px",
-                                    fontSize: "14px",
-                                    color: "#047857",
-                                }}
-                            >
-                <span>
-                  Đang sử dụng trạm: <strong>{stationId}</strong>
-                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setManualInput(manualStationValue || stationId);
-                                        setManualError("");
-                                        setIsEditingStation(true);
-                                    }}
-                                    style={{
-                                        padding: "6px 14px",
-                                        borderRadius: "6px",
-                                        border: "1px solid #10b981",
-                                        background: "#fff",
-                                        color: "#047857",
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Thay đổi trạm
-                                </button>
+                        {stationId && (
+                            <div>
+                
                             </div>
                         )}
 
-                        {isEditingStation && (
-                            <form
-                                className="staff-orders__manual-station"
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "12px",
-                                    padding: "12px 16px",
-                                    marginBottom: "16px",
-                                    backgroundColor: "#fff7ed",
-                                    border: "1px dashed #fb923c",
-                                    borderRadius: "12px",
-                                    flexWrap: "wrap",
-                                }}
-                                onSubmit={handleManualSubmit}
-                            >
-                                <div style={{ flex: "1 1 220px" }}>
-                                    <label
-                                        htmlFor="manual-station-id"
-                                        style={{
-                                            display: "block",
-                                            fontSize: "14px",
-                                            fontWeight: 600,
-                                            marginBottom: "6px",
-                                            color: "#b45309",
-                                        }}
-                                    >
-                                        Nhập mã trạm cho nhân viên
-                                    </label>
-                                    <input
-                                        id="manual-station-id"
-                                        type="text"
-                                        value={manualInput}
-                                        onChange={(event) => {
-                                            setManualInput(event.target.value);
-                                            setManualError("");
-                                        }}
-                                        placeholder="Ví dụ: 1"
-                                        style={{
-                                            width: "100%",
-                                            padding: "10px 12px",
-                                            borderRadius: "8px",
-                                            border: "1px solid #f97316",
-                                            fontSize: "14px",
-                                        }}
-                                    />
-                                    {manualError && (
-                                        <p
-                                            style={{
-                                                marginTop: "6px",
-                                                fontSize: "13px",
-                                                color: "#b91c1c",
-                                            }}
-                                        >
-                                            {manualError}
-                                        </p>
-                                    )}
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                        flexWrap: "wrap",
-                                    }}
-                                >
-                                    <button
-                                        type="submit"
-                                        style={{
-                                            padding: "10px 18px",
-                                            borderRadius: "8px",
-                                            border: "none",
-                                            background: "#f97316",
-                                            color: "#fff",
-                                            fontWeight: 600,
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        Thiết lập trạm
-                                    </button>
-                                    {manualStationValue && (
-                                        <button
-                                            type="button"
-                                            onClick={handleManualReset}
-                                            style={{
-                                                padding: "10px 18px",
-                                                borderRadius: "8px",
-                                                border: "1px solid #f97316",
-                                                background: "#fff",
-                                                color: "#f97316",
-                                                fontWeight: 600,
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            Xóa cấu hình
-                                        </button>
-                                    )}
-                                </div>
-                            </form>
-                        )}
+                        {/* Manual station form removed: stationId is auto-derived at login */}
 
                         <section className="orders-board">
                             <OrdersTable
