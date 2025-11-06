@@ -1,10 +1,11 @@
 package com.evrental.evrentalsystem.controller.admin;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
-import com.evrental.evrentalsystem.request.AdminCreateVehicleDetailRequest;
-import com.evrental.evrentalsystem.request.AdminUpdateVehicleDetailRequest;
-import com.evrental.evrentalsystem.request.AdminUpdateVehicleStatusRequest;
+import com.evrental.evrentalsystem.entity.VehicleModel;
+import com.evrental.evrentalsystem.request.*;
+import com.evrental.evrentalsystem.response.admin.AdminGetAllModelResponse;
 import com.evrental.evrentalsystem.response.admin.AdminGetAllVehicleDetailResponse;
+import com.evrental.evrentalsystem.response.admin.AdminGetModelDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
 import com.evrental.evrentalsystem.service.VehicleManagementService;
 import com.evrental.evrentalsystem.util.ImageUtil;
@@ -25,6 +26,7 @@ public class VehicleManagementController {
 
     private final VehicleManagementService vehicleManagementService;
 
+    // <editor-fold desc="This is the section for vehicle detail management">
     //API: http://localhost:8084/EVRentalSystem/vehicle-management/vehicles
     @GetMapping("/vehicles")
     public ResponseEntity<List<AdminVehicleModelResponse>> getAllVehicles() {
@@ -41,7 +43,7 @@ public class VehicleManagementController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/image/{vehicleDetailId}")
+    @GetMapping("/image/{vehicleDetailId}/*")
     public ResponseEntity<byte[]> getVehicleDetailImage(@PathVariable Integer vehicleDetailId) {
         VehicleDetail vd = vehicleManagementService.findVehicleDetailEntity(vehicleDetailId);
         byte[] bytes = ImageUtil.decodeBase64(vd.getPicture());
@@ -62,6 +64,7 @@ public class VehicleManagementController {
 
         return ResponseEntity.ok(response);
     }
+
     //Update xe
     //API: http://localhost:8084/EVRentalSystem/vehicle-management/update-vehicle/{detailId}
     @PutMapping(value = "/update-vehicle/{detailId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -73,7 +76,7 @@ public class VehicleManagementController {
             @RequestParam("color") String color,
             @RequestParam("stationId") Integer stationId,
             @RequestParam("vehicleModelId") Integer vehicleModelId,
-            @RequestParam("picture")MultipartFile picture) {
+            @RequestParam(value = "picture", required = false) MultipartFile picture) {
 
         AdminUpdateVehicleDetailRequest req = new AdminUpdateVehicleDetailRequest();
         req.setDetailId(detailId);
@@ -101,8 +104,7 @@ public class VehicleManagementController {
             @RequestParam("color") String color,
             @RequestParam("stationId") Integer stationId,
             @RequestParam("vehicleModelId") Integer vehicleModelId,
-            @RequestParam("picture")MultipartFile picture)
-    {
+            @RequestParam("picture") MultipartFile picture) {
         AdminCreateVehicleDetailRequest req = new AdminCreateVehicleDetailRequest();
         req.setLicensePlate(licensePlate);
         req.setBatteryCapacity(batteryCapacity);
@@ -117,5 +119,72 @@ public class VehicleManagementController {
         response.put("message", message);
         return ResponseEntity.ok(response);
     }
+    // </editor-fold>
 
+    // <editor-fold desc="This is the section for vehicle model management">
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/models
+    @GetMapping("/models")
+    public ResponseEntity<List<AdminGetAllModelResponse>> getAllVehicleModels() {
+        List<AdminGetAllModelResponse> models = vehicleManagementService.getAllModels();
+        return ResponseEntity.ok(models);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/models/{modellId}
+    @GetMapping("/models/{modellId}")
+    public ResponseEntity<AdminGetModelDetailResponse> getVehicleModelById(
+            @PathVariable Integer modellId) {
+        AdminGetModelDetailResponse resp = vehicleManagementService.getModelDetail(modellId);
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/model-image/{modelId}/*")
+    public ResponseEntity<byte[]> getVehicleModelImage(@PathVariable Integer modelId) {
+        VehicleModel vd = vehicleManagementService.findVehicleModelEntity(modelId);
+        byte[] bytes = ImageUtil.decodeBase64(vd.getPicture());
+        String mimeType = ImageUtil.detectImageMimeType(bytes);
+        return ImageUtil.buildImageResponse(bytes, mimeType);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/vehicle-management/create-model
+    @PostMapping(value = "/create-model", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> createVehicleModel(@RequestParam("brand") String brand,
+                                                                  @RequestParam("model") String model,
+                                                                  @RequestParam("price") Double price,
+                                                                  @RequestParam("seats") Integer seats,
+                                                                  @RequestParam("modelPicture") MultipartFile modelPicture) {
+        AdminCreateVehicleModelRequest req = new AdminCreateVehicleModelRequest();
+        req.setBrand(brand);
+        req.setModel(model);
+        req.setPrice(price);
+        req.setSeats(seats);
+
+        String message = vehicleManagementService.createVehicleModel(req, modelPicture);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", message);
+
+        return ResponseEntity.ok(response);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/update-model/{modelId}
+    @PutMapping(value = "/update-model/{modelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> updateVehicleModel(
+            @PathVariable Integer modelId,
+            @RequestParam("brand") String brand,
+            @RequestParam("model") String model,
+            @RequestParam("price") Double price,
+            @RequestParam("seats") Integer seats,
+            @RequestParam(value = "modelPicture", required = false) MultipartFile modelPicture) {
+        AdminUpdateVehicleModelRequest req = new AdminUpdateVehicleModelRequest();
+        req.setModelId(modelId);
+        req.setBrand(brand);
+        req.setModel(model);
+        req.setPrice(price);
+        req.setSeats(seats);
+        String message = vehicleManagementService.updateVehicleModel(req, modelPicture);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", message);
+        return ResponseEntity.ok(response);
+    }
+    // </editor-fold>
 }

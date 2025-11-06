@@ -7,19 +7,20 @@ import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
 import com.evrental.evrentalsystem.request.AdminCreateVehicleDetailRequest;
+import com.evrental.evrentalsystem.request.AdminCreateVehicleModelRequest;
 import com.evrental.evrentalsystem.request.AdminUpdateVehicleDetailRequest;
-import com.evrental.evrentalsystem.response.admin.AdminGetAllVehicleDetailResponse;
-import com.evrental.evrentalsystem.response.admin.AdminVehicleDetailResponse;
-import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
+import com.evrental.evrentalsystem.request.AdminUpdateVehicleModelRequest;
+import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.util.ImageUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,8 @@ public class VehicleManagementService {
     private final VehicleDetailRepository vehicleDetailRepository;
     private final StationRepository stationRepository;
     ImageUtil imageUtil = new ImageUtil();
+
+    // <editor-fold desc="This is the section for vehicle detail management">
     public List<AdminVehicleModelResponse> getAllVehiclesGroupedByModel() {
         List<VehicleModel> models = vehicleModelRepository.findAllWithDetailsAndStation();
 
@@ -118,23 +121,26 @@ public class VehicleManagementService {
         vd.setOdo(req.getOdo());
         vd.setColor(req.getColor());
         vd.setStatus("AVAILABLE");
-        vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        if (detailPicture != null) {
+            vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+        }
         vd.setStation(station);
         vd.setVehicleModel(vm);
         vehicleDetailRepository.save(vd);
         return "Vehicle update created successfully.";
     }
+
     public AdminGetAllVehicleDetailResponse getVehicleDetailById(Integer vehicleDetailId) {
         VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
-
+        String randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         AdminGetAllVehicleDetailResponse resp = AdminGetAllVehicleDetailResponse.builder()
                 .detailId(vd.getId())
                 .licensePlate(vd.getLicensePlate())
                 .batteryCapacity(vd.getBatteryCapacity())
                 .odo(vd.getOdo())
                 // Trả URL ảnh (backend tự phục vụ ở endpoint image/{id})
-                .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId())
+                .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId() + "/" + randomId)
                 .status(vd.getStatus())
                 .color(vd.getColor())
                 .build();
@@ -158,4 +164,66 @@ public class VehicleManagementService {
         return vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
     }
+    // </editor-fold>
+
+    // <editor-fold desc="This is the section for vehicle model management">
+    public List<AdminGetAllModelResponse> getAllModels() {
+        return vehicleModelRepository.findAll()
+                .stream()
+                .map(vm -> new AdminGetAllModelResponse(
+                        vm.getVehicleId() == null ? null : vm.getVehicleId().intValue(), // nếu id là Long -> chuyển sang Integer
+                        vm.getBrand(),
+                        vm.getModel(),
+                        vm.getPrice(),
+                        vm.getSeats()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public AdminGetModelDetailResponse getModelDetail(Integer modelId) {
+        VehicleModel vm = vehicleModelRepository.findById(modelId)
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found with id: " + modelId));
+        String randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+
+        AdminGetModelDetailResponse resp = AdminGetModelDetailResponse.builder()
+                .modelId(vm.getVehicleId())
+                .brand(vm.getBrand())
+                .model(vm.getModel())
+                .price(vm.getPrice())
+                .seats(vm.getSeats())
+                .modelPicture("http://localhost:8084/EVRentalSystem/vehicle-management/model-image/" + vm.getVehicleId() + "/" + randomId)
+                .build();
+        return resp;
+    }
+
+    public VehicleModel findVehicleModelEntity(Integer modelId) {
+        return vehicleModelRepository.findById(modelId)
+                .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + modelId));
+    }
+
+    public String createVehicleModel(AdminCreateVehicleModelRequest req, MultipartFile modelPicture) {
+        VehicleModel vm = new VehicleModel();
+        vm.setBrand(req.getBrand());
+        vm.setModel(req.getModel());
+        vm.setPrice(req.getPrice());
+        vm.setSeats(req.getSeats());
+        vm.setPicture(imageUtil.encodeToBase64(modelPicture));
+        vehicleModelRepository.save(vm);
+        return "Vehicle detail created successfully.";
+    }
+
+    public String updateVehicleModel(AdminUpdateVehicleModelRequest req, MultipartFile modelPicture) {
+        VehicleModel vm = vehicleModelRepository.findById(req.getModelId())
+                .orElseThrow(() -> new RuntimeException("Vehicle model not found with id: " + req.getModelId()));
+        vm.setBrand(req.getBrand());
+        vm.setModel(req.getModel());
+        vm.setPrice(req.getPrice());
+        vm.setSeats(req.getSeats());
+        if (modelPicture != null) {
+            vm.setPicture(imageUtil.encodeToBase64(modelPicture));
+        }
+        vehicleModelRepository.save(vm);
+        return "Vehicle model updated successfully.";
+    }
+    // </editor-fold>
 }

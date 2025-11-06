@@ -55,6 +55,8 @@ import AddStaffPage from "./components/admin/AddStaffPage";
 import AdminVehicleDetail from "./pages/admin/AdminVehicleDetail";
 import AdminVehicleEdit from "./pages/admin/AdminVehicleEdit";
 import AdminVehicleAdd from "./pages/admin/AdminVehicleAdd";
+import AdminCreateModel from "./pages/admin/AdminCreateModel.jsx";
+import AdminUpdateModel from "./pages/admin/AdminUpdateModel.jsx";
 function App() {
 
     console.log("App component is rendering...");
@@ -116,6 +118,8 @@ function App() {
                                 <Route path="customers" element={<CustomerManagement />} />
                                 <Route path="staff" element={<StaffManagement />} />
                                 <Route path="vehicles" element={<VehicleManagement />} />
+                                <Route path="vehicles/add-model" element={<AdminCreateModel />} />
+                                <Route path="vehicles/model/:id" element={<AdminUpdateModel />} />
                                 <Route path="vehicles/add" element={<AdminVehicleAdd />} />
                                 <Route path="vehicles/:id" element={<AdminVehicleDetail />} />
                                 <Route path="staff/:id" element={<StaffDetailPage />} />
