@@ -13,11 +13,9 @@ import com.evrental.evrentalsystem.response.admin.AdminVehicleDetailResponse;
 import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.UUID;
 
 import java.util.*;
 
@@ -129,14 +127,14 @@ public class VehicleManagementService {
     public AdminGetAllVehicleDetailResponse getVehicleDetailById(Integer vehicleDetailId) {
         VehicleDetail vd = vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("VehicleDetail not found with id: " + vehicleDetailId));
-
+        String randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         AdminGetAllVehicleDetailResponse resp = AdminGetAllVehicleDetailResponse.builder()
                 .detailId(vd.getId())
                 .licensePlate(vd.getLicensePlate())
                 .batteryCapacity(vd.getBatteryCapacity())
                 .odo(vd.getOdo())
                 // Trả URL ảnh (backend tự phục vụ ở endpoint image/{id})
-                .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId())
+                .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId() + "/" + randomId)
                 .status(vd.getStatus())
                 .color(vd.getColor())
                 .build();

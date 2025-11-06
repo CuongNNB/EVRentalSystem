@@ -41,7 +41,7 @@ public class VehicleManagementController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/image/{vehicleDetailId}")
+    @GetMapping("/image/{vehicleDetailId}/*")
     public ResponseEntity<byte[]> getVehicleDetailImage(@PathVariable Integer vehicleDetailId) {
         VehicleDetail vd = vehicleManagementService.findVehicleDetailEntity(vehicleDetailId);
         byte[] bytes = ImageUtil.decodeBase64(vd.getPicture());
