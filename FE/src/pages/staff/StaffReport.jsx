@@ -7,6 +7,7 @@ import StaffHeader from "../../components/staff/StaffHeader";
 import StaffSlideBar from "../../components/staff/StaffSlideBar";
 import StaffOverview from "../../components/staff/StaffOverview";
 import { getModelsByStation } from "../../api/vehicles";
+import { useAuth } from "../../contexts/AuthContext";
 // StaffReport: Station Staff Report Page
 // Uses TailwindCSS classes. Mock data used for display.
 
@@ -42,6 +43,7 @@ function resolveColor(raw) {
 
 export default function StaffReport() {
   const navigate = useNavigate();
+  const { stationId } = useAuth();
   const [tab, setTab] = useState("Xe tại Trạm");
   const [now, setNow] = useState(new Date());
   const [reportType, setReportType] = useState("Sự cố");
@@ -51,27 +53,10 @@ export default function StaffReport() {
   // sorting
   const [sortField, setSortField] = useState('id'); // 'id' | 'status'
   const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'
-  // station/manual setup state (allow staff to enter station code like Orders page)
-  const [manualInput, setManualInput] = useState("");
-  const [manualError, setManualError] = useState("");
-  const [manualStationValue, setManualStationValue] = useState(null);
-  const [connectionState, setConnectionState] = useState({
-    status: "idle",
-    message: "",
-  });
-  const [isEditingStation, setIsEditingStation] = useState(false);
+  // connection state for auto-resolved stationId
+  const [connectionState, setConnectionState] = useState({ status: stationId ? 'idle' : 'error', message: stationId ? '' : 'Chưa xác định được trạm cho nhân viên.' });
 
-
-  
-useEffect(() => {
-  const savedStation = localStorage.getItem("staff_station_id");
-  if (savedStation) {
-    setManualStationValue(savedStation);
-    setManualInput(savedStation);
-  } else {
-    setIsEditingStation(true);
-  }
-}, []);
+  // removed manual station init; stationId comes from AuthContext/localStorage
   // realtime clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -89,8 +74,14 @@ useEffect(() => {
 
   // no external chart dependency required — using simple SVG charts
 
-  // stationName is derived from manualStationValue when set.
-  const stationName = manualStationValue ? `Trạm ${manualStationValue}` : null;
+  // stationName is derived from context stationId or fallback localStorage key
+  const stationName = stationId ? `Trạm ${stationId}` : (() => {
+    if (typeof window !== 'undefined') {
+      const savedStation = window.localStorage.getItem('ev_station_id');
+      if (savedStation && savedStation.trim()) return `Trạm ${savedStation.trim()}`;
+    }
+    return null;
+  })();
   const shift = "Sáng (07:00–15:00)";
 
   const [models, setModels] = useState([]);
@@ -238,78 +229,43 @@ useEffect(() => {
     setToast({ type: "success", message: "✅ Báo cáo đã gửi" });
   };
 
-const handleManualSubmit = async (e) => {
-  e.preventDefault();
-  if (!manualInput?.trim()) {
-    setManualError("Vui lòng nhập mã trạm hợp lệ.");
-    return;
-  }
 
-  setConnectionState({ status: "loading", message: "Đang tải dữ liệu trạm..." });
-
-  try {
-  const data = await getModelsByStation(manualInput.trim());
-    setModels(data);
-    setManualStationValue(manualInput.trim());
-    setManualError("");
-  // Persist under both keys to keep other screens in sync
-  localStorage.setItem("staff_station_id", manualInput.trim());
-  localStorage.setItem("ev_staff_station_id", manualInput.trim());
-    setConnectionState({
-      status: "success",
-      message: `Đã tải ${data?.length || 0} xe của trạm ${manualInput.trim()}.`,
-    });
-    setIsEditingStation(false);
-  } catch (err) {
-    console.error("Lỗi khi gọi API:", err);
-    setConnectionState({
-      status: "error",
-      message: "Không tìm thấy trạm hoặc lỗi khi lấy dữ liệu.",
-    });
-  }
-};
+  // removed manual station submit/reset handlers
 
 
 
 
-  const handleManualReset = () => {
-  localStorage.removeItem("staff_station_id");
-  localStorage.removeItem("ev_staff_station_id");
-  setManualStationValue(null);
-  setManualInput("");
-  setIsEditingStation(true);
-  setConnectionState({
-    status: "idle",
-    message: "",
-  });
-};
 
 
-  // fetch models when station is configured
+  // fetch models when stationId or fallback localStorage station exists
   useEffect(() => {
     let mounted = true;
     async function loadModels() {
-      if (!manualStationValue) {
+      const effectiveStation = stationId || (typeof window !== 'undefined' ? window.localStorage.getItem('ev_station_id') : '');
+      if (!effectiveStation) {
         setModels([]);
+        setConnectionState({ status: 'error', message: 'Chưa xác định được trạm cho nhân viên.' });
         return;
       }
       setModelsLoading(true);
-      setModelsError("");
+      setModelsError('');
+      setConnectionState({ status: 'loading', message: `Đang tải dữ liệu xe của trạm ${effectiveStation}...` });
       try {
-        const { getModelsByStation } = await import('../../api').then(m => m.vehicles);
-        const data = await getModelsByStation(manualStationValue);
+        const data = await getModelsByStation(effectiveStation);
         if (!mounted) return;
         setModels(Array.isArray(data) ? data : []);
+        setConnectionState({ status: 'success', message: `Đã tải ${data?.length || 0} xe của trạm ${effectiveStation}.` });
       } catch (err) {
         if (!mounted) return;
         setModelsError(err?.response?.data?.message || err.message || 'Lỗi khi tải mẫu xe');
+        setConnectionState({ status: 'error', message: `Không thể tải dữ liệu xe cho trạm ${effectiveStation}.` });
       } finally {
         if (mounted) setModelsLoading(false);
       }
     }
     loadModels();
     return () => { mounted = false; };
-  }, [manualStationValue]);
+  }, [stationId]);
 
   
 
@@ -326,42 +282,9 @@ const handleManualSubmit = async (e) => {
               <p className="staff-content__intro">Trạm quản lý & báo cáo vận hành — {stationName || 'Chưa chọn trạm'} | Ca: {shift} | {now.toLocaleTimeString()}</p>
             </div>
 
-            {/* Station not found / manual setup (copied behavior from Orders page) */}
+            {/* Station info banner */}
             {!stationName && (
-              <div>
-                <div className="sr-station-alert">Chưa tìm thấy trạm. Vui lòng thiết lập thủ công.</div>
-                {connectionState.status === 'success' && manualStationValue && (
-                  <div className="station-success-box">
-                    <p>✅ {connectionState.message}</p>
-                  </div>
-                )}
-{manualStationValue && (
-  <div className="station-info-box">
-    <p>Đang sử dụng trạm: <strong>{manualStationValue}</strong></p>
-    <button type="button" onClick={handleManualReset} className="btn-outline-orange">Thay đổi trạm</button>
-  </div>
-)}
-                <form className="manual-station-form" onSubmit={handleManualSubmit}>
-                  <div className="manual-station-field">
-                    <label htmlFor="manual-station-id" className="manual-station-label">Nhập mã trạm cho nhân viên</label>
-                    <input
-                      id="manual-station-id"
-                      type="text"
-                      value={manualInput}
-                      onChange={(event) => { setManualInput(event.target.value); setManualError(""); }}
-                      className={`manual-station-input ${manualStationValue ? 'manual-station--active' : ''}`}
-                      placeholder="Ví dụ: 1"
-                    />
-                    {manualError && <p className="manual-error">{manualError}</p>}
-                  </div>
-                  <div className="manual-actions">
-                    <button type="submit" className="btn-primary-orange">Thiết lập trạm</button>
-                    {manualStationValue && <button type="button" onClick={handleManualReset} className="btn-outline-orange">Xóa cấu hình</button>}
-                  </div>
-                                  {modelsLoading && <p className="manual-loading">Đang tải mẫu xe...</p>}
-                                  {modelsError && <p className="manual-error">{modelsError}</p>}
-                </form>
-              </div>
+              <div className="sr-station-alert">Chưa xác định được trạm cho nhân viên. Vui lòng đăng nhập lại tài khoản STAFF hoặc kiểm tra server trả về stationId.</div>
             )}
 
           {toast && (
@@ -396,149 +319,26 @@ const handleManualSubmit = async (e) => {
   })()
 )}
 
-{/* 🔹 Khi đã có trạm, hiển thị trạng thái và nút đổi */}
-{manualStationValue && !isEditingStation && (
-  <div
-    style={{
-      marginBottom: "12px",
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      flexWrap: "wrap",
-      backgroundColor: "#ecfdf5",
-      border: "1px solid #6ee7b7",
-      borderRadius: "10px",
-      padding: "10px 14px",
-      fontSize: "14px",
-      color: "#047857",
-    }}
-  >
-    <span>
-      Đang sử dụng trạm: <strong>{manualStationValue}</strong>
-    </span>
-    <button
-      type="button"
-      onClick={() => {
-        setManualInput(manualStationValue);
-        setIsEditingStation(true);
-        setConnectionState({ status: "idle", message: "" });
-      }}
-      style={{
-        padding: "6px 14px",
-        borderRadius: "6px",
-        border: "1px solid #10b981",
-        background: "#fff",
-        color: "#047857",
-        fontWeight: 600,
-        cursor: "pointer",
-      }}
-    >
-      Thay đổi trạm
-    </button>
-  </div>
-)}
+            {/* Current station banner */}
+            {stationId && (
+              <div
+                style={{
+                  marginBottom: "12px",
+                  display: "inline-block",
+                  backgroundColor: "#ecfdf5",
+                  border: "1px solid #6ee7b7",
+                  borderRadius: "10px",
+                  padding: "10px 14px",
+                  fontSize: "14px",
+                  color: "#047857",
+                }}
+              >
+                Đang sử dụng trạm: <strong>{stationId}</strong>
+              </div>
+            )}
 
 {/* 🔹 Form nhập mã trạm thủ công */}
-{isEditingStation && (
-  <form
-    className="staff-orders__manual-station"
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "12px 16px",
-      marginBottom: "16px",
-      backgroundColor: "#fff7ed",
-      border: "1px dashed #fb923c",
-      borderRadius: "12px",
-      flexWrap: "wrap",
-    }}
-    onSubmit={handleManualSubmit}
-  >
-    <div style={{ flex: "1 1 220px" }}>
-      <label
-        htmlFor="manual-station-id"
-        style={{
-          display: "block",
-          fontSize: "14px",
-          fontWeight: 600,
-          marginBottom: "6px",
-          color: "#b45309",
-        }}
-      >
-        Nhập mã trạm cho nhân viên
-      </label>
-      <input
-        id="manual-station-id"
-        type="text"
-        value={manualInput}
-        onChange={(event) => {
-          setManualInput(event.target.value);
-          setManualError("");
-        }}
-        placeholder="Ví dụ: 1"
-        style={{
-          width: "100%",
-          padding: "10px 12px",
-          borderRadius: "8px",
-          border: "1px solid #f97316",
-          fontSize: "14px",
-        }}
-      />
-      {manualError && (
-        <p
-          style={{
-            marginTop: "6px",
-            fontSize: "13px",
-            color: "#b91c1c",
-          }}
-        >
-          {manualError}
-        </p>
-      )}
-    </div>
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        flexWrap: "wrap",
-      }}
-    >
-      <button
-        type="submit"
-        style={{
-          padding: "10px 18px",
-          borderRadius: "8px",
-          border: "none",
-          background: "#f97316",
-          color: "#fff",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Thiết lập trạm
-      </button>
-      {manualStationValue && (
-        <button
-          type="button"
-          onClick={handleManualReset}
-          style={{
-            padding: "10px 18px",
-            borderRadius: "8px",
-            border: "1px solid #f97316",
-            background: "#fff",
-            color: "#f97316",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Xóa cấu hình
-        </button>
-      )}
-    </div>
-  </form>
-)}
+            {/* Manual station form removed */}
 
             {/* Overview moved to component */}
             <StaffOverview
