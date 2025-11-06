@@ -1,15 +1,10 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
-import com.evrental.evrentalsystem.repository.RenterDetailRepository;
-import com.evrental.evrentalsystem.repository.StationRepository;
-import com.evrental.evrentalsystem.repository.UserRepository;
-import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
+import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
-import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
-import com.evrental.evrentalsystem.response.admin.GetRenterDetailResponse;
-import com.evrental.evrentalsystem.response.admin.RentedVehicleResponse;
-import com.evrental.evrentalsystem.response.admin.TotalVehicleResponse;
+import com.evrental.evrentalsystem.request.UpdateReportStatusRequest;
+import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.response.vehicle.FixingVehicleResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
@@ -33,7 +28,8 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final RenterDetailRepository renterDetailRepository;
-
+    private final ReportRepository reportRepository;
+    private final EmployeeDetailRepository employeeDetailRepository;
 
     //Hàm lấy tổng số xe tại 1 trạm cụ thể cho admin.
     public TotalVehicleResponse getTotalVehiclesByStation(Integer stationId) {
@@ -154,11 +150,70 @@ public class AdminService {
         // Nếu entity có quan hệ OneToOne tới User
         try {
             renterDetail.setRenter(user);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // 5️⃣ Lưu vào DB
         return renterDetailRepository.save(renterDetail);
     }
 
+    public List<AdminGetAllReportResponse> getReportsByAdminId(Integer adminId) {
+        if (adminId == null) throw new IllegalArgumentException("adminId must not be null");
+
+        List<Report> reports = reportRepository.findByAdmin_UserId(adminId);
+
+        return reports.stream().map(report -> {
+            AdminGetAllReportResponse.AdminGetAllReportResponseBuilder b = AdminGetAllReportResponse.builder()
+                    .reportId(report.getReportId())
+                    .description(report.getDescription())
+                    .status(report.getStatus())
+                    .createdAt(report.getCreatedAt());
+
+            // Staff info
+            if (report.getStaff() != null) {
+                b.staffId(report.getStaff().getUserId());
+                b.staffName(report.getStaff().getFullName());
+            }
+
+            // Vehicle info
+            VehicleDetail vd = report.getVehicleDetail();
+            if (vd != null) {
+                b.vehicleDetailId(vd.getId());
+                b.licensePlate(vd.getLicensePlate());
+            }
+
+            // Station info (from EmployeeDetail -> Station)
+            String stationName = null;
+            if (report.getStaff() != null) {
+                Integer staffId = report.getStaff().getUserId();
+                stationName = employeeDetailRepository.findByEmployee_UserId(staffId)
+                        .map(EmployeeDetail::getStation)
+                        .map(s -> {
+                            try {
+                                return s.getStationName(); // update if your field is 'name' instead
+                            } catch (Exception ex) {
+                                return s.toString();
+                            }
+                        }).orElse(null);
+            }
+            b.stationName(stationName);
+
+            return b.build();
+        }).collect(Collectors.toList());
+    }
+
+    public String updateReportStatus(UpdateReportStatusRequest request) {
+        if (request.getReportId() == null || request.getStatus() == null || request.getStatus().isBlank()) {
+            return "Invalid request data";
+        }
+
+        return reportRepository.findById(request.getReportId())
+                .map(report -> {
+                    report.setStatus(request.getStatus());
+                    reportRepository.save(report);
+                    return "Update report status success";
+                })
+                .orElse("Update report status failed: report not found");
+    }
     //End code here
 }

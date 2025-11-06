@@ -15,4 +15,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     default List<Report> findTopNByOrderByCreatedAtDesc(int n) {
         return findRecent(org.springframework.data.domain.PageRequest.of(0, n));
     }
+
+    List<Report> findByAdmin_UserId(Integer adminId);
+
 }
