@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import StaffSlideBar from "../../../components/staff/StaffSlideBar";
 import StaffHeader from "../../../components/staff/StaffHeader";
 import api from "../../../utils/api";
+import { getRenterDetail, mapRenterDetail } from "../../../api/users";
 import "../StaffLayout.css";
 import "./OrderDetail.css";
 
@@ -80,7 +81,9 @@ const DocumentViewer = ({ documents, title }) => (
 
 const OrderDetail = () => {
   const navigate = useNavigate();
-  const { orderId } = useParams();
+  // Support multiple possible route param names: :bookingId or :id or :orderId
+  const { bookingId: bookingIdParam, id: idParam, orderId: orderIdParam } = useParams();
+  const bookingId = bookingIdParam || idParam || orderIdParam;
   
   // Core states
   const [loading, setLoading] = useState(true);
@@ -98,7 +101,7 @@ const OrderDetail = () => {
 
   // Fetch order details with improved error handling
   const fetchOrderDetails = useCallback(async () => {
-    if (!orderId) {
+    if (!bookingId) {
       setError("Không tìm thấy mã đơn hàng");
       setLoading(false);
       return;
@@ -111,28 +114,29 @@ const OrderDetail = () => {
 
       // Gọi song song các API
       const [renterResponse, bookingResponse, verificationResponse] = await Promise.allSettled([
-        api.get(`/api/bookings/${orderId}/renter-details`, {
-          params: { bookingId: parseInt(orderId) }
+        api.get(`/api/bookings/${bookingId}/renter-details`, {
+          params: { bookingId: parseInt(bookingId) }
         }),
-        api.get(`/api/bookings/${orderId}/booking-details`, {
-          params: { bookingId: parseInt(orderId) }
+        api.get(`/api/bookings/booking-details`, {
+          params: { bookingId: parseInt(bookingId) }
         }),
         api.get(`/api/renter-detail/verification-status`, {
-          params: { bookingId: parseInt(orderId) }
+          params: { bookingId: parseInt(bookingId) }
         })
       ]);
 
       // Process successful responses
+      let bookingData;
       if (renterResponse.status === 'fulfilled') {
-        const renterData = renterResponse.value.data?.data || renterResponse.value.data;
-        setRenterDetails(renterData);
+        const renterDataRaw = renterResponse.value.data?.data || renterResponse.value.data;
+        setRenterDetails(renterDataRaw);
       } else {
         console.warn("Failed to fetch renter details:", renterResponse.reason);
         setRenterDetails(null);
       }
 
       if (bookingResponse.status === 'fulfilled') {
-        const bookingData = bookingResponse.value.data?.data || bookingResponse.value.data;
+        bookingData = bookingResponse.value.data?.data || bookingResponse.value.data;
         setBookingDetails(bookingData);
       } else {
         console.warn("Failed to fetch booking details:", bookingResponse.reason);
@@ -147,6 +151,18 @@ const OrderDetail = () => {
         setVerificationStatus('PENDING');
       }
 
+      // Fallback: if renter details missing doc URLs, try user profile renter-detail API
+      const hasDocs = (rd) => !!(rd && (rd.cccdFrontUrl || rd.frontCccd || rd.cccdBackUrl || rd.backCccd || rd.gplx || rd.driverLicenseUrl || rd.driverLicenseImageUrl));
+      if (!hasDocs(renterDetails) && bookingData?.userId) {
+        try {
+          const userDetailRaw = await getRenterDetail(bookingData.userId);
+          const mapped = mapRenterDetail(userDetailRaw);
+          setRenterDetails(prev => ({ ...(prev || {}), ...mapped }));
+        } catch (e) {
+          console.warn('Fallback renter-detail by user failed:', e.message);
+        }
+      }
+
     } catch (err) {
       console.error("Error fetching order details:", err);
       setError(
@@ -157,7 +173,7 @@ const OrderDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [bookingId, getRenterDetail]);
 
   // Load data on mount
   useEffect(() => {
@@ -213,23 +229,105 @@ const OrderDetail = () => {
   // Prepare documents data for DocumentViewer
   const getDocumentsData = () => {
     if (!renterDetails) return [];
-    
     const documents = [];
-    if (renterDetails.gplx) {
-      documents.push({ label: "Giấy phép lái xe", url: renterDetails.gplx });
-    }
-    if (renterDetails.frontCccd) {
-      documents.push({ label: "CCCD - Mặt trước", url: renterDetails.frontCccd });
-    }
-    if (renterDetails.backCccd) {
-      documents.push({ label: "CCCD - Mặt sau", url: renterDetails.backCccd });
-    }
+
+    const gplxUrl = renterDetails.gplx || renterDetails.driverLicenseUrl || renterDetails.driverLicenseImageUrl;
+    const frontUrl = renterDetails.frontCccd || renterDetails.cccdFrontUrl || renterDetails.frontCccdUrl;
+    const backUrl = renterDetails.backCccd || renterDetails.cccdBackUrl || renterDetails.backCccdUrl;
+
+    if (gplxUrl) documents.push({ key: 'gplx', label: 'Giấy phép lái xe', url: gplxUrl });
+    if (frontUrl) documents.push({ key: 'frontCccd', label: 'CCCD - Mặt trước', url: frontUrl });
+    if (backUrl) documents.push({ key: 'backCccd', label: 'CCCD - Mặt sau', url: backUrl });
+
     return documents;
   };
 
+  const [preparedDocs, setPreparedDocs] = useState([]);
+
+  // Detect and normalize base64 image strings to data URLs
+  const looksLikeBase64 = useCallback((s) => {
+    if (typeof s !== 'string') return false;
+    const t = s.trim();
+    if (t.length < 50) return false; // too short to be an image
+    // Allow letters, numbers, + / = and optional newlines
+    if (!/^[A-Za-z0-9+/=\r\n]+$/.test(t)) return false;
+    const noNl = t.replace(/[\r\n]/g, '');
+    return noNl.length % 4 === 0;
+  }, []);
+
+  const ensureDataUrl = useCallback((u) => {
+    if (!u) return null;
+    if (/^data:/i.test(u)) return u; // already a data URL
+    // Sometimes backend may return "image/png;base64,AAAA..." (missing data: prefix)
+    if (/^[a-z]+\/[a-z0-9.+-]+;base64,/i.test(u)) return `data:${u}`;
+    if (looksLikeBase64(u)) return `data:image/jpeg;base64,${u}`; // default to jpeg
+    return null;
+  }, [looksLikeBase64]);
+
+  const resolveAbsoluteUrl = useCallback((u) => {
+    if (!u) return null;
+    if (/^(https?:)?\/\//i.test(u) || /^data:/i.test(u)) return u;
+    try {
+      const base = api.defaults?.baseURL || '';
+      const url = new URL(base);
+      const baseOrigin = url.origin;
+      const basePath = url.pathname.replace(/\/$/, '');
+      if (u.startsWith('/')) {
+        // Join origin + basePath + u
+        return `${baseOrigin}${basePath}${u}`;
+      }
+      return `${baseOrigin}${basePath}/${u}`;
+    } catch {
+      return u;
+    }
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+    const urlsToRevoke = [];
+
+    const load = async () => {
+      const docs = getDocumentsData();
+      if (docs.length === 0) {
+        setPreparedDocs([]);
+        return;
+      }
+      const results = await Promise.all(docs.map(async (d) => {
+        // First, check if it's base64 and convert to data URL
+        const asData = ensureDataUrl(d.url);
+        if (asData) {
+          return { ...d, blobUrl: asData, linkUrl: asData };
+        }
+        const resolved = resolveAbsoluteUrl(d.url);
+        if (!resolved) return { ...d, blobUrl: null, error: true };
+        // data URL - use directly
+        if (/^data:/i.test(resolved)) {
+          return { ...d, blobUrl: resolved, linkUrl: resolved };
+        }
+        try {
+          const resp = await api.get(resolved, { responseType: 'blob' });
+          const blobUrl = URL.createObjectURL(resp.data);
+          urlsToRevoke.push(blobUrl);
+          return { ...d, blobUrl, linkUrl: blobUrl };
+        } catch (e) {
+          // Fallback: try using resolved URL directly (public)
+          return { ...d, blobUrl: null, linkUrl: resolved, error: true };
+        }
+      }));
+      if (!isCancelled) setPreparedDocs(results);
+    };
+
+    load();
+    return () => {
+      isCancelled = true;
+      urlsToRevoke.forEach((u) => URL.revokeObjectURL(u));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renterDetails]);
+
   // Action handlers
   const handleVerifyRenter = async () => {
-    if (!orderId) {
+    if (!bookingId) {
       setError("Không tìm thấy mã đơn hàng");
       return;
     }
@@ -240,7 +338,7 @@ const OrderDetail = () => {
       setSuccessMessage("");
 
       const response = await api.post("/api/renter-detail/verify-renter", null, {
-        params: { bookingId: parseInt(orderId) }
+        params: { bookingId: parseInt(bookingId) }
       });
 
       if (response.data.success) {
@@ -262,7 +360,7 @@ const OrderDetail = () => {
   };
 
   const handleUpdateBookingStatus = async (newStatus) => {
-    if (!orderId) {
+    if (!bookingId) {
       setError("Không tìm thấy mã đơn hàng");
       return;
     }
@@ -272,7 +370,7 @@ const OrderDetail = () => {
       setError("");
       setSuccessMessage("");
 
-      const response = await api.put(`/api/bookings/${orderId}/status`, null, {
+      const response = await api.put(`/api/bookings/${bookingId}/status`, null, {
         params: { status: newStatus }
       });
 
@@ -319,7 +417,7 @@ const OrderDetail = () => {
               <div className="order-detail__header-info">
                 <h1>
                   Chi tiết đơn hàng{" "}
-                  <span className="order-detail__code">#{orderId || "N/A"}</span>
+                  <span className="order-detail__code">#{bookingId || "N/A"}</span>
                 </h1>
                 {bookingDetails && (
                   <StatusBadge 
@@ -406,52 +504,89 @@ const OrderDetail = () => {
 
                           {/* Documents Section */}
                           <div className="order-detail__renter-documents">
-                            <h3 className="order-detail__documents-title">
-                              📄 Tài liệu người thuê
-                            </h3>
-                            {getDocumentsData().length > 0 ? (
-                              <div className="order-detail__doc-grid">
-                                {getDocumentsData().map((doc, index) => (
-                                  <div key={index} className="order-detail__doc-item">
-                                    <div 
-                                      className="order-detail__doc-preview"
-                                      onClick={() => window.open(doc.url, '_blank')}
-                                      style={{ cursor: 'pointer' }}
-                                    >
-                                      <img 
-                                        src={doc.url} 
-                                        alt={doc.label}
-                                        className="order-detail__doc-img"
-                                        onError={(e) => {
-                                          e.target.style.display = 'none';
-                                          e.target.nextElementSibling.style.display = 'flex';
-                                        }}
-                                      />
-                                      <div 
-                                        className="order-detail__doc-fallback"
-                                        style={{ display: 'none' }}
-                                      >
-                                        📄
-                                      </div>
-                                    </div>
-                                    <p className="order-detail__doc-label">{doc.label}</p>
-                                    <a 
-                                      href={doc.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="order-detail__doc-link"
-                                    >
-                                      Xem chi tiết
-                                    </a>
+                            <h3 className="order-detail__documents-title">📄 Tài liệu người thuê</h3>
+                            <div className="document-card-wrapper">
+                              {/* CCCD Card */}
+                              <div className="document-card">
+                                <div className="document-header">
+                                  <div className="document-icon document-icon-purple">🪪</div>
+                                  <div className="document-info">
+                                    <h3>Căn cước công dân</h3>
+                                    <p>CCCD/CMND</p>
                                   </div>
-                                ))}
+                                </div>
+                                {/* Ảnh mặt trước */}
+                                {preparedDocs.find(d=>d.key==='frontCccd') ? (
+                                  <div className="document-preview" style={{ marginTop: 12 }}>
+                                    <div className="document-preview-title">Ảnh mặt trước</div>
+                                    <div className="document-image-frame" aria-hidden>
+                                      <img
+                                        src={preparedDocs.find(d=>d.key==='frontCccd')?.blobUrl || preparedDocs.find(d=>d.key==='frontCccd')?.linkUrl}
+                                        alt="cccd-front"
+                                        className="document-image"
+                                        onError={(e)=>{ e.target.style.display='none'; }}
+                                      />
+                                    </div>
+                                    <a
+                                      href={preparedDocs.find(d=>d.key==='frontCccd')?.linkUrl || preparedDocs.find(d=>d.key==='frontCccd')?.blobUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="document-view-link"
+                                    >Mở ảnh trong tab mới</a>
+                                  </div>
+                                ) : <div className="document-missing">Chưa có ảnh mặt trước</div>}
+                                {/* Ảnh mặt sau */}
+                                {preparedDocs.find(d=>d.key==='backCccd') ? (
+                                  <div className="document-preview" style={{ marginTop: 12 }}>
+                                    <div className="document-preview-title">Ảnh mặt sau</div>
+                                    <div className="document-image-frame" aria-hidden>
+                                      <img
+                                        src={preparedDocs.find(d=>d.key==='backCccd')?.blobUrl || preparedDocs.find(d=>d.key==='backCccd')?.linkUrl}
+                                        alt="cccd-back"
+                                        className="document-image"
+                                        onError={(e)=>{ e.target.style.display='none'; }}
+                                      />
+                                    </div>
+                                    <a
+                                      href={preparedDocs.find(d=>d.key==='backCccd')?.linkUrl || preparedDocs.find(d=>d.key==='backCccd')?.blobUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="document-view-link"
+                                    >Mở ảnh trong tab mới</a>
+                                  </div>
+                                ) : <div className="document-missing" style={{ marginTop: 8 }}>Chưa có ảnh mặt sau</div>}
                               </div>
-                            ) : (
-                              <div className="order-detail__empty-state">
-                                <span className="order-detail__empty-icon">📄</span>
-                                <p>Chưa có tài liệu nào được tải lên</p>
+
+                              {/* GPLX Card */}
+                              <div className="document-card">
+                                <div className="document-header">
+                                  <div className="document-icon document-icon-orange">🚗</div>
+                                  <div className="document-info">
+                                    <h3>Giấy phép lái xe</h3>
+                                    <p>GPLX</p>
+                                  </div>
+                                </div>
+                                {preparedDocs.find(d=>d.key==='gplx') ? (
+                                  <div className="document-preview" style={{ marginTop: 12 }}>
+                                    <div className="document-preview-title">Ảnh GPLX</div>
+                                    <div className="document-image-frame" aria-hidden>
+                                      <img
+                                        src={preparedDocs.find(d=>d.key==='gplx')?.blobUrl || preparedDocs.find(d=>d.key==='gplx')?.linkUrl}
+                                        alt="driver-license"
+                                        className="document-image"
+                                        onError={(e)=>{ e.target.style.display='none'; }}
+                                      />
+                                    </div>
+                                    <a
+                                      href={preparedDocs.find(d=>d.key==='gplx')?.linkUrl || preparedDocs.find(d=>d.key==='gplx')?.blobUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="document-view-link"
+                                    >Mở ảnh trong tab mới</a>
+                                  </div>
+                                ) : <div className="document-missing">Chưa có ảnh GPLX</div>}
                               </div>
-                            )}
+                            </div>
                           </div>
                         </div>
 

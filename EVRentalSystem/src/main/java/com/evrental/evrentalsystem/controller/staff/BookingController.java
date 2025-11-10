@@ -80,7 +80,7 @@ public class BookingController {
     //
     @GetMapping("/{bookingId}/renter-details")
     public ResponseEntity<ApiResponse<RenterDetailsByBookingResponse>> getRenterDetailsByBooking(
-            @RequestParam int bookingId
+            @PathVariable int bookingId
     ) {
         RenterDetailsByBookingResponse response = staffService.getRenterDetailsByBooking(bookingId);
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin người thuê thành công", response));

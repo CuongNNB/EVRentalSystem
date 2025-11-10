@@ -89,6 +89,13 @@ export default function StaffReport() {
   const [modelsError, setModelsError] = useState("");
 
   // small helpers
+  const formatStatus = (raw) => {
+    const s = String(raw ?? '').toLowerCase();
+    if (s.includes('avail')) return 'Sẵn sàng';
+    if (s.includes('fix')) return 'Sửa chữa';
+    if (s === 'rented' || s.includes('rent')) return 'Đang thuê';
+    return raw ?? '—';
+  };
   // battery extraction removed from table usage; can be reintroduced if needed
 
   // Derive display lists from models with safe fallbacks to mocks
@@ -392,7 +399,7 @@ export default function StaffReport() {
                             <span>{c.color || '—'}</span>
                           </span>
                         </td>
-                        <td>{c.status}</td>
+                        <td>{formatStatus(c.status)}</td>
                         <td>
                           <button
                             className="sr-btn sr-btn--danger sr-btn--sm"
