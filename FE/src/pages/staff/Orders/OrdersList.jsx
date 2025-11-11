@@ -620,6 +620,11 @@ const mapBooking = (booking, fallbackId) => {
         booking.return_time
     );
     const status = resolveStatus(booking.status);
+    const numericTotal = (() => {
+        const candidate = booking.totalAmount ?? booking.total ?? booking.amount;
+        const n = Number(candidate);
+        return Number.isNaN(n) ? 0 : n;
+    })();
     return {
         id:
             booking.id ||
@@ -640,7 +645,8 @@ const mapBooking = (booking, fallbackId) => {
         pickup,
         dropoff,
         status,
-        total: formatCurrency(booking.totalAmount ?? booking.total ?? booking.amount),
+        total: formatCurrency(numericTotal),
+        totalValue: numericTotal,
         actions: deriveActions(status.key),
         raw: {
             ...booking,
@@ -692,7 +698,7 @@ const matchesDateFilter = (date, filter) => {
     }
 };
 
-const OrdersTable = ({ title, orders, emptyMessage, onRenderRow }) => (
+const OrdersTable = ({ title, orders, emptyMessage, onRenderRow, sortConfig, onSort }) => (
     <article className="orders-card">
         <header className="orders-card__header">
             <h2>{title}</h2>
@@ -702,13 +708,76 @@ const OrdersTable = ({ title, orders, emptyMessage, onRenderRow }) => (
             <table className="orders-table">
                 <thead>
                 <tr>
-                    <th>Mã đơn</th>
-                    <th>Khách hàng</th>
-                    <th>Xe</th>
-                    <th>Ngày thuê</th>
-                    <th>Ngày trả</th>
-                    <th>Trạng thái</th>
-                    <th>Tổng tiền</th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('id')}
+                        aria-sort={sortConfig?.key === 'id' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('id'); }}
+                    >
+                        Mã đơn {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('customer')}
+                        aria-sort={sortConfig?.key === 'customer' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('customer'); }}
+                    >
+                        Khách hàng {sortConfig?.key === 'customer' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('car')}
+                        aria-sort={sortConfig?.key === 'car' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('car'); }}
+                    >
+                        Xe {sortConfig?.key === 'car' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('pickup')}
+                        aria-sort={sortConfig?.key === 'pickup' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('pickup'); }}
+                    >
+                        Ngày thuê {sortConfig?.key === 'pickup' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('dropoff')}
+                        aria-sort={sortConfig?.key === 'dropoff' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('dropoff'); }}
+                    >
+                        Ngày trả {sortConfig?.key === 'dropoff' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('status')}
+                        aria-sort={sortConfig?.key === 'status' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('status'); }}
+                    >
+                        Trạng thái {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
+                    <th
+                        className="orders-table__th--sortable"
+                        onClick={() => onSort && onSort('total')}
+                        aria-sort={sortConfig?.key === 'total' ? sortConfig.direction : 'none'}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('total'); }}
+                    >
+                        Tổng tiền {sortConfig?.key === 'total' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                    </th>
                     <th>Hành động</th>
                 </tr>
                 </thead>
@@ -751,6 +820,21 @@ const OrdersList = () => {
     const [statusFilter, setStatusFilter] = useState("");
     const [dateFilter, setDateFilter] = useState("");
     const [manualError, setManualError] = useState("");
+    const [sortConfigHandover, setSortConfigHandover] = useState({ key: "", direction: "asc" });
+    const [sortConfigReceiving, setSortConfigReceiving] = useState({ key: "", direction: "asc" });
+
+    const requestSortHandover = (key) => {
+        setSortConfigHandover((prev) => {
+            const direction = prev.key === key && prev.direction === "asc" ? "desc" : "asc";
+            return { key, direction };
+        });
+    };
+    const requestSortReceiving = (key) => {
+        setSortConfigReceiving((prev) => {
+            const direction = prev.key === key && prev.direction === "asc" ? "desc" : "asc";
+            return { key, direction };
+        });
+    };
 
     useEffect(() => {
         if (stationId) {
@@ -767,6 +851,59 @@ const OrdersList = () => {
             setStationId(derived);
         }
     }, [user, stationId]);
+
+    // Server search (optional): Try backend search API; fall back to client-side filter
+    const handleSearch = async () => {
+        if (!stationId) {
+            setConnectionState({ status: "error", message: "Chưa xác định trạm để tìm kiếm." });
+            return;
+        }
+
+        const q = (searchTerm || "").trim();
+        // If no keyword, just refetch all to refresh view
+        if (!q && !statusFilter && !dateFilter) {
+            // Trigger the existing effect by toggling stationId message only
+            setConnectionState({ status: "loading", message: `Đang tải đơn hàng cho trạm ${stationId}...` });
+            try {
+                const response = await api.get(`/api/bookings/station/${stationId}`);
+                const payload = Array.isArray(response.data) ? response.data : response.data?.data ?? [];
+                const mapped = payload.map((item, index) => mapBooking(item, index));
+                setOrders(mapped);
+                setConnectionState({ status: mapped.length ? "success" : "warning", message: mapped.length ? `Đã tải ${mapped.length} đơn hàng.` : "Không có đơn phù hợp." });
+            } catch (e) {
+                setConnectionState({ status: "error", message: e?.response?.data?.message || e.message || "Không thể tải danh sách đơn hàng." });
+            }
+            return;
+        }
+
+        setLoading(true);
+        setConnectionState({ status: "loading", message: "Đang tìm kiếm..." });
+        try {
+            // Preferred backend search endpoint (adjust if your BE differs)
+            const res = await api.get(`/api/bookings/search`, {
+                params: {
+                    stationId,
+                    q,
+                    status: statusFilter || undefined,
+                    dateRange: dateFilter || undefined,
+                },
+            });
+            const payload = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+            const mapped = payload.map((item, index) => mapBooking(item, index));
+            setOrders(mapped);
+            setConnectionState({ status: "success", message: `Tìm thấy ${mapped.length} đơn phù hợp.` });
+        } catch (err) {
+            // Fallback gracefully to client-side filtering when search API is not available
+            const status = err?.response?.status;
+            if (status === 404 || status === 405 || status === 501) {
+                setConnectionState({ status: "warning", message: "API tìm kiếm chưa sẵn sàng – dùng lọc tại chỗ." });
+            } else {
+                setConnectionState({ status: "warning", message: "Không thể tìm kiếm từ server – dùng lọc tại chỗ." });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!stationId) {
@@ -832,37 +969,66 @@ const OrdersList = () => {
         };
     }, [stationId]);
 
-    const filteredOrders = useMemo(
-        () =>
-            orders.filter((order) => {
-                if (!matchesSearch(order, searchTerm)) return false;
-                if (
-                    statusFilter &&
-                    order.status.key !== statusFilter &&
-                    order.status.raw?.toLowerCase() !== statusFilter
-                ) {
-                    return false;
-                }
-                if (dateFilter && !matchesDateFilter(order.pickup.raw, dateFilter)) {
-                    return false;
-                }
-                return true;
-            }),
-        [orders, searchTerm, statusFilter, dateFilter]
-    );
+    const filteredOrders = useMemo(() => {
+        const list = orders.filter((order) => {
+            if (!matchesSearch(order, searchTerm)) return false;
+            if (
+                statusFilter &&
+                order.status.key !== statusFilter &&
+                order.status.raw?.toLowerCase() !== statusFilter
+            ) {
+                return false;
+            }
+            if (dateFilter && !matchesDateFilter(order.pickup.raw, dateFilter)) {
+                return false;
+            }
+            return true;
+        });
+        return list;
+    }, [orders, searchTerm, statusFilter, dateFilter]);
 
-    const groupedOrders = useMemo(
-        () =>
-            filteredOrders.reduce(
-                (result, order) => {
-                    const bucket = order.status.bucket === "handover" ? "handover" : "receiving";
-                    result[bucket].push(order);
-                    return result;
-                },
-                { handover: [], receiving: [] }
-            ),
-        [filteredOrders]
-    );
+    const groupedOrders = useMemo(() => {
+        return filteredOrders.reduce(
+            (result, order) => {
+                const bucket = order.status.bucket === "handover" ? "handover" : "receiving";
+                result[bucket].push(order);
+                return result;
+            },
+            { handover: [], receiving: [] }
+        );
+    }, [filteredOrders]);
+
+    const sortOrders = (list, sortCfg) => {
+        if (!sortCfg?.key) return list;
+        const dir = sortCfg.direction === "desc" ? -1 : 1;
+        const safeStr = (v) => (v === undefined || v === null ? "" : String(v).toLowerCase());
+        const safeNum = (v) => (v === undefined || v === null || Number.isNaN(Number(v)) ? 0 : Number(v));
+        const safeTime = (d) => (d && d instanceof Date && !Number.isNaN(d.getTime()) ? d.getTime() : 0);
+        const compare = (a, b) => {
+            switch (sortCfg.key) {
+                case "id":
+                    return safeStr(a.id).localeCompare(safeStr(b.id), undefined, { numeric: true }) * dir;
+                case "customer":
+                    return safeStr(a.customer?.name).localeCompare(safeStr(b.customer?.name)) * dir;
+                case "car":
+                    return safeStr(a.car).localeCompare(safeStr(b.car)) * dir;
+                case "pickup":
+                    return (safeTime(a.pickup?.raw) - safeTime(b.pickup?.raw)) * dir;
+                case "dropoff":
+                    return (safeTime(a.dropoff?.raw) - safeTime(b.dropoff?.raw)) * dir;
+                case "status":
+                    return safeStr(a.status?.label).localeCompare(safeStr(b.status?.label)) * dir;
+                case "total":
+                    return (safeNum(a.totalValue) - safeNum(b.totalValue)) * dir;
+                default:
+                    return 0;
+            }
+        };
+        return [...list].sort(compare);
+    };
+
+    const sortedHandover = useMemo(() => sortOrders(groupedOrders.handover, sortConfigHandover), [groupedOrders, sortConfigHandover]);
+    const sortedReceiving = useMemo(() => sortOrders(groupedOrders.receiving, sortConfigReceiving), [groupedOrders, sortConfigReceiving]);
 
     const applyStatusUpdate = (orderId, newStatusKey) => {
         setOrders((prev) =>
@@ -1255,6 +1421,12 @@ const OrdersList = () => {
                                         placeholder="Tìm kiếm mã đơn, khách hàng, biển số xe..."
                                         value={searchTerm}
                                         onChange={(event) => setSearchTerm(event.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleSearch();
+                                            }
+                                        }}
                                     />
                                 </div>
                                 <select
@@ -1281,7 +1453,7 @@ const OrdersList = () => {
                                     <option value="week">7 ngày gần nhất</option>
                                     <option value="month">30 ngày gần nhất</option>
                                 </select>
-                                <button type="button" className="staff-orders__export">
+                                <button type="button" className="staff-orders__export" onClick={handleSearch}>
                                     Tìm kiếm 🔍
                                 </button>
                             </div>
@@ -1316,24 +1488,28 @@ const OrdersList = () => {
                         <section className="orders-board">
                             <OrdersTable
                                 title="Đơn hàng bàn giao"
-                                orders={loading ? [] : groupedOrders.handover}
+                                orders={loading ? [] : sortedHandover}
                                 emptyMessage={
                                     loading
                                         ? "Đang tải danh sách đơn hàng..."
                                         : "Không có đơn hàng nào cần bàn giao."
                                 }
                                 onRenderRow={renderOrderRow}
+                                sortConfig={sortConfigHandover}
+                                onSort={requestSortHandover}
                             />
 
                             <OrdersTable
                                 title="Đơn hàng nhận xe"
-                                orders={loading ? [] : groupedOrders.receiving}
+                                orders={loading ? [] : sortedReceiving}
                                 emptyMessage={
                                     loading
                                         ? "Đang tải danh sách đơn hàng..."
                                         : "Không có đơn hàng nào trong quá trình nhận xe."
                                 }
                                 onRenderRow={renderOrderRow}
+                                sortConfig={sortConfigReceiving}
+                                onSort={requestSortReceiving}
                             />
                         </section>
 
