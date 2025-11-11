@@ -663,7 +663,7 @@ const OrderDetail = () => {
                                 </div>
                                 <div className="order-detail__pricing-item">
                                   <dt>Tiền cọc</dt>
-                                  <dd>{formatCurrency(bookingDetails.deposit/1000)}</dd>
+                                  <dd>{formatCurrency(bookingDetails.deposit)}</dd>
                                 </div>
                                 <div className="order-detail__pricing-item">
                                   <dt>Phí phát sinh</dt>
