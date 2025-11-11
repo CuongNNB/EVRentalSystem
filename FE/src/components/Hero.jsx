@@ -170,14 +170,14 @@ export default function Hero({ backgroundImage }) {
                         </div>
                     </div>
 
-                    <div className="hero-stats">
-                        {stats.map((stat) => (
-                            <div key={stat.value} className="stat">
-                                <strong>{stat.value}</strong>
-                                <span>{stat.label}</span>
-                            </div>
-                        ))}
-                    </div>
+                    {/*<div className="hero-stats">*/}
+                    {/*    {stats.map((stat) => (*/}
+                    {/*        <div key={stat.value} className="stat">*/}
+                    {/*            <strong>{stat.value}</strong>*/}
+                    {/*            <span>{stat.label}</span>*/}
+                    {/*        </div>*/}
+                    {/*    ))}*/}
+                    {/*</div>*/}
 
                     <button type="button" className="btn primary-btn hero-cta" onClick={() => navigate('/cars')}>
                         Xem danh sách xe
