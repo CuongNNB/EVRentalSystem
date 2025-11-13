@@ -32,7 +32,24 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const paymentMethods = [
         { id: 'bank-transfer', name: 'Chuyển khoản ngân hàng', description: 'Chuyển khoản qua ngân hàng trong nước', icon: CreditCard, color: '#10b981', qr: '/qrimage/bank_qr.png' },
         { id: 'momo', name: 'Ví MoMo', description: 'Thanh toán nhanh chóng qua ví MoMo', icon: Smartphone, color: '#d946ef', qr: '/qrimage/momo_qr.png' },
+        {
+            id: 'vietqr',
+            name: 'VietinBank',
+            description: 'Quét mã VietQR để chuyển khoản tới VietinBank',
+            icon: Wallet,
+            color: '#0ea5a3',
+            // note: không đặt qr tĩnh ở đây; sẽ build URL động khi cần hiển thị
+            qr: null,
+            // thông tin tài khoản được embed để gửi khi gọi API nếu cần
+            qrMeta: {
+                bankId: 'vietinbank',
+                accountNo: '106878468586',
+                accountName: 'NGUYEN NGOC BAO CUONG',
+                template: 'TgCTXTW'
+            }
+        },
         { id: 'ewallet', name: 'Thẻ ngân hàng nội địa', description: 'Ngân hàng NCB', icon: Wallet, color: '#3b82f6', qr: '/qrimage/ewallet_qr.png' }
+        
     ];
 
     useEffect(() => {
@@ -681,7 +698,7 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                             <X />
                         </button>
 
-                        <h3 style={{ marginTop: 0 }}>Quét mã QR để thanh toán (demo)</h3>
+                        <h3 style={{ marginTop: 0 }}>Quét mã QR để thanh toán</h3>
                         <p style={{ color: '#64748b' }}>
                             Ứng dụng: {selectedMethod === 'momo' ? 'MoMo' : (selectedMethod === 'bank-transfer' ? 'Ngân hàng' : 'Ví điện tử')}
                         </p>
@@ -704,7 +721,28 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                             </>
                         ) : (
                             <>
-                                <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
+                                {selectedMethod === 'vietqr' ? (
+                                    (() => {
+                                        const pm = paymentMethods.find(m => m.id === 'vietqr');
+                                        const meta = pm?.qrMeta || {};
+                                        // amount theo VND, dùng giá trị finalTotal (đã tính sẵn)
+                                        const amount = Number(finalTotal || 0);
+                                        const addInfo = `Thanh toán đơn hàng #${summary?.contractCode ?? summary?.bookingId ?? ''}`;
+                                        const accountName = meta.accountName || '';
+                                        // encode URI components
+                                        const query = new URLSearchParams({
+                                            amount: String(amount),
+                                            addInfo: addInfo,
+                                            accountName: accountName
+                                        }).toString();
+                                        const qrUrl = `https://img.vietqr.io/image/${meta.bankId}-${meta.accountNo}-${meta.template}.png?${query}`;
+
+                                        return <img src={qrUrl} alt="VietQR Code" className="qr-image" />;
+                                    })()
+                                ) : (
+                                    <img src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'} alt="QR Code" className="qr-image" />
+                                )}
+
                                 <button
                                     className="qr-confirm-btn"
                                     onClick={handleConfirmPayment}
