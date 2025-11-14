@@ -104,7 +104,6 @@ const ExtraFee = () => {
         // No reception report validation (removed)
 
         setSubmitting(true);
-
         try {
             // 0. Gửi biên bản nhận xe lên BE (nếu có endpoint).
             // NOTE: Assumption: backend accepts a multipart/form-data POST to `/api/bookings/{orderId}/return-report`

@@ -236,13 +236,13 @@ const STATUS_CONFIG = {
         bucket: "receiving",
     },
     total_fees_charged: {
-        label: "Tính phí bổ sung",
-        variant: "warning",
+        label: "Đã hoàn thành",
+        variant: "success",
         bucket: "receiving",
     },
     completed: {
-        label: "Hoàn thành",
-        variant: "success",
+        label: "Đợi thanh toán hóa đơn",
+        variant: "warning",
         bucket: "receiving",
     },
     vehicle_return_overdue: {
@@ -1441,7 +1441,7 @@ const OrdersList = () => {
                                     <option value="vehicle_inspected_before_pickup">Đã kiểm tra xe</option>
                                     <option value="currently_renting">Đang thuê</option>
                                     <option value="vehicle_returned">Đã trả xe</option>
-                                    <option value="total_fees_charged">Tính phí bổ sung</option>
+                                    <option value="total_fees_charged">Chờ thanh toán bổ sung</option>
                                     <option value="completed">Hoàn thành</option>
                                 </select>
                                 <select

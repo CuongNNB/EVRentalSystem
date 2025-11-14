@@ -27,14 +27,7 @@ async function createPlaceholderBlob() {
 	});
 }
 
-async function updateBookingStatusCompleted(id) {
-	try {
-		// Set booking status to "Đã trả xe" (Vehicle_Returned)
-		await api.put(`/api/bookings/${encodeURIComponent(id)}/status`, null, { params: { status: "Vehicle_Returned" } });
-	} catch (error_) {
-		console.warn("Unable to update booking status", error_);
-	}
-}
+
 
 // additional fee helper: directly create on backend (backend computes final money if needed)
 async function createAdditionalFee(bookingId, feeName, amount, desc) {
@@ -288,15 +281,13 @@ export default function ReceiveCar() {
 					}
 				}
 
-				await updateBookingStatusCompleted(bookingId);
-
 			const baseMessage = fail > 0
 				? `Đã tạo ${success} biên bản, ${fail} mục thất bại.`
 				: `Đã hoàn tất biên bản nhận xe (${success} mục).`;
 			const feePart = feeMessages.length ? ` ${feeMessages.join("; ")}.` : "";
 			const message = `${baseMessage}${feePart}`;
 			setNotification(message);
-			setTimeout(() => navigate("/staff/orders", { replace: true }), 2000);
+			setTimeout(() => navigate(`/staff/orders/${orderId}/extra-fee`, { replace: true }), 2000);
 		} catch (e) {
 			console.error("handleReceive error", e);
 			setErrorMessage("Lỗi khi gửi biên bản nhận xe.");

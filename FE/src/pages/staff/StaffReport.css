@@ -11,7 +11,7 @@
 html, body, #root { height: 100%; }
 
 .sr-container { width:100%; min-height:100vh; display:flex; flex-direction:column; padding:0; box-sizing:border-box; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#0f172a; background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%); }
-
+.crf-desc, #crf-desc { font-size:13px; color:var(--muted); margin-top:4px; font-family: Arial, Helvetica, sans-serif; }
 .sr-layout { flex:1; display:grid; grid-template-columns:240px 1fr; min-height:calc(100vh - var(--staff-header-height)); gap:20px }
 .sr-aside { width:240px; position:sticky; top:var(--staff-header-height); height:calc(100vh - var(--staff-header-height)); overflow-y:auto; padding:16px }
 .sr-main { flex:1; overflow:auto; padding:28px }
