@@ -10,4 +10,5 @@
         Vehicle_Returned,
         Total_Fees_Charged,
         Completed,
+        Cancelled,
     }

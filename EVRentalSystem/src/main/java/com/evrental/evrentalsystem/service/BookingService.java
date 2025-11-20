@@ -9,14 +9,16 @@ import com.evrental.evrentalsystem.response.user.BookingDetailResponse;
 import com.evrental.evrentalsystem.response.user.BookingResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class    BookingService {
+public class BookingService {
 
     private final UserRepository userRepository;
     private final VehicleModelRepository vehicleModelRepository;
@@ -143,5 +145,40 @@ public class    BookingService {
         }
 
         return dto;
+    }
+
+
+    @Transactional
+    public String updateStatus(Integer bookingId, String status) {
+        Optional<Booking> opt = bookingRepository.findById(bookingId);
+        if (opt.isEmpty()) {
+            return "No booking with the given ID.";
+        }
+
+        Booking booking = opt.get();
+
+        if (status.equalsIgnoreCase(BookingStatus.Cancelled.toString())) {
+            VehicleDetail vehicle = booking.getVehicleDetail();
+            if (vehicle != null && vehicle.getLicensePlate() != null) {
+                resetStatusVeDetail(vehicle.getLicensePlate());
+            }
+        }
+
+        booking.setStatus(status);
+        bookingRepository.save(booking);
+        return "Status updated successfully.";
+    }
+
+    @Transactional
+    public boolean resetStatusVeDetail(String licensePlate) {
+        VehicleDetail detail = vehicleDetailRepository.findByLicensePlate(licensePlate);
+
+        if (detail == null) {
+            return false;
+        }
+
+        detail.setStatus("AVAILABLE");
+        vehicleDetailRepository.save(detail);
+        return true;
     }
 }
