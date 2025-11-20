@@ -205,7 +205,7 @@ const MyBookings = () => {
 
                     raw: item
                 }));
-
+                mapped.sort((a, b) => Number(a.bookingId) < Number(b.bookingId) ? 1 : -1);
                 setBookings(mapped);
             } catch (err) {
                 if (err.name === 'AbortError') return;
@@ -358,7 +358,7 @@ const MyBookings = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 * index }}
                                         className="booking-card"
-                                       
+
                                     >
                                         {/* Header */}
                                         <div className="card-header">
