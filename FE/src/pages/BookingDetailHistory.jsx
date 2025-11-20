@@ -455,23 +455,23 @@ const BookingDetailHistory = () => {
             setUpdating(false);
         }
     };
-
-    // Accept all for inspections after
     const handleAcceptAllAfter = async () => {
         if (!normalized.bookingId) return;
 
-        setAcceptModalAfterOpen(true);
         const result = await callUpdateStatusAfterApi(normalized.bookingId, 'CONFIRMED');
 
         if (result.success) {
-            setAcceptModalAfterOpen(false);
-            navigate('/my-bookings');
+            // 1) Mở modal SUCCESS
+            setAcceptModalAfterOpen(true);
+
+            // 2) Chờ 2 giây rồi điều hướng
+            setTimeout(() => {
+                navigate('/my-bookings');
+            }, 2000);
         } else {
-            setAcceptModalAfterOpen(false);
             alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
         }
     };
-
 
     // Close accept modal after
     const handleAcceptAfterClose = () => {
@@ -550,27 +550,23 @@ const BookingDetailHistory = () => {
         }
     };
 
-
-    // 🔹 ADD: handlers for Accept modal
-    // Accept all for inspections (trước pickup)
     const handleAcceptAll = async () => {
         if (!normalized.bookingId) return;
 
-        setAcceptModalOpen(true); // vẫn mở modal để hiển thị thông báo nếu bạn muốn
         const result = await callUpdateStatusApi(normalized.bookingId, 'CONFIRMED');
 
         if (result.success) {
-            // đóng modal (tùy chọn)
-            setAcceptModalOpen(false);
-            // navigate to My Bookings
-            navigate('/my-bookings');
+            // 1) Mở modal SUCCESS
+            setAcceptModalOpen(true);
+
+            // 2) Chờ 2 giây → navigate
+            setTimeout(() => {
+                navigate('/my-bookings');
+            }, 2000);
         } else {
-            // giữ modal mở để show lỗi hoặc hiện alert
-            setAcceptModalOpen(false);
             alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
         }
     };
-
 
     const handleAcceptClose = () => {
         setAcceptModalOpen(false);
