@@ -117,36 +117,26 @@
 /* =========================================================
    LIST / TABLE VIEW
    ========================================================= */
-.staff-table-container{
+.staff-management-page .staff-table-container{
   background:var(--bg);border:1px solid #e9eef5;border-radius:16px;box-shadow:var(--shadow-2);overflow:hidden;position:relative;
 }
-.staff-table.modern{
+.staff-management-page .staff-table.modern{
   width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;
 }
-.staff-table.modern thead{background:linear-gradient(180deg,#f9fafb 0%,#f3f4f6 100%);border-bottom:1px solid #e5e7eb;}
-.staff-table.modern thead th{
+.staff-management-page .staff-table.modern thead{background:linear-gradient(180deg,#f9fafb 0%,#f3f4f6 100%);border-bottom:1px solid #e5e7eb;}
+.staff-management-page .staff-table.modern thead th{
   padding:18px 16px;text-align:left;font-size:12px;font-weight:800;color:#475569;text-transform:uppercase;
   letter-spacing:.9px;white-space:nowrap;position:sticky;top:0;z-index:1;
 }
 
 /* Cells */
-.staff-table.modern th,.staff-table.modern td{
+.staff-management-page .staff-table.modern th,.staff-management-page .staff-table.modern td{
   padding:18px 16px;border-bottom:1px solid var(--border-2);vertical-align:middle;box-sizing:border-box;
 }
 
-/* Column widths – keep header/body aligned perfectly */
-.staff-table.modern th.col-id,.staff-table.modern td.col-id{width:72px;text-align:center;font-weight:800;color:var(--primary);border-right:1px dashed #e5e7eb;}
-.staff-table.modern th.col-name,.staff-table.modern td.col-name{width:260px;}
-.staff-table.modern th.col-position,.staff-table.modern td.col-position{width:120px;}
-.staff-table.modern th.col-station,.staff-table.modern td.col-station{width:280px;}
-.staff-table.modern th.col-phone,.staff-table.modern td.col-phone{width:150px;text-align:center;}
-.staff-table.modern th.col-join,.staff-table.modern td.col-join{width:130px;text-align:center;}
-.staff-table.modern th.col-status,.staff-table.modern td.col-status{width:140px;text-align:center;}
-.staff-table.modern th.col-actions,.staff-table.modern td.col-actions{width:120px;text-align:center;}
-
 /* Zebra & hover */
-.staff-table.modern tbody tr:nth-child(even){background:#fbfdff;}
-.staff-table.modern tbody tr:hover{background:#f1f5ff;}
+.staff-management-page .staff-table.modern tbody tr:nth-child(even){background:#fbfdff;}
+.staff-management-page .staff-table.modern tbody tr:hover{background:#f1f5ff;}
 
 /* Name + email cell */
 .staff-info-table{display:flex;align-items:center;gap:14px;min-width:0;}
@@ -213,13 +203,11 @@
 
 /* thanh công cụ: 4 cột thích nghi */
 .staff-toolbar{
-  display:grid;
-  grid-template-columns: 1.2fr 0.9fr 0.9fr auto;
+  display:flex;
   gap:12px;
   align-items:center;
 }
-@media (max-width:1100px){ .staff-toolbar{ grid-template-columns:1fr 1fr; } }
-@media (max-width:640px){  .staff-toolbar{ grid-template-columns:1fr; } }
+
 
 /* search có icon trái */
 .staff-search{ position:relative; }
@@ -315,24 +303,24 @@
 .staff-btn-danger:hover{ background:#ef4444; color:#fff; border-color:#ef4444; transform:translateY(-2px); }
 
 /* === TABLE view === */
-.staff-table-container{
+.staff-management-page .staff-table-container{
   background:#fff; border:1px solid #e9eef5; border-radius:16px;
   box-shadow:0 6px 18px rgba(17,24,39,.06); overflow:hidden;
 }
-.staff-table.modern{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
-.staff-table.modern thead{
+.staff-management-page .staff-table.modern{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+.staff-management-page .staff-table.modern thead{
   background:linear-gradient(180deg,#f9fafb 0%,#f3f4f6 100%);
   border-bottom:1px solid #e5e7eb;
 }
-.staff-table.modern thead th{
+.staff-management-page .staff-table.modern thead th{
   padding:18px 16px; font-size:12px; font-weight:800; color:#475569;
-  text-transform:uppercase; letter-spacing:.9px; position:sticky; top:0; z-index:1;
+  text-transform:uppercase; letter-spacing:.9px; 
 }
-.staff-table.modern th,.staff-table.modern td{
-  padding:18px 16px; border-bottom:1px solid #e2e8f0; vertical-align:middle;
+.staff-management-page .staff-table.modern th,.staff-management-page .staff-table.modern td{
+  padding:18px 16px; border-bottom:1px solid #e2e8f0; 
 }
-.staff-table.modern tbody tr:nth-child(even){ background:#fbfdff; }
-.staff-table.modern tbody tr:hover{ background:#f1f5ff; }
+.staff-management-page .staff-table.modern tbody tr:nth-child(even){ background:#fbfdff; }
+.staff-management-page .staff-table.modern tbody tr:hover{ background:#f1f5ff; }
 
 /* cell “nhân viên” */
 .staff-info-table{ display:flex; align-items:center; gap:14px; min-width:0; }
@@ -378,21 +366,19 @@
 /* =========================================================
    RESPONSIVE
    ========================================================= */
-@media (max-width:1200px){
-  .staff-toolbar{flex-direction:column;align-items:stretch;}
-  .staff-search{min-width:100%;}
-  .staff-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));}
-
-  .staff-table.modern th.col-name,.staff-table.modern td.col-name{width:220px;}
-  .staff-table.modern th.col-station,.staff-table.modern td.col-station{width:240px;}
-  .staff-table.modern th.col-status,.staff-table.modern td.col-status{width:150px;}
-}
-
-@media (max-width:992px){
-  .staff-table-container{overflow-x:auto;}
-  .staff-table.modern{min-width:1100px;} /* enable horizontal scroll without breaking columns */
-}
 
 @media (max-width:768px){
   .staff-grid{grid-template-columns:1fr;}
+}
+
+
+.staff-management-page .staff-table {
+  display: table;
+  font-size: 10;
+}
+
+.staff-table.modern th,
+.staff-table.modern td {
+  justify-content: center !important;
+  align-items: center !important;
 }
