@@ -358,7 +358,7 @@ const MyBookings = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 * index }}
                                         className="booking-card"
-                                        onClick={() => navigate(`/my-bookings/${booking.bookingId}`, { state: { booking: booking.raw ?? booking } })}
+                                       
                                     >
                                         {/* Header */}
                                         <div className="card-header">
