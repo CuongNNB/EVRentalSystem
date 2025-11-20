@@ -64,6 +64,8 @@ const MyBookings = () => {
                 return 'Quá hạn trả xe';
             case 'Pending_Renter_Confirmation':
                 return 'Đợi khách hàng xác nhận';
+            case 'Cancelled':
+                return 'Đã hủy';
             default:
                 return 'Không xác định';
         }
@@ -91,6 +93,8 @@ const MyBookings = () => {
                 return 'status-yellow';
             case 'Total_Fees_Charged':
                 return 'status-emerald';
+            case 'Cancelled':
+                return 'status-red';
             default:
                 return 'status-blue'; // fallback
         }

@@ -28,13 +28,15 @@ const getStatusText = (status) => {
         case 'Vehicle_Returned':
             return 'Xe đã trả';
         case 'Total_Fees_Charged':
-            return 'Đã tính tổng chi phí';
+            return 'Đã hoàn tất đơn hàng';
         case 'Completed':
             return 'Đợi thanh toán hóa đơn';
         case 'Vehicle_Return_Overdue':
             return 'Quá hạn trả xe';
         case 'Pending_Renter_Confirmation':
             return 'Đợi khách hàng xác nhận';
+        case 'Cancelled':
+            return 'Đã hủy';
         default:
             return 'Không xác định';
     }
@@ -61,6 +63,8 @@ const getStatusClass = (status) => {
             return 'status-yellow';
         case 'Total_Fees_Charged':
             return 'status-emerald';
+        case 'Cancelled':
+            return 'status-red';
         default:
             return 'status-blue'; // fallback
     }
@@ -102,12 +106,32 @@ const BookingDetailHistory = () => {
     const [acceptModalOpen, setAcceptModalOpen] = useState(false);
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
+    // collapse / expand states
+    const [isOpenCondition, setIsOpenCondition] = useState(true); // Kiểm tra tình trạng xe (mở theo mặc định)
+    const [isOpenAfter, setIsOpenAfter] = useState(true);       // Kiểm tra sau khi trả xe (mở theo mặc định)
+
     const [acceptModalAfterOpen, setAcceptModalAfterOpen] = useState(false);
     const [rejectModalAfterOpen, setRejectModalAfterOpen] = useState(false);
 
     // NEW: checkout modal state & payload
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [checkoutPayload, setCheckoutPayload] = useState(null);
+
+    // thêm cùng chỗ với các useState hiện tại
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [canceling, setCanceling] = useState(false);
+    const [cancelError, setCancelError] = useState(null);
+    const toggleCondition = () => setIsOpenCondition(prev => !prev);
+    const toggleAfter = () => setIsOpenAfter(prev => !prev);
+
+    // danh sách status được phép hiển thị nút "Hủy"
+    const cancellableStatuses = [
+        'Pending_Deposit_Confirmation',
+        'Pending_Contract_Signing',
+        'Pending_Vehicle_Pickup',
+        'Pending_Renter_Confirmation',         // note: file dùng 'Pending_Renter_Confirmation' vs 'Pending_renter_confirmation' — mình theo chuẩn bạn đang dùng
+        'Vehicle_Inspected_Before_Pickup'
+    ];
 
     // Prefer booking from navigation state (forwarded from MyBookings)
     useEffect(() => {
@@ -368,6 +392,7 @@ const BookingDetailHistory = () => {
     const { durationText, daysForBilling, deposit, extrasFee: extrasFeeDisplayed, estimated, total } = computePriceData();
 
     // 🔹 ADD: call API to update inspections' status for a bookingId
+    // CALL API cập nhật status cho inspections (trước pickup)
     const callUpdateStatusApi = async (bookingId, status) => {
         setUpdating(true);
         setUpdateError(null);
@@ -383,15 +408,14 @@ const BookingDetailHistory = () => {
                 throw new Error(errBody.message || `HTTP ${resp.status}`);
             }
 
-            // backend returns List<Inspection>
             const data = await resp.json();
             if (Array.isArray(data) && data.length > 0) {
                 setInspections(data);
             } else {
-                // fallback: mark local inspections with new status
                 setInspections(prev => prev.map(i => ({ ...i, status })));
             }
 
+            // SUCCESS -> trả về success true
             return { success: true };
         } catch (err) {
             setUpdateError(err.message);
@@ -416,12 +440,10 @@ const BookingDetailHistory = () => {
                 throw new Error(errBody.message || `HTTP ${resp.status}`);
             }
 
-            // backend trả List<InspectionAfter> — cập nhật state inspectionsAfter nếu có
             const data = await resp.json();
             if (Array.isArray(data) && data.length > 0) {
                 setInspectionsAfter(data);
             } else {
-                // fallback: đánh dấu tất cả mục inspectionsAfter local với status mới
                 setInspectionsAfter(prev => prev.map(i => ({ ...i, status })));
             }
 
@@ -437,9 +459,19 @@ const BookingDetailHistory = () => {
     // Accept all for inspections after
     const handleAcceptAllAfter = async () => {
         if (!normalized.bookingId) return;
+
         setAcceptModalAfterOpen(true);
-        await callUpdateStatusAfterApi(normalized.bookingId, 'CONFIRMED');
+        const result = await callUpdateStatusAfterApi(normalized.bookingId, 'CONFIRMED');
+
+        if (result.success) {
+            setAcceptModalAfterOpen(false);
+            navigate('/my-bookings');
+        } else {
+            setAcceptModalAfterOpen(false);
+            alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
+        }
     };
+
 
     // Close accept modal after
     const handleAcceptAfterClose = () => {
@@ -456,7 +488,6 @@ const BookingDetailHistory = () => {
         setRejectModalAfterOpen(false);
     };
 
-    // Confirm reject for inspections after
     const handleRejectConfirmAfter = async () => {
         setRejectModalAfterOpen(false);
         if (!normalized.bookingId) return;
@@ -464,21 +495,82 @@ const BookingDetailHistory = () => {
         const result = await callUpdateStatusAfterApi(normalized.bookingId, "REJECTED");
 
         if (result.success) {
-            window.location.reload();
+            navigate('/my-bookings');
         } else {
             alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
         }
     };
 
 
+    // Mở modal xác nhận hủy
+    const handleOpenCancelModal = () => {
+        setCancelError(null);
+        setCancelModalOpen(true);
+    };
+
+    // Đóng modal hủy
+    const handleCloseCancelModal = () => {
+        if (canceling) return; // không đóng khi đang gửi
+        setCancelModalOpen(false);
+        setCancelError(null);
+    };
+
+    // Xác nhận hủy: gọi API update-status và navigate nếu thành công
+    const handleConfirmCancel = async () => {
+        if (!normalized.bookingId) return;
+        setCanceling(true);
+        setCancelError(null);
+
+        try {
+            // backend định nghĩa: PUT /api/user/booking/update-status?bookingId=...&status=...
+            const params = new URLSearchParams();
+            params.append('bookingId', normalized.bookingId);
+            params.append('status', 'Cancelled'); // dùng 'Cancelled' (hoặc 'CANCELLED') tuỳ backend; nếu không ăn, đổi thành 'CANCELLED'
+
+            const resp = await fetch(`${API_BASE}/user/booking/update-status?${params.toString()}`, {
+                method: 'PUT'
+            });
+
+            if (!resp.ok) {
+                const body = await resp.json().catch(() => ({}));
+                throw new Error(body.message || `HTTP ${resp.status}`);
+            }
+
+            const data = await resp.json().catch(() => ({}));
+            // backend trả Map với key "message", nhưng ta chỉ kiểm tra HTTP OK
+            // nếu muốn, kiểm tra data.message
+
+            // đóng modal, chuyển trang
+            setCancelModalOpen(false);
+            navigate('/my-bookings');
+        } catch (err) {
+            setCancelError(err.message || 'Lỗi khi hủy đơn');
+        } finally {
+            setCanceling(false);
+        }
+    };
+
+
     // 🔹 ADD: handlers for Accept modal
+    // Accept all for inspections (trước pickup)
     const handleAcceptAll = async () => {
         if (!normalized.bookingId) return;
-        // mở modal trước để người dùng thấy thông báo
-        setAcceptModalOpen(true);
-        // gọi API cập nhật status -> CONFIRMED
-        await callUpdateStatusApi(normalized.bookingId, 'CONFIRMED');
+
+        setAcceptModalOpen(true); // vẫn mở modal để hiển thị thông báo nếu bạn muốn
+        const result = await callUpdateStatusApi(normalized.bookingId, 'CONFIRMED');
+
+        if (result.success) {
+            // đóng modal (tùy chọn)
+            setAcceptModalOpen(false);
+            // navigate to My Bookings
+            navigate('/my-bookings');
+        } else {
+            // giữ modal mở để show lỗi hoặc hiện alert
+            setAcceptModalOpen(false);
+            alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
+        }
     };
+
 
     const handleAcceptClose = () => {
         setAcceptModalOpen(false);
@@ -493,20 +585,20 @@ const BookingDetailHistory = () => {
         setRejectModalOpen(false);
     };
 
-    // 🔹 Xác nhận từ chối: gọi API cập nhật status -> REJECTED
     const handleRejectConfirm = async () => {
         setRejectModalOpen(false);
         if (!normalized.bookingId) return;
 
         const result = await callUpdateStatusApi(normalized.bookingId, "REJECTED");
 
-        // ✅ Nếu API trả về success, reload lại trang
         if (result.success) {
-            window.location.reload();
+            // navigate to My Bookings
+            navigate('/my-bookings');
         } else {
             alert("Cập nhật thất bại: " + (result.message || "Lỗi không xác định"));
         }
     };
+
 
     // CHỈNH: mở modal Checkout và truyền dữ liệu
     // Thay thế hàm handleProceedToCheckout trong BookingDetailHistory.jsx bằng đoạn sau:
@@ -776,88 +868,116 @@ const BookingDetailHistory = () => {
 
                     {/* Inspection */}
                     <motion.div className="detail-card inspection-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h2 className="section-header"><span className="section-title">Kiểm tra tình trạng xe</span></h2>
+                        <h2 className="section-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <span className="section-title">Kiểm tra tình trạng xe</span>
+
+                            {/* Toggle button (giữ ở ngoài nội dung, không làm thay đổi structure của .inspection-list) */}
+                            <button
+                                type="button"
+                                className="section-header-toggle"
+                                onClick={toggleCondition}
+                                aria-expanded={isOpenCondition}
+                                aria-controls="inspection-condition"
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                            >
+                                <span className={`caret ${isOpenCondition ? '' : 'rotate'}`} aria-hidden>▾</span>
+                            </button>
+                        </h2>
 
                         {loadingInsp && <p>🔄 Đang tải thông tin kiểm tra...</p>}
-                        {errorInsp && <p className="text-error">Đang cập nhật tình trạng kiểm tra xe...</p>}
+                        {errorInsp && <p className="text-error">Đang cập nhật...</p>}
 
                         {!loadingInsp && !errorInsp && inspections.length === 0 && (
                             <p>Không có dữ liệu kiểm tra nào cho đơn này.</p>
                         )}
 
-                        <div className="inspection-list">
-                            {inspections.map((insp) => (
-                                <div key={insp.inspectionId} className="inspection-item">
-                                    <div className="inspection-info">
-                                        <div><strong>Phần:</strong> {insp.partName}</div>
-                                        <div>
-                                            <strong>Trạng thái:</strong>{' '}
-                                            {insp.status === 'CONFIRMED'
-                                                ? 'Đã đồng ý'
-                                                : insp.status === 'PENDING'
-                                                    ? 'Đang chờ xác thực'
-                                                    : insp.status === 'REJECTED'
-                                                        ? 'Đã từ chối'
-                                                        : insp.status ?? 'Không xác định'}
+                        {/* WRAPPER COLLAPSIBLE — KHÔNG THAY ĐỔI NỘI DUNG .inspection-list */}
+                        <div id="inspection-condition" className={`collapsible ${isOpenCondition ? '' : 'collapsed'}`}>
+                            <div className="inspection-list">
+                                {inspections.map((insp) => (
+                                    <div key={insp.inspectionId} className="inspection-item">
+                                        {/* <-- GIỮ NGUYÊN TOÀN BỘ NỘI DUNG BÊN TRONG --> */}
+                                        <div className="inspection-info">
+                                            <div><strong>Phần:</strong> {insp.partName}</div>
+                                            <div>
+                                                <strong>Trạng thái:</strong>{' '}
+                                                {insp.status === 'CONFIRMED'
+                                                    ? 'Đã đồng ý'
+                                                    : insp.status === 'PENDING'
+                                                        ? 'Đang chờ xác thực'
+                                                        : insp.status === 'REJECTED'
+                                                            ? 'Đã từ chối'
+                                                            : insp.status ?? 'Không xác định'}
+                                            </div>
+                                            <div><strong>Nhân viên:</strong> {insp.staffName}</div>
+                                            <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
+                                            <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
                                         </div>
-                                        <div><strong>Nhân viên:</strong> {insp.staffName}</div>
-                                        <div><strong>Thời gian:</strong> {fmtDateTime(insp.inspectedAt)}</div>
-                                        <div><strong>Mô tả:</strong> {insp.description || '---'}</div>
+                                        {insp.pictureUrl && insp.pictureUrl.trim() !== '' ? (
+                                            <div className="inspection-image-box">
+                                                <img
+                                                    src={insp.pictureUrl}
+                                                    alt={insp.partName || 'Ảnh kiểm tra'}
+                                                    className="inspection-image"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        const link = e.target.parentNode.querySelector('.document-view-link');
+                                                        if (link) link.style.display = 'none';
+                                                    }}
+                                                />
+                                                <a href={insp.pictureUrl} target="_blank" rel="noreferrer" className="document-view-link">Xem ảnh lớn</a>
+                                            </div>
+                                        ) : null}
                                     </div>
-                                    {insp.pictureUrl && insp.pictureUrl.trim() !== '' ? (
-                                        <div className="inspection-image-box">
-                                            <img
-                                                src={insp.pictureUrl}
-                                                alt={insp.partName || 'Ảnh kiểm tra'}
-                                                className="inspection-image"
-                                                onError={(e) => {
-                                                    // nếu ảnh lỗi (404, ...), ẩn luôn để tránh khung trống
-                                                    e.target.style.display = 'none';
-                                                    const link = e.target.parentNode.querySelector('.document-view-link');
-                                                    if (link) link.style.display = 'none';
-                                                }}
-                                            />
-                                            <a
-                                                href={insp.pictureUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="document-view-link"
-                                            >
-                                                Xem ảnh lớn
-                                            </a>
-                                        </div>
-                                    ) : null}
-                                </div>
-                            ))}
+                                ))}
 
-                            {inspections.length > 0 && !hasConfirmed && (
-                                <div className="inspection-actions">
-                                    <button
-                                        className="btn-accept"
-                                        onClick={handleAcceptAll}
-                                        disabled={updating}
-                                        title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
-                                    >
-                                        {updating ? 'Đang xử lý...' : 'Chấp nhận'}
-                                    </button>
+                                {inspections.length > 0 && !hasConfirmed && (
+                                    <div className="inspection-actions">
+                                        <button className="btn-accept" onClick={handleAcceptAll} disabled={updating} title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}>
+                                            {updating ? 'Đang xử lý...' : 'Chấp nhận'}
+                                        </button>
 
-                                    <button
-                                        className="btn-reject"
-                                        onClick={handleOpenRejectModal}
-                                        disabled={updating}
-                                        style={{ marginLeft: 12 }}
-                                        title={updating ? "Đang xử lý..." : "Từ chối"}
-                                    >
-                                        Từ chối
-                                    </button>
-                                </div>
-                            )}
+                                        <button className="btn-reject" onClick={handleOpenRejectModal} disabled={updating} style={{ marginLeft: 12 }} title={updating ? "Đang xử lý..." : "Từ chối"}>
+                                            Từ chối
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
 
-                    {/* Inspection After (mới) */}
-                    <motion.div className="detail-card inspection-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h2 className="section-header"><span className="section-title">Kiểm tra sau khi trả xe</span></h2>
+
+                    {/* ===== KIỂM TRA SAU KHI TRẢ XE ===== */}
+                    <motion.div
+                        className="detail-card inspection-card"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <h2
+                            className="section-header"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 12
+                            }}
+                        >
+                            <span className="section-title">Kiểm tra sau khi trả xe</span>
+
+                            {/* Toggle button (không thay đổi nội dung bên trong) */}
+                            <button
+                                type="button"
+                                className="section-header-toggle"
+                                onClick={toggleAfter}
+                                aria-expanded={isOpenAfter}
+                                aria-controls="inspection-after"
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                            >
+                                <span className={`caret ${isOpenAfter ? '' : 'rotate'}`} aria-hidden>
+                                    ▾
+                                </span>
+                            </button>
+                        </h2>
 
                         {loadingInspAfter && <p>🔄 Đang tải thông tin kiểm tra sau...</p>}
                         {errorInspAfter && <p className="text-error">Đang cập nhật...</p>}
@@ -866,72 +986,108 @@ const BookingDetailHistory = () => {
                             <p>Không có dữ liệu kiểm tra sau cho đơn này.</p>
                         )}
 
-                        <div className="inspection-list">
-                            {inspectionsAfter.map((ia) => (
-                                <div key={ia.inspectionId} className="inspection-item">
-                                    <div className="inspection-info">
-                                        <div><strong>Phần:</strong> {ia.partName}</div>
-                                        <div>
-                                            <strong>Trạng thái:</strong>{' '}
-                                            {ia.status === 'CONFIRMED' ? 'Đã đồng ý' :
-                                                ia.status === 'PENDING' ? 'Đang chờ xác thực' :
-                                                    ia.status === 'REJECTED' ? 'Đã từ chối' :
-                                                        ia.status ?? 'Không xác định'}
+                        {/* WRAPPER COLLAPSIBLE — giữ nguyên toàn bộ nội dung .inspection-list */}
+                        <div
+                            id="inspection-after"
+                            className={`collapsible ${isOpenAfter ? '' : 'collapsed'}`}
+                        >
+                            <div className="inspection-list">
+                                {inspectionsAfter.map((ia) => (
+                                    <div key={ia.inspectionId} className="inspection-item">
+                                        {/* giữ nguyên cấu trúc hiển thị thông tin */}
+                                        <div className="inspection-info">
+                                            <div>
+                                                <strong>Phần:</strong> {ia.partName}
+                                            </div>
+                                            <div>
+                                                <strong>Trạng thái:</strong>{' '}
+                                                {ia.status === 'CONFIRMED'
+                                                    ? 'Đã đồng ý'
+                                                    : ia.status === 'PENDING'
+                                                        ? 'Đang chờ xác thực'
+                                                        : ia.status === 'REJECTED'
+                                                            ? 'Đã từ chối'
+                                                            : ia.status ?? 'Không xác định'}
+                                            </div>
+                                            <div>
+                                                <strong>Nhân viên:</strong> {ia.staffName}
+                                            </div>
+                                            <div>
+                                                <strong>Thời gian:</strong> {fmtDateTime(ia.inspectedAt)}
+                                            </div>
+                                            <div>
+                                                <strong>Mô tả:</strong> {ia.description || '---'}
+                                            </div>
                                         </div>
-                                        <div><strong>Nhân viên:</strong> {ia.staffName ?? ia.staffId}</div>
-                                        <div><strong>Thời gian:</strong> {fmtDateTime(ia.inspectedAt)}</div>
-                                        <div><strong>Mô tả:</strong> {ia.description || '---'}</div>
+
+                                        {/* giữ nguyên phần hiển thị ảnh / link (onError vẫn hoạt động) */}
+                                        {ia.pictureUrl && ia.pictureUrl.trim() !== '' ? (
+                                            <div className="inspection-image-box">
+                                                <img
+                                                    src={ia.pictureUrl}
+                                                    alt={ia.partName || 'Ảnh kiểm tra sau'}
+                                                    className="inspection-image"
+                                                    onError={(e) => {
+                                                        // giữ logic onError gốc để ẩn ảnh + link nếu bị lỗi
+                                                        e.target.style.display = 'none';
+                                                        const link = e.target.parentNode.querySelector('.document-view-link');
+                                                        if (link) link.style.display = 'none';
+                                                    }}
+                                                />
+                                                <a
+                                                    href={ia.pictureUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="document-view-link"
+                                                >
+                                                    Xem ảnh lớn
+                                                </a>
+                                            </div>
+                                        ) : null}
                                     </div>
+                                ))}
 
-                                    {ia.pictureUrl && ia.pictureUrl.trim() !== '' ? (
-                                        <div className="inspection-image-box">
-                                            <img
-                                                src={ia.pictureUrl}
-                                                alt={ia.partName || 'Ảnh kiểm tra sau'}
-                                                className="inspection-image"
-                                                onError={(e) => {
-                                                    e.target.style.display = 'none';
-                                                    const link = e.target.parentNode.querySelector('.document-view-link');
-                                                    if (link) link.style.display = 'none';
-                                                }}
-                                            />
-                                            <a
-                                                href={ia.pictureUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="document-view-link"
-                                            >
-                                                Xem ảnh lớn
-                                            </a>
-                                        </div>
-                                    ) : null}
-                                </div>
-                            ))}
-                            {inspectionsAfter.length > 0 && !hasConfirmedAfter && (
-                                <div className="inspection-actions">
-                                    <button
-                                        className="btn-accept"
-                                        onClick={handleAcceptAllAfter}
-                                        disabled={updating}
-                                        title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
-                                    >
-                                        {updating ? 'Đang xử lý...' : 'Chấp nhận'}
-                                    </button>
+                                {/* Khi có inspectionsAfter và chưa confirm, hiển thị actions (giữ nguyên) */}
+                                {inspectionsAfter.length > 0 && !hasConfirmedAfter && (
+                                    <div className="inspection-actions">
+                                        <button
+                                            className="btn-accept"
+                                            onClick={handleAcceptAllAfter}
+                                            disabled={updating}
+                                            title={updating ? "Đang xử lý..." : "Chấp nhận tất cả"}
+                                        >
+                                            {updating ? 'Đang xử lý...' : 'Chấp nhận'}
+                                        </button>
 
-                                    <button
-                                        className="btn-reject"
-                                        onClick={handleOpenRejectModalAfter}
-                                        disabled={updating}
-                                        style={{ marginLeft: 12 }}
-                                        title={updating ? "Đang xử lý..." : "Từ chối"}
-                                    >
-                                        Từ chối
-                                    </button>
-                                </div>
-                            )}
+                                        <button
+                                            className="btn-reject"
+                                            onClick={handleOpenRejectModalAfter}
+                                            disabled={updating}
+                                            style={{ marginLeft: 12 }}
+                                            title={updating ? "Đang xử lý..." : "Từ chối"}
+                                        >
+                                            Từ chối
+                                        </button>
+
+
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
 
+                    {/* Nút Hủy đơn hàng - chỉ hiện với các trạng thái cho phép */}
+                    {cancellableStatuses.includes(normalized.status) && (
+                        <button
+                            className="btn-cancel"
+                            onClick={handleOpenCancelModal}
+                            disabled={canceling || updating}
+                            style={{ marginLeft: 12, backgroundColor: '#e74c3c', color: '#fff' }}
+                            title="Hủy đơn hàng"
+                        >
+                            {canceling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -1062,7 +1218,35 @@ const BookingDetailHistory = () => {
                     </div>
                 </div>
             )}
+            {/* 🔹 CANCEL BOOKING CONFIRMATION MODAL */}
+            {cancelModalOpen && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-card">
+                        <h3>Xác nhận hủy đơn</h3>
+                        <p>Bạn có chắc muốn hủy đơn #{normalized.bookingId}? Hành động này sẽ huỷ đặt xe và cập nhật trạng thái xe.</p>
 
+                        {canceling && <p style={{ marginTop: 8 }}>Đang gửi yêu cầu hủy...</p>}
+                        {cancelError && <p className="text-error" style={{ marginTop: 8 }}>{cancelError}</p>}
+
+                        <div className="modal-actions" style={{ marginTop: 12 }}>
+                            <button
+                                className="modal-btn modal-cancel"
+                                onClick={handleCloseCancelModal}
+                                disabled={canceling}
+                            >
+                                Huỷ
+                            </button>
+                            <button
+                                className="modal-btn modal-confirm"
+                                onClick={handleConfirmCancel}
+                                disabled={canceling}
+                            >
+                                {canceling ? 'Đang hủy...' : 'Xác nhận hủy'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <Footer />
         </div>
     );
