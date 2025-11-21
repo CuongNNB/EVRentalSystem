@@ -8,6 +8,7 @@ import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.response.vehicle.FixingVehicleResponse;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 //import lombok.extern.slf4j.Slf4j;
@@ -19,15 +20,17 @@ import java.util.stream.Collectors;
 //@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminService {
     private final StationRepository stationRepository;
 
     private final VehicleDetailRepository vehicleDetailRepository;
-
+    private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final RenterDetailRepository renterDetailRepository;
     private final ReportRepository reportRepository;
     private final EmployeeDetailRepository employeeDetailRepository;
+    private final PaymentRepository paymentRepository;
 
     //Hàm lấy tổng số xe tại 1 trạm cụ thể cho admin.
     public TotalVehicleResponse getTotalVehiclesByStation(Integer stationId) {
@@ -212,5 +215,101 @@ public class AdminService {
                 })
                 .orElse("Update report status failed: report not found");
     }
+
+    public List<BookingAdminDto> getAllBookingsForAdmin() {
+        List<Booking> bookings = bookingRepository.findAll();
+
+        return bookings.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private BookingAdminDto mapToDto(Booking booking) {
+        BookingAdminDto.BookingAdminDtoBuilder builder = BookingAdminDto.builder();
+
+        builder.bookingId(booking.getBookingId());
+        builder.status(booking.getStatus());
+        builder.createdAt(booking.getCreatedAt());
+        builder.startTime(booking.getStartTime());
+        builder.expectedReturnTime(booking.getExpectedReturnTime());
+        builder.actualReturnTime(booking.getActualReturnTime());
+        builder.deposit(booking.getDeposit());
+
+        // renter (User)
+        if (booking.getRenter() != null) {
+            try {
+                builder.renterId(booking.getRenter().getUserId()); // adjust if your User PK getter name differs
+            } catch (Exception e) {
+                // If User uses different field name for id, comment above and set manually
+                log.debug("Unable to read renterId via getUserId(): {}", e.getMessage());
+            }
+
+            // IMPORTANT: change this if your User entity uses another getter (getName/getFullName/getFull_name)
+            try {
+                builder.renterName(booking.getRenter().getFullName());
+            } catch (Exception e) {
+                // fallback — try common alternatives (uncomment/change if needed)
+                // builder.renterName(booking.getRenter().getName());
+                log.debug("Unable to read renterName via getFullName(): {}", e.getMessage());
+            }
+        }
+
+        // station
+        if (booking.getStation() != null) {
+            try {
+                // common pattern: station.getStationId() / station.getId() as PK
+                // and station.getName() as display name. Adjust if your Station uses other names.
+                // builder.stationId(booking.getStation().getStationId());
+                builder.stationName(booking.getStation().getStationName());
+            } catch (Exception e) {
+                log.debug("Unable to read station fields: {}", e.getMessage());
+            }
+        }
+
+        // vehicleDetail
+        VehicleDetail vd = booking.getVehicleDetail();
+        if (vd != null) {
+            builder.vehicleDetailId(vd.getId());
+            builder.licensePlate(vd.getLicensePlate());
+            // station of vehicleDetail could also be used:
+            try {
+                if (vd.getStation() != null) {
+                    // builder.stationId(vd.getStation().getStationId());
+                    builder.stationName(vd.getStation().getStationName());
+                }
+            } catch (Exception e) {
+                log.debug("VehicleDetail.station read failed: {}", e.getMessage());
+            }
+        }
+
+        // vehicleModel (from Booking.vehicleModel or vd.vehicleModel)
+        VehicleModel vm = booking.getVehicleModel();
+        if (vm != null) {
+            builder.vehicleModelId(vm.getVehicleId());
+            builder.vehicleBrand(vm.getBrand());
+            builder.vehicleModel(vm.getModel());
+        } else if (vd != null && vd.getVehicleModel() != null) {
+            VehicleModel vm2 = vd.getVehicleModel();
+            builder.vehicleModelId(vm2.getVehicleId());
+            builder.vehicleBrand(vm2.getBrand());
+            builder.vehicleModel(vm2.getModel());
+        }
+
+        // payment total: find Payment by Booking entity
+        try {
+            Optional<Payment> pOpt = paymentRepository.findByBooking(booking);
+            if (pOpt.isPresent()) {
+                builder.paymentTotal(pOpt.get().getTotal());
+            } else {
+                builder.paymentTotal(null);
+            }
+        } catch (Exception ex) {
+            log.warn("Error fetching payment for booking {}: {}", booking.getBookingId(), ex.getMessage());
+            builder.paymentTotal(null);
+        }
+
+        return builder.build();
+    }
+
     //End code here
 }

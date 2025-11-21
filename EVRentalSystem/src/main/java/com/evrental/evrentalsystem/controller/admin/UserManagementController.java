@@ -4,6 +4,7 @@ package com.evrental.evrentalsystem.controller.admin;
 import com.evrental.evrentalsystem.entity.RenterDetail;
 import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
+import com.evrental.evrentalsystem.response.admin.BookingAdminDto;
 import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
 import com.evrental.evrentalsystem.response.admin.GetRenterDetailResponse;
 import com.evrental.evrentalsystem.service.AdminService;
@@ -23,7 +24,6 @@ import java.util.Optional;
 public class UserManagementController {
 
     private final AdminService adminService;
-    private final UserService userService;
 
     //API: http://localhost:8084/EVRentalSystem/api/user-management/renters
     @GetMapping("/renters")
@@ -87,7 +87,6 @@ public class UserManagementController {
         return ImageUtil.buildImageResponse(bytes, mime);
     }
 
-
     //API: http://localhost:8084/EVRentalSystem/api/user-management/{userId}/renter-detail
     @PutMapping("/{userId}/renter-detail")
     public ResponseEntity<?> updateRenterDetail(
@@ -107,5 +106,12 @@ public class UserManagementController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/user-management/get-bookings
+    @GetMapping("/get-bookings")
+    public ResponseEntity<List<BookingAdminDto>> getAllBookings() {
+        List<BookingAdminDto> dtos = adminService.getAllBookingsForAdmin();
+        return ResponseEntity.ok(dtos);
     }
 }
