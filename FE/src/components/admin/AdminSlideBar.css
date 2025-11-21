@@ -278,3 +278,26 @@
   }
 }
 
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Phần menu nằm trên */
+.sidebar-menu-wrapper {
+  flex: 1;             /* đẩy phần còn lại xuống đáy */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Nút logout nằm ở đáy */
+.sidebar-logout-btn {
+  margin-top: auto;    /* quan trọng nhất */
+  width: 60%;
+  margin-bottom: 20px;
+  align-self: center;
+  align-items: center;
+    justify-content: center;
+}

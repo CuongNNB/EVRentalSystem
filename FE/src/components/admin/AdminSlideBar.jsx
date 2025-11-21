@@ -1,4 +1,6 @@
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import "./AdminSlideBar.css";
 
 const MENU_ITEMS = [
@@ -10,6 +12,8 @@ const MENU_ITEMS = [
 ];
 
 const AdminSlideBar = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar__logo">
@@ -47,7 +51,11 @@ const AdminSlideBar = () => {
             </NavLink>
           )
         )}
+
       </nav>
+      <button className="admin-btn admin-btn-danger sidebar-logout-btn" onClick={() => { logout(); navigate('/'); }}>
+        <i className="fas fa-sign-out-alt" /><span>Đăng xuất</span>
+      </button>
     </aside>
   );
 };

@@ -167,9 +167,6 @@ export function AdminOverview() {
             <span>Xuất danh sách ra Excel</span>
           </button>
 
-          <button className="admin-btn admin-btn-danger" onClick={() => { logout(); navigate('/'); }}>
-            <i className="fas fa-sign-out-alt" /><span>Đăng xuất</span>
-          </button>
         </div>
       </div>
 
