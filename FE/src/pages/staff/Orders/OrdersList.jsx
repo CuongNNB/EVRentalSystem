@@ -481,7 +481,7 @@ const deriveActions = (statusKey) => {
         case "pending_deposit_payment":
             return ["view", "reject"];
         case "pending_deposit_confirmation":
-            return ["view", "reject", "confirm"];
+            return ["view", "reject","set_deposit_payment", "confirm"];
         case "pending_contract_signing":
             return ["view"];
         case "pending_vehicle_pickup":
@@ -511,6 +511,7 @@ const ACTION_STATUS_MAP = {
     confirm: "pending_contract_signing",
     handover: "currently_renting",
     reject: "cancelled",
+    set_deposit_payment: "pending_deposit_payment",
 };
 
 const resolveVehicleDetailId = (source = {}) => {
@@ -822,6 +823,9 @@ const OrdersList = () => {
     const [isEditingStation, setIsEditingStation] = useState(
         () => !determineInitialStationId(user)
     );
+    const [depositModalOpen, setDepositModalOpen] = useState(false);
+    const [depositTargetOrder, setDepositTargetOrder] = useState(null);
+    const [depositLoading, setDepositLoading] = useState(false);
     // --- Modal state for "reject" ---
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
     const [rejectTargetOrder, setRejectTargetOrder] = useState(null);
@@ -1107,6 +1111,37 @@ const OrdersList = () => {
         }
     };
 
+    const confirmSetDeposit = async () => {
+        if (!depositTargetOrder) return;
+        const order = depositTargetOrder;
+        setDepositLoading(true);
+
+        try {
+            // attemptStatusUpdate sẽ gọi /api/bookings/{orderId}/status?status=Pending_Deposit_Payment
+            const ok = await attemptStatusUpdate(order.id, "pending_deposit_payment");
+
+            // attemptStatusUpdate đã gọi applyStatusUpdate khi thành công hoặc tạm cập nhật khi fail
+            setConnectionState({
+                status: ok ? "success" : "warning",
+                message: ok
+                    ? `Đã chuyển đơn ${order.id} về Chờ thanh toán cọc.`
+                    : `Không thể kết nối API — đã cập nhật tạm sang Chờ thanh toán cọc.`,
+            });
+        } catch (err) {
+            console.error("confirmSetDeposit failed", err);
+            // bảo đảm vẫn đóng modal
+            setConnectionState({
+                status: "error",
+                message: `Không thể thực hiện thao tác. Vui lòng thử lại.`,
+            });
+        } finally {
+            setDepositLoading(false);
+            setDepositModalOpen(false);
+            setDepositTargetOrder(null);
+        }
+    };
+
+
     const attemptStatusUpdate = async (orderId, newStatusKey) => {
         const enumValue = statusKeyToEnum(newStatusKey);
         try {
@@ -1139,6 +1174,12 @@ const OrdersList = () => {
             setRejectModalOpen(true);
             return;
         }
+        if (action === "set_deposit_payment") {
+            setDepositTargetOrder(order);
+            setDepositModalOpen(true);
+            return;
+        }
+
         let orderSnapshot = order;
         let updateSucceeded = null;
         const nextStatusKey = ACTION_STATUS_MAP[action];
@@ -1397,9 +1438,11 @@ const OrdersList = () => {
                                                 ? { icon: "key", variant: "success", label: "Nhận xe" }
                                                 : action === "revenue"
                                                     ? { icon: "revenue", variant: "revenue", label: "Tính phí phát sinh" }
-                                                    : action === "reject" // <-- thêm đoạn này
-                                                        ? { icon: "cancel", variant: "danger", label: "Từ chối đặt cọc" }
-                                                        : { icon: "eye", variant: "view", label: "Xem chi tiết" };
+                                                    : action === "reject"
+                                                        ? { icon: "cancel", variant: "danger", label: "Hủy đơn" }
+                                                        : action === "set_deposit_payment"
+                                                            ? { icon: "document", variant: "contract", label: "Từ chối đặt cọc" }
+                                                            : { icon: "eye", variant: "view", label: "Xem chi tiết" };
 
                         return (
                             <button
@@ -1637,7 +1680,38 @@ const OrdersList = () => {
                     </div>
                 </div>
             )}
+            {/* SET DEPOSIT -> CONFIRM MODAL */}
+            {depositModalOpen && (
+                <div className="orders-overlay" role="dialog" aria-modal="true">
+                    <div className="orders-modal">
+                        <h3 className="orders-modal__title">Từ chối đặt cọc</h3>
 
+                        <p className="orders-modal__desc">
+                            Bạn có chắc muốn từ chối đặt cọc của đơn hàng số <strong>#{depositTargetOrder?.id}</strong> không?
+                        </p>
+
+                        <div className="orders-modal__actions">
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--cancel"
+                                onClick={() => { if (!depositLoading) { setDepositModalOpen(false); setDepositTargetOrder(null); } }}
+                                disabled={depositLoading}
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--danger"
+                                onClick={confirmSetDeposit}
+                                disabled={depositLoading}
+                            >
+                                {depositLoading ? "Đang xử lý..." : "Xác nhận"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
