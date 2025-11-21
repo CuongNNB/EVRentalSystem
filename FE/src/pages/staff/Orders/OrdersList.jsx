@@ -192,6 +192,7 @@ const STATUS_ALIASES = {
     late: "vehicle_return_overdue",
     past_due: "vehicle_return_overdue",
     expired: "vehicle_return_overdue",
+    cancelled: "cancelled",
 };
 
 const STATUS_CONFIG = {
@@ -247,6 +248,11 @@ const STATUS_CONFIG = {
     },
     vehicle_return_overdue: {
         label: "Quá hạn trả xe",
+        variant: "danger",
+        bucket: "receiving",
+    },
+    cancelled: {
+        label: "Đã hủy đơn hàng",
         variant: "danger",
         bucket: "receiving",
     },
