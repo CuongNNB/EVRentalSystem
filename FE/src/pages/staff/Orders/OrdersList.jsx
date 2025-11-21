@@ -168,6 +168,7 @@ const ICONS = {
 };
 
 const STATUS_ALIASES = {
+    Pending_Deposit_Payment: "pending_deposit_payment",
     pending_deposit_confirmation: "pending_deposit_confirmation",
     pending_contract_signing: "pending_contract_signing",
     pending_vehicle_pickup: "pending_vehicle_pickup",
@@ -196,6 +197,11 @@ const STATUS_ALIASES = {
 };
 
 const STATUS_CONFIG = {
+    pending_deposit_payment: {
+        label: "Chờ thanh toán cọc",
+        variant: "warning",
+        bucket: "handover",
+    },
     pending_deposit_confirmation: {
         label: "Chờ xác nhận đặt cọc",
         variant: "warning",
@@ -254,7 +260,7 @@ const STATUS_CONFIG = {
     cancelled: {
         label: "Đã hủy đơn hàng",
         variant: "danger",
-        bucket: "receiving",
+        bucket: "handover",
     },
     default: { label: "Không xác định", variant: "default", bucket: "handover" },
 };
@@ -472,8 +478,10 @@ const formatCurrency = (value) => {
 
 const deriveActions = (statusKey) => {
     switch (statusKey) {
+        case "pending_deposit_payment":
+            return ["view", "reject"];
         case "pending_deposit_confirmation":
-            return ["view","reject" ,"confirm"];
+            return ["view", "reject", "confirm"];
         case "pending_contract_signing":
             return ["view"];
         case "pending_vehicle_pickup":
@@ -1589,57 +1597,43 @@ const OrdersList = () => {
                     </section>
                 </main>
             </div>
-
             {/* REJECT CONFIRM MODAL */}
             {rejectModalOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center"
-                    role="dialog"
-                    aria-modal="true"
-                >
-                    {/* backdrop */}
-                    <div
-                        className="fixed inset-0 bg-black/50"
-                        onClick={() => { if (!rejectLoading) { setRejectModalOpen(false); setRejectTargetOrder(null); } }}
-                    />
+                <div className="orders-overlay">
+                    <div className="orders-modal">
 
-                    {/* modal box */}
-                    <div className="relative bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6 z-10">
-                        <h3 className="text-lg font-semibold mb-2">Xác nhận hủy đơn</h3>
-                        <p className="text-sm mb-4">
-                            Bạn có chắc muốn <strong>hủy</strong> đơn{" "}
-                            <span className="font-medium">{rejectTargetOrder?.id}</span>?
-                            Hành động này sẽ đặt trạng thái là <strong>Cancelled</strong>.
+                        <h3 className="orders-modal__title">Xác nhận hủy đơn</h3>
+
+                        <p className="orders-modal__desc">
+                            Bạn có chắc muốn <strong>hủy</strong> đơn số {" "}
+                            <span className="font-medium">{rejectTargetOrder?.id}</span> không?<br />
                         </p>
 
-                        <div className="flex justify-end gap-3 mt-4">
+                        <div className="orders-modal__actions">
                             <button
                                 type="button"
-                                className="px-4 py-2 rounded border hover:bg-gray-50"
-                                onClick={() => { if (!rejectLoading) { setRejectModalOpen(false); setRejectTargetOrder(null); } }}
+                                className="orders-modal__btn orders-modal__btn--cancel"
+                                onClick={() => {
+                                    if (!rejectLoading) {
+                                        setRejectModalOpen(false);
+                                        setRejectTargetOrder(null);
+                                    }
+                                }}
                                 disabled={rejectLoading}
                             >
-                                Huỷ
+                                Hủy
                             </button>
 
                             <button
                                 type="button"
-                                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
+                                className="orders-modal__btn orders-modal__btn--danger"
                                 onClick={confirmReject}
                                 disabled={rejectLoading}
                             >
-                                {rejectLoading ? (
-                                    <>
-                                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        </svg>
-                                        Đang hủy...
-                                    </>
-                                ) : (
-                                    <>Xác nhận hủy</>
-                                )}
+                                {rejectLoading ? "Đang hủy..." : "Xác nhận"}
                             </button>
                         </div>
+
                     </div>
                 </div>
             )}

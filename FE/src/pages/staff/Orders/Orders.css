@@ -425,3 +425,103 @@
         padding: 20px;
     }
 }
+
+/* ================================
+   OVERLAY (NỀN ĐEN MỜ)
+   ================================ */
+.orders-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55); /* giống tone shadow trong file */
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999; /* cao hơn toast */
+}
+
+/* ================================
+   MODAL BOX
+   ================================ */
+.orders-modal {
+    background: #ffffff;
+    padding: 28px 26px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 420px;
+
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.15); /* đồng bộ style từ orders-card */
+    animation: modalFadeIn 0.18s ease-out;
+}
+
+/* Title */
+.orders-modal__title {
+    margin: 0 0 10px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Description */
+.orders-modal__desc {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 22px;
+    line-height: 1.45;
+}
+
+/* ================================
+   BUTTONS
+   ================================ */
+.orders-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+.orders-modal__btn {
+    padding: 10px 18px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+/* Cancel Button */
+.orders-modal__btn--cancel {
+    background: rgba(148, 163, 184, 0.18);
+    color: #475569;
+}
+
+.orders-modal__btn--cancel:hover {
+    background: rgba(148, 163, 184, 0.28);
+    transform: translateY(-1px);
+}
+
+/* Confirm Danger Button */
+.orders-modal__btn--danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    box-shadow: 0 14px 30px rgba(239, 68, 68, 0.35);
+}
+
+.orders-modal__btn--danger:hover {
+    box-shadow: 0 18px 38px rgba(239, 68, 68, 0.45);
+    transform: translateY(-1px);
+}
+
+/* ================================
+   ANIMATION
+   ================================ */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
