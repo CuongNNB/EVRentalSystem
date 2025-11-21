@@ -430,6 +430,78 @@ const BookingDetailHistory = () => {
             setUpdating(false);
         }
     };
+
+    // --- Thêm: chuyển tới trang thanh toán đặt cọc (DepositPaymentPage) khi status = Pending_Deposit_Payment
+    const handleGoToDepositPayment = () => {
+        // Tái sử dụng cấu trúc fb (fullBooking) tương tự handleProceedToCheckout
+        const startIso = normalized.startAt || null;
+        const actualReturnIso = normalized.actualReturnTime || normalized.endAt || null;
+
+        // Lấy pricePerDay (nếu có)
+        const pricePerDay = Number(
+            (booking && (booking.pricePerDay ?? booking.price ?? booking.pricePerDay)) ??
+            (normalized.pricePerDay ?? 0)
+        ) || 0;
+
+        // Tính thời gian thuê đơn giản (dùng để hiển thị)
+        let rentalHours = 0;
+        let rentalDays = 0;
+        let rentalDurationText = '0 giờ';
+        if (startIso && actualReturnIso) {
+            const s = new Date(startIso);
+            const e = new Date(actualReturnIso);
+            if (!isNaN(s) && !isNaN(e) && e.getTime() > s.getTime()) {
+                const ms = e.getTime() - s.getTime();
+                const totalHoursRaw = ms / (1000 * 60 * 60);
+                rentalHours = Math.ceil(totalHoursRaw);
+                rentalDays = Math.floor(rentalHours / 24);
+                const remHours = rentalHours % 24;
+                rentalDurationText = rentalDays > 0 ? `${rentalDays} ngày${remHours > 0 ? ' ' + remHours + ' giờ' : ''}` : `${remHours} giờ`;
+            }
+        }
+
+        // Tính estimated (dự tính) và deposit (từ normalized)
+        const depositAmount = Number(normalized.deposit ?? booking?.deposit ?? 0) || 0;
+        // nếu bạn dùng tỷ lệ 30% như computePriceData, estimated = deposit / 0.3
+        const estimatedAmount = Math.round(depositAmount / 0.3) || 0;
+
+        // Build payload 'fullBooking' mà DepositPaymentPage chấp nhận (mình giữ những field thiết thực)
+        const fullBookingPayload = {
+            // giữ một số field gốc để DepositPaymentPage có thể extract bookingId, start/end, totals...
+            bookingId: normalized.bookingId,
+            bookingPayload: {
+                startTime: startIso || '',
+                expectedReturnTime: normalized.endAt || '',
+                pickupLocation: normalized.stationName,
+            },
+            startTime: startIso,
+            expectedReturnTime: normalized.endAt,
+            user: normalized.raw?.user || {
+                name: normalized.raw?.userName || normalized.raw?.renterName || '',
+                email: normalized.raw?.user?.email || '',
+                phone: normalized.raw?.user?.phone || ''
+            },
+            carData: {
+                name: normalized.vehicleBrand ? `${normalized.vehicleBrand} ${normalized.vehicleModel || ''}`.trim() : (normalized.vehicleModel || ''),
+                licensePlate: normalized.licensePlate || ''
+            },
+            totals: {
+                pricePerDay,
+                dailyPrice: pricePerDay,
+                days: rentalDays,
+                hours: rentalHours,
+                rentalDurationText,
+                totalRental: estimatedAmount,
+                deposit: depositAmount
+            },
+            // preserve additionalFees so DepositPaymentPage có thông tin phụ phí nếu cần
+            extraFees: Array.isArray(additionalFees) ? additionalFees : []
+        };
+
+        // Navigate tới DepositPaymentPage, truyền state.fullBooking
+        navigate('/deposit-payment', { state: { fullBooking: fullBookingPayload } });
+    };
+
     // CALL API riêng cho "inspection after"
     const callUpdateStatusAfterApi = async (bookingId, status) => {
         setUpdating(true);
@@ -663,14 +735,18 @@ const BookingDetailHistory = () => {
                 expectedReturnTime: normalized.endAt || '',
                 actualReturnTime: actualReturnIso || null  // <-- forward ngày trả thực tế
             },
+
             totals: {
-                // pricePerDay từ MyBookings (đảm bảo backend pricePerDay được map khi fetch ở MyBookings). :contentReference[oaicite:4]{index=4}
                 pricePerDay: Number(pricePerDay) || 0,
-                dailyPrice: Number(pricePerDay) || 0, // giữ cả 2 tên để tương thích
+                dailyPrice: Number(pricePerDay) || 0,
                 deposit: Number(normalized.deposit ?? booking?.deposit ?? 0) || 0,
-                // gửi cả thời lượng tính sẵn và tổng dự tính theo giờ để Checkout dễ hiển thị
-                rentalHours,
-                rentalDays,
+
+                // giữ cả total hours (nếu cần sử dụng ở nơi khác)
+                rentalHours: totalHoursAll,
+                // gửi days và phần giờ dư đúng như DepositPaymentPage mong đợi
+                days: days,
+                hours: hoursRemainder,
+                rentalDays: rentalDays,
                 rentalDurationText,
                 totalRentalByHour,
                 totalRental: estimated
@@ -795,7 +871,7 @@ const BookingDetailHistory = () => {
                                 <span className="price-value">{fmtVND(estimated)}</span>
                             </div>
                             <div className="price-row">
-                                <span className="price-label">Số tiền đã đặt cọc:</span>
+                                <span className="price-label">Số tiền đặt cọc:</span>
                                 <span className="price-value">{fmtVND(deposit)}</span>
                             </div>
 
@@ -862,6 +938,18 @@ const BookingDetailHistory = () => {
                                         onClick={handleProceedToCheckout}
                                     >
                                         Thanh toán
+                                    </button>
+                                </div>
+                            )}
+
+                            {normalized.status === 'Pending_Deposit_Payment' && (
+                                <div className="price-actions">
+                                    <button
+                                        className="btn-pay"
+                                        onClick={handleGoToDepositPayment}
+                                        title="Thanh toán tiền đặt cọc"
+                                    >
+                                        Thanh toán đặt cọc
                                     </button>
                                 </div>
                             )}

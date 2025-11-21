@@ -63,12 +63,13 @@ const DepositPaymentPage = () => {
                 phone: fb.user?.phone,
                 address: fb.user?.address || 'Không rõ'
             },
+            
             car: {
                 name: fb.carData?.name,
                 licensePlate: fb.carData?.licensePlate,
                 color: fb.carData?.color,
                 price: fb.totals?.dailyPrice,
-                rentalDays: `${fb.totals?.days} ngày ${fb.totals?.hours} giờ`,
+                rentalDays: `${fb.totals?.days} ngày`,
                 totalAmount: fb.totals?.totalRental,
                 deposit: fb.totals?.deposit
             },
@@ -267,7 +268,7 @@ const DepositPaymentPage = () => {
     const depositAmount = summaryData?.depositAmount ?? 0;
     const pricePerDay = summaryData?.pricePerDay ?? 0;
     const rentalDays = summaryData?.days ?? '1 ngày 0 giờ';
-    const stationName = summaryData?.rental?.pickupLocation ?? 'Không rõ';
+    const stationName = summaryData?.rental?.pickupLocation ?? fullBooking?.bookingPayload?.pickupLocation ??  'Không rõ';
     const startTimeDisplay = summaryData?.rental?.startDate ?? summaryData?.rental?.pickupDateTime ?? (fullBooking?.bookingPayload?.startTime || fullBooking?.startTime);
     const endTimeDisplay = summaryData?.rental?.endDate ?? summaryData?.rental?.returnDateTime ?? (fullBooking?.bookingPayload?.expectedReturnTime || fullBooking?.expectedReturnTime);
 
