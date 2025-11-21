@@ -94,24 +94,48 @@ public class UserService {
     public UserLoginResponse login(UserLoginRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
+        String username = request.getUsername();
 
-        if (email == null || email.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email và mật khẩu là bắt buộc!");
+
+        if ((email == null || email.trim().isEmpty()) &&
+                (username == null || username.trim().isEmpty())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email hoặc Username là bắt buộc!"
+            );
         }
 
-        User user = userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với email này!"));
+        if (password == null || password.trim().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mật khẩu là bắt buộc!"
+            );
+        }
+
+        User user;
+
+        if (email != null && !email.trim().isEmpty()) {
+            user = userRepository.findByEmail(email.trim().toLowerCase())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với email này!"
+                    ));
+        } else {
+            user = userRepository.findByUsername(username.trim())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Không tìm thấy người dùng với username này!"
+                    ));
+        }
 
         if (!user.getPassword().equals(password)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai mật khẩu!");
         }
 
-        String token = jwtService.generateToken(user.getEmail());
+        String token = jwtService.generateToken(user.getUsername());
 
         String cccdFront = null;
         String cccdBack = null;
         String driverLicense = null;
-        
+
         if (user.getRenterDetail() != null) {
             cccdFront = user.getRenterDetail().getCccdFront();
             cccdBack = user.getRenterDetail().getCccdBack();
@@ -187,9 +211,11 @@ public class UserService {
     public Optional<String> getCccdFrontBase64(Integer userId) {
         return renterDetailRepository.findById(userId).map(RenterDetail::getCccdFront);
     }
+
     public Optional<String> getCccdBackBase64(Integer userId) {
         return renterDetailRepository.findById(userId).map(RenterDetail::getCccdBack);
     }
+
     public Optional<String> getDriverLicenseBase64(Integer userId) {
         return renterDetailRepository.findById(userId).map(RenterDetail::getDriverLicense);
     }
