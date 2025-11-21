@@ -168,6 +168,7 @@ const ICONS = {
 };
 
 const STATUS_ALIASES = {
+    Pending_Deposit_Payment: "pending_deposit_payment",
     pending_deposit_confirmation: "pending_deposit_confirmation",
     pending_contract_signing: "pending_contract_signing",
     pending_vehicle_pickup: "pending_vehicle_pickup",
@@ -192,9 +193,15 @@ const STATUS_ALIASES = {
     late: "vehicle_return_overdue",
     past_due: "vehicle_return_overdue",
     expired: "vehicle_return_overdue",
+    cancelled: "cancelled",
 };
 
 const STATUS_CONFIG = {
+    pending_deposit_payment: {
+        label: "Chờ thanh toán cọc",
+        variant: "warning",
+        bucket: "handover",
+    },
     pending_deposit_confirmation: {
         label: "Chờ xác nhận đặt cọc",
         variant: "warning",
@@ -250,7 +257,12 @@ const STATUS_CONFIG = {
         variant: "danger",
         bucket: "receiving",
     },
-    default: { label: "Không xác định", variant: "default", bucket: "receiving" },
+    cancelled: {
+        label: "Đã hủy đơn hàng",
+        variant: "danger",
+        bucket: "handover",
+    },
+    default: { label: "Không xác định", variant: "default", bucket: "handover" },
 };
 
 const CONNECTION_STYLE = {
@@ -466,8 +478,10 @@ const formatCurrency = (value) => {
 
 const deriveActions = (statusKey) => {
     switch (statusKey) {
+        case "pending_deposit_payment":
+            return ["view", "reject"];
         case "pending_deposit_confirmation":
-            return ["view", "confirm"];
+            return ["view", "reject", "confirm"];
         case "pending_contract_signing":
             return ["view"];
         case "pending_vehicle_pickup":
@@ -496,6 +510,7 @@ const ACTION_STATUS_MAP = {
     // revenue: không tự động đổi trạng thái, sẽ đổi trong trang Extra Fee khi nhấn "Gửi cho khách"
     confirm: "pending_contract_signing",
     handover: "currently_renting",
+    reject: "cancelled",
 };
 
 const resolveVehicleDetailId = (source = {}) => {
@@ -707,90 +722,90 @@ const OrdersTable = ({ title, orders, emptyMessage, onRenderRow, sortConfig, onS
         <div className="orders-table__scroll">
             <table className="orders-table">
                 <thead>
-                <tr>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('id')}
-                        aria-sort={sortConfig?.key === 'id' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('id'); }}
-                    >
-                        Mã đơn {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('customer')}
-                        aria-sort={sortConfig?.key === 'customer' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('customer'); }}
-                    >
-                        Khách hàng {sortConfig?.key === 'customer' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('car')}
-                        aria-sort={sortConfig?.key === 'car' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('car'); }}
-                    >
-                        Xe {sortConfig?.key === 'car' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('pickup')}
-                        aria-sort={sortConfig?.key === 'pickup' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('pickup'); }}
-                    >
-                        Ngày thuê {sortConfig?.key === 'pickup' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('dropoff')}
-                        aria-sort={sortConfig?.key === 'dropoff' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('dropoff'); }}
-                    >
-                        Ngày trả {sortConfig?.key === 'dropoff' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('status')}
-                        aria-sort={sortConfig?.key === 'status' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('status'); }}
-                    >
-                        Trạng thái {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th
-                        className="orders-table__th--sortable"
-                        onClick={() => onSort && onSort('total')}
-                        aria-sort={sortConfig?.key === 'total' ? sortConfig.direction : 'none'}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('total'); }}
-                    >
-                        Tổng tiền {sortConfig?.key === 'total' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
-                    </th>
-                    <th>Hành động</th>
-                </tr>
+                    <tr>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('id')}
+                            aria-sort={sortConfig?.key === 'id' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('id'); }}
+                        >
+                            Mã đơn {sortConfig?.key === 'id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('customer')}
+                            aria-sort={sortConfig?.key === 'customer' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('customer'); }}
+                        >
+                            Khách hàng {sortConfig?.key === 'customer' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('car')}
+                            aria-sort={sortConfig?.key === 'car' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('car'); }}
+                        >
+                            Xe {sortConfig?.key === 'car' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('pickup')}
+                            aria-sort={sortConfig?.key === 'pickup' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('pickup'); }}
+                        >
+                            Ngày thuê {sortConfig?.key === 'pickup' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('dropoff')}
+                            aria-sort={sortConfig?.key === 'dropoff' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('dropoff'); }}
+                        >
+                            Ngày trả {sortConfig?.key === 'dropoff' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('status')}
+                            aria-sort={sortConfig?.key === 'status' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('status'); }}
+                        >
+                            Trạng thái {sortConfig?.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th
+                            className="orders-table__th--sortable"
+                            onClick={() => onSort && onSort('total')}
+                            aria-sort={sortConfig?.key === 'total' ? sortConfig.direction : 'none'}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && onSort) onSort('total'); }}
+                        >
+                            Tổng tiền {sortConfig?.key === 'total' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th>Hành động</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {orders.length ? (
-                    orders.map(onRenderRow)
-                ) : (
-                    <tr>
-                        <td colSpan={8} className="orders-table__empty">
-                            {emptyMessage}
-                        </td>
-                    </tr>
-                )}
+                    {orders.length ? (
+                        orders.map(onRenderRow)
+                    ) : (
+                        <tr>
+                            <td colSpan={8} className="orders-table__empty">
+                                {emptyMessage}
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
         </div>
@@ -807,7 +822,10 @@ const OrdersList = () => {
     const [isEditingStation, setIsEditingStation] = useState(
         () => !determineInitialStationId(user)
     );
-
+    // --- Modal state for "reject" ---
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [rejectTargetOrder, setRejectTargetOrder] = useState(null);
+    const [rejectLoading, setRejectLoading] = useState(false);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -1048,6 +1066,47 @@ const OrdersList = () => {
         );
     };
 
+    const confirmReject = async () => {
+        if (!rejectTargetOrder) return;
+        const order = rejectTargetOrder;
+        setRejectLoading(true);
+
+        try {
+            await api.put(
+                "http://localhost:8084/EVRentalSystem/api/user/booking/update-status",
+                null,
+                {
+                    params: {
+                        bookingId: order.id,
+                        status: "Cancelled",
+                    },
+                }
+            );
+
+            // cập nhật UI giống trước: applyStatusUpdate(order.id, "cancelled")
+            applyStatusUpdate(order.id, "cancelled");
+
+            setConnectionState({
+                status: "success",
+                message: `Đã huỷ đơn ${order.id} (Cancelled).`,
+            });
+        } catch (err) {
+            console.error("Unable to call update-status", err);
+
+            // Tùy chọn: vẫn apply tạm (giữ cùng behavior cũ)
+            applyStatusUpdate(order.id, "cancelled");
+
+            setConnectionState({
+                status: "warning",
+                message: `Không thể kết nối API huỷ đơn ${order.id}. Đã cập nhật tạm trạng thái (Cancelled).`,
+            });
+        } finally {
+            setRejectLoading(false);
+            setRejectModalOpen(false);
+            setRejectTargetOrder(null);
+        }
+    };
+
     const attemptStatusUpdate = async (orderId, newStatusKey) => {
         const enumValue = statusKeyToEnum(newStatusKey);
         try {
@@ -1057,9 +1116,8 @@ const OrdersList = () => {
             applyStatusUpdate(orderId, newStatusKey);
             setConnectionState({
                 status: "success",
-                message: `Đã cập nhật trạng thái đơn ${orderId}: ${
-                    STATUS_CONFIG[newStatusKey]?.label || enumValue
-                }.`,
+                message: `Đã cập nhật trạng thái đơn ${orderId}: ${STATUS_CONFIG[newStatusKey]?.label || enumValue
+                    }.`,
             });
             return true;
         } catch (error) {
@@ -1075,7 +1133,12 @@ const OrdersList = () => {
 
     const handleAction = async (order, action) => {
         if (!order) return;
-
+        if (action === "reject") {
+            // 1) Confirm với user
+            setRejectTargetOrder(order);
+            setRejectModalOpen(true);
+            return;
+        }
         let orderSnapshot = order;
         let updateSucceeded = null;
         const nextStatusKey = ACTION_STATUS_MAP[action];
@@ -1098,38 +1161,38 @@ const OrdersList = () => {
                 break;
             case "confirm":
                 // Xác nhận đặt cọc: chuyển trạng thái và tạo hợp đồng
-            {
-                let contractCreated = false;
-                try {
-                    await api.post('/api/contract/create', null, {
-                        params: {
-                            bookingId: order.id,
-                            staffId: user?.id || user?.userId || user?.staffId
-                        }
+                {
+                    let contractCreated = false;
+                    try {
+                        await api.post('/api/contract/create', null, {
+                            params: {
+                                bookingId: order.id,
+                                staffId: user?.id || user?.userId || user?.staffId
+                            }
+                        });
+                        contractCreated = true;
+                    } catch (contractError) {
+                        console.error("Unable to create contract", contractError);
+                    }
+
+                    const statusMessage = updateSucceeded
+                        ? "Đã xác nhận đặt cọc thành công."
+                        : "Đã xác nhận đặt cọc (tạm thời do lỗi kết nối trạng thái).";
+
+                    const contractMessage = contractCreated
+                        ? "Hợp đồng đã được tạo."
+                        : "Không thể tạo hợp đồng, vui lòng thử lại sau.";
+
+                    const statusType =
+                        updateSucceeded && contractCreated ? "success"
+                            : updateSucceeded || contractCreated ? "warning"
+                                : "error";
+
+                    setConnectionState({
+                        status: statusType,
+                        message: `${statusMessage} ${contractMessage}`,
                     });
-                    contractCreated = true;
-                } catch (contractError) {
-                    console.error("Unable to create contract", contractError);
                 }
-
-                const statusMessage = updateSucceeded
-                    ? "Đã xác nhận đặt cọc thành công."
-                    : "Đã xác nhận đặt cọc (tạm thời do lỗi kết nối trạng thái).";
-
-                const contractMessage = contractCreated
-                    ? "Hợp đồng đã được tạo."
-                    : "Không thể tạo hợp đồng, vui lòng thử lại sau.";
-
-                const statusType =
-                    updateSucceeded && contractCreated ? "success"
-                        : updateSucceeded || contractCreated ? "warning"
-                            : "error";
-
-                setConnectionState({
-                    status: statusType,
-                    message: `${statusMessage} ${contractMessage}`,
-                });
-            }
                 break;
             case "vehicle":
                 try {
@@ -1151,57 +1214,57 @@ const OrdersList = () => {
                 }
                 break;
             case "handover":
-            {
-                const baseMessage = updateSucceeded
-                    ? "Đã bàn giao xe cho khách."
-                    : "Đã bàn giao xe cho khách (tạm thời do lỗi kết nối, vui lòng kiểm tra lại).";
-                const cachedSelection = getCachedHandoverSelection(orderSnapshot.id);
-                const vehicleId =
-                    cachedSelection?.vehicle?.id ||
-                    cachedSelection?.vehicleId ||
-                    resolveVehicleDetailId(orderSnapshot.raw);
-                const previousVehicleStatus = cachedSelection?.vehicleStatus || "UNKNOWN";
-                if (!vehicleId) {
-                    setConnectionState({
-                        status: updateSucceeded ? "warning" : "error",
-                        message: `${baseMessage} Không tìm thấy mã xe để cập nhật trạng thái.`,
-                    });
-                    break;
-                }
-                let vehicleUpdateSucceeded = false;
-                try {
-                    await api.put("/api/vehicle-details/update-status", null, {
-                        params: { vehicleId, newStatus: "RENTED" },
-                    });
-                    vehicleUpdateSucceeded = true;
-                    if (typeof window !== "undefined") {
-                        window.sessionStorage.removeItem("handover-order");
-                        window.sessionStorage.setItem(
-                            `vehicle-status-${vehicleId}`,
-                            JSON.stringify({
-                                previous: previousVehicleStatus,
-                                current: "RENTED",
-                                updatedAt: Date.now(),
-                            })
-                        );
+                {
+                    const baseMessage = updateSucceeded
+                        ? "Đã bàn giao xe cho khách."
+                        : "Đã bàn giao xe cho khách (tạm thời do lỗi kết nối, vui lòng kiểm tra lại).";
+                    const cachedSelection = getCachedHandoverSelection(orderSnapshot.id);
+                    const vehicleId =
+                        cachedSelection?.vehicle?.id ||
+                        cachedSelection?.vehicleId ||
+                        resolveVehicleDetailId(orderSnapshot.raw);
+                    const previousVehicleStatus = cachedSelection?.vehicleStatus || "UNKNOWN";
+                    if (!vehicleId) {
+                        setConnectionState({
+                            status: updateSucceeded ? "warning" : "error",
+                            message: `${baseMessage} Không tìm thấy mã xe để cập nhật trạng thái.`,
+                        });
+                        break;
                     }
-                } catch (vehicleError) {
-                    console.warn("Unable to update vehicle status", vehicleError);
+                    let vehicleUpdateSucceeded = false;
+                    try {
+                        await api.put("/api/vehicle-details/update-status", null, {
+                            params: { vehicleId, newStatus: "RENTED" },
+                        });
+                        vehicleUpdateSucceeded = true;
+                        if (typeof window !== "undefined") {
+                            window.sessionStorage.removeItem("handover-order");
+                            window.sessionStorage.setItem(
+                                `vehicle-status-${vehicleId}`,
+                                JSON.stringify({
+                                    previous: previousVehicleStatus,
+                                    current: "RENTED",
+                                    updatedAt: Date.now(),
+                                })
+                            );
+                        }
+                    } catch (vehicleError) {
+                        console.warn("Unable to update vehicle status", vehicleError);
+                    }
+                    const statusType =
+                        updateSucceeded && vehicleUpdateSucceeded
+                            ? "success"
+                            : updateSucceeded || vehicleUpdateSucceeded
+                                ? "warning"
+                                : "error";
+                    const detailMessage = vehicleUpdateSucceeded
+                        ? "Trạng thái xe đã chuyển sang đang thuê."
+                        : "Không thể cập nhật trạng thái xe.";
+                    setConnectionState({
+                        status: statusType,
+                        message: `${baseMessage} ${detailMessage}`,
+                    });
                 }
-                const statusType =
-                    updateSucceeded && vehicleUpdateSucceeded
-                        ? "success"
-                        : updateSucceeded || vehicleUpdateSucceeded
-                            ? "warning"
-                            : "error";
-                const detailMessage = vehicleUpdateSucceeded
-                    ? "Trạng thái xe đã chuyển sang đang thuê."
-                    : "Không thể cập nhật trạng thái xe.";
-                setConnectionState({
-                    status: statusType,
-                    message: `${baseMessage} ${detailMessage}`,
-                });
-            }
                 break;
             case "invoice":
                 // Nhận xe: chuyển sang trang nhận xe để staff thực hiện kiểm tra chi tiết
@@ -1227,7 +1290,7 @@ const OrdersList = () => {
 
                     // Continue with the existing server-side updates (update return time / set vehicle AVAILABLE)
                     // so behavior remains compatible even if staff returns from the receive page.
-                    
+
                     // 1) Cập nhật thời gian trả
                     try {
                         await api.post(`/api/bookings/${order.id}/update-return-time`);
@@ -1313,9 +1376,9 @@ const OrdersList = () => {
                 <span className="orders-table__muted">{order.dropoff.time}</span>
             </td>
             <td>
-        <span className={`status-badge status-badge--${order.status.variant}`}>
-          {order.status.label}
-        </span>
+                <span className={`status-badge status-badge--${order.status.variant}`}>
+                    {order.status.label}
+                </span>
             </td>
             <td className="orders-table__money">{order.total} </td>
             <td>
@@ -1334,7 +1397,9 @@ const OrdersList = () => {
                                                 ? { icon: "key", variant: "success", label: "Nhận xe" }
                                                 : action === "revenue"
                                                     ? { icon: "revenue", variant: "revenue", label: "Tính phí phát sinh" }
-                                                    : { icon: "eye", variant: "view", label: "Xem chi tiết" };
+                                                    : action === "reject" // <-- thêm đoạn này
+                                                        ? { icon: "cancel", variant: "danger", label: "Từ chối đặt cọc" }
+                                                        : { icon: "eye", variant: "view", label: "Xem chi tiết" };
 
                         return (
                             <button
@@ -1344,9 +1409,9 @@ const OrdersList = () => {
                                 title={actionMeta.label}
                                 onClick={() => handleAction(order, action)}
                             >
-                <span className="orders-action__icon">
-                  {ICONS[actionMeta.icon] || ICONS.eye}
-                </span>
+                                <span className="orders-action__icon">
+                                    {ICONS[actionMeta.icon] || ICONS.eye}
+                                </span>
                             </button>
                         );
                     })}
@@ -1413,9 +1478,9 @@ const OrdersList = () => {
 
                             <div className="staff-orders__filters">
                                 <div className="staff-orders__field">
-                <span className="staff-orders__field-icon" aria-hidden="true">
-                  🔍
-                </span>
+                                    <span className="staff-orders__field-icon" aria-hidden="true">
+                                        🔍
+                                    </span>
                                     <input
                                         type="search"
                                         placeholder="Tìm kiếm mã đơn, khách hàng, biển số xe..."
@@ -1479,7 +1544,7 @@ const OrdersList = () => {
 
                         {stationId && (
                             <div>
-                
+
                             </div>
                         )}
 
@@ -1532,8 +1597,50 @@ const OrdersList = () => {
                     </section>
                 </main>
             </div>
+            {/* REJECT CONFIRM MODAL */}
+            {rejectModalOpen && (
+                <div className="orders-overlay">
+                    <div className="orders-modal">
+
+                        <h3 className="orders-modal__title">Xác nhận hủy đơn</h3>
+
+                        <p className="orders-modal__desc">
+                            Bạn có chắc muốn <strong>hủy</strong> đơn số {" "}
+                            <span className="font-medium">{rejectTargetOrder?.id}</span> không?<br />
+                        </p>
+
+                        <div className="orders-modal__actions">
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--cancel"
+                                onClick={() => {
+                                    if (!rejectLoading) {
+                                        setRejectModalOpen(false);
+                                        setRejectTargetOrder(null);
+                                    }
+                                }}
+                                disabled={rejectLoading}
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--danger"
+                                onClick={confirmReject}
+                                disabled={rejectLoading}
+                            >
+                                {rejectLoading ? "Đang hủy..." : "Xác nhận"}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
         </div>
     );
+
 };
 
 export default OrdersList;

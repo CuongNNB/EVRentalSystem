@@ -61,7 +61,7 @@ public class BookingService {
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
         booking.setDeposit(request.getDeposit());
-
+        booking.setStatus(BookingStatus.Pending_Deposit_Payment.toString());
         bookingRepository.save(booking);
 
         vehicleDetailRepository.save(vehicleDetail);

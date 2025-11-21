@@ -163,7 +163,7 @@
 }
 
 .primary-btn {
-    background: linear-gradient(135deg, #10b981, #06b6d4);
+    background: linear-gradient(135deg, #10b981, #06b6d4) !important;
     color: #ffffff;
     padding: 0.45rem 1rem;
     border-radius: 8px;
