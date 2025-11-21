@@ -43,7 +43,7 @@ const MyBookings = () => {
         if (!status) return 'Không xác định';
         switch (status) {
             case 'Pending_Deposit_Confirmation':
-                return 'Chờ thanh toán cọc';
+                return 'Chờ xác nhận cọc';
             case 'Pending_Contract_Signing':
                 return 'Chờ ký hợp đồng';
             case 'Pending_Vehicle_Pickup':
@@ -66,6 +66,8 @@ const MyBookings = () => {
                 return 'Đợi khách hàng xác nhận';
             case 'Cancelled':
                 return 'Đã hủy';
+            case 'Pending_Deposit_Payment':
+                return 'Đợi thanh toán cọc';
             default:
                 return 'Không xác định';
         }
@@ -95,6 +97,8 @@ const MyBookings = () => {
                 return 'status-emerald';
             case 'Cancelled':
                 return 'status-red';
+            case 'Pending_Deposit_Payment':
+                return 'status-yellow'; // vàng
             default:
                 return 'status-blue'; // fallback
         }

@@ -37,6 +37,8 @@ const getStatusText = (status) => {
             return 'Đợi khách hàng xác nhận';
         case 'Cancelled':
             return 'Đã hủy';
+        case 'Pending_Deposit_Payment':
+            return 'Đợi thanh toán cọc';
         default:
             return 'Không xác định';
     }
@@ -65,6 +67,8 @@ const getStatusClass = (status) => {
             return 'status-emerald';
         case 'Cancelled':
             return 'status-red';
+        case 'Pending_Deposit_Payment':
+            return 'status-yellow'; // vàng
         default:
             return 'status-blue'; // fallback
     }
