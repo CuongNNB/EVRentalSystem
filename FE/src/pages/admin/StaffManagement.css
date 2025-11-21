@@ -213,8 +213,7 @@
 
 /* thanh công cụ: 4 cột thích nghi */
 .staff-toolbar{
-  display:grid;
-  grid-template-columns: 1.2fr 0.9fr 0.9fr auto;
+  display: flex;
   gap:12px;
   align-items:center;
 }

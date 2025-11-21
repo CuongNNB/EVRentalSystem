@@ -296,18 +296,6 @@ const StaffManagement = () => {
       ) : (
         <div className="staff-table-container">
           <table className="staff-table modern">
-            {/* Cố định độ rộng từng cột để thẳng hàng tuyệt đối */}
-            <colgroup>
-              <col style={{ width: '72px' }} />
-              <col style={{ width: '260px' }} />
-              <col style={{ width: '120px' }} />
-              <col style={{ width: '280px' }} />
-              <col style={{ width: '150px' }} />
-              <col style={{ width: '130px' }} />
-              <col style={{ width: '140px' }} />
-              <col style={{ width: '120px' }} />
-            </colgroup>
-
             <thead>
               <tr>
                 <th className="col-id">ID</th>
