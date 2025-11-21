@@ -129,8 +129,10 @@ const BookingDetailHistory = () => {
         'Pending_Deposit_Confirmation',
         'Pending_Contract_Signing',
         'Pending_Vehicle_Pickup',
-        'Pending_Renter_Confirmation',         // note: file dùng 'Pending_Renter_Confirmation' vs 'Pending_renter_confirmation' — mình theo chuẩn bạn đang dùng
-        'Vehicle_Inspected_Before_Pickup'
+        'Pending_Renter_Confirmation',
+        'Vehicle_Inspected_Before_Pickup',
+        null,
+        'Không xác định',
     ];
 
     // Prefer booking from navigation state (forwarded from MyBookings)
@@ -1073,7 +1075,7 @@ const BookingDetailHistory = () => {
                     </motion.div>
 
                     {/* Nút Hủy đơn hàng - chỉ hiện với các trạng thái cho phép */}
-                    {cancellableStatuses.includes(normalized.status) && (
+                    {cancellableStatuses.includes(normalized.status ?? null) && (
                         <button
                             className="btn-cancel"
                             onClick={handleOpenCancelModal}

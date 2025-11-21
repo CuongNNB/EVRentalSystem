@@ -253,7 +253,7 @@
 }
 
 .orders-table__actions {
-    display: grid;
+    display: flex;
     grid-template-columns: repeat(2, 42px);
     justify-content: center;
     gap: 12px;
