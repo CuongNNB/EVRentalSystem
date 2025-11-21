@@ -53,10 +53,10 @@ import VehicleManagement from "./pages/admin/VehicleManagement";
 import StaffDetailPage from "./components/admin/StaffDetailPage";
 import AddStaffPage from "./components/admin/AddStaffPage";
 import AdminVehicleDetail from "./pages/admin/AdminVehicleDetail";
-import AdminVehicleEdit from "./pages/admin/AdminVehicleEdit";
 import AdminVehicleAdd from "./pages/admin/AdminVehicleAdd";
 import AdminCreateModel from "./pages/admin/AdminCreateModel.jsx";
 import AdminUpdateModel from "./pages/admin/AdminUpdateModel.jsx";
+import BookingManagement from "./pages/admin/BookingManagement.jsx";
 function App() {
 
     console.log("App component is rendering...");
@@ -117,6 +117,7 @@ function App() {
                                 <Route path="analytics" element={<AnalyticsPage />} />
                                 <Route path="customers" element={<CustomerManagement />} />
                                 <Route path="staff" element={<StaffManagement />} />
+                                <Route path="bookings" element={<BookingManagement />} />
                                 <Route path="vehicles" element={<VehicleManagement />} />
                                 <Route path="vehicles/add-model" element={<AdminCreateModel />} />
                                 <Route path="vehicles/model/:id" element={<AdminUpdateModel />} />

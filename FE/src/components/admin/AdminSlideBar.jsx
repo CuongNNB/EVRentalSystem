@@ -7,6 +7,7 @@ const MENU_ITEMS = [
   { key: "overview", label: "Tổng quan", icon: "📊", to: "/admin", enabled: true },
   { key: "vehicles", label: "Quản lý xe", icon: "🚘", to: "/admin/vehicles", enabled: true },
   { key: "customers", label: "Quản lý khách hàng", icon: "👥", to: "/admin/customers", enabled: true },
+  { key: "customers", label: "Quản lý đơn hàng", icon: "🛍️", to: "/admin/bookings", enabled: true },
   { key: "staff", label: "Quản lý nhân viên", icon: "👔", to: "/admin/staff", enabled: true },
   { key: "analytics", label: "Báo cáo & Phân tích", icon: "📈", to: "/admin/analytics", enabled: true },
 ];
