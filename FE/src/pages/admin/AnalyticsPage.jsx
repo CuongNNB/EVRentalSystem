@@ -136,16 +136,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
         <div className="hero__right">
-          <div className="inline-input">
-            <label className="muted">Admin ID</label>
-            <input
-              type="number"
-              className="input"
-              value={adminId}
-              onChange={(e) => setAdminId(e.target.value)}
-              placeholder="adminId"
-            />
-          </div>
           <button className="btn btn--excel" onClick={exportReportsExcel}>
             Xuất danh sách ra Excel
           </button>
@@ -179,23 +169,6 @@ export default function AnalyticsPage() {
         <button className="btn" onClick={() => { setSearch(""); setStatusFilter("ALL"); }}>
           Xoá lọc
         </button>
-      </section>
-
-      {/* Station lookup */}
-      <section className="lookup card">
-        <div className="lookup__row">
-          <div className="inline-input">
-            <label className="muted">Tra cứu Station theo Staff ID</label>
-            <input
-              className="input"
-              placeholder="staffId"
-              value={staffLookup}
-              onChange={(e) => setStaffLookup(e.target.value)}
-            />
-          </div>
-          <button className="btn" onClick={doLookupStation}>Lấy Station</button>
-          {stationLookupMsg && <span className="lookup__msg">{stationLookupMsg}</span>}
-        </div>
       </section>
 
       {/* Table */}
