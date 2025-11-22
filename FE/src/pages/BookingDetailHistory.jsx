@@ -737,16 +737,13 @@ const BookingDetailHistory = () => {
             },
 
             totals: {
+                // pricePerDay từ MyBookings (đảm bảo backend pricePerDay được map khi fetch ở MyBookings). :contentReference[oaicite:4]{index=4}
                 pricePerDay: Number(pricePerDay) || 0,
-                dailyPrice: Number(pricePerDay) || 0,
+                dailyPrice: Number(pricePerDay) || 0, // giữ cả 2 tên để tương thích
                 deposit: Number(normalized.deposit ?? booking?.deposit ?? 0) || 0,
-
-                // giữ cả total hours (nếu cần sử dụng ở nơi khác)
-                rentalHours: totalHoursAll,
-                // gửi days và phần giờ dư đúng như DepositPaymentPage mong đợi
-                days: days,
-                hours: hoursRemainder,
-                rentalDays: rentalDays,
+                // gửi cả thời lượng tính sẵn và tổng dự tính theo giờ để Checkout dễ hiển thị
+                rentalHours,
+                rentalDays,
                 rentalDurationText,
                 totalRentalByHour,
                 totalRental: estimated
