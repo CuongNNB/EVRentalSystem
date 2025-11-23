@@ -30,11 +30,10 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
     const [promotionsLoading, setPromotionsLoading] = useState(false);
 
     const paymentMethods = [
-        { id: 'bank-transfer', name: 'Chuyển khoản ngân hàng', description: 'Chuyển khoản qua ngân hàng trong nước', icon: CreditCard, color: '#10b981', qr: '/qrimage/bank_qr.png' },
         { id: 'momo', name: 'Ví MoMo', description: 'Thanh toán nhanh chóng qua ví MoMo', icon: Smartphone, color: '#d946ef', qr: '/qrimage/momo_qr.png' },
         {
             id: 'vietqr',
-            name: 'VietinBank',
+            name: 'Chuyển khoản ngân hàng',
             description: 'Quét mã VietQR để chuyển khoản tới VietinBank',
             icon: Wallet,
             color: '#0ea5a3',
@@ -48,7 +47,6 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                 template: 'TgCTXTW'
             }
         },
-        { id: 'ewallet', name: 'Thẻ ngân hàng nội địa', description: 'Ngân hàng NCB', icon: Wallet, color: '#3b82f6', qr: '/qrimage/ewallet_qr.png' }
         
     ];
 

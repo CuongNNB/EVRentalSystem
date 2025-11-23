@@ -194,6 +194,9 @@ const STATUS_ALIASES = {
     past_due: "vehicle_return_overdue",
     expired: "vehicle_return_overdue",
     cancelled: "cancelled",
+    vehicle_inspected_after_pickup: "Vehicle_Inspected_After_Pickup",
+    pending_total_payment_confirmation: "Pending_Total_Payment_Confirmation",
+    pending_total_payment: "Pending_Total_Payment",
 };
 
 const STATUS_CONFIG = {
@@ -213,7 +216,7 @@ const STATUS_CONFIG = {
         bucket: "handover",
     },
     pending_vehicle_pickup: {
-        label: "Chờ nhận xe",
+        label: "Chờ kiểm tra xe",
         variant: "warning",
         bucket: "handover",
     },
@@ -243,13 +246,13 @@ const STATUS_CONFIG = {
         bucket: "receiving",
     },
     total_fees_charged: {
-        label: "Đã hoàn thành",
+        label: "Đã thanh toán hóa đơn",
         variant: "success",
         bucket: "receiving",
     },
     completed: {
-        label: "Đợi thanh toán hóa đơn",
-        variant: "warning",
+        label: "Đã hoàn thành đơn hàng",
+        variant: "success",
         bucket: "receiving",
     },
     vehicle_return_overdue: {
@@ -261,6 +264,21 @@ const STATUS_CONFIG = {
         label: "Đã hủy đơn hàng",
         variant: "danger",
         bucket: "handover",
+    },
+    Vehicle_Inspected_After_Pickup: {
+        label: "Đã kiểm tra sau khi nhận xe",
+        variant: "warning",
+        bucket: "receiving",
+    },
+    Pending_Total_Payment_Confirmation: {
+        label: "Đợi xác nhận tổng thanh toán",
+        variant: "warning",
+        bucket: "receiving",
+    },
+    Pending_Total_Payment: {
+        label: "Đợi thanh toán tổng",
+        variant: "warning",
+        bucket: "receiving",
     },
     default: { label: "Không xác định", variant: "default", bucket: "handover" },
 };
@@ -481,7 +499,7 @@ const deriveActions = (statusKey) => {
         case "pending_deposit_payment":
             return ["view", "reject"];
         case "pending_deposit_confirmation":
-            return ["view", "reject","set_deposit_payment", "confirm"];
+            return ["view", "reject", "set_deposit_payment", "confirm"];
         case "pending_contract_signing":
             return ["view"];
         case "pending_vehicle_pickup":
@@ -498,6 +516,10 @@ const deriveActions = (statusKey) => {
         case "vehicle_returned":
             return ["view", "revenue"];
         case "completed":
+        case "Vehicle_Inspected_After_Pickup":
+            return ["view"];
+        case "Pending_Total_Payment_Confirmation":
+            return ["view", "reject_payment", "confirm_payment"];
         default:
             return ["view"];
     }
@@ -512,6 +534,8 @@ const ACTION_STATUS_MAP = {
     handover: "currently_renting",
     reject: "cancelled",
     set_deposit_payment: "pending_deposit_payment",
+    reject_payment: "Pending_Total_Payment",
+    confirm_payment: "Completed",
 };
 
 const resolveVehicleDetailId = (source = {}) => {
@@ -826,6 +850,12 @@ const OrdersList = () => {
     const [depositModalOpen, setDepositModalOpen] = useState(false);
     const [depositTargetOrder, setDepositTargetOrder] = useState(null);
     const [depositLoading, setDepositLoading] = useState(false);
+    // Modal cho hành động trên Pending_Total_Payment_Confirmation
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [paymentTargetOrder, setPaymentTargetOrder] = useState(null);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    // paymentActionType sẽ là "reject_payment" hoặc "confirm_payment"
+    const [paymentActionType, setPaymentActionType] = useState("");
     // --- Modal state for "reject" ---
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
     const [rejectTargetOrder, setRejectTargetOrder] = useState(null);
@@ -1165,6 +1195,38 @@ const OrdersList = () => {
             return false;
         }
     };
+    const confirmPaymentAction = async () => {
+        if (!paymentTargetOrder || !paymentActionType) return;
+        const order = paymentTargetOrder;
+        setPaymentLoading(true);
+
+        try {
+            // map action -> statusKey via ACTION_STATUS_MAP (đã có)
+            const statusKey = ACTION_STATUS_MAP[paymentActionType];
+            if (!statusKey) {
+                throw new Error("Không tìm thấy status map cho hành động này.");
+            }
+
+            const ok = await attemptStatusUpdate(order.id, statusKey); // attemptStatusUpdate sẽ gọi API và applyStatusUpdate
+            setConnectionState({
+                status: ok ? "success" : "warning",
+                message: ok
+                    ? `${paymentActionType === "confirm_payment" ? "Đã xác nhận thanh toán" : "Đã từ chối thanh toán"} cho đơn ${order.id}.`
+                    : `Không thể kết nối API — đã cập nhật tạm cho đơn ${order.id}.`,
+            });
+        } catch (err) {
+            console.error("confirmPaymentAction failed", err);
+            setConnectionState({
+                status: "error",
+                message: "Không thể thực hiện thao tác. Vui lòng thử lại.",
+            });
+        } finally {
+            setPaymentLoading(false);
+            setPaymentModalOpen(false);
+            setPaymentTargetOrder(null);
+            setPaymentActionType("");
+        }
+    };
 
     const handleAction = async (order, action) => {
         if (!order) return;
@@ -1177,6 +1239,12 @@ const OrdersList = () => {
         if (action === "set_deposit_payment") {
             setDepositTargetOrder(order);
             setDepositModalOpen(true);
+            return;
+        }
+        if (action === "reject_payment" || action === "confirm_payment") {
+            setPaymentTargetOrder(order);
+            setPaymentActionType(action); // giữ action để biết sẽ gửi gì khi xác nhận
+            setPaymentModalOpen(true);
             return;
         }
 
@@ -1442,7 +1510,11 @@ const OrdersList = () => {
                                                         ? { icon: "cancel", variant: "danger", label: "Hủy đơn" }
                                                         : action === "set_deposit_payment"
                                                             ? { icon: "document", variant: "contract", label: "Từ chối đặt cọc" }
-                                                            : { icon: "eye", variant: "view", label: "Xem chi tiết" };
+                                                            : action === "reject_payment"
+                                                                ? { icon: "cancel", variant: "danger", label: "Từ chối thanh toán" }
+                                                                : action === "confirm_payment"
+                                                                    ? { icon: "check", variant: "success", label: "Xác nhận thanh toán" }
+                                                                    : { icon: "eye", variant: "view", label: "Xem chi tiết" };
 
                         return (
                             <button
@@ -1544,7 +1616,7 @@ const OrdersList = () => {
                                     <option value="">Tất cả trạng thái</option>
                                     <option value="pending_deposit_confirmation">Chờ xác nhận đặt cọc</option>
                                     <option value="pending_contract_signing">Chờ ký hợp đồng</option>
-                                    <option value="pending_vehicle_pickup">Chờ nhận xe</option>
+                                    <option value="pending_vehicle_pickup">Chờ kiểm tra xe</option>
                                     <option value="pending_renter_confirmation">Chờ khách xác nhận</option>
                                     <option value="vehicle_inspected_before_pickup">Đã kiểm tra xe</option>
                                     <option value="currently_renting">Đang thuê</option>
@@ -1712,6 +1784,46 @@ const OrdersList = () => {
                     </div>
                 </div>
             )}
+
+            {/* PAYMENT ACTION CONFIRM MODAL */}
+            {paymentModalOpen && (
+                <div className="orders-overlay" role="dialog" aria-modal="true">
+                    <div className="orders-modal">
+                        <h3 className="orders-modal__title">
+                            {paymentActionType === "confirm_payment" ? "Xác nhận thanh toán" : "Từ chối thanh toán"}
+                        </h3>
+
+                        <p className="orders-modal__desc">
+                            {paymentActionType === "confirm_payment" ? (
+                                <>Bạn có chắc muốn <strong>xác nhận</strong> tổng thanh toán cho đơn <strong>#{paymentTargetOrder?.id}</strong> không?</>
+                            ) : (
+                                <>Bạn có chắc muốn <strong>từ chối</strong> tổng thanh toán cho đơn <strong>#{paymentTargetOrder?.id}</strong> không?</>
+                            )}
+                        </p>
+
+                        <div className="orders-modal__actions">
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--cancel"
+                                onClick={() => { if (!paymentLoading) { setPaymentModalOpen(false); setPaymentTargetOrder(null); setPaymentActionType(""); } }}
+                                disabled={paymentLoading}
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="button"
+                                className="orders-modal__btn orders-modal__btn--danger"
+                                onClick={confirmPaymentAction}
+                                disabled={paymentLoading}
+                            >
+                                {paymentLoading ? "Đang xử lý..." : "Xác nhận"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 

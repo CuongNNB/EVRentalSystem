@@ -11,29 +11,8 @@ const BookingManagement = () => {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedStatusMap, setSelectedStatusMap] = useState({});
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [currentRowForUpdate, setCurrentRowForUpdate] = useState(null);
 
-    // trạng thái dropdown (theo yêu cầu)
-    const statusOptions = [
-        "Pending_Deposit_Payment",
-        "Pending_Deposit_Confirmation",
-        "Pending_Contract_Signing",
-        "Pending_Vehicle_Pickup",
-        "Pending_renter_confirmation",
-        "Vehicle_Inspected_Before_Pickup",
-        "Vehicle_Pickup_Overdue",
-        "Currently_Renting",
-        "Vehicle_Returned",
-        "Total_Fees_Charged",
-        "Completed",
-        "Vehicle_Return_Overdue",
-        "Pending_Renter_Confirmation",
-        "Cancelled",
-    ];
-
-    // mapping trạng thái -> label tiếng Việt (dùng của bạn)
+    // mapping trạng thái -> label tiếng Việt
     const getStatusText = (status) => {
         if (!status) return "Không xác định";
         switch (status) {
@@ -71,7 +50,6 @@ const BookingManagement = () => {
     // format ngày giờ dạng dd/MM/yyyy HH:mm
     const formatDateTime = (value) => {
         if (!value && value !== 0) return "-";
-        // try to handle unix timestamp / number / ISO string
         const d = new Date(value);
         if (isNaN(d.getTime())) return String(value);
         return d.toLocaleString("vi-VN", {
@@ -95,7 +73,6 @@ const BookingManagement = () => {
     const findKey = (obj = {}, candidates = []) => {
         for (const c of candidates) {
             if (Object.prototype.hasOwnProperty.call(obj, c)) return c;
-            // case-insensitive
             const lowerKeys = Object.keys(obj).find((k) => k.toLowerCase() === c.toLowerCase());
             if (lowerKeys) return lowerKeys;
         }
@@ -133,7 +110,6 @@ const BookingManagement = () => {
     }, []);
 
     // tìm tên key cụ thể (ứng với yêu cầu sắp xếp cột)
-    // candidates for each desired column (bảo đảm linh hoạt nếu api đổi tên)
     const renterKey = findKey(rows[0] || {}, ["renterName", "renter", "customerName", "userName", "name", "fullName"]);
     const brandKey = findKey(rows[0] || {}, ["vehicleBrand", "brand", "make"]);
     const modelKey = findKey(rows[0] || {}, ["vehicleModel", "model", "vehicle_model", "modelName"]);
@@ -161,78 +137,31 @@ const BookingManagement = () => {
     const filtered = rows.filter((r) => {
         if (!searchTerm) return true;
         const q = searchTerm.toLowerCase();
-        // search in the ordered columns + fallback all string values
         for (const c of orderedColumns) {
             const v = r[c.key];
             if (v !== null && v !== undefined && String(v).toLowerCase().includes(q)) return true;
         }
-        // fallback: any field
         return Object.values(r).some((v) => (v ?? "").toString().toLowerCase().includes(q));
     });
-
-    // handlers for status selection
-    const onStatusChange = (row, newStatus) => {
-        const id = row.bookingId ?? row.id ?? JSON.stringify(row);
-        setSelectedStatusMap((s) => ({ ...s, [id]: newStatus }));
-    };
-
-    const openConfirm = (row) => {
-        setCurrentRowForUpdate(row);
-        setShowConfirm(true);
-    };
-
-    const closeConfirm = () => {
-        setShowConfirm(false);
-        setCurrentRowForUpdate(null);
-    };
-
-    const doUpdateStatus = async () => {
-        if (!currentRowForUpdate) return;
-        const id = currentRowForUpdate.bookingId ?? currentRowForUpdate.id;
-        const chosen = selectedStatusMap[id] ?? currentRowForUpdate[statusKey];
-
-        try {
-            const res = await fetch(
-                `${API_BASE}/api/user/booking/update-status?bookingId=${id}&status=${encodeURIComponent(chosen)}`,
-                {
-                    method: "PUT",
-                }
-            );
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            // optionally read message
-            await res.json().catch(() => { });
-            // refresh list
-            await fetchBookings();
-        } catch (err) {
-            console.error("Update status failed:", err);
-            // TODO: show notification
-        } finally {
-            closeConfirm();
-        }
-    };
 
     // render cell value with formatting
     const renderCell = (key, value) => {
         if (value === null || value === undefined) return "-";
         const lowerKey = (key || "").toLowerCase();
-        // date/time heuristics
         if (lowerKey.includes("time") || lowerKey.includes("date") || lowerKey.includes("at")) {
             return formatDateTime(value);
         }
-        // money heuristics
         if (typeof value === "number") {
             if (lowerKey.includes("total") || lowerKey.includes("payment") || lowerKey.includes("price") || lowerKey.includes("deposit")) {
                 return formatMoney(value) + " đ";
             }
             return String(value);
         }
-        // numeric string for money
         if (!isNaN(Number(value))) {
             if (lowerKey.includes("total") || lowerKey.includes("payment") || lowerKey.includes("deposit") || lowerKey.includes("price")) {
                 return formatMoney(Number(value)) + " đ";
             }
         }
-        // default
         return String(value);
     };
 
@@ -297,7 +226,6 @@ const BookingManagement = () => {
                                 {orderedColumns.map((c) => (
                                     <th key={c.key}>{c.label}</th>
                                 ))}
-                                <th>Hành động</th>
                             </tr>
                         </thead>
 
@@ -309,37 +237,14 @@ const BookingManagement = () => {
                                         <td>{i + 1}</td>
 
                                         {orderedColumns.map((c) => {
-                                            // status cell: show pretty label + dropdown
+                                            // for status column just show pretty label
                                             if (c.key === statusKey) {
-                                                const currentRaw = selectedStatusMap[id] ?? r[c.key];
                                                 return (
-                                                    <td key={c.key}>
-                                                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                                            <select
-                                                                className="booking-status-dropdown"
-                                                                value={currentRaw ?? ""}
-                                                                onChange={(e) => onStatusChange(r, e.target.value)}
-                                                            >
-                                                                {[...new Set([r[c.key], ...statusOptions])].map((st) => (
-                                                                    <option key={st} value={st}>
-                                                                        {getStatusText(st) !== "Không xác định" ? getStatusText(st) : st}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                    </td>
+                                                    <td key={c.key}>{getStatusText(r[c.key])}</td>
                                                 );
                                             }
-
-                                            // default cell
                                             return <td key={c.key}>{renderCell(c.key, r[c.key])}</td>;
                                         })}
-
-                                        <td>
-                                            <button className="admin-btn admin-btn-primary" onClick={() => openConfirm(r)}>
-                                                Cập nhật
-                                            </button>
-                                        </td>
                                     </tr>
                                 );
                             })}
@@ -348,124 +253,16 @@ const BookingManagement = () => {
                 )}
             </div>
 
-            {/* Confirm overlay */}
-            {showConfirm && currentRowForUpdate && (
-                <div className="overlay-confirm">
-                    <div className="confirm-box">
-                        <h3>Xác nhận cập nhật trạng thái?</h3>
-                        <p>
-                            Bạn có chắc muốn cập nhật đơn hàng #
-                            {currentRowForUpdate.bookingId ?? currentRowForUpdate.id}?
-                        </p>
-                        <div style={{ marginTop: 12 }}>
-                            <button className="admin-btn admin-btn-danger" onClick={closeConfirm} style={{ marginRight: 12 }}>
-                                Hủy
-                            </button>
-                            <button className="admin-btn admin-btn-primary" onClick={doUpdateStatus}>
-                                Xác nhận
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Internal CSS for better table spacing (kept minimal) */}
             <style>{`
-/* ========== DROPDOWN STATUS ========== */
-.booking-status-dropdown {
-    width: 100%;
-    padding: 6px 8px;
-    font-size: 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background-color: #ffffff;
-    color: #111827;
-    outline: none;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.booking-status-dropdown:hover {
-    border-color: #3b82f6;
-}
-
-.booking-status-dropdown:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
-}
-
-/* Option styling (trên Chrome chỉ hỗ trợ hạn chế) */
-.booking-status-dropdown option {
-    padding: 8px;
-}
-
-/* ========== OVERLAY CONFIRM ========== */
-.overlay-confirm {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    animation: fadeInOverlay 0.2s ease-out;
-}
-
-@keyframes fadeInOverlay {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.confirm-box {
-    width: 360px;
-    background: #ffffff;
-    padding: 22px 26px;
-    border-radius: 14px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
-    animation: popIn 0.25s ease-out;
-}
-
-@keyframes popIn {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1;}
-}
-
-.confirm-box h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #111827;
-    font-weight: 600;
-    text-align: center;
-}
-
-.confirm-box p {
-    font-size: 15px;
-    color: #4b5563;
-    margin: 14px 0;
-    text-align: center;
-}
-
-/* ========== BUTTONS INSIDE OVERLAY ========== */
-.confirm-box .admin-btn-primary {
-    background: #3b82f6 !important;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-}
-
-.confirm-box .admin-btn-danger {
-    background: #ef4444 !important;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-}
-
-.confirm-box .admin-btn-primary:hover {
-    background: #2563eb !important;
-}
-
-.confirm-box .admin-btn-danger:hover {
-    background: #dc2626 !important;
-}
-`}</style>
+                .vehicles-table td, .vehicles-table th {
+                    padding: 10px 12px;
+                    vertical-align: middle;
+                }
+                .vehicles-table tbody tr:hover {
+                    background: rgba(59,130,246,0.03);
+                }
+            `}</style>
 
         </ErrorBoundary>
     );

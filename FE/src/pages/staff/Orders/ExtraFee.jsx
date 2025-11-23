@@ -165,7 +165,7 @@ const ExtraFee = () => {
 
             // 2. Cập nhật trạng thái đơn hàng sang "Completed"
             await api.put(`/api/bookings/${orderId}/status`, null, {
-                params: { status: "Vehicle_Returned" },
+                params: { status: "Vehicle_Inspected_After_Pickup" },
             });
 
             setSubmitting(false);

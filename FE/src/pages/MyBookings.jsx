@@ -47,9 +47,9 @@ const MyBookings = () => {
             case 'Pending_Contract_Signing':
                 return 'Chờ ký hợp đồng';
             case 'Pending_Vehicle_Pickup':
-                return 'Chờ nhận xe';
+                return 'Chờ kiểm tra xe';
             case 'Vehicle_Inspected_Before_Pickup':
-                return 'Xe đang kiểm tra trước khi giao';
+                return 'Đã kiểm tra xe';
             case 'Vehicle_Pickup_Overdue':
                 return 'Quá hạn nhận xe';
             case 'Currently_Renting':
@@ -59,7 +59,7 @@ const MyBookings = () => {
             case 'Total_Fees_Charged':
                 return 'Đã hoàn tất đơn hàng';
             case 'Completed':
-                return 'Đợi thanh toán hóa đơn';
+                return 'Đã hoàn thành đơn hàng';
             case 'Vehicle_Return_Overdue':
                 return 'Quá hạn trả xe';
             case 'Pending_Renter_Confirmation':
@@ -68,6 +68,12 @@ const MyBookings = () => {
                 return 'Đã hủy';
             case 'Pending_Deposit_Payment':
                 return 'Đợi thanh toán cọc';
+            case 'Vehicle_Inspected_After_Pickup':
+                return 'Đợi xác nhận nhận xe';
+            case 'Pending_Total_Payment':
+                return 'Đợi thanh toán đơn hàng';
+            case 'Pending_Total_Payment_Confirmation':
+                return 'Đợi xác nhận tổng thanh toán';
             default:
                 return 'Không xác định';
         }
@@ -88,7 +94,7 @@ const MyBookings = () => {
             case 'Vehicle_Returned':
                 return 'status-purple-dark'; // tím đậm
             case 'Completed':
-                return 'status-yellow'; // xanh ngọc
+                return 'status-emerald'; // xanh ngọc
             case 'Vehicle_Return_Overdue':
                 return 'status-red'; // đỏ
             case 'Pending_Renter_Confirmation':
@@ -99,6 +105,10 @@ const MyBookings = () => {
                 return 'status-red';
             case 'Pending_Deposit_Payment':
                 return 'status-yellow'; // vàng
+            case 'Pending_Total_Payment':
+                return 'status-yellow';
+            case 'Pending_Total_Payment_Confirmation':
+                return 'status-yellow';
             default:
                 return 'status-blue'; // fallback
         }
