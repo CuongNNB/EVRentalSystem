@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.RenterDetailVerificationStatusEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +32,7 @@ public class RenterDetail {
 
     @Lob
     private String driverLicense;
-
-    private String verificationStatus;
+    @Enumerated(EnumType.STRING)
+    private RenterDetailVerificationStatusEnum verificationStatus;
     private Boolean isRisky;
 }

@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
@@ -57,7 +58,7 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
         return VehicleDetailResponse.builder()
                 .id(v.getId())
                 .licensePlate(v.getLicensePlate())
-                .status(v.getStatus())
+                .status(v.getStatus().toString())
                 .odo(v.getOdo())
                 .color(v.getColor())
                 .picture(v.getPicture())
@@ -97,7 +98,7 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
         v.setBatteryCapacity( normalize(r.getBatteryCapacity()) );
         v.setOdo(r.getOdo() == null ? 0 : r.getOdo());
         v.setPicture( normalize(r.getPicture()) );
-        v.setStatus( normalize(r.getStatus()) == null ? "AVAILABLE" : r.getStatus().trim() );
+        v.setStatus( normalize(r.getStatus()) == null ? VehicleStatus.AVAILABLE : VehicleStatus.valueOf(r.getStatus().toString().trim()) );
 
         repo.save(v);
         return v.getId();
@@ -113,12 +114,12 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
                 .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
 
         // Không cho sửa xe đã xoá mềm (tránh revive nhầm)
-        if ("DELETED".equalsIgnoreCase(v.getStatus())) {
+        if ("DELETED".equalsIgnoreCase(v.getStatus().toString())) {
             throw new RuntimeException("Vehicle is deleted (soft). Restore or create new record instead.");
         }
 
         if (r.getLicensePlate() != null) v.setLicensePlate(r.getLicensePlate().trim());
-        if (r.getStatus() != null)       v.setStatus(r.getStatus().trim());
+        if (r.getStatus() != null)       v.setStatus(VehicleStatus.valueOf(r.getStatus().toString().trim()) );
         if (r.getOdo() != null)          v.setOdo(r.getOdo());
         if (r.getColor() != null)        v.setColor(r.getColor().trim());
         if (r.getPicture() != null)      v.setPicture(r.getPicture().trim());
@@ -146,12 +147,12 @@ public class VehicleAdminServiceImpl implements VehicleAdminService {
         VehicleDetail v = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found: " + id));
 
-        if ("RENTED".equalsIgnoreCase(v.getStatus())) {
+        if ("RENTED".equalsIgnoreCase(v.getStatus().toString())) {
             throw new RuntimeException("Cannot delete vehicle while RENTED.");
         }
 
         // Đánh dấu xoá mềm để tránh lỗi FK
-        v.setStatus("DELETED");
+        v.setStatus(VehicleStatus.DELETED);
 
         // Tránh đụng unique biển số (nếu có)
         if (v.getLicensePlate() != null) {

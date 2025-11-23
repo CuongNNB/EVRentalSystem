@@ -75,7 +75,7 @@ public class DashboardStationService {
                 v.getId(), nz(v.getLicensePlate()), nz(v.getColor()),
                 nz(v.getBatteryCapacity()),
                 v.getVehicleModel() != null ? nz(v.getVehicleModel().getModel()) : "",
-                nz(v.getStatus())
+                nz(v.getStatus().toString())
         )).toList();
         return new FixingVehicleResponse(st.getStationName(), list.size(), list);
     }

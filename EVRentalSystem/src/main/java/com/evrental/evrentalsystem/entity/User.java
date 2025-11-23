@@ -1,5 +1,7 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.StaffStatusEnum;
+import com.evrental.evrentalsystem.enums.UserEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,9 +30,10 @@ public class User {
     private String address;
 
     @Column(nullable = false)
-    private String role; // ADMIN, STAFF, RENTER
-
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private UserEnum role; // ADMIN, STAFF, RENTER
+    @Enumerated(EnumType.STRING)
+    private StaffStatusEnum status;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "renter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -47,8 +50,8 @@ public class User {
             email = email.trim().toLowerCase();
         }
         if (address != null) address = address.trim();
-        if (role != null) role = role.trim().toUpperCase();
-        if (status != null) status = status.trim().toUpperCase();
+        if (role != null) role = UserEnum.valueOf(role.toString().trim().toUpperCase()) ;
+        if (status != null) status = StaffStatusEnum.valueOf(status.toString().trim().toUpperCase()) ;
     }
     // Kiểm tra role hợp lệ trong lớp User
     public void setRole(String role) {
@@ -58,7 +61,7 @@ public class User {
                 throw new IllegalArgumentException("Invalid role: " + role);
             }
         }
-        this.role = role;
+        this.role = UserEnum.valueOf(role);
     }
 
 }

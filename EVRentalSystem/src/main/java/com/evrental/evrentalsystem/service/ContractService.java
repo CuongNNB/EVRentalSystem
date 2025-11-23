@@ -3,6 +3,7 @@ package com.evrental.evrentalsystem.service;
 import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.Contract;
 import com.evrental.evrentalsystem.enums.BookingStatus;
+import com.evrental.evrentalsystem.enums.ContractStatusEnum;
 import com.evrental.evrentalsystem.repository.BookingRepository;
 import com.evrental.evrentalsystem.repository.ContractRepository;
 import com.evrental.evrentalsystem.response.user.ContractItemResponse;
@@ -30,7 +31,7 @@ public class ContractService {
         String otp = otpService.generateOtp(bookingId);
         contract.setBooking(boooking);
         contract.setOtpCode(otp);
-        contract.setStatus("WATING_FOR_VERIFICATION");
+        contract.setStatus(ContractStatusEnum.WATING_FOR_VERIFICATION);
         contractRepository.save(contract);
 
         mailService.sendOtpMail(email, otp);
@@ -45,11 +46,11 @@ public class ContractService {
 
         if (valid) {
             contract.setSignedAt(LocalDateTime.now());
-            contract.setStatus("SIGNED");
+            contract.setStatus(ContractStatusEnum.SIGNED);
             contractRepository.save(contract);
             Booking booking = bookingRepository.findByBookingId(bookingId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bookingId: " + bookingId));
-            booking.setStatus(BookingStatus.Pending_Vehicle_Pickup.toString()); // hoặc "APPROVED" / "ACTIVE" tùy theo business
+            booking.setStatus(BookingStatus.Pending_Vehicle_Pickup); // hoặc "APPROVED" / "ACTIVE" tùy theo business
             bookingRepository.save(booking);
 
             return "Hợp đồng đã được xác nhận thành công.";
@@ -68,14 +69,14 @@ public class ContractService {
 
                     return new ContractItemResponse(
                             c.getContractId(),
-                            c.getStatus(),
+                            c.getStatus().toString(),
 
                             // booking
                             (b != null ? b.getBookingId() : null),
                             (vm != null ? vm.getModel() : null),
                             (b != null ? b.getStartTime() : null),
                             (b != null ? b.getExpectedReturnTime() : null),
-                            (b != null ? b.getStatus() : null),
+                            (b != null ? b.getStatus().toString() : null),
                             (st != null ? st.getStationId() : null),
                             (st != null ? st.getStationName() : null),
 

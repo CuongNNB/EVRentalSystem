@@ -1,5 +1,7 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
+import com.evrental.evrentalsystem.enums.PartCarName;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -19,7 +21,8 @@ public class InspectionAfter {
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    private String partName;
+    @Enumerated(EnumType.STRING)
+    private PartCarName partName;
 
     @Lob
     @Column(name = "picture", columnDefinition = "nvarchar(MAX)", nullable = true)
@@ -35,5 +38,7 @@ public class InspectionAfter {
     private User staff;
 
     private LocalDateTime inspectedAt = LocalDateTime.now();
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private InspectionStatusEnum status;
 }

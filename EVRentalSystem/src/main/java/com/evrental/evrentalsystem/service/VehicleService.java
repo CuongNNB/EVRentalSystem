@@ -87,7 +87,7 @@ public class VehicleService {
                             d.getBatteryCapacity(),
                             d.getOdo(),
                             d.getPicture(),
-                            d.getStatus(),
+                            d.getStatus().toString(),
                             d.getColor(),
                             d.getStation() != null ? d.getStation().getStationId() : null
                     ))

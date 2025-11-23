@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,6 +45,7 @@ public class Booking {
 
     private Double deposit;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
 
 }

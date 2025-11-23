@@ -1,6 +1,9 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.RenterDetail;
+import com.evrental.evrentalsystem.enums.RenterDetailVerificationStatusEnum;
+import com.evrental.evrentalsystem.enums.StaffStatusEnum;
+import com.evrental.evrentalsystem.enums.UserEnum;
 import com.evrental.evrentalsystem.repository.RenterDetailRepository;
 import com.evrental.evrentalsystem.repository.UserRepository;
 import com.evrental.evrentalsystem.entity.User;
@@ -59,8 +62,8 @@ public class UserService {
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         user.setAddress(request.getAddress());
-        user.setRole("RENTER");
-        user.setStatus("ACTIVE");
+        user.setRole(UserEnum.RENTER.toString());
+        user.setStatus(StaffStatusEnum.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -72,7 +75,7 @@ public class UserService {
         detail.setCccdFront(encodeToBase64(cccdFront));
         detail.setCccdBack(encodeToBase64(cccdBack));
         detail.setDriverLicense(encodeToBase64(gplx));
-        detail.setVerificationStatus("PENDING");
+        detail.setVerificationStatus(RenterDetailVerificationStatusEnum.PENDING);
         detail.setIsRisky(false);
         renterDetailRepository.saveAndFlush(detail);
 
@@ -147,7 +150,7 @@ public class UserService {
                 user.getUsername(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRole(),
+                user.getRole().toString(),
                 user.getPhone(),
                 user.getAddress(),
                 user.getCreatedAt(),
@@ -193,10 +196,10 @@ public class UserService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .address(user.getAddress())
-                .role(user.getRole())
-                .status(user.getStatus())
+                .role(user.getRole().toString())
+                .status(user.getStatus().toString())
                 .createdAt(user.getCreatedAt())
-                .verificationStatus(user.getRenterDetail().getVerificationStatus())
+                .verificationStatus(user.getRenterDetail().getVerificationStatus().toString())
                 .isRisky(user.getRenterDetail().getIsRisky())
                 // image URLs (client can call these endpoints)
                 .cccdFrontUrl("http://localhost:8084/EVRentalSystem/api/users/" + userId + "/renter-detail/cccd-front")
@@ -228,8 +231,8 @@ public class UserService {
         dto.setPhone(user.getPhone());
         dto.setEmail(user.getEmail());
         dto.setAddress(user.getAddress());
-        dto.setRole(user.getRole());
-        dto.setStatus(user.getStatus());
+        dto.setRole(user.getRole().toString());
+        dto.setStatus(user.getStatus().toString());
         return dto;
     }
 

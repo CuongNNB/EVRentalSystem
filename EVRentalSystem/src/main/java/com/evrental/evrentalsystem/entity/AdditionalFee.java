@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.AdditionalFeeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -19,7 +20,8 @@ public class AdditionalFee {
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    private String feeName;
+    @Enumerated(EnumType.STRING)
+    private AdditionalFeeEnum feeName;
     private Double amount;
 
     @Lob

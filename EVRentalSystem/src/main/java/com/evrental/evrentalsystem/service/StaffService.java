@@ -107,7 +107,7 @@ public class StaffService {
                     response.startDate = booking.getStartTime();
                     response.endDate = booking.getExpectedReturnTime();
                     response.totalAmount = fee + additionalFee;
-                    response.status = booking.getStatus();
+                    response.status = booking.getStatus().toString();
 
                     return response;
                 })
@@ -183,14 +183,14 @@ public class StaffService {
             inspection.setBooking(booking);
 
             // ✅ Lưu tên phần xe bằng enum
-            inspection.setPartName(partName.name()); // hoặc .toString(), cả hai đều OK
+            inspection.setPartName(partName); // hoặc .toString(), cả hai đều OK
 
             String base64Picture = encodeToBase64(picture);
             log.info("Base64 picture length: {}", base64Picture.length());
             inspection.setPicture(base64Picture);
             inspection.setDescription(description);
             inspection.setStaff(staff);
-            inspection.setStatus(status);
+            inspection.setStatus(InspectionStatusEnum.valueOf(status));
             inspection.setInspectedAt(LocalDateTime.now());
             inspectionRepository.save(inspection);
             return true;
@@ -202,13 +202,13 @@ public class StaffService {
 
     public boolean createAdditionalFee(
             Integer bookingId,
-            AdditionalFeeEnum feeName,
+            String feeName,
             int amount,
             String desc
     ) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking ID không tồn tại: " + bookingId));
-        if (feeName == AdditionalFeeEnum.Late_Return_Fee) {
+        if (feeName == AdditionalFeeEnum.Late_Return_Fee.toString()) {
             long minutes = Duration.between(booking.getStartTime(), booking.getExpectedReturnTime()).toMinutes();
             int rentingHours = (int) Math.ceil(minutes / 60.0);
             double pricePerHour = booking.getVehicleModel().getPrice() * 1000 / 24;
@@ -216,7 +216,7 @@ public class StaffService {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
-                    af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+                    af.setFeeName(AdditionalFeeEnum.valueOf(feeName)); // hoặc .toString(), cả hai đều OK
                     double cost = rentingHours * pricePerHour;
                     af.setAmount(cost);
                     af.setDescription(desc);
@@ -231,7 +231,7 @@ public class StaffService {
             }
 
         }
-        if (feeName == AdditionalFeeEnum.Over_Mileage_Fee) {
+        if (feeName == AdditionalFeeEnum.Over_Mileage_Fee.toString()) {
             Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Odometer.toString());
             int odoBefore = Integer.parseInt(i.getDescription().replaceAll("[^0-9]", ""));
             int odoAfter = amount;
@@ -243,7 +243,7 @@ public class StaffService {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
-                    af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+                    af.setFeeName(AdditionalFeeEnum.valueOf(feeName)); // hoặc .toString(), cả hai đều OK
                     double cost = (odoAfter - totalAllowedOdo) * (pricePerHour / Enum.Allowed_distance_per_hour.getValue());
                     af.setAmount(cost);
                     af.setDescription(desc);
@@ -259,13 +259,13 @@ public class StaffService {
                 return false;
             }
         }
-        if (feeName == AdditionalFeeEnum.Fuel_Fee) {
+        if (feeName == AdditionalFeeEnum.Fuel_Fee.toString()) {
             Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Battery.toString());
             if (amount < Integer.parseInt(i.getDescription())) {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
-                    af.setFeeName(feeName.name());
+                    af.setFeeName(AdditionalFeeEnum.valueOf(feeName));
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", ""));
                     double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
                     af.setAmount(cost);
@@ -283,7 +283,7 @@ public class StaffService {
         try {
             AdditionalFee af = new AdditionalFee();
             af.setBooking(booking);
-            af.setFeeName(feeName.name()); // hoặc .toString(), cả hai đều OK
+            af.setFeeName(AdditionalFeeEnum.valueOf(feeName)); // hoặc .toString(), cả hai đều OK
             af.setAmount((double) amount);
             af.setDescription(desc);
             additionalFeeRepository.save(af);
@@ -336,7 +336,7 @@ public class StaffService {
         response.setStartDate(booking.getStartTime());
         response.setLicensePlate(booking.getVehicleDetail().getLicensePlate());
         response.setModelName(booking.getVehicleModel().getModel());
-        response.setStatus(BookingStatus.valueOf(booking.getStatus()));
+        response.setStatus(booking.getStatus());
         response.setRentingDurationDay(rentingDurationDay);
         return response;
     }
@@ -353,7 +353,7 @@ public class StaffService {
                 .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
         Contract c = new Contract();
         c.setBooking(booking);
-        c.setStatus(ContractStatusEnum.PENDING.name());
+        c.setStatus(ContractStatusEnum.PENDING);
         c.setStaffManager(staff);
         contractRepository.save(c);
 
@@ -366,14 +366,14 @@ public class StaffService {
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
         RenterDetail rd = new RenterDetail();
         rd = booking.getRenter().getRenterDetail();
-        rd.setVerificationStatus(RenterDetailVerificationStatusEnum.VERIFIED.name());
+        rd.setVerificationStatus(RenterDetailVerificationStatusEnum.VERIFIED);
         renterDetailRepository.save(rd);
     }
 
     public RenterDetailVerificationStatusEnum getVerificationStatusByBookingId(int id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
-        String status = booking.getRenter().getRenterDetail().getVerificationStatus();
+        String status = booking.getRenter().getRenterDetail().getVerificationStatus().toString();
         return RenterDetailVerificationStatusEnum.valueOf(status);
     }
 
@@ -395,7 +395,7 @@ public class StaffService {
         return inspections.stream()
                 .map(inspection -> {
                     InspectionDetailsByBookingResponse response = new InspectionDetailsByBookingResponse();
-                    response.setPartName(PartCarName.valueOf(inspection.getPartName()));
+                    response.setPartName(inspection.getPartName());
                     response.setPic(inspection.getPicture());
                     response.setDesc(inspection.getDescription());
                     return response;
@@ -410,7 +410,7 @@ public class StaffService {
         return inspections.stream()
                 .map(inspection -> {
                     InspectionDetailsByBookingResponse response = new InspectionDetailsByBookingResponse();
-                    response.setPartName(PartCarName.valueOf(inspection.getPartName()));
+                    response.setPartName(inspection.getPartName());
                     response.setPic(inspection.getPicture());
                     response.setDesc(inspection.getDescription());
                     return response;
@@ -437,7 +437,7 @@ public class StaffService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
         VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(booking.getVehicleDetail().getLicensePlate());
-        vd.setStatus(VehicleStatus.AVAILABLE.name());
+        vd.setStatus(VehicleStatus.AVAILABLE);
     }
 
     public boolean createInspectionAfter(
@@ -460,14 +460,14 @@ public class StaffService {
             inspection.setBooking(booking);
 
             // ✅ Lưu tên phần xe bằng enum
-            inspection.setPartName(partName.name()); // hoặc .toString(), cả hai đều OK
+            inspection.setPartName(partName); // hoặc .toString(), cả hai đều OK
 
             String base64Picture = encodeToBase64(picture);
             log.info("Base64 picture length: {}", base64Picture.length());
             inspection.setPicture(base64Picture);
             inspection.setDescription(description);
             inspection.setStaff(staff);
-            inspection.setStatus(status);
+            inspection.setStatus(InspectionStatusEnum.valueOf(status));
             inspection.setInspectedAt(LocalDateTime.now());
             inspectionAfterRepository.save(inspection);
             return true;
@@ -495,7 +495,7 @@ public class StaffService {
         r.setDescription(description);
         r.setVehicleDetail(vd);
         r.setCreatedAt(LocalDateTime.now());
-        r.setStatus(ReportStatusEnum.PENDING.toString());
+        r.setStatus(ReportStatusEnum.PENDING);
         reportRepository.save(r);
     }
 
@@ -506,7 +506,7 @@ public class StaffService {
                         u.getUserId(),
                         u.getUsername(),
                         u.getFullName(),
-                        u.getRole()
+                        u.getRole().toString()
                 ))
                 .collect(Collectors.toList());
     }

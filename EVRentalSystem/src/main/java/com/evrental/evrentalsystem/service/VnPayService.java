@@ -77,7 +77,7 @@ public class VnPayService {
     public String updateBookingStatus(Integer bookingId) {
         Booking booking = bookingRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
-        booking.setStatus(BookingStatus.Total_Fees_Charged.toString());
+        booking.setStatus(BookingStatus.Total_Fees_Charged);
         bookingRepository.save(booking);
         return "Booking confirmed successfully.";
     }

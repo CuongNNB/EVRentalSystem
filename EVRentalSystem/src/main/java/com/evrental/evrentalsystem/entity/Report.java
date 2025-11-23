@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.ReportStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,7 +30,7 @@ public class Report {
 
     @Lob
     private String description;
-
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ReportStatusEnum status;
     private LocalDateTime createdAt = LocalDateTime.now();
 }

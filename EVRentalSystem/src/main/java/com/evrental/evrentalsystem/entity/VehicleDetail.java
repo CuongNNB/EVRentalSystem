@@ -1,5 +1,6 @@
     package com.evrental.evrentalsystem.entity;
 
+    import com.evrental.evrentalsystem.enums.VehicleStatus;
     import jakarta.persistence.*;
     import lombok.*;
 
@@ -28,6 +29,7 @@
         private String batteryCapacity;
         private Integer odo;
         private String picture;
-        private String status;
+        @Enumerated(EnumType.STRING)
+        private VehicleStatus status;
         private String color;
     }

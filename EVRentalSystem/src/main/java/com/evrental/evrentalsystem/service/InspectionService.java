@@ -39,9 +39,9 @@ public class InspectionService {
         if (insp.getBooking() != null)
             dto.setBookingId(insp.getBooking().getBookingId());
 
-        dto.setPartName(insp.getPartName());
+        dto.setPartName(insp.getPartName().toString());
         dto.setDescription(insp.getDescription());
-        dto.setStatus(insp.getStatus());
+        dto.setStatus(insp.getStatus().toString());
         dto.setInspectedAt(insp.getInspectedAt());
 
         if (insp.getStaff() != null) {
@@ -70,9 +70,9 @@ public class InspectionService {
         if (insp.getBooking() != null)
             dto.setBookingId(insp.getBooking().getBookingId());
 
-        dto.setPartName(insp.getPartName());
+        dto.setPartName(insp.getPartName().toString());
         dto.setDescription(insp.getDescription());
-        dto.setStatus(insp.getStatus());
+        dto.setStatus(insp.getStatus().toString());
         dto.setInspectedAt(insp.getInspectedAt());
 
         if (insp.getStaff() != null) {
@@ -102,15 +102,15 @@ public class InspectionService {
         }
 
         for (Inspection inspection : inspections) {
-            inspection.setStatus(status);
+            inspection.setStatus(InspectionStatusEnum.valueOf(status));
         }
 
         Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
-        checkBooking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
+        checkBooking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup);
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
-                booking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup.toString());
+                booking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup);
                 bookingRepository.save(booking);
             });
             int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
@@ -127,15 +127,15 @@ public class InspectionService {
         }
 
         for (InspectionAfter inspection : inspections) {
-            inspection.setStatus(status);
+            inspection.setStatus(InspectionStatusEnum.valueOf(status));
         }
 
         Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
-        checkBooking.setStatus(BookingStatus.Pending_Total_Payment.toString());
+        checkBooking.setStatus(BookingStatus.Pending_Total_Payment);
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
-                booking.setStatus(BookingStatus.Currently_Renting.toString());
+                booking.setStatus(BookingStatus.Currently_Renting);
                 bookingRepository.save(booking);
             });
             int deleted = inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());

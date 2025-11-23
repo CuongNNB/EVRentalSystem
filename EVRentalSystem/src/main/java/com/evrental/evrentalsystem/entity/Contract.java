@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.entity;
 
+import com.evrental.evrentalsystem.enums.ContractStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -24,6 +25,8 @@ public class Contract {
     private Booking booking;
 
     private LocalDateTime signedAt = LocalDateTime.now();
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    private ContractStatusEnum status;
     private String otpCode;
 }

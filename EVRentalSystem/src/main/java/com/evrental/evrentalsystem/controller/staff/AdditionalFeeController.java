@@ -23,7 +23,7 @@ public class AdditionalFeeController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Boolean>> createInspection(
             @RequestParam Integer bookingId,
-            @RequestParam AdditionalFeeEnum feeName,
+            @RequestParam String feeName,
             @RequestParam int amount,
             @RequestParam String desc
     ) {

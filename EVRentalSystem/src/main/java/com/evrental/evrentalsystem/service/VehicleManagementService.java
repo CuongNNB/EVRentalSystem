@@ -3,6 +3,7 @@ package com.evrental.evrentalsystem.service;
 import com.evrental.evrentalsystem.entity.Station;
 import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.entity.VehicleModel;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
@@ -62,7 +63,7 @@ public class VehicleManagementService {
                         .batteryCapacity(vd.getBatteryCapacity())
                         .odo(vd.getOdo())
                         .detailPicture(vd.getPicture())
-                        .status(vd.getStatus())
+                        .status(vd.getStatus().toString())
                         .color(vd.getColor())
                         .build();
 
@@ -83,7 +84,7 @@ public class VehicleManagementService {
         VehicleDetail vehicleDetail = vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("Vehicle detail not found with id: " + vehicleDetailId));
 
-        vehicleDetail.setStatus(newStatus);
+        vehicleDetail.setStatus(VehicleStatus.valueOf(newStatus));
         vehicleDetailRepository.save(vehicleDetail);
 
         return "Vehicle detail status updated successfully.";
@@ -100,7 +101,7 @@ public class VehicleManagementService {
         vd.setBatteryCapacity(req.getBatteryCapacity());
         vd.setOdo(req.getOdo());
         vd.setColor(req.getColor());
-        vd.setStatus("AVAILABLE");
+        vd.setStatus(VehicleStatus.AVAILABLE);
         vd.setPicture(imageUtil.encodeToBase64(detailPicture));
         vd.setStation(station);
         vd.setVehicleModel(vm);
@@ -120,7 +121,7 @@ public class VehicleManagementService {
         vd.setBatteryCapacity(req.getBatteryCapacity());
         vd.setOdo(req.getOdo());
         vd.setColor(req.getColor());
-        vd.setStatus("AVAILABLE");
+        vd.setStatus(VehicleStatus.AVAILABLE);
         if (detailPicture != null) {
             vd.setPicture(imageUtil.encodeToBase64(detailPicture));
         }
@@ -141,7 +142,7 @@ public class VehicleManagementService {
                 .odo(vd.getOdo())
                 // Trả URL ảnh (backend tự phục vụ ở endpoint image/{id})
                 .detailPicture("http://localhost:8084/EVRentalSystem/vehicle-management/image/" + vd.getId() + "/" + randomId)
-                .status(vd.getStatus())
+                .status(vd.getStatus().toString())
                 .color(vd.getColor())
                 .build();
 

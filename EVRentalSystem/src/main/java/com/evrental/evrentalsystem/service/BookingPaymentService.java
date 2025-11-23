@@ -49,7 +49,7 @@ public class BookingPaymentService {
         }
 
         // Chỉnh lại booking thành completed
-        booking.setStatus(BookingStatus.Pending_Total_Payment_Confirmation.toString());
+        booking.setStatus(BookingStatus.Pending_Total_Payment_Confirmation);
 
         // Lưu booking trước (tránh transient issues)
         bookingRepository.save(booking);

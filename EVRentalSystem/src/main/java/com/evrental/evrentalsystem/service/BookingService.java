@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
 import com.evrental.evrentalsystem.enums.BookingStatus;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.BookingRequest;
 import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
@@ -61,7 +62,7 @@ public class BookingService {
         booking.setStartTime(request.getStartTime());
         booking.setExpectedReturnTime(request.getExpectedReturnTime());
         booking.setDeposit(request.getDeposit());
-        booking.setStatus(BookingStatus.Pending_Deposit_Payment.toString());
+        booking.setStatus(BookingStatus.Pending_Deposit_Payment);
         bookingRepository.save(booking);
 
         vehicleDetailRepository.save(vehicleDetail);
@@ -73,7 +74,7 @@ public class BookingService {
         response.setVehicleId(request.getVehicleModelId());
         response.setVehicleModel(model.getModel());
         response.setStationName(station.getStationName());
-        response.setStatus(booking.getStatus());
+        response.setStatus(booking.getStatus().toString());
         response.setMessage("Booking created successfully");
 
         return response;
@@ -83,7 +84,7 @@ public class BookingService {
         Booking booking = bookingRepository.findByBookingId(request.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Not found booking!"));
 
-        booking.setStatus(BookingStatus.Pending_Deposit_Confirmation.toString());
+        booking.setStatus(BookingStatus.Pending_Deposit_Confirmation);
         bookingRepository.save(booking);
 
         return "Booking confirmed successfully.";
@@ -119,7 +120,7 @@ public class BookingService {
         dto.setExpectedReturnTime(booking.getExpectedReturnTime());
         dto.setActualReturnTime(booking.getActualReturnTime());
         dto.setDeposit(booking.getDeposit() == null ? 0.0 : booking.getDeposit());
-        dto.setBookingStatus(booking.getStatus());
+        dto.setBookingStatus(booking.getStatus().toString());
 
         if (model != null) {
             dto.setVehicleModel(model.getModel());
@@ -164,7 +165,7 @@ public class BookingService {
             }
         }
 
-        booking.setStatus(status);
+        booking.setStatus(BookingStatus.valueOf(status));
         bookingRepository.save(booking);
         return "Status updated successfully.";
     }
@@ -177,7 +178,7 @@ public class BookingService {
             return false;
         }
 
-        detail.setStatus("AVAILABLE");
+        detail.setStatus(VehicleStatus.AVAILABLE);
         vehicleDetailRepository.save(detail);
         return true;
     }

@@ -50,7 +50,7 @@ public class DashboardRecentService {
                     .vehicleCode(vehicleCode)
                     .startTime(startTime)
                     .endTime(endTime)
-                    .status(b.getStatus() != null ? b.getStatus() : "")
+                    .status(b.getStatus().toString() != null ? b.getStatus().toString() : "")
                     .price(price)
                     .build();
         }).toList();

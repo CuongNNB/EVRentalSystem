@@ -1,6 +1,9 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
+import com.evrental.evrentalsystem.enums.RenterDetailVerificationStatusEnum;
+import com.evrental.evrentalsystem.enums.ReportStatusEnum;
+import com.evrental.evrentalsystem.enums.StaffStatusEnum;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.request.UpdateReportStatusRequest;
@@ -64,7 +67,7 @@ public class AdminService {
                         v.getColor(),
                         v.getBatteryCapacity(),
                         v.getVehicleModel().getModel(),
-                        v.getStatus()
+                        v.getStatus().toString()
                 )
         ).toList();
 
@@ -87,10 +90,10 @@ public class AdminService {
                         user.getEmail(),
                         user.getPhone(),
                         user.getAddress(),
-                        user.getStatus(),
+                        user.getStatus().toString(),
                         user.getCreatedAt(),
                         user.getRenterDetail().getIsRisky(),
-                        user.getRole()
+                        user.getRole().toString()
                 ))
                 .collect(Collectors.toList());
     }
@@ -102,7 +105,7 @@ public class AdminService {
     public GetRenterDetailResponse toDto(RenterDetail e, String baseImageUrl) {
         GetRenterDetailResponse dto = new GetRenterDetailResponse();
         dto.setRenterId(e.getRenterId());
-        dto.setVerificationStatus(e.getVerificationStatus());
+        dto.setVerificationStatus(e.getVerificationStatus().toString());
         dto.setIsRisky(e.getIsRisky());
 
         // build URL cho từng ảnh (controller truyền baseImageUrl)
@@ -133,7 +136,7 @@ public class AdminService {
         if (request.getEmail() != null) user.setEmail(request.getEmail().trim());
         if (request.getPhone() != null) user.setPhone(request.getPhone().trim());
         if (request.getAddress() != null) user.setAddress(request.getAddress().trim());
-        if (request.getStatus() != null) user.setStatus(request.getStatus().trim().toUpperCase());
+        if (request.getStatus() != null) user.setStatus(StaffStatusEnum.valueOf(request.getStatus().toString().trim().toUpperCase()) );
 
         userRepository.save(user);
 
@@ -146,7 +149,8 @@ public class AdminService {
         // 4️⃣ Cập nhật renter detail
         if (request.getIsRisky() != null) renterDetail.setIsRisky(request.getIsRisky());
         if (request.getVerificationStatus() != null)
-            renterDetail.setVerificationStatus(request.getVerificationStatus().trim().toUpperCase());
+            renterDetail.setVerificationStatus(RenterDetailVerificationStatusEnum.valueOf(
+                    request.getVerificationStatus().trim().toUpperCase()));
 
         // Nếu entity có quan hệ OneToOne tới User
         try {
@@ -167,7 +171,7 @@ public class AdminService {
             AdminGetAllReportResponse.AdminGetAllReportResponseBuilder b = AdminGetAllReportResponse.builder()
                     .reportId(report.getReportId())
                     .description(report.getDescription())
-                    .status(report.getStatus())
+                    .status(report.getStatus().toString())
                     .createdAt(report.getCreatedAt());
 
             // Staff info
@@ -209,7 +213,7 @@ public class AdminService {
 
         return reportRepository.findById(request.getReportId())
                 .map(report -> {
-                    report.setStatus(request.getStatus());
+                    report.setStatus(ReportStatusEnum.valueOf(request.getStatus()));
                     reportRepository.save(report);
                     return "Update report status success";
                 })
@@ -228,7 +232,7 @@ public class AdminService {
         BookingAdminDto.BookingAdminDtoBuilder builder = BookingAdminDto.builder();
 
         builder.bookingId(booking.getBookingId());
-        builder.status(booking.getStatus());
+        builder.status(booking.getStatus().toString());
         builder.createdAt(booking.getCreatedAt());
         builder.startTime(booking.getStartTime());
         builder.expectedReturnTime(booking.getExpectedReturnTime());

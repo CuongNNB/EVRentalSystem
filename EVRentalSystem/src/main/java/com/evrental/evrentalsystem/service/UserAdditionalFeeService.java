@@ -40,7 +40,7 @@ public class UserAdditionalFeeService {
                 res.setBookingId(null);
             }
         }
-        res.setFeeName(fee.getFeeName());
+        res.setFeeName(fee.getFeeName().toString());
         res.setAmount(fee.getAmount());
         res.setDescription(fee.getDescription());
         res.setCreatedAt(fee.getCreatedAt());

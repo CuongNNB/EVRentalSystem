@@ -884,7 +884,7 @@ public class StaffAdminService {
         user.setPhone(phone);
         user.setAddress(address);
         user.setRole(role);
-        user.setStatus("ACTIVE");
+        user.setStatus(StaffStatusEnum.ACTIVE);
 
         User saved = userRepository.save(user);
 
@@ -900,8 +900,8 @@ public class StaffAdminService {
                 .email(saved.getEmail())
                 .phone(saved.getPhone())
                 .address(saved.getAddress())
-                .position(saved.getRole())
-                .status(saved.getStatus())
+                .position(saved.getRole().toString())
+                .status(saved.getStatus().toString())
                 .stationId(station.getStationId())
                 .stationName(station.getStationName())
                 .createdAt(saved.getCreatedAt())
@@ -914,18 +914,18 @@ public class StaffAdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nhân viên không tồn tại"));
 
         // 2) Chỉ cho phép xóa STAFF
-        String role = user.getRole() == null ? "" : user.getRole().trim().toUpperCase();
+        String role = user.getRole() == null ? "" : user.getRole().toString().trim().toUpperCase();
         if (!"STAFF".equals(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ được xóa tài khoản STAFF");
         }
 
         // 3) Nếu đã INACTIVE thì bỏ qua
-        if ("INACTIVE".equalsIgnoreCase(user.getStatus())) {
+        if ("INACTIVE".equalsIgnoreCase(user.getStatus().toString())) {
             return;
         }
 
         // 4) Soft delete
-        user.setStatus(StaffStatusEnum.INACTIVE.name());
+        user.setStatus(StaffStatusEnum.INACTIVE);
         userRepository.save(user);
     }
 }
