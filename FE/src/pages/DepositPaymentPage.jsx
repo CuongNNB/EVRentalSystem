@@ -21,14 +21,6 @@ const DepositPaymentPage = () => {
 
     const paymentMethods = [
         {
-            id: 'bank-transfer',
-            name: 'Chuyển khoản ngân hàng',
-            description: 'Chuyển khoản qua ngân hàng trong nước',
-            icon: CreditCard,
-            color: '#10b981',
-            qr: '/qrimage/bank_qr.png'
-        },
-        {
             id: 'momo',
             name: 'Ví MoMo',
             description: 'Thanh toán nhanh chóng qua ví MoMo',
@@ -37,13 +29,19 @@ const DepositPaymentPage = () => {
             qr: '/qrimage/momo_qr.png'
         },
         {
-            id: 'ewallet',
-            name: 'Ví điện tử khác',
-            description: 'ZaloPay, ShopeePay, ViettelPay, VNPAY',
-            icon: Wallet,
-            color: '#3b82f6',
-            qr: '/qrimage/ewallet_qr.png'
-        }
+            id: 'vietqr', // Đổi ID từ bank-transfer sang vietqr để khớp logic
+            name: 'Chuyển khoản ngân hàng',
+            description: 'Quét mã VietQR để chuyển khoản tới VietinBank',
+            icon: Wallet, // Hoặc CreditCard tuỳ bạn chọn icon
+            color: '#0ea5a3',
+            qr: null, // Để null vì sẽ generate link động
+            qrMeta: {
+                bankId: 'vietinbank',
+                accountNo: '106878468586',
+                accountName: 'NGUYEN NGOC BAO CUONG',
+                template: 'TgCTXTW'
+            }
+        },
     ];
 
     useEffect(() => {
@@ -63,7 +61,7 @@ const DepositPaymentPage = () => {
                 phone: fb.user?.phone,
                 address: fb.user?.address || 'Không rõ'
             },
-            
+
             car: {
                 name: fb.carData?.name,
                 licensePlate: fb.carData?.licensePlate,
@@ -268,7 +266,7 @@ const DepositPaymentPage = () => {
     const depositAmount = summaryData?.depositAmount ?? 0;
     const pricePerDay = summaryData?.pricePerDay ?? 0;
     const rentalDays = summaryData?.days ?? '1 ngày 0 giờ';
-    const stationName = summaryData?.rental?.pickupLocation ?? fullBooking?.bookingPayload?.pickupLocation ??  'Không rõ';
+    const stationName = summaryData?.rental?.pickupLocation ?? fullBooking?.bookingPayload?.pickupLocation ?? 'Không rõ';
     const startTimeDisplay = summaryData?.rental?.startDate ?? summaryData?.rental?.pickupDateTime ?? (fullBooking?.bookingPayload?.startTime || fullBooking?.startTime);
     const endTimeDisplay = summaryData?.rental?.endDate ?? summaryData?.rental?.returnDateTime ?? (fullBooking?.bookingPayload?.expectedReturnTime || fullBooking?.expectedReturnTime);
 
@@ -398,15 +396,41 @@ const DepositPaymentPage = () => {
                         <button className="close-btn" onClick={() => setShowQRModal(false)} style={{ position: 'absolute', right: 12, top: 12, border: 'none', background: 'transparent' }}>
                             <X />
                         </button>
-
                         <h3 style={{ marginTop: 0 }}>Quét mã QR để thanh toán</h3>
-                        <p style={{ color: '#64748b' }}>Sử dụng ứng dụng {selectedMethod === 'momo' ? 'MoMo' : 'ngân hàng'} để quét mã.</p>
+                        {/* ... code mới ... */}
+                        {selectedMethod === 'vietqr' ? (
+                            (() => {
+                                const pm = paymentMethods.find(m => m.id === 'vietqr');
+                                const meta = pm?.qrMeta || {};
 
-                        <img
-                            src={paymentMethods.find(m => m.id === selectedMethod)?.qr}
-                            alt="QR Code"
-                            className="qr-image"
-                        />
+                                // QUAN TRỌNG: Ở DepositPage biến chứa tiền là depositAmount (khác với finalTotal ở Checkout)
+                                const amount = Number(depositAmount || 0);
+
+                                // Nội dung chuyển khoản: "Dat coc [Mã hợp đồng]"
+                                const codeInfo = summaryData?.contractCode || extractBookingId()?.code || 'Booking';
+                                const addInfo = `Dat coc ${codeInfo}`;
+
+                                const accountName = meta.accountName || '';
+
+                                // Tạo URL VietQR
+                                const query = new URLSearchParams({
+                                    amount: String(amount),
+                                    addInfo: addInfo,
+                                    accountName: accountName
+                                }).toString();
+
+                                const qrUrl = `https://img.vietqr.io/image/${meta.bankId}-${meta.accountNo}-${meta.template}.png?${query}`;
+
+                                return <img src={qrUrl} alt="VietQR Code" className="qr-image" />;
+                            })()
+                        ) : (
+                            // Các phương thức khác (Momo,...) dùng ảnh tĩnh như cũ
+                            <img
+                                src={paymentMethods.find(m => m.id === selectedMethod)?.qr || '/qrimage/placeholder.png'}
+                                alt="QR Code"
+                                className="qr-image"
+                            />
+                        )}
 
                         <button
                             className="qr-confirm-btn"
