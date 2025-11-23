@@ -137,6 +137,22 @@ public class VehicleManagementController {
         return ResponseEntity.ok(resp);
     }
 
+    @GetMapping("/models/brand-model")
+    public ResponseEntity<List<Map<String, String>>> getBrandModelNames() {
+        List<VehicleModel> models = vehicleManagementService.findAllVehicleModels();
+
+        List<Map<String, String>> response = models.stream()
+                .map(m -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("id", String.valueOf(m.getVehicleId()));
+                    map.put("name", m.getBrand() + " " + m.getModel()); // Ví dụ: "VinFast VF8"
+                    return map;
+                })
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/model-image/{modelId}/*")
     public ResponseEntity<byte[]> getVehicleModelImage(@PathVariable Integer modelId) {
         VehicleModel vd = vehicleManagementService.findVehicleModelEntity(modelId);
@@ -187,4 +203,5 @@ public class VehicleManagementController {
         return ResponseEntity.ok(response);
     }
     // </editor-fold>
+
 }

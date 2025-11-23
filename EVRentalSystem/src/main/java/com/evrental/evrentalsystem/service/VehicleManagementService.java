@@ -180,6 +180,11 @@ public class VehicleManagementService {
                 .collect(Collectors.toList());
     }
 
+    // Lấy tất cả entity VehicleModel để controller dùng
+    public List<VehicleModel> findAllVehicleModels() {
+        return vehicleModelRepository.findAll();
+    }
+
     public AdminGetModelDetailResponse getModelDetail(Integer modelId) {
         VehicleModel vm = vehicleModelRepository.findById(modelId)
                 .orElseThrow(() -> new RuntimeException("Vehicle model not found with id: " + modelId));
