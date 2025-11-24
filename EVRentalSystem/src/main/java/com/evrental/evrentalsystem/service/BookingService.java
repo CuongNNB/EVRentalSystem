@@ -40,7 +40,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Station not found"));
 
         VehicleDetail vehicleDetail = vehicleDetailRepository
-                .findFirstByVehicleModelAndStatus(model, "AVAILABLE")
+                .findFirstByVehicleModelAndStatus(model, VehicleStatus.AVAILABLE)
                 .orElse(null);
 
         if (vehicleDetail == null) {

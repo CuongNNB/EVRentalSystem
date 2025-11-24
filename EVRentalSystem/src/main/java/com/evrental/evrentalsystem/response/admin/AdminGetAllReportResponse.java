@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.response.admin;
 
+import com.evrental.evrentalsystem.enums.ReportStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 public class AdminGetAllReportResponse {
     private Integer reportId;
     private String description;
-    private String status;
+    private ReportStatusEnum status;
     private LocalDateTime createdAt;
 
     private Integer staffId;

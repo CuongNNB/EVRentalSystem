@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.controller.staff;
 
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.request.ConfirmDepositPaymentRequest;
 import com.evrental.evrentalsystem.response.ApiResponse;
 import com.evrental.evrentalsystem.response.staff.BookingDetailsByBookingResponse;
@@ -51,7 +52,7 @@ public class BookingController {
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateBookingStatus(
             @PathVariable int id,
-            @RequestParam String status) {
+            @RequestParam BookingStatus status) {
 
         try {
             boolean updated = staffService.changeStatus(id, status);

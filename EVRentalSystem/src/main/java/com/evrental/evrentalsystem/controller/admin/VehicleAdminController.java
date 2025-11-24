@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.controller.admin;
 
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.request.CreateVehicleRequest;
 import com.evrental.evrentalsystem.request.UpdateVehicleRequest;
@@ -31,18 +32,16 @@ public class VehicleAdminController {
         }
 
         Integer stationId = (Integer) payload.get("stationId");
-        Map<String, Long> stats = new LinkedHashMap<>();
+        Map<VehicleStatus, Long> stats = new LinkedHashMap<>();
 
         if (stationId == null || stationId == 0) {
-            stats.put("total", vehicleDetailRepository.count());
-            stats.put("available", vehicleDetailRepository.countByStatus("AVAILABLE"));
-            stats.put("rented", vehicleDetailRepository.countByStatus("RENTED"));
-            stats.put("fixing", vehicleDetailRepository.countByStatus("FIXING"));
+            stats.put(VehicleStatus.AVAILABLE, vehicleDetailRepository.countByStatus(VehicleStatus.AVAILABLE));
+            stats.put(VehicleStatus.RENTED, vehicleDetailRepository.countByStatus(VehicleStatus.RENTED));
+            stats.put(VehicleStatus.RENTED, vehicleDetailRepository.countByStatus(VehicleStatus.RENTED));
         } else {
-            stats.put("total", vehicleDetailRepository.countVehiclesByStationId(stationId));
-            stats.put("available", vehicleDetailRepository.countByStationIdAndStatus(stationId, "AVAILABLE"));
-            stats.put("rented", vehicleDetailRepository.countByStationIdAndStatus(stationId, "RENTED"));
-            stats.put("fixing", vehicleDetailRepository.countByStationIdAndStatus(stationId, "FIXING"));
+            stats.put(VehicleStatus.AVAILABLE, vehicleDetailRepository.countByStatus(VehicleStatus.AVAILABLE));
+            stats.put(VehicleStatus.RENTED, vehicleDetailRepository.countByStatus(VehicleStatus.RENTED));
+            stats.put(VehicleStatus.RENTED, vehicleDetailRepository.countByStatus(VehicleStatus.RENTED));
         }
 
         return ResponseEntity.ok(stats);

@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.repository;
 
 import com.evrental.evrentalsystem.entity.User;
+import com.evrental.evrentalsystem.enums.UserEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
 
-    List<User> findByRole(String role);  // Tìm người dùng theo role (ADMIN, STAFF, RENTER)
+    List<User> findByRole(UserEnum role);  // Tìm người dùng theo role (ADMIN, STAFF, RENTER)
     List<User> findByStatus(String status);  // Tìm người dùng theo trạng thái
 
     @Query("""

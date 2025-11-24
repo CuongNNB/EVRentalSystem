@@ -115,7 +115,7 @@ public class StaffService {
         // Thu thập các đối tượng vào danh sách
     }
 
-    public boolean changeStatus(int id, String status) {
+    public boolean changeStatus(int id, BookingStatus status) {
         try {
             int updated = bookingRepository.updateBookingStatus(id, status);
             if (updated > 0) {
@@ -132,7 +132,7 @@ public class StaffService {
     }
 
     public List<VehicleIdAndLicensePlateResponse> getAllAvailableVehiclesInStationAndModel(int modelId, int stationId) {
-        List<VehicleDetail> vehicles = vehicleDetailRepository.findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(modelId, stationId, "AVAILABLE");
+        List<VehicleDetail> vehicles = vehicleDetailRepository.findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(modelId, stationId, VehicleStatus.AVAILABLE);
         return vehicles.stream()
                 .map(vehicle -> new VehicleIdAndLicensePlateResponse(
                         vehicle.getId(),
@@ -158,7 +158,7 @@ public class StaffService {
     }
 
     public boolean changeVehicleStatus(Integer vehicleId, String newStatus) {
-        int updated = vehicleDetailRepository.updateVehicleStatusById(vehicleId, newStatus);
+        int updated = vehicleDetailRepository.updateVehicleStatusById(vehicleId, VehicleStatus.valueOf(newStatus));
         return updated > 0;
     }
 
@@ -500,7 +500,7 @@ public class StaffService {
     }
 
     public List<GetAllAdminResponse> getAllAdmins() {
-        return userRepository.findByRole("ADMIN")
+        return userRepository.findByRole(UserEnum.ADMIN)
                 .stream()
                 .map(u -> new GetAllAdminResponse(
                         u.getUserId(),

@@ -113,7 +113,7 @@ public class InspectionService {
                 booking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup);
                 bookingRepository.save(booking);
             });
-            int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+            int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED);
         }
         return inspectionRepository.saveAll(inspections);
     }
@@ -138,19 +138,19 @@ public class InspectionService {
                 booking.setStatus(BookingStatus.Currently_Renting);
                 bookingRepository.save(booking);
             });
-            int deleted = inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+            int deleted = inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED);
         }
         return inspectionAfterRepository.saveAll(inspections);
     }
 
     @Transactional
     public int deleteRejectedInspectionsByBookingId(Integer bookingId) {
-        return inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+        return inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED);
     }
 
     @Transactional
     public int deleteRejectedInspectionsAfterByBookingId(Integer bookingId) {
-        return inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED.toString());
+        return inspectionAfterRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED);
     }
 
     @Transactional

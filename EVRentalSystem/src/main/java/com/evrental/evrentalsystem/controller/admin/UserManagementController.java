@@ -3,6 +3,8 @@ package com.evrental.evrentalsystem.controller.admin;
 
 import com.evrental.evrentalsystem.entity.RenterDetail;
 import com.evrental.evrentalsystem.entity.User;
+import com.evrental.evrentalsystem.enums.StaffStatusEnum;
+import com.evrental.evrentalsystem.enums.UserEnum;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.response.admin.BookingAdminDto;
 import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
@@ -28,7 +30,7 @@ public class UserManagementController {
     //API: http://localhost:8084/EVRentalSystem/api/user-management/renters
     @GetMapping("/renters")
     public List<GetAllUserResponse> getAllRenters() {
-        return adminService.getAllUsersByRole("RENTER");
+        return adminService.getAllUsersByRole(UserEnum.RENTER);
     }
 
     //API: http://localhost:8084/EVRentalSystem/api/user-management/{userId}/renter-detail

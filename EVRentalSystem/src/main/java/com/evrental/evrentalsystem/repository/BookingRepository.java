@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.repository;
 
 import com.evrental.evrentalsystem.entity.Booking;
+import com.evrental.evrentalsystem.enums.BookingStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Modifying
     @Transactional
     @Query("UPDATE Booking u SET u.status = :status WHERE u.bookingId = :id")
-    int updateBookingStatus(@Param("id") int id, @Param("status") String status);
+    int updateBookingStatus(@Param("id") int id, @Param("status") BookingStatus status);
 
     // User bookings
     List<Booking> findAllByRenter_UserId(Integer userId);

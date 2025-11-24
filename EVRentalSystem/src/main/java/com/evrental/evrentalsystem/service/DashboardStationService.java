@@ -1,6 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.Station;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.response.vehicle.FixingVehicleResponse;
@@ -36,15 +37,13 @@ public class DashboardStationService {
                             st.getStationId(), start, endEx));
 
                     long totalV = nz(vehicleDetailRepository.countVehiclesByStationId(st.getStationId()));
-                    long rentedV = vehicleDetailRepository.countByStationIdAndStatus(st.getStationId(), "RENTED");
-                    double util = totalV == 0 ? 0.0 : rentedV * 1.0 / totalV;
+
 
                     return TopStationsResponse.StationRow.builder()
                             .stationId(st.getStationId())
                             .stationName(st.getStationName())
                             .rentals(rentals)
                             .revenue(revenue)
-                            .utilizationRate(util)
                             .build();
                 }).sorted(Comparator
                         .comparing(TopStationsResponse.StationRow::getRevenue).reversed()
@@ -64,7 +63,7 @@ public class DashboardStationService {
 
     public RentedVehicleResponse rentedByStation(Integer stationId) {
         Station st = station(stationId);
-        long rented = vehicleDetailRepository.countByStationIdAndStatus(stationId, "RENTED");
+        long rented = vehicleDetailRepository.countByStationIdAndStatus(stationId, VehicleStatus.RENTED);
         return new RentedVehicleResponse(st.getStationId(), st.getStationName(), rented);
     }
 

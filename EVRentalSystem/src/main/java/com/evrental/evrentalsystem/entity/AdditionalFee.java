@@ -22,6 +22,7 @@ public class AdditionalFee {
 
     @Enumerated(EnumType.STRING)
     private AdditionalFeeEnum feeName;
+
     private Double amount;
 
     @Lob

@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.entity.VehicleModel;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.StationRepository;
 import com.evrental.evrentalsystem.repository.VehicleDetailRepository;
 import com.evrental.evrentalsystem.repository.VehicleModelRepository;
@@ -31,7 +32,7 @@ public class VehicleService {
         List<VehicleModel> models = vehicleModelRepository.findAll();
 
         return models.stream().map(m -> {
-            long count = vehicleDetailRepository.countByVehicleModel_VehicleIdAndStatus(m.getVehicleId(), "AVAILABLE");
+            long count = vehicleDetailRepository.countByVehicleModel_VehicleIdAndStatus(m.getVehicleId(), VehicleStatus.AVAILABLE);
             return new VehicleDetailResponse(
                     m.getVehicleId(),
                     m.getBrand(),

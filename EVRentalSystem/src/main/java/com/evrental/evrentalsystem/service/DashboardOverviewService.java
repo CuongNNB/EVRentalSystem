@@ -1,5 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
+import com.evrental.evrentalsystem.enums.UserEnum;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.admin.*;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +35,10 @@ public class DashboardOverviewService {
         LocalDateTime t1 = today.plusDays(1).atStartOfDay(ZONE).toLocalDateTime();
         int rentalsToday = bookingRepository.countByStartTimeBetween(t0, t1);
 
-        int totalCustomers = userRepository.findByRole("RENTER").size();
+        int totalCustomers = userRepository.findByRole(UserEnum.RENTER).size();
         long totalVehicles = vehicleDetailRepository.count();
-        long rentedVehicles = vehicleDetailRepository.countByStatus("RENTED");
-        double utilization = totalVehicles == 0 ? 0.0 : (rentedVehicles * 1.0 / totalVehicles);
+
+
 
         // So sánh kỳ trước (để tính phần trăm tăng trưởng)
         long days = windowDays(r[0], r[1]);
@@ -54,7 +56,6 @@ public class DashboardOverviewService {
                 .totalRevenue(totalRevenue)
                 .rentalsToday(rentalsToday)
                 .totalCustomers(totalCustomers)
-                .utilizationRate(utilization)
                 .delta(OverviewMetricsResponse.Delta.builder()
                         .revenue(pctDelta(prevRevenue, totalRevenue))
                         .rentals(pctDelta(prevRentals, rentalsToday))

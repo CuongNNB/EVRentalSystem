@@ -4,6 +4,7 @@ import com.evrental.evrentalsystem.entity.*;
 import com.evrental.evrentalsystem.enums.RenterDetailVerificationStatusEnum;
 import com.evrental.evrentalsystem.enums.ReportStatusEnum;
 import com.evrental.evrentalsystem.enums.StaffStatusEnum;
+import com.evrental.evrentalsystem.enums.UserEnum;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.request.UpdateReportStatusRequest;
@@ -80,7 +81,7 @@ public class AdminService {
 
 
     //GetALllRenter
-    public List<GetAllUserResponse> getAllUsersByRole(String role) {
+    public List<GetAllUserResponse> getAllUsersByRole(UserEnum role) {
         return userRepository.findByRole(role)
                 .stream()
                 .map(user -> new GetAllUserResponse(
@@ -171,7 +172,7 @@ public class AdminService {
             AdminGetAllReportResponse.AdminGetAllReportResponseBuilder b = AdminGetAllReportResponse.builder()
                     .reportId(report.getReportId())
                     .description(report.getDescription())
-                    .status(report.getStatus().toString())
+                    .status(report.getStatus())
                     .createdAt(report.getCreatedAt());
 
             // Staff info

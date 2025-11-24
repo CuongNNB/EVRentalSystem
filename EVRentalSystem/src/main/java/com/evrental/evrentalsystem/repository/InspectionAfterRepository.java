@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.repository;
 
 import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.InspectionAfter;
+import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,7 +19,7 @@ public interface InspectionAfterRepository extends JpaRepository<InspectionAfter
     @Modifying
     @Transactional
     @Query("delete from InspectionAfter i where i.booking.bookingId = :bookingId and i.status = :status")
-    int deleteByBookingIdAndStatus(Integer bookingId, String status);
+    int deleteByBookingIdAndStatus(Integer bookingId, InspectionStatusEnum status);
 
     List<InspectionAfter> findByBookingBookingId(Integer bookingId);
 }

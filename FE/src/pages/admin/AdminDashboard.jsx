@@ -193,9 +193,6 @@ export function AdminOverview() {
             <KpiCard title="KHÁCH HÀNG" value={num(m?.customersTotal)}
               sub={m?.deltaCustomersMoM != null && `So với tháng trước: ${formatPercent(m?.deltaCustomersMoM)}`}
               icon="👥" gradient="linear-gradient(135deg,#4facfe,#00f2fe)" />
-            <KpiCard title="TỶ LỆ SỬ DỤNG" value={formatPercent(num(m?.utilizationRate))}
-              sub={m?.deltaUtilizationWoW != null && `So với tuần trước: ${formatPercent(m?.deltaUtilizationWoW)}`}
-              icon="📊" gradient="linear-gradient(135deg,#fa709a,#fee140)" />
           </>
         )}
       </div>

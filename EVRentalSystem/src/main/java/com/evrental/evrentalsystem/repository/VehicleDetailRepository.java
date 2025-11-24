@@ -37,7 +37,7 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     """)
     Long countRentedVehiclesByStationId(@Param("stationId") Integer stationId);
 
-    long countByVehicleModel_VehicleIdAndStatus(Integer vehicleId, String status);
+    long countByVehicleModel_VehicleIdAndStatus(Integer vehicleId, VehicleStatus status);
 
     @Query("""
         SELECT v FROM VehicleDetail v
@@ -59,15 +59,15 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
     List<VehicleDetail> findAllByVehicleModel_VehicleIdAndStation_StationIdAndStatus(
             Integer vehicleModelId,
             Integer stationId,
-            String status
+            VehicleStatus status
     );
 
     @Modifying
     @Transactional
     @Query("UPDATE VehicleDetail v SET v.status = :status WHERE v.id = :id")
-    int updateVehicleStatusById(@Param("id") Integer id, @Param("status") String status);
+    int updateVehicleStatusById(@Param("id") Integer id, @Param("status") VehicleStatus status);
 
-    Optional<VehicleDetail> findFirstByVehicleModelAndStatus(VehicleModel vehicleModel, String status);
+    Optional<VehicleDetail> findFirstByVehicleModelAndStatus(VehicleModel vehicleModel, VehicleStatus status);
 
     @Query("""
         SELECT v FROM VehicleDetail v
@@ -99,14 +99,14 @@ public interface VehicleDetailRepository extends JpaRepository<VehicleDetail, In
           and upper(v.status) = upper(:status)
     """)
     long countByStationIdAndStatus(@Param("stationId") Integer stationId,
-                                   @Param("status") String status);
+                                   @Param("status") VehicleStatus status);
 
 
     @Query("""
         select count(v) from VehicleDetail v
         where upper(v.status) = upper(:status)
     """)
-    long countByStatus(@Param("status") String status);
+    long countByStatus(@Param("status") VehicleStatus status);
 
 
     List<VehicleDetail> findByStationStationId(Integer stationId);

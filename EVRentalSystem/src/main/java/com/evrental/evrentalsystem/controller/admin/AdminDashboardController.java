@@ -19,6 +19,7 @@ public class AdminDashboardController {
     private final AdminDashboardService dashboard;
 
     // ===== Overview =====
+    //API: http://localhost:8084/EVRentalSystem/api/admin/overview/metrics
     @GetMapping("/overview/metrics")
     public OverviewMetricsResponse getMetrics(@RequestParam(required = false) String from,
                                               @RequestParam(required = false) String to) {
@@ -43,7 +44,7 @@ public class AdminDashboardController {
     public RecentRentalsResponse getRecentRentals(@RequestParam(required = false, defaultValue = "10") Integer limit) {
         return dashboard.getRecentRentals(limit);
     }
-
+    //API: http://localhost:8084/EVRentalSystem/api/admin/overview/activity?limit=10
     @GetMapping("/overview/activity")
     public ActivityFeedResponse getActivity(@RequestParam(required = false, defaultValue = "10") Integer limit) {
         return dashboard.getActivityFeed(limit);

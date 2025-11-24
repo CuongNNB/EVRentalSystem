@@ -29,7 +29,9 @@
         private String batteryCapacity;
         private Integer odo;
         private String picture;
+
         @Enumerated(EnumType.STRING)
         private VehicleStatus status;
+
         private String color;
     }

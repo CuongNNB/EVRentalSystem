@@ -30,7 +30,9 @@ public class Report {
 
     @Lob
     private String description;
+
     @Enumerated(EnumType.STRING)
     private ReportStatusEnum status;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 }
