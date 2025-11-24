@@ -39,4 +39,11 @@ public class UserReviewController {
         List<CreateReviewResponse> list = reviewService.getReviewsByCarModelId(modelId);
         return ResponseEntity.ok(list);
     }
+
+    //API: http://localhost:8084/EVRentalSystem/api/reviews/check-exist?bookingId=1
+    @GetMapping("/check-exist")
+    public ResponseEntity<String> checkExistReview(@RequestParam Integer bookingId) {
+        String message = reviewService.checkReviewExist(bookingId);
+        return ResponseEntity.ok(message);
+    }
 }

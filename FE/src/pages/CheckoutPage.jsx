@@ -47,7 +47,7 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                 template: 'TgCTXTW'
             }
         },
-        
+
     ];
 
     useEffect(() => {
@@ -415,7 +415,6 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
         setShowQRModal(true);
     };
 
-
     // Gọi API khi người dùng xác nhận "Tôi đã thanh toán"
     const handleConfirmPayment = async () => {
         try {
@@ -424,82 +423,75 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
                 return;
             }
 
-            // Lấy bookingId: cố gắng lấy từ các trường phổ biến
+            // Lấy bookingId
             const rawBookingId = summary.contractCode ?? summary.bookingId ?? summary.id ?? null;
             const bookingIdParsed = Number.isInteger(Number(rawBookingId)) ? Number(rawBookingId) : null;
 
             if (!bookingIdParsed) {
-                showToast && showToast('BookingId không hợp lệ — không thể gửi yêu cầu thanh toán', 'error');
-                console.error('Invalid bookingId from summary:', rawBookingId, 'summary:', summary);
+                showToast && showToast('BookingId không hợp lệ', 'error');
                 return;
             }
 
-            // promotionId có thể null
             const promotionId = couponApplied ? (couponApplied.id ?? couponApplied.promotionId ?? null) : null;
-
-            // totalCharge: dùng giá trị bạn đã tính (finalTotal) hoặc fallback sang summary.totalEstimate...
             const totalCharge = Number(rentalTotal + extraFeesSum - depositAmount - discountAmount);
-
-            if (!totalCharge) {
-                // nếu totalCharge = 0 thì vẫn có thể hợp lệ, nhưng log để kiểm tra
-                console.warn('totalCharge is falsy:', totalCharge, { finalTotal, summary });
-            }
 
             const body = {
                 bookingId: bookingIdParsed,
-                promotionId: promotionId, // null nếu không có khuyến mãi
+                promotionId: promotionId,
                 total: totalCharge
             };
 
             setPaying(true);
 
-            // Endpoint mới (không chứa bookingId trong URL)
-            const url = 'http://localhost:8084/EVRentalSystem/api/bookings/payment';
-
-            console.info('Sending payment update to', url, 'body:', body);
-
-            const resp = await fetch(url, {
+            // 1. Gọi API cập nhật thanh toán
+            const urlPayment = 'http://localhost:8084/EVRentalSystem/api/bookings/payment';
+            const resp = await fetch(urlPayment, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                    // nếu cần auth: 'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
 
-            // cố parse JSON (nếu response không phải JSON thì respJson = {})
             const respJson = await resp.json().catch(() => ({}));
 
             if (resp.ok) {
                 const msg = respJson.message ?? 'Thanh toán cập nhật thành công';
                 showToast && showToast(msg, 'success');
-
-                // đóng modal QR nếu có
                 setShowQRModal && setShowQRModal(false);
 
-                // → CHUYỂN HƯỚNG SANG TRANG TẠO REVIEW, TRUYỀN bookingId QUA state
-                // Giữ delay nhỏ để user kịp thấy toast/modal
-                setTimeout(() => {
+                // 2. Logic kiểm tra Review trước khi điều hướng
+                setTimeout(async () => {
                     try {
-                        navigate('/create-review', { state: { bookingId: bookingIdParsed } });
-                    } catch (navErr) {
-                        console.error('Navigate to create-review failed:', navErr);
-                        // fallback: quay lại trang trước
-                        if (typeof navigate === 'function') navigate(-1);
-                        else window.location.reload();
-                    }
-                }, 700);
-            } else {
-                // hiển thị lỗi chi tiết để debug
-                const code = respJson.code ?? resp.status;
-                const message = respJson.message ?? resp.statusText ?? `HTTP ${resp.status}`;
-                showToast && showToast(`Lỗi (${code}): ${message}`, 'error');
+                        // Gọi API checkExistReview
+                        const urlCheckReview = `http://localhost:8084/EVRentalSystem/api/reviews/check-exist?bookingId=${bookingIdParsed}`;
+                        const checkResp = await fetch(urlCheckReview);
 
-                console.error('Payment update failed', {
-                    status: resp.status,
-                    body: respJson,
-                    sentBody: body
-                });
+                        // Backend trả về String (Text plain) nên dùng .text()
+                        const checkMsg = await checkResp.text();
+
+                        console.log("Check Review Result:", checkMsg);
+
+                        // Logic dựa trên chuỗi trả về từ Backend (Controller/Service cũ):
+                        // Case 1: "Review đã tồn tại..."
+                        // Case 2: "Chưa có Review nào..."
+                        if (checkMsg && checkMsg.includes("đã tồn tại")) {
+                            // Đã có review -> Về trang chủ
+                            navigate('/my-bookings');
+                        } else {
+                            // Chưa có review -> Qua trang tạo review
+                            navigate('/create-review', { state: { bookingId: bookingIdParsed } });
+                        }
+
+                    } catch (err) {
+                        console.error('Lỗi khi kiểm tra review tồn tại:', err);
+                        // Fallback: Nếu lỗi mạng khi check, ưu tiên cho user đi tạo review (hoặc về home tùy bạn chọn)
+                        navigate('/create-review', { state: { bookingId: bookingIdParsed } });
+                    }
+                }, 1000); // Tăng delay lên 1s để user kịp đọc thông báo thanh toán thành công
+
+            } else {
+                const code = respJson.code ?? resp.status;
+                const message = respJson.message ?? resp.statusText;
+                showToast && showToast(`Lỗi (${code}): ${message}`, 'error');
             }
         } catch (err) {
             console.error('Lỗi gọi API payment:', err);
@@ -508,8 +500,6 @@ const CheckOutPage = ({ forwardedFromParent = null, embedded = false }) => {
             setPaying(false);
         }
     };
-
-
     // If there's no summary (shouldn't happen, but safe guard)
     if (!summary) {
         return (

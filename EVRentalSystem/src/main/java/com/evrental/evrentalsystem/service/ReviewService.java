@@ -88,4 +88,15 @@ public class ReviewService {
                     .build();
         }).collect(Collectors.toList());
     }
+
+    public String checkReviewExist(Integer bookingId) {
+        // Gọi hàm check từ repository
+        boolean exists = reviewRepository.existsByBooking_BookingId(bookingId);
+
+        if (exists) {
+            return "Review đã tồn tại cho Booking ID: " + bookingId;
+        } else {
+            return "Chưa có Review nào cho Booking ID: " + bookingId;
+        }
+    }
 }

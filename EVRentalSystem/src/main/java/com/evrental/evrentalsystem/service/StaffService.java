@@ -497,6 +497,9 @@ public class StaffService {
         r.setCreatedAt(LocalDateTime.now());
         r.setStatus(ReportStatusEnum.PENDING);
         reportRepository.save(r);
+
+        vd.setStatus(VehicleStatus.FIXING);
+        vehicleDetailRepository.save(vd);
     }
 
     public List<GetAllAdminResponse> getAllAdmins() {
