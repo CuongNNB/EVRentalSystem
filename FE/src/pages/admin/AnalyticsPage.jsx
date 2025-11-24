@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { getAllReports, updateReportStatus, getStationIdByStaff } from "../../api/reportAdmin";
 import "./AnalyticsPage.css";
+import { REPORT_STATUS, canChangeReportStatus, getAvailableNextStatuses } from "../../api/reportAdmin";
 
 const STATUS_OPTIONS = ["PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"];
 
@@ -145,9 +146,8 @@ export default function AnalyticsPage() {
       {/* Stats */}
       <section className="stats">
         <StatCard label="Tổng báo cáo" value={stats.total} />
-        {Object.entries(stats.byStatus).map(([k, v]) => (
-          <StatCard key={k} label={k} value={v} />
-        ))}
+        <StatCard label="PENDING" value={stats.byStatus.PENDING || 0} />
+        <StatCard label="IN_PROGRESS" value={stats.byStatus.IN_PROGRESS || 0} />
       </section>
 
       {/* Filters */}
@@ -228,23 +228,60 @@ function RowAction({ currentStatus, onUpdate }) {
   const [saving, setSaving] = useState(false);
   useEffect(() => setValue(currentStatus), [currentStatus]);
 
-  const save = async () => {
-    if (value === currentStatus) return;
-    setSaving(true);
-    try { await onUpdate(value); } finally { setSaving(false); }
-  };
+  const options = useMemo(() => {
+    const allowed = getAvailableNextStatuses(currentStatus);
+    return [currentStatus, ...allowed];
+  }, [currentStatus]);
 
+  const isValidTransition =
+    value !== currentStatus && canChangeReportStatus(currentStatus, value);
+
+  const save = async () => {
+    if (!isValidTransition) return; // Không cần báo lỗi
+    setSaving(true);
+    try {
+      await onUpdate(value);
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <div className="row-action">
       <select className="input" value={value} onChange={(e) => setValue(e.target.value)}>
-        {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+        {options.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
       </select>
-      <button className="btn btn--success" disabled={saving || value === currentStatus} onClick={save}>
+
+      <button
+        className="btn btn--success"
+        disabled={saving || !isValidTransition}
+        onClick={save}
+      >
         {saving ? "Đang lưu..." : "Cập nhật"}
       </button>
     </div>
   );
 }
+// const save = async () => {
+//   if (value === currentStatus) return;
+//   setSaving(true);
+//   try { await onUpdate(value); } finally { setSaving(false); }
+// };
+
+//   return (
+//     <div className="row-action">
+//       <select className="input" value={value} onChange={(e) => setValue(e.target.value)}>
+//         {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+//       </select>
+//       <button className="btn btn--success" disabled={saving || value === currentStatus} onClick={save}>
+//         {saving ? "Đang lưu..." : "Cập nhật"}
+//       </button>
+//     </div>
+//   );
+// }
 
 function StatCard({ label, value }) {
   return (
