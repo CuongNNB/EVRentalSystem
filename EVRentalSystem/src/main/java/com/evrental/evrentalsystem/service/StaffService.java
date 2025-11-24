@@ -364,7 +364,8 @@ public class StaffService {
         c.setStatus(ContractStatusEnum.PENDING);
         c.setStaffManager(staff);
         contractRepository.save(c);
-
+        booking.setStatus(BookingStatus.Pending_Contract_Signing);
+        bookingRepository.save(booking);
         String renterEmail = booking.getRenter().getEmail();
         mailService.sendContractCreatedMail(renterEmail);
     }

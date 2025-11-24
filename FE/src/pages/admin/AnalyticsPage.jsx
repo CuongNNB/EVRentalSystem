@@ -179,7 +179,6 @@ export default function AnalyticsPage() {
               <tr>
                 <th>#</th>
                 <th>Mô tả</th>
-                <th>Trạng thái</th>
                 <th>Thời gian</th>
                 <th>Nhân viên</th>
                 <th>Biển số</th>
@@ -197,11 +196,7 @@ export default function AnalyticsPage() {
                   <tr key={r.reportId}>
                     <td className="mono">{idx + 1}</td>
                     <td className="ellipsis" title={r.description}>{r.description}</td>
-                    <td>
-                      <span className={`badge badge--${(r.status || "PENDING").toLowerCase()}`}>
-                        {(r.status || "").toUpperCase()}
-                      </span>
-                    </td>
+
                     <td>{formatDate(r.createdAt)}</td>
                     <td>
                       <div className="stack">
