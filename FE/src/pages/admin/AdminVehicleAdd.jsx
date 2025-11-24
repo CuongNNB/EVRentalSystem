@@ -54,86 +54,40 @@ const AdminVehicleAdd = () => {
     setFormData(prev => ({ ...prev, batteryCapacity: val }));
   };
 
-  // Fetch dropdown options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         setLoadingOptions(true)
-        const [stationsData] = await Promise.all([
-          getStationOptions()
-        ])
-
+        
+        // 1. Lấy dữ liệu Stations (giữ nguyên)
+        const stationsData = await getStationOptions()
         setStations(stationsData || [])
 
-        // Fetch vehicle models - try multiple methods
-        let modelsFetched = false
-
-        // Try 1: Using adminVehicles API
+        // 2. Lấy dữ liệu Vehicle Models (SỬA ĐOẠN NÀY)
         try {
-          const modelsFromAPI = await getVehicleModels()
-          if (Array.isArray(modelsFromAPI) && modelsFromAPI.length > 0) {
-            // If API returns array of strings, convert to objects
-            if (typeof modelsFromAPI[0] === 'string') {
-              setVehicleModels(modelsFromAPI.map((name, index) => ({
-                id: index + 1,
-                name: name,
-                model: name
-              })))
-            } else {
-              // If already objects, use as is
-              setVehicleModels(modelsFromAPI)
-            }
-            modelsFetched = true
-            console.log('[AdminVehicleAdd] Vehicle models loaded from API:', modelsFromAPI.length)
+          // Gọi đúng API bạn cung cấp
+          const response = await fetch('http://localhost:8084/EVRentalSystem/vehicle-management/models/brand-model', {
+             method: 'GET',
+             headers: {
+               'Content-Type': 'application/json'
+             }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            // API trả về List<Map> có key là "id" và "name"
+            // Cấu trúc: [{"id": "2", "name": "VinFast VF 8"}, ...]
+            // React state sẽ lưu trực tiếp mảng này
+            setVehicleModels(data);
+            console.log('[AdminVehicleAdd] Vehicle models loaded:', data.length);
+          } else {
+             console.error('Failed to fetch vehicle models');
+             setVehicleModels([]); // Hoặc xử lý lỗi tùy ý
           }
-        } catch (apiErr) {
-          console.warn('[AdminVehicleAdd] Could not fetch models from API:', apiErr)
+        } catch (modelErr) {
+          console.error('Error fetching models:', modelErr);
         }
 
-        // Try 2: Direct fetch as fallback
-        if (!modelsFetched) {
-          try {
-            const response = await fetch('http://localhost:8084/EVRentalSystem/api/vehicle/models', {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-              },
-            })
-
-            if (response.ok) {
-              const modelsData = await response.json()
-              if (Array.isArray(modelsData) && modelsData.length > 0) {
-                if (typeof modelsData[0] === 'object' && modelsData[0].id) {
-                  setVehicleModels(modelsData)
-                } else if (typeof modelsData[0] === 'string') {
-                  setVehicleModels(modelsData.map((name, index) => ({
-                    id: index + 1,
-                    name: name,
-                    model: name
-                  })))
-                }
-                modelsFetched = true
-                console.log('[AdminVehicleAdd] Vehicle models loaded from direct fetch:', modelsData.length)
-              }
-            } else {
-              console.warn('[AdminVehicleAdd] Direct fetch returned status:', response.status)
-            }
-          } catch (fetchErr) {
-            console.warn('[AdminVehicleAdd] Direct fetch failed:', fetchErr)
-          }
-        }
-
-        // Fallback: Use default models if all methods fail
-        if (!modelsFetched) {
-          console.warn('[AdminVehicleAdd] All methods failed, using default models')
-          setVehicleModels([
-            { id: 1, name: 'VinFast VF e34', model: 'VF e34' },
-            { id: 2, name: 'VinFast VF 8', model: 'VF 8' },
-            { id: 3, name: 'VinFast VF 9', model: 'VF 9' },
-            { id: 4, name: 'Tesla Model 3', model: 'Model 3' },
-            { id: 5, name: 'Tesla Model Y', model: 'Model Y' }
-          ])
-        }
       } catch (err) {
         console.error('[AdminVehicleAdd] Error fetching options:', err)
         setError('Không thể tải dữ liệu dropdown')

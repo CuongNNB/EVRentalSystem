@@ -137,6 +137,7 @@ public class VehicleManagementController {
         return ResponseEntity.ok(resp);
     }
 
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/models/brand-model
     @GetMapping("/models/brand-model")
     public ResponseEntity<List<Map<String, String>>> getBrandModelNames() {
         List<VehicleModel> models = vehicleManagementService.findAllVehicleModels();
