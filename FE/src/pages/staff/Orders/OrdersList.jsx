@@ -1613,7 +1613,8 @@ const OrdersList = () => {
                                     value={statusFilter}
                                     onChange={(event) => setStatusFilter(event.target.value)}
                                 >
-                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="">Tất cả đơn hàng</option>
+                                    <option value="Pending_Deposit_Payment">Chờ thanh toán đặt cọc</option>
                                     <option value="pending_deposit_confirmation">Chờ xác nhận đặt cọc</option>
                                     <option value="pending_contract_signing">Chờ ký hợp đồng</option>
                                     <option value="pending_vehicle_pickup">Chờ kiểm tra xe</option>
@@ -1621,8 +1622,10 @@ const OrdersList = () => {
                                     <option value="vehicle_inspected_before_pickup">Đã kiểm tra xe</option>
                                     <option value="currently_renting">Đang thuê</option>
                                     <option value="vehicle_returned">Đã trả xe</option>
-                                    <option value="total_fees_charged">Chờ thanh toán bổ sung</option>
-                                    <option value="completed">Hoàn thành</option>
+                                    <option value="Vehicle_Inspected_After_Pickup">Đợi xác nhận nhận xe</option>
+                                    <option value="Pending_Total_Payment">Đợi thanh toán tổng đơn hàng</option>
+                                    <option value="Pending_Total_Payment_Confirmation">Đợi xác nhận tổng thanh toán</option>
+                                    <option value="completed">Đã hoàn thành đơn hàng</option>
                                 </select>
                                 <select
                                     value={dateFilter}

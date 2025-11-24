@@ -27,8 +27,6 @@ const getStatusText = (status) => {
             return 'Đang thuê xe';
         case 'Vehicle_Returned':
             return 'Xe đã trả';
-        case 'Total_Fees_Charged':
-            return 'Đã hoàn tất đơn hàng';
         case 'Completed':
             return 'Đã hoàn thành đơn hàng';
         case 'Vehicle_Return_Overdue':
@@ -69,8 +67,6 @@ const getStatusClass = (status) => {
             return 'status-red'; // đỏ
         case 'Pending_Renter_Confirmation':
             return 'status-yellow';
-        case 'Total_Fees_Charged':
-            return 'status-emerald';
         case 'Cancelled':
             return 'status-red';
         case 'Pending_Deposit_Payment':

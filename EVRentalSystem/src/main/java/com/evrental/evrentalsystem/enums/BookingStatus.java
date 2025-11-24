@@ -10,7 +10,6 @@
         Vehicle_Returned,
         Vehicle_Inspected_After_Pickup,
         Pending_Total_Payment,
-        Total_Fees_Charged,
         Pending_Total_Payment_Confirmation,
         Completed,
         Cancelled,
