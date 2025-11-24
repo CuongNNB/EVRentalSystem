@@ -101,5 +101,10 @@ public class VehicleService {
         result.sort(Comparator.comparing(o -> Optional.ofNullable(o.getModel().getBrand()).orElse("") + " " + Optional.ofNullable(o.getModel().getModel()).orElse("")));
         return result;
     }
+
+    public List<VehicleModel> findAllVehicleModels() {
+        return vehicleModelRepository.findAll();
+    }
+
     //End code here
 }

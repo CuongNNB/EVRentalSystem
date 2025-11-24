@@ -195,25 +195,34 @@ export default function BookingPage() {
                 );
                 if (!res.ok) throw new Error("Không thể lấy thông tin trạm");
                 const data = await res.json();
-                // Expecting array of { vehicleDetailId, stationId, stationName, stationAddress }
-                setStations(data || []);
-                // Nếu chưa có selectedStationId, hoặc selectedStationId không thuộc data -> set default là first
-                if (!selectedStationId || !data.some((s) => s.stationId === selectedStationId)) {
-                    if (data && data.length > 0) {
-                        const first = data[0];
+
+                // --- BẮT ĐẦU SỬA: Lọc trùng trạm ---
+
+                // Cách hoạt động: Tạo một Map với key là stationId. 
+                // Nếu stationId đã tồn tại, nó sẽ tự đè (hoặc bỏ qua), giúp danh sách là duy nhất.
+                const uniqueStations = [
+                    ...new Map(data.map((item) => [item.stationId, item])).values(),
+                ];
+
+                setStations(uniqueStations || []);
+
+                // Sửa biến 'data' thành 'uniqueStations' trong logic chọn mặc định bên dưới
+                if (!selectedStationId || !uniqueStations.some((s) => s.stationId === selectedStationId)) {
+                    if (uniqueStations && uniqueStations.length > 0) {
+                        const first = uniqueStations[0];
                         setSelectedStationId(first.stationId);
                         handleInputChange("pickupLocation", first.stationName);
                     }
                 } else {
-                    // ensure pickupLocation string syncs with selectedStationId
-                    const found = data.find((s) => s.stationId === selectedStationId);
+                    const found = uniqueStations.find((s) => s.stationId === selectedStationId);
                     if (found) handleInputChange("pickupLocation", found.stationName);
                 }
+                // --- KẾT THÚC SỬA ---
+
             } catch (err) {
                 console.error("Lỗi khi lấy stations:", err);
             }
         };
-
         fetchStations();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [passedCar, carId]);
@@ -470,10 +479,10 @@ export default function BookingPage() {
                                             value={selectedStationId ?? ""}
                                             onChange={handleStationSelect}
                                         >
-                                            {/* If no stations, still show fallback single option */}
                                             {stations && stations.length > 0 ? (
                                                 stations.map((s) => (
-                                                    <option key={s.vehicleDetailId} value={s.stationId}>
+                                                    // SỬA: Đổi key thành s.stationId cho đúng ngữ nghĩa danh sách trạm
+                                                    <option key={s.stationId} value={s.stationId}>
                                                         {s.stationName}
                                                     </option>
                                                 ))
@@ -536,12 +545,12 @@ export default function BookingPage() {
                 </div>
 
                 {errorOverlay.visible && (
-                    <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999}}>
-                        <div style={{background: '#fff', padding: 20, borderRadius: 8, width: 'min(420px, 90%)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'}}>
-                            <h3 style={{marginTop: 0, marginBottom: 8}}>Lỗi</h3>
-                            <p style={{marginTop: 0, marginBottom: 16}}>{errorOverlay.message}</p>
-                            <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
-                                <button onClick={() => setErrorOverlay({ visible: false, message: "" })} style={{padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', background: '#fff'}}>Đóng</button>
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+                        <div style={{ background: '#fff', padding: 20, borderRadius: 8, width: 'min(420px, 90%)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+                            <h3 style={{ marginTop: 0, marginBottom: 8 }}>Lỗi</h3>
+                            <p style={{ marginTop: 0, marginBottom: 16 }}>{errorOverlay.message}</p>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                                <button onClick={() => setErrorOverlay({ visible: false, message: "" })} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #ccc', background: '#fff' }}>Đóng</button>
                             </div>
                         </div>
                     </div>

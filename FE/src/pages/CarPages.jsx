@@ -4,24 +4,26 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./CarPages.css";
 
-const filterOptions = [
-    { label: "Tất cả xe điện", value: "all" },
-    { label: "VinFast", value: "VinFast" },
-    { label: "Hyundai", value: "Hyundai" },
-    { label: "Tesla", value: "Tesla" },
-    { label: "Kia", value: "Kia" },
-    { label: "BMW", value: "BMW" },
-    { label: "Nissan", value: "Nissan" }
-];
 
 const formatPrice = (price) => {
     if (!price) return "Liên hệ";
     const formatted = (price * 1000).toLocaleString("vi-VN");
     return `${formatted} VND/ngày`;
 };
-
+// Thêm hàm này ở bên ngoài các Component (ví dụ: ngay dưới formatPrice)
+const getCarImageSrc = (modelPicture) => {
+    if (!modelPicture) return "/anhxe/1.jpg";
+    if (modelPicture.toLowerCase().endsWith(".jpg")) {
+        return `/carpic/${modelPicture}`;
+    }
+    return `data:image/jpeg;base64,${modelPicture}`;
+};
 function CarCard({ car }) {
     const navigate = useNavigate();
+
+    // GỌI HÀM XỬ LÝ ẢNH Ở ĐÂY
+    // Biến imageUrl sẽ chứa đường dẫn file hoặc chuỗi base64 hoàn chỉnh
+    const imageUrl = getCarImageSrc(car.modelPicture);
 
     const handleViewDetails = () => {
         navigate(`/car/${car.vehicleModelId}`, {
@@ -33,11 +35,11 @@ function CarCard({ car }) {
                 seats: car.seats,
                 availableCount: car.availableCount,
                 modelPicture: car.modelPicture,
-                images: [car.modelPicture ? `/carpic/${car.modelPicture}` : "/anhxe/default.jpg"],
+                // Sửa: Dùng biến imageUrl đã xử lý
+                images: [imageUrl],
             },
         });
     };
-
 
     const handleBookNow = () => {
         navigate(`/booking/${car.vehicleModelId}`, {
@@ -45,7 +47,8 @@ function CarCard({ car }) {
                 id: car.vehicleModelId,
                 name: `${car.brand} ${car.model}`,
                 price: car.price,
-                images: [car.modelPicture ? `/carpic/${car.modelPicture}` : "/anhxe/default.jpg"],
+                // Sửa: Dùng biến imageUrl đã xử lý
+                images: [imageUrl],
             },
         });
     };
@@ -53,9 +56,10 @@ function CarCard({ car }) {
     return (
         <article className="car-card">
             <div className="car-card__media">
+                {/* Sửa: Kiểm tra car.modelPicture có tồn tại không, nếu có dùng imageUrl làm src */}
                 {car.modelPicture ? (
                     <img
-                        src={`/carpic/${car.modelPicture}`}
+                        src={imageUrl}
                         alt={car.model}
                         className="car-card__image"
                         loading="lazy"
@@ -104,6 +108,9 @@ function CarCard({ car }) {
 }
 
 export default function CarPages() {
+    const [filterOptions, setFilterOptions] = useState([
+        { label: "Tất cả xe điện", value: "all" }
+    ]);
     const [activeFilter, setActiveFilter] = useState("all");
     const [cars, setCars] = useState([]);
 
@@ -112,7 +119,33 @@ export default function CarPages() {
             .then((res) => res.json())
             .then((data) => setCars(data))
             .catch((err) => console.error("Lỗi khi lấy danh sách xe:", err));
+
+        fetch("http://localhost:8084/EVRentalSystem/api/vehicles/brands")
+            .then((res) => res.json())
+            .then((data) => {
+                // data trả về dạng: [{id: "1", brand: "VinFast"}, {id: "2", brand: "VinFast"}, ...]
+
+                // Bước 1: Lấy ra mảng chỉ chứa tên brand
+                const allBrands = data.map(item => item.brand);
+
+                // Bước 2: Dùng Set để lọc trùng (VinFast xuất hiện 2 lần sẽ chỉ còn 1)
+                const uniqueBrands = [...new Set(allBrands)];
+
+                // Bước 3: Tạo mảng options cho UI
+                const newFilters = uniqueBrands.map(brandName => ({
+                    label: brandName,  // Hiển thị: VinFast
+                    value: brandName   // Giá trị dùng để lọc: VinFast
+                }));
+
+                // Bước 4: Gộp với nút "Tất cả" ban đầu và cập nhật State
+                setFilterOptions([
+                    { label: "Tất cả xe điện", value: "all" },
+                    ...newFilters
+                ]);
+            })
+            .catch((err) => console.error("Lỗi khi lấy danh sách hãng:", err));
     }, []);
+
 
     const filteredCars = useMemo(() => {
         // lọc theo hãng xe và chỉ lấy xe có availableCount > 0
