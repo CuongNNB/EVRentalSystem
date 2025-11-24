@@ -399,3 +399,7 @@ body {
             -4px -4px 8px rgba(255, 255, 255, 1),
             inset 2px 2px 6px rgba(173, 183, 200, 0.25);
 }
+
+.ccrp-root .btn-cancel{
+    color: black !important;
+}

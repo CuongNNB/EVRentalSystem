@@ -116,9 +116,17 @@ public class StaffService {
     }
 
     public boolean changeStatus(int id, BookingStatus status) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
+        VehicleDetail vd = vehicleDetailRepository.findById(booking.getVehicleDetail().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
         try {
             int updated = bookingRepository.updateBookingStatus(id, status);
             if (updated > 0) {
+                if(status.equals(BookingStatus.Vehicle_Inspected_After_Pickup)) {
+                    vd.setStatus(VehicleStatus.AVAILABLE);
+                    vehicleDetailRepository.save(vd);
+                }
                 log.info("✅ Update success! (Booking ID: {})", id);
                 return true;
             } else {
