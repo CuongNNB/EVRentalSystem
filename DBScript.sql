@@ -261,16 +261,7 @@ VALUES ('Admin01', '123456', N'Nguyễn Ngọc Bảo Cường', '038123456', 'ba
         'ACTIVE', GETDATE()), -- user_id = 1
        ('Staff01', '123456', N'Đoàn Nguyễn Trung Nguyên', '011111111', 'nguyendnt@gmail.com', N'Hồ Chí Minh', 'STAFF',
         'ACTIVE', GETDATE()), -- user_id = 2
-       ('Renter01', '123456', N'Phạm Trí Tính', '011222222', 'tinhpt@gmail.com', N'Thủ Đức, HCM', 'RENTER', 'ACTIVE',
-        GETDATE()),
        ('Jang Won-young', '123456', N'Jang Won-young', '0123456789', 'jangwonyoung@gmail.com', N'69', 'STAFF', 'ACTIVE', GETDATE()); -- user_id = 3
-GO
-
--- ========================
--- 2. Renter_Detail
--- ========================
-INSERT INTO Renter_Detail (renter_id, cccd_front, cccd_back, driver_license, verification_status, is_risky)
-VALUES (3, N'base64-front-cccd', N'base64-back-cccd', 'B2-123456789', 'VERIFIED', 0);
 GO
 
 -- ========================
@@ -304,7 +295,7 @@ GO
 -- 4. Employee_Detail
 -- ========================
 INSERT INTO Employee_Detail (employee_id, station_id)
-VALUES (2, 1), (4, 1); -- Staff01 làm việc tại Station 1
+VALUES (2, 1), (3, 1);
 GO
 
 -- ========================
@@ -378,55 +369,6 @@ VALUES ('SALE10', N'Giảm 10% cho tất cả đơn trong tháng này', 10, GETD
        ('NEWUSER20', N'Ưu đãi 20% cho khách hàng mới', 20, GETDATE(), DATEADD(DAY, 60, GETDATE()), 'ACTIVE');
 GO
 
--- ========================
--- 8. Booking
--- ========================
-INSERT INTO Booking (renter_id, vehicle_model_id, station_id, license_plate,
-                     promotion_id, created_at, start_time, expected_return_time,
-                     actual_return_time, deposit, [status])
-VALUES (3, 1, 1, '51A-12345', 1, GETDATE(), GETDATE(), DATEADD(DAY, 1, GETDATE()), NULL, 2000000,
-        'PENDING'), -- booking_id = 1
-       (3, 2, 1, '51B-67890', 2, DATEADD(DAY, -10, GETDATE()), DATEADD(DAY, -10, GETDATE()),
-        DATEADD(DAY, -9, GETDATE()), DATEADD(DAY, -9, GETDATE()), 3000000, 'COMPLETED'); -- booking_id = 2
-GO
-
-
--- =======================
--- 10. Payment
--- ========================
-INSERT INTO Payment (booking_id, total, paid_at)
-VALUES (2, 2700000, DATEADD(DAY, -9, GETDATE())); -- Thanh toán hoàn tất cho booking 2
-GO
-
--- ========================
--- 11. Inspection
--- ========================
-INSERT INTO Inspection (booking_id, part_name, staff_id, inspected_at, [status])
-VALUES (2, N'Bánh xe', 2, DATEADD(DAY, -9, GETDATE()), 'PASSED'),
-       (2, N'Đèn xe', 2, DATEADD(DAY, -9, GETDATE()), 'PASSED'),
-       (2, N'Pin', 2, DATEADD(DAY, -9, GETDATE()), 'PASSED');
-GO
-
--- ========================
--- 12. Additional_Fee
--- ========================
-INSERT INTO Additional_Fee (booking_id, fee_name, amount, [description])
-VALUES (2, N'Trá xe trễ', 500000, N'Trá xe trễ 2 giờ so với dự kiến');
-GO
-
--- ========================
--- 13. Contract
--- ========================
-INSERT INTO Contract (booking_id, staff_id ,[status], otp_code)
-VALUES (2, 2,'COMPLETED', '123456');
-GO
-
--- ========================
--- 14. Review
--- ========================
-INSERT INTO Review (booking_id, rating, comment)
-VALUES (2, 5, N'Xe chạy êm, nhân viên hỗ trợ nhiệt tình!');
-GO
 
 -- ========================
 -- 15. Holiday_Fee
@@ -435,9 +377,3 @@ INSERT INTO Holiday_Fee (fee_name, start_date, end_date, value, [status])
 VALUES (N'Lễ Quốc Khánh 2/9', '2025-09-01', '2025-09-03', 0.15, 'ACTIVE');
 GO
 
--- ========================
--- 16. Report
--- ========================
-INSERT INTO Report (staff_id, admin_id, vehicle_detail_id, [description], [status])
-VALUES (2, 1, 1, N'Xe VF e34 bị trầy nhẹ ở cản trước khi trả xe', 'RESOLVED');
-GO
