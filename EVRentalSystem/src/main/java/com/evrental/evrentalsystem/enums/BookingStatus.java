@@ -13,4 +13,5 @@
         Pending_Total_Payment_Confirmation,
         Completed,
         Cancelled,
+        Total_Fees_Charged
     }
