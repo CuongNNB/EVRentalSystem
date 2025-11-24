@@ -1,10 +1,7 @@
 package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.*;
-import com.evrental.evrentalsystem.enums.RenterDetailVerificationStatusEnum;
-import com.evrental.evrentalsystem.enums.ReportStatusEnum;
-import com.evrental.evrentalsystem.enums.StaffStatusEnum;
-import com.evrental.evrentalsystem.enums.UserEnum;
+import com.evrental.evrentalsystem.enums.*;
 import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.request.UpdateReportStatusRequest;
@@ -137,7 +134,8 @@ public class AdminService {
         if (request.getEmail() != null) user.setEmail(request.getEmail().trim());
         if (request.getPhone() != null) user.setPhone(request.getPhone().trim());
         if (request.getAddress() != null) user.setAddress(request.getAddress().trim());
-        if (request.getStatus() != null) user.setStatus(StaffStatusEnum.valueOf(request.getStatus().toString().trim().toUpperCase()) );
+        if (request.getStatus() != null)
+            user.setStatus(StaffStatusEnum.valueOf(request.getStatus().toString().trim().toUpperCase()));
 
         userRepository.save(user);
 
@@ -207,6 +205,8 @@ public class AdminService {
             return b.build();
         }).collect(Collectors.toList());
     }
+
+    @Transactional // 2. Thêm Transactional để đảm bảo cả 2 bảng được update cùng lúc hoặc rollback nếu lỗi
     public String updateReportStatus(UpdateReportStatusRequest request) {
         if (request.getReportId() == null || request.getStatus() == null || request.getStatus().isBlank()) {
             return "Invalid request data";
@@ -214,9 +214,29 @@ public class AdminService {
 
         return reportRepository.findById(request.getReportId())
                 .map(report -> {
-                    report.setStatus(ReportStatusEnum.valueOf(request.getStatus()));
-                    reportRepository.save(report);
-                    return "Update report status success";
+                    try {
+                        // Convert string request sang Enum
+                        ReportStatusEnum newStatus = ReportStatusEnum.valueOf(request.getStatus());
+                        report.setStatus(newStatus);
+                        if (newStatus.equals(ReportStatusEnum.RESOLVED) || newStatus.equals(ReportStatusEnum.REJECTED)) {
+                            VehicleDetail vehicle = report.getVehicleDetail();
+                            if (vehicle != null) {
+                                vehicle.setStatus(VehicleStatus.AVAILABLE);
+                                vehicleDetailRepository.save(vehicle); // Lưu thay đổi của xe
+                            }
+                        } else {
+                            VehicleDetail vehicle = report.getVehicleDetail();
+                            if (vehicle != null) {
+                                vehicle.setStatus(VehicleStatus.FIXING);
+                                vehicleDetailRepository.save(vehicle); // Lưu thay đổi của xe
+                            }
+                        }
+                        reportRepository.save(report); // Lưu thay đổi của report
+                        return "Update report status success";
+
+                    } catch (IllegalArgumentException e) {
+                        return "Invalid status value provided";
+                    }
                 })
                 .orElse("Update report status failed: report not found");
     }
