@@ -25,19 +25,18 @@ public class DashboardStationService {
     public TopStationsResponse topStations(Integer limit, String from, String to) {
         int top = limit != null ? limit : 5;
 
-        var r = range(from, to, 7);
-        LocalDateTime start = r[0].atStartOfDay(ZONE).toLocalDateTime();
-        LocalDateTime endEx = r[1].plusDays(1).atStartOfDay(ZONE).toLocalDateTime();
+        LocalDate startDate = LocalDate.parse(from);
+        LocalDate endDate = LocalDate.parse(to);
+
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime endEx = endDate.plusDays(1).atStartOfDay();
 
         var rows = stationRepository.findAll().stream().map(st -> {
-                    int rentals = bookingRepository.countByStationIdAndCreatedAtBetween(
+                    int rentals = bookingRepository.countValidRentalsBetween(
                             st.getStationId(), start, endEx);
 
                     long revenue = nz(paymentRepository.sumTotalByStationBetween(
                             st.getStationId(), start, endEx));
-
-                    long totalV = nz(vehicleDetailRepository.countVehiclesByStationId(st.getStationId()));
-
 
                     return TopStationsResponse.StationRow.builder()
                             .stationId(st.getStationId())
@@ -45,13 +44,17 @@ public class DashboardStationService {
                             .rentals(rentals)
                             .revenue(revenue)
                             .build();
-                }).sorted(Comparator
-                        .comparing(TopStationsResponse.StationRow::getRevenue).reversed()
-                        .thenComparing(TopStationsResponse.StationRow::getRentals).reversed())
+                }).sorted(
+                        Comparator
+                                .comparing(TopStationsResponse.StationRow::getRentals, Comparator.reverseOrder())
+                                .thenComparing(TopStationsResponse.StationRow::getRevenue, Comparator.reverseOrder())
+                                .thenComparing(TopStationsResponse.StationRow::getStationId)
+                )
                 .limit(top)
                 .collect(Collectors.toList());
 
         return new TopStationsResponse(rows);
+
     }
 
 

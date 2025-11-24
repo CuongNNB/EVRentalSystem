@@ -33,6 +33,7 @@ public class AdminDashboardController {
         return dashboard.getRevenueSeries(period, from, to);
     }
 
+    //API: http://localhost:8084/EVRentalSystem/api/admin/overview/top-stations?limit=5&from=2024-01-01&to=2024-01-31
     @GetMapping("/overview/top-stations")
     public TopStationsResponse getTopStations(@RequestParam(required = false) Integer limit,
                                               @RequestParam(required = false) String from,

@@ -38,15 +38,22 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // KPI: đếm booking theo start_time trong khoảng
     int countByStartTimeBetween(LocalDateTime start, LocalDateTime end);
 
-    // Top stations: đếm booking của 1 station theo khoảng created_at
     @Query("""
-        select count(b) from Booking b
-        where b.station.stationId = :stationId
-          and b.createdAt >= :start and b.createdAt < :end
-    """)
-    int countByStationIdAndCreatedAtBetween(@Param("stationId") Integer stationId,
-                                            @Param("start") LocalDateTime start,
-                                            @Param("end") LocalDateTime end);
+   select count(b) from Booking b
+   where b.station.stationId = :stationId
+     and b.startTime >= :start and b.startTime < :end
+     and b.status in (
+         'Completed',
+         'Pending_Total_Payment',
+         'Pending_Total_Payment_Confirmation',
+         'Currently_Renting',
+         'Vehicle_Returned',
+         'Vehicle_Inspected_After_Pickup'
+     )
+""")
+    int countValidRentalsBetween(@Param("stationId") Integer stationId,
+                                 @Param("start") LocalDateTime start,
+                                 @Param("end") LocalDateTime end);
 
     // Recent rentals / Activity
     @Query("select b from Booking b order by b.createdAt desc")
