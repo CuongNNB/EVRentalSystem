@@ -118,16 +118,12 @@ const MyBookings = () => {
     const pageSize = 6;
 
     const [bookings, setBookings] = useState([]); // <- use real bookings from API
-
-    // const tabs = [
-    //     { key: 'ALL', label: 'Tất cả' },
-    //     { key: 'RENTED', label: 'Đang thuê' },
-    //     { key: 'PENDING', label: 'Sắp thuê' },
-    //     { key: 'RETURNED', label: 'Đã hoàn tất' },
-    //     { key: 'CANCELLED', label: 'Đã hủy' }
-    // ];
-
-    // Fetch user's bookings on mount
+    const tabs = [
+        { key: 'ALL', label: 'Tất cả' },
+        { key: 'COMPLETED', label: 'Hoàn thành' },
+        { key: 'CANCELLED', label: 'Đã hủy' },
+        { key: 'IN_PROGRESS', label: 'Đang trong quá trình thuê' }
+    ];
     useEffect(() => {
         let isMounted = true;
         const controller = new AbortController();
@@ -233,29 +229,39 @@ const MyBookings = () => {
         };
     }, []);
 
-
     // Filter bookings by tab/search
     const filteredBookings = bookings.filter(booking => {
-        // Filter by status (note: mapping between tab keys and booking.status might need tuning)
-        if (activeTab !== 'ALL') {
-            // map tab keys to booking.status values - try reasonable mapping
-            if (activeTab === 'RENTED' && booking.status !== 'RENTED' && booking.status !== 'RENTAL') return false;
-            if (activeTab === 'PENDING' && booking.status !== 'PENDING') return false;
-            if (activeTab === 'RETURNED' && (booking.status !== 'Completed' && booking.status !== 'RETURNED' && booking.status !== 'COMPLETED')) return false;
-            if (activeTab === 'CANCELLED' && booking.status !== 'CANCELLED') return false;
-        }
-
+        // 1. Lọc theo Search Query (giữ nguyên logic cũ)
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            return (
+            const matchesSearch = (
                 (booking.vehicleModel || '').toLowerCase().includes(q) ||
                 (booking.licensePlate || '').toLowerCase().includes(q) ||
                 (booking.vehicleBrand || '').toLowerCase().includes(q)
             );
+            if (!matchesSearch) return false;
         }
+
+        // 2. Lọc theo TAB (Logic mới)
+        if (activeTab === 'ALL') return true;
+
+        if (activeTab === 'COMPLETED') {
+            // Chỉ lấy trạng thái Completed
+            return booking.status === 'Completed';
+        }
+
+        if (activeTab === 'CANCELLED') {
+            // Chỉ lấy trạng thái Cancelled
+            return booking.status === 'Cancelled';
+        }
+
+        if (activeTab === 'IN_PROGRESS') {
+            // Lấy TẤT CẢ các trạng thái còn lại (Không phải Completed và không phải Cancelled)
+            return booking.status !== 'Completed' && booking.status !== 'Cancelled';
+        }
+
         return true;
     });
-
     // Pagination
     const totalPages = Math.ceil(filteredBookings.length / pageSize) || 1;
     const startIndex = (currentPage - 1) * pageSize;
@@ -288,7 +294,6 @@ const MyBookings = () => {
                     <p className="bookings-subtitle">Xem và quản lý tất cả các đơn đặt xe của bạn</p>
                 </motion.div>
 
-                {/* Tabs
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -306,7 +311,7 @@ const MyBookings = () => {
                             </button>
                         ))}
                     </div>
-                </motion.div> */}
+                </motion.div>
 
                 {/* Error State */}
                 {error && (

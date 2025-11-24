@@ -65,6 +65,22 @@ const centroidOf = (arr) => {
     return { lat, lng };
 };
 
+// --- THÊM ĐOẠN NÀY VÀO (Khoảng dòng 80) ---
+const getCarImageSrc = (image) => {
+    if (!image) return "/anhxe/default.jpg";
+
+    // Nếu là file ảnh (có đuôi .jpg)
+    if (image.toLowerCase().endsWith(".jpg")) {
+        // Nếu đã có đường dẫn tuyệt đối (ví dụ mock data)
+        if (image.startsWith("/")) return image;
+        // Nếu chỉ là tên file thì thêm folder
+        return `/carpic/${image}`;
+    }
+
+    // Ngược lại coi là Base64
+    return `data:image/jpeg;base64,${image}`;
+};
+
 const MapStations = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDistrict, setSelectedDistrict] = useState("Thủ Đức");
@@ -86,7 +102,7 @@ const MapStations = () => {
 
     // Derived static districts for tabs
     const DISTRICTS = useMemo(() =>
-            Array.from(new Set(stations.map(s => s.district))),
+        Array.from(new Set(stations.map(s => s.district))),
         []);
 
 
@@ -319,10 +335,13 @@ const MapStations = () => {
                             {vehicleModels && vehicleModels.length > 0 ? (
                                 <div className="vehicles-grid-display">
                                     {vehicleModels.map((m, idx) => {
-                                        const img = m.modelPicture ? `/carpic/${m.modelPicture}` : "/anhxe/default.jpg";
+                                        // 1. SỬA: Gọi hàm xử lý ảnh
+                                        const img = getCarImageSrc(m.modelPicture);
+
                                         return (
                                             <article key={`${m.vehicleModelId || m.model}-${idx}`} className="vehicle-card">
                                                 <div className="vehicle-card__media">
+                                                    {/* 2. SỬA: Dùng biến img đã xử lý */}
                                                     {img ? (
                                                         <img
                                                             src={img}
@@ -337,6 +356,7 @@ const MapStations = () => {
                                                     )}
                                                 </div>
 
+                                                {/* ... (Phần Header và Tags giữ nguyên) ... */}
                                                 <div className="vehicle-card__header">
                                                     <div>
                                                         <h3 className="vehicle-card__name">{m.model}</h3>
@@ -359,6 +379,7 @@ const MapStations = () => {
                                                     <span className="vehicle-card__tag">Còn: {m.availableCount ?? '—'}</span>
                                                     <span className="vehicle-card__tag">{m.seats} chỗ</span>
                                                 </div>
+                                                {/* ... (Hết phần Header và Tags) ... */}
 
                                                 <div className="vehicle-card__actions">
                                                     <button
@@ -375,11 +396,8 @@ const MapStations = () => {
                                                                     seats: m.seats || 4,
                                                                     availableCount: m.availableCount ?? 1,
                                                                     modelPicture: m.modelPicture,
-                                                                    images: [
-                                                                        m.modelPicture
-                                                                            ? `/carpic/${m.modelPicture}`
-                                                                            : "/anhxe/default.jpg",
-                                                                    ],
+                                                                    // 3. SỬA: Dùng hàm xử lý ảnh cho mảng images
+                                                                    images: [img],
                                                                     stationId: m.stationId,
                                                                     stationName: m.stationName,
                                                                 },
@@ -398,10 +416,13 @@ const MapStations = () => {
                                 vehiclesData && vehiclesData.length > 0 ? (
                                     <div className="vehicles-grid-display">
                                         {vehiclesData.map(v => {
-                                            const img = v.picture ? `/carpic/${v.picture}` : "/anhxe/default.jpg";
+                                            // 1. SỬA: Gọi hàm xử lý ảnh (Lưu ý ở đây key là v.picture)
+                                            const img = getCarImageSrc(v.picture);
+
                                             return (
                                                 <article key={`${v.licensePlate || v.id || Math.random()}`} className="vehicle-card">
                                                     <div className="vehicle-card__media">
+                                                        {/* 2. SỬA: Dùng biến img */}
                                                         {img ? (
                                                             <img
                                                                 src={img}
@@ -416,36 +437,7 @@ const MapStations = () => {
                                                         )}
                                                     </div>
 
-                                                    <div className="vehicle-card__header">
-                                                        <div>
-                                                            <h3 className="vehicle-card__name">{v.model}</h3>
-                                                            <p className="vehicle-card__subtitle">
-                                                                {v.brand} – {v.color}
-                                                            </p>
-                                                        </div>
-                                                        <div className="vehicle-card__price-wrapper">
-                                                            <span className="vehicle-card__price-label">Giá thuê</span>
-                                                            <p className="vehicle-card__price">
-                                                                {fPrice(v.vehicleModel?.price || v.price || 1200)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="vehicle-card__tags">
-                                                        <span className="vehicle-card__tag">⚡ {v.batteryCapacity}</span>
-                                                        <span className="vehicle-card__tag">{v.status}</span>
-                                                    </div>
-
-                                                    <ul className="vehicle-card__features">
-                                                        <li className="vehicle-card__feature">
-                                                            <span className="vehicle-card__feature-icon">📍</span>
-                                                            <span>{v.stationName || v.station || 'Không rõ'}</span>
-                                                        </li>
-                                                        <li className="vehicle-card__feature">
-                                                            <span className="vehicle-card__feature-icon">🧭</span>
-                                                            <span>Odo: {(v.odo || 0).toLocaleString('vi-VN')} km</span>
-                                                        </li>
-                                                    </ul>
+                                                    {/* ... (Phần giữa giữ nguyên) ... */}
 
                                                     <div className="vehicle-card__actions">
                                                         <button
@@ -460,7 +452,8 @@ const MapStations = () => {
                                                                         price: v.price,
                                                                         stationId: v.stationId || v.stationId || null,
                                                                         stationName: v.stationName || v.station || 'Không rõ trạm',
-                                                                        images: [v.picture ? `/carpic/${v.picture}` : '/anhxe/default.jpg'],
+                                                                        // 3. SỬA: Dùng biến img cho mảng images
+                                                                        images: [img],
                                                                     }
                                                                 });
                                                             }}
