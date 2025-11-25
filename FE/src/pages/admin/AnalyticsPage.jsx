@@ -5,6 +5,13 @@ import "./AnalyticsPage.css";
 import { REPORT_STATUS, canChangeReportStatus, getAvailableNextStatuses } from "../../api/reportAdmin";
 
 const STATUS_OPTIONS = ["PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"];
+const STATUS_LABELS = {
+  PENDING: "Chờ xử lý",
+  IN_PROGRESS: "Đang xử lý",
+  RESOLVED: "Đã giải quyết",
+  REJECTED: "Đã từ chối",
+  ALL: "Tất cả trạng thái"
+};
 
 export default function AnalyticsPage() {
   const [adminId, setAdminId] = useState(1);
@@ -146,8 +153,9 @@ export default function AnalyticsPage() {
       {/* Stats */}
       <section className="stats">
         <StatCard label="Tổng báo cáo" value={stats.total} />
-        <StatCard label="PENDING" value={stats.byStatus.PENDING || 0} />
-        <StatCard label="IN_PROGRESS" value={stats.byStatus.IN_PROGRESS || 0} />
+        <StatCard label="Đang xử li" value={stats.byStatus.PENDING || 0} />
+        <StatCard label="Đã giải quyết" value={stats.byStatus.RESOLVED || 0} />
+        <StatCard label="Đã từ chối" value={stats.byStatus.REJECTED || 0} />
       </section>
 
       {/* Filters */}
@@ -159,10 +167,10 @@ export default function AnalyticsPage() {
           placeholder="Tìm mô tả / biển số / nhân viên / trạm / mã báo cáo"
         />
         <select className="input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="ALL">Tất cả trạng thái</option>
+          <option value="ALL">{STATUS_LABELS.ALL}</option> {/* Hiển thị tiếng Việt */}
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {STATUS_LABELS[s] || s} {/* Hiển thị tiếng Việt, value giữ nguyên tiếng Anh */}
             </option>
           ))}
         </select>
@@ -250,7 +258,7 @@ function RowAction({ currentStatus, onUpdate }) {
       <select className="input" value={value} onChange={(e) => setValue(e.target.value)}>
         {options.map((s) => (
           <option key={s} value={s}>
-            {s}
+            {STATUS_LABELS[s] || s} {/* SỬA Ở ĐÂY: Hiển thị tiếng Việt */}
           </option>
         ))}
       </select>
