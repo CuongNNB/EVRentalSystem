@@ -20,4 +20,6 @@ public interface InspectionRepository extends JpaRepository<Inspection, Integer>
     @Transactional
     @Query("delete from Inspection i where i.booking.bookingId = :bookingId and i.status = :status")
     int deleteByBookingIdAndStatus(Integer bookingId, InspectionStatusEnum status);
+
+    void deleteByBooking_BookingId(Integer bookingId);
 }

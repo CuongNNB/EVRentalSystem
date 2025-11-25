@@ -1,10 +1,12 @@
 package com.evrental.evrentalsystem.controller.admin;
 
 
+import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.RenterDetail;
 import com.evrental.evrentalsystem.entity.User;
 import com.evrental.evrentalsystem.enums.StaffStatusEnum;
 import com.evrental.evrentalsystem.enums.UserEnum;
+import com.evrental.evrentalsystem.request.BookingUpdateRequest;
 import com.evrental.evrentalsystem.request.UpdateRenterDetailRequest;
 import com.evrental.evrentalsystem.response.admin.BookingAdminDto;
 import com.evrental.evrentalsystem.response.admin.GetAllUserResponse;
@@ -115,5 +117,23 @@ public class UserManagementController {
     public ResponseEntity<List<BookingAdminDto>> getAllBookings() {
         List<BookingAdminDto> dtos = adminService.getAllBookingsForAdmin();
         return ResponseEntity.ok(dtos);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/user-management/update-booking
+    @PutMapping("/update-booking")
+    public ResponseEntity<?> updateRenterBooking(@RequestBody BookingUpdateRequest request) {
+        try {
+            if (request.getBookingId() == null) {
+                return ResponseEntity.badRequest().body("Booking ID là bắt buộc");
+            }
+            Booking updatedBooking = adminService.updateRenterBooking(request);
+            return ResponseEntity.ok(updatedBooking);
+        } catch (RuntimeException e) {
+            // Trả về lỗi 400 cho các lỗi nghiệp vụ (sai trạng thái, xe bận...)
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
+        }
     }
 }

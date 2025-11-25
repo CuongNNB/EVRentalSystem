@@ -2,14 +2,13 @@ package com.evrental.evrentalsystem.service;
 
 import com.evrental.evrentalsystem.entity.Booking;
 import com.evrental.evrentalsystem.entity.InspectionAfter;
+import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.enums.BookingStatus;
 import com.evrental.evrentalsystem.enums.InspectionStatusEnum;
-import com.evrental.evrentalsystem.repository.AdditionalFeeRepository;
-import com.evrental.evrentalsystem.repository.BookingRepository;
-import com.evrental.evrentalsystem.repository.InspectionAfterRepository;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
+import com.evrental.evrentalsystem.repository.*;
 import com.evrental.evrentalsystem.response.vehicle.UserInspectionDetailResponse;
 import com.evrental.evrentalsystem.entity.Inspection;
-import com.evrental.evrentalsystem.repository.InspectionRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,7 @@ public class InspectionService {
     private final InspectionAfterRepository inspectionAfterRepository;
     private final AdditionalFeeRepository additionalFeeRepository;
     private final BookingRepository bookingRepository;
+    private final VehicleDetailRepository vehicleDetailRepository;
 
     public List<UserInspectionDetailResponse> getInspectionsByBookingId(Integer bookingId) {
         List<Inspection> inspections = inspectionRepository.findByBooking_BookingId(bookingId);
@@ -110,9 +110,12 @@ public class InspectionService {
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
-                booking.setStatus(BookingStatus.Vehicle_Inspected_Before_Pickup);
+                booking.setStatus(BookingStatus.Pending_Vehicle_Pickup);
                 bookingRepository.save(booking);
             });
+            VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(checkBooking.getVehicleDetail().getLicensePlate());
+            vd.setStatus(VehicleStatus.AVAILABLE);
+            vehicleDetailRepository.save(vd);
             int deleted = inspectionRepository.deleteByBookingIdAndStatus(bookingId, InspectionStatusEnum.REJECTED);
         }
         return inspectionRepository.saveAll(inspections);

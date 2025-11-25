@@ -3,10 +3,7 @@ package com.evrental.evrentalsystem.controller.admin;
 import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.entity.VehicleModel;
 import com.evrental.evrentalsystem.request.*;
-import com.evrental.evrentalsystem.response.admin.AdminGetAllModelResponse;
-import com.evrental.evrentalsystem.response.admin.AdminGetAllVehicleDetailResponse;
-import com.evrental.evrentalsystem.response.admin.AdminGetModelDetailResponse;
-import com.evrental.evrentalsystem.response.admin.AdminVehicleModelResponse;
+import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.service.VehicleManagementService;
 import com.evrental.evrentalsystem.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
@@ -202,6 +199,17 @@ public class VehicleManagementController {
         Map<String, String> response = new HashMap<>();
         response.put("message", message);
         return ResponseEntity.ok(response);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/vehicle-management/get-all-about-station
+    @GetMapping("/get-all-about-station")
+    public ResponseEntity<GetAllAboutStationResponse> getAllAboutStation() {
+        try {
+            GetAllAboutStationResponse response = vehicleManagementService.getAllAboutStation();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
     // </editor-fold>
 

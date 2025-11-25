@@ -184,4 +184,9 @@ where upper(v.status) <> 'DELETED'
             @Param("stationId") Integer stationId
     );
 
+    @Query("SELECT v FROM VehicleDetail v " +
+            "JOIN FETCH v.station " +
+            "JOIN FETCH v.vehicleModel " +
+            "WHERE v.status = 'AVAILABLE'")
+    List<VehicleDetail> findAllAvailableWithStationAndModel();
 }

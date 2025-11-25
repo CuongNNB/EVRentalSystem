@@ -16,6 +16,7 @@ import com.evrental.evrentalsystem.util.ImageUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
@@ -230,6 +231,58 @@ public class VehicleManagementService {
         }
         vehicleModelRepository.save(vm);
         return "Vehicle model updated successfully.";
+    }
+
+    @Transactional(readOnly = true)
+    public GetAllAboutStationResponse getAllAboutStation() {
+        // 1. Lấy tất cả các trạm (để trạm hết xe vẫn hiện tên trong dropdown cấp 1)
+        List<Station> allStations = stationRepository.findAll();
+
+        // 2. Lấy xe chỉ có status AVAILABLE (SỬA Ở ĐÂY)
+        List<VehicleDetail> availableVehicles = vehicleDetailRepository.findAllAvailableWithStationAndModel();
+
+        // 3. Gom nhóm xe (Logic giữ nguyên)
+        Map<Integer, Map<Integer, List<VehicleDetail>>> groupedData = availableVehicles.stream()
+                .collect(Collectors.groupingBy(
+                        v -> v.getStation().getStationId(),
+                        Collectors.groupingBy(v -> v.getVehicleModel().getVehicleId())
+                ));
+
+        // 4. Build DTO Response (Logic giữ nguyên)
+        List<GetAllAboutStationResponse.StationDTO> stationDTOs = allStations.stream().map(station -> {
+
+            // Lấy map model (nếu trạm không có xe available nào thì map này rỗng)
+            Map<Integer, List<VehicleDetail>> modelsInStation = groupedData.getOrDefault(station.getStationId(), new HashMap<>());
+
+            List<GetAllAboutStationResponse.ModelDTO> modelDTOs = modelsInStation.values().stream().map(vehicleList -> {
+                VehicleModel modelEntity = vehicleList.get(0).getVehicleModel();
+
+                List<GetAllAboutStationResponse.CarDTO> carDTOs = vehicleList.stream().map(v ->
+                        GetAllAboutStationResponse.CarDTO.builder()
+                                .vehicleDetailId(v.getId())
+                                .licensePlate(v.getLicensePlate())
+                                .color(v.getColor())
+                                .status(v.getStatus())
+                                .build()
+                ).collect(Collectors.toList());
+
+                return GetAllAboutStationResponse.ModelDTO.builder()
+                        .vehicleModelId(modelEntity.getVehicleId())
+                        .brand(modelEntity.getBrand())
+                        .modelName(modelEntity.getModel())
+                        .cars(carDTOs)
+                        .build();
+            }).collect(Collectors.toList());
+
+            return GetAllAboutStationResponse.StationDTO.builder()
+                    .stationId(station.getStationId())
+                    .stationName(station.getStationName())
+                    .models(modelDTOs)
+                    .build();
+
+        }).collect(Collectors.toList());
+
+        return new GetAllAboutStationResponse(stationDTOs);
     }
     // </editor-fold>
 }
