@@ -1,0 +1,248 @@
+/* src/pages/admin/BookingManagement.css */
+
+/* Overlay nền mờ */
+.booking-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.6); /* Slate-900 with opacity */
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal Content */
+.booking-modal-content {
+    background: #ffffff;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal Header */
+.booking-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+}
+
+.booking-modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.booking-modal-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.booking-modal-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Modal Body - Scrollable */
+.booking-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Form Grid System */
+.booking-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.booking-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.booking-form-group.full-width {
+    grid-column: span 2;
+}
+
+.booking-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.booking-form-input,
+.booking-form-select {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    transition: all 0.2s;
+    outline: none;
+    background-color: #fff;
+}
+
+.booking-form-input:focus,
+.booking-form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.booking-form-input:disabled,
+.booking-form-select:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* Modal Footer */
+.booking-modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.btn-save {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .booking-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .booking-form-group.full-width {
+        grid-column: span 1;
+    }
+}
+
+/* ========================================= */
+/* CUSTOM STYLE CHO DROPDOWN & OPTION */
+/* ========================================= */
+
+/* 1. Tùy chỉnh mũi tên và giao diện Select box */
+.booking-form-select {
+    appearance: none; /* Xóa style mặc định của trình duyệt */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px; /* Chừa khoảng trống cho icon mũi tên */
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+/* Hover vào select */
+.booking-form-select:hover:not(:disabled) {
+    border-color: #94a3b8;
+    background-color: #f8fafc;
+}
+
+/* 2. Style chung cho các Option bên trong */
+.booking-form-select option {
+    padding: 12px; /* Lưu ý: Chrome Windows có thể không nhận padding này */
+    font-size: 14px;
+    color: #1e293b; /* Slate-800 */
+    background-color: #ffffff;
+    min-height: 40px;
+}
+
+/* 3. Style cho Option đang được chọn (Checked) */
+.booking-form-select option:checked {
+    background-color: #eff6ff !important; /* Blue-50 */
+    color: #2563eb; /* Blue-600 */
+    font-weight: 600;
+}
+
+/* 4. Style cho Option bị Disabled ( QUAN TRỌNG ) */
+/* Giúp admin dễ nhận biết xe nào đang bận hoặc trạng thái nào bị khóa */
+.booking-form-select option:disabled {
+    color: #cbd5e1; /* Slate-300 - Màu xám nhạt */
+    background-color: #f8fafc; /* Slate-50 */
+    font-style: italic; /* Chữ nghiêng để nhấn mạnh */
+}
+
+/* 5. Tùy chỉnh option "Placeholder" (Option đầu tiên --Chọn--) */
+.booking-form-select option[value=""] {
+    color: #64748b;
+    font-weight: 500;
+}
