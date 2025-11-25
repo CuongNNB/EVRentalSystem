@@ -275,7 +275,7 @@ const CheckCar = () => {
     // Gọi API cập nhật trạng thái booking
     try {
       await api.put(`/api/bookings/${encodeURIComponent(bookingId)}/status`, null, {
-          params: { status: "Pending_Renter_Confirmation" },
+          params: { status: "Vehicle_Inspected_Before_Pickup" },
       });
     } catch (statusError) {
       console.warn("Unable to update booking status", statusError);

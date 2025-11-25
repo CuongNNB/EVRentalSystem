@@ -1,106 +1,100 @@
 // src/pages/admin/BookingManagement.jsx
-// Dựa trên: /mnt/data/VehicleManagement.jsx
 import React, { useEffect, useState } from "react";
 import "./AdminDashboardNew.css";
 import "./VehicleManagement.css";
+import "./BookingManagement.css";
 import ErrorBoundary from "../../components/admin/ErrorBoundary";
 
 const BookingManagement = () => {
     const API_BASE = "http://localhost:8084/EVRentalSystem";
 
+    // --- State cho Table ---
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("ALL");
-    // mapping trạng thái -> label tiếng Việt
+
+    // --- State cho Modal & Edit ---
+    const [showModal, setShowModal] = useState(false);
+    const [editingBooking, setEditingBooking] = useState(null);
+    const [masterData, setMasterData] = useState([]); // Dữ liệu Station -> Model -> Car
+    const [loadingMaster, setLoadingMaster] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    // --- Form State trong Modal ---
+    const [formData, setFormData] = useState({
+        bookingId: null,
+        stationId: "",
+        vehicleModelId: "",
+        vehicleDetailId: "",
+        startTime: "",
+        expectedReturnTime: "",
+        actualReturnTime: "",
+        status: ""
+    });
+
+    // Helper: Mapping trạng thái hiển thị
     const getStatusText = (status) => {
         if (!status) return 'Không xác định';
         switch (status) {
-            case 'Pending_Deposit_Confirmation':
-                return 'Chờ xác nhận cọc';
-            case 'Pending_Contract_Signing':
-                return 'Chờ ký hợp đồng';
-            case 'Pending_Vehicle_Pickup':
-                return 'Chờ kiểm tra xe';
-            case 'Vehicle_Inspected_Before_Pickup':
-                return 'Đã kiểm tra xe';
-            case 'Vehicle_Pickup_Overdue':
-                return 'Quá hạn nhận xe';
-            case 'Currently_Renting':
-                return 'Đang thuê xe';
-            case 'Vehicle_Returned':
-                return 'Xe đã trả';
-            case 'Total_Fees_Charged':
-                return 'Đã hoàn tất đơn hàng';
-            case 'Completed':
-                return 'Đã hoàn thành đơn hàng';
-            case 'Vehicle_Return_Overdue':
-                return 'Quá hạn trả xe';
-            case 'Pending_Renter_Confirmation':
-                return 'Đợi khách hàng xác nhận';
-            case 'Cancelled':
-                return 'Đã hủy';
-            case 'Pending_Deposit_Payment':
-                return 'Đợi thanh toán cọc';
-            case 'Vehicle_Inspected_After_Pickup':
-                return 'Đợi xác nhận nhận xe';
-            case 'Pending_Total_Payment':
-                return 'Đợi thanh toán đơn hàng';
-            case 'Pending_Total_Payment_Confirmation':
-                return 'Đợi xác nhận tổng thanh toán';
-            default:
-                return 'Không xác định';
+            case 'Pending_Deposit_Confirmation': return 'Chờ xác nhận cọc';
+            case 'Pending_Contract_Signing': return 'Chờ ký hợp đồng';
+            case 'Pending_Vehicle_Pickup': return 'Chờ kiểm tra xe';
+            case 'Vehicle_Inspected_Before_Pickup': return 'Đã kiểm tra xe';
+            case 'Currently_Renting': return 'Đang thuê xe';
+            case 'Vehicle_Returned': return 'Xe đã trả';
+            case 'Completed': return 'Đã hoàn thành';
+            case 'Vehicle_Return_Overdue': return 'Quá hạn trả xe';
+            case 'Cancelled': return 'Đã hủy';
+            case 'Pending_Deposit_Payment': return 'Đợi thanh toán cọc';
+            case 'Vehicle_Inspected_After_Pickup': return 'Đợi xác nhận nhận xe';
+            case 'Pending_Total_Payment': return 'Đợi thanh toán đơn hàng';
+            case 'Pending_Total_Payment_Confirmation': return 'Đợi xác nhận tổng thanh toán';
+            case 'Total_Fees_Charged': return 'Đã tính phí tổng';
+            default: return status;
         }
     };
-    // format ngày giờ dạng dd/MM/yyyy HH:mm
-    const formatDateTime = (value) => {
-        if (!value && value !== 0) return "-";
-        const d = new Date(value);
-        if (isNaN(d.getTime())) return String(value);
-        return d.toLocaleString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+
+    // Danh sách các trạng thái Admin được phép chọn thủ công (Theo yêu cầu)
+    const ALLOWED_MANUAL_STATUSES = [
+        "Pending_Deposit_Confirmation",
+        "Vehicle_Inspected_Before_Pickup",
+        "Currently_Renting",
+        "Pending_Total_Payment",
+        "Pending_Total_Payment_Confirmation"
+    ];
+
+    // Helper: Format
+    const formatMoney = (val) => (val || val === 0) ? Number(val).toLocaleString("vi-VN") + " đ" : "-";
+    const formatDateTime = (val) => {
+        if (!val) return "-";
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? String(val) : d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    };
+    const formatForInput = (isoString) => {
+        if (!isoString) return "";
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        const offset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offset).toISOString().slice(0, 16);
     };
 
-    // format tiền
-    const formatMoney = (value) => {
-        if (value === null || value === undefined || value === "") return "-";
-        const num = Number(value);
-        if (Number.isNaN(num)) return String(value);
-        return num.toLocaleString("vi-VN");
-    };
-
-    // helper: tìm key thực tế trong object từ danh sách candidates
-    const findKey = (obj = {}, candidates = []) => {
-        for (const c of candidates) {
-            if (Object.prototype.hasOwnProperty.call(obj, c)) return c;
-            const lowerKeys = Object.keys(obj).find((k) => k.toLowerCase() === c.toLowerCase());
-            if (lowerKeys) return lowerKeys;
-        }
-        return null;
-    };
-
-    // fetch bookings
+    // --- API Calls ---
     const fetchBookings = async () => {
         try {
             setLoading(true);
             const res = await fetch(`${API_BASE}/api/user-management/get-bookings`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-
-            // normalize array
+            
             let arr = [];
             if (Array.isArray(data)) arr = data;
             else if (data && Array.isArray(data.data)) arr = data.data;
             else {
-                const key = Object.keys(data || {}).find((k) => Array.isArray(data[k]));
+                const key = Object.keys(data || {}).find(k => Array.isArray(data[k]));
                 arr = key ? data[key] : [];
             }
-
+            arr.sort((a, b) => (b.bookingId || 0) - (a.bookingId || 0));
             setRows(arr);
         } catch (err) {
             console.error("Fetch bookings failed:", err);
@@ -110,111 +104,158 @@ const BookingManagement = () => {
         }
     };
 
-    // Danh sách các trạng thái được coi là "Đang xử lý"
-    const PROCESSING_STATUSES = [
-        "Pending_Deposit_Payment",
-        "Pending_Deposit_Confirmation",
-        "Pending_Contract_Signing",
-        "Pending_Vehicle_Pickup",
-        "Vehicle_Inspected_Before_Pickup",
-        "Currently_Renting",
-        "Vehicle_Returned",
-        "Vehicle_Inspected_After_Pickup",
-        "Pending_Total_Payment",
-        "Total_Fees_Charged",
-        "Pending_Total_Payment_Confirmation"
-    ];
+    const fetchMasterData = async () => {
+        if (masterData.length > 0) return masterData; 
+        try {
+            setLoadingMaster(true);
+            const res = await fetch(`${API_BASE}/vehicle-management/get-all-about-station`);
+            if (!res.ok) throw new Error("Failed to load master data");
+            const data = await res.json();
+            const stations = data.stations || [];
+            setMasterData(stations);
+            return stations;
+        } catch (err) {
+            console.error(err);
+            return [];
+        } finally {
+            setLoadingMaster(false);
+        }
+    };
 
     useEffect(() => {
         fetchBookings();
     }, []);
 
-    // tìm tên key cụ thể (ứng với yêu cầu sắp xếp cột)
-    const renterKey = findKey(rows[0] || {}, ["renterName", "renter", "customerName", "userName", "name", "fullName"]);
-    const brandKey = findKey(rows[0] || {}, ["vehicleBrand", "brand", "make"]);
-    const modelKey = findKey(rows[0] || {}, ["vehicleModel", "model", "vehicle_model", "modelName"]);
-    const startKey = findKey(rows[0] || {}, ["startTime", "start", "startAt", "start_time", "startDate", "startAtTime"]);
-    const expectedReturnKey = findKey(rows[0] || {}, ["expectedReturnTime", "expectedReturn", "expectedReturnAt", "expected_return_time"]);
-    const actualReturnKey = findKey(rows[0] || {}, ["actualReturnTime", "actualReturn", "actualReturnAt", "actual_return_time"]);
-    const depositKey = findKey(rows[0] || {}, ["deposit", "depositAmount", "deposit_amount"]);
-    const paymentTotalKey = findKey(rows[0] || {}, ["paymentTotal", "total", "payment_total", "totalPayment", "paymentTotalAmount"]);
-    const statusKey = findKey(rows[0] || {}, ["status", "bookingStatus", "state"]);
-
-    // build ordered columns, only include those that exist and ignore id-like keys
-    const orderedColumns = [
-        { key: renterKey, label: "Khách thuê" },
-        { key: brandKey, label: "Thương hiệu" },
-        { key: modelKey, label: "Model" },
-        { key: startKey, label: "Thời gian nhận xe" },
-        { key: expectedReturnKey, label: "Thời gian trả dự kiến" },
-        { key: actualReturnKey, label: "Thời gian trả thực tế" },
-        { key: depositKey, label: "Tiền đặt cọc" },
-        { key: paymentTotalKey, label: "Tổng thanh toán" },
-        { key: statusKey, label: "Trạng thái" },
-    ].filter((c) => c.key !== null); // loại các cột không tìm thấy
-
-    // search & status filter
-    const filtered = rows.filter((r) => {
-        // 1. Lọc theo trạng thái (Filter)
-        let matchesStatus = true;
-        const currentStatus = r[statusKey]; // Lấy status của dòng hiện tại
-
-        if (filterStatus === "COMPLETED") {
-            matchesStatus = currentStatus === "Completed";
-        } else if (filterStatus === "CANCELLED") {
-            matchesStatus = currentStatus === "Cancelled";
-        } else if (filterStatus === "PROCESSING") {
-            matchesStatus = PROCESSING_STATUSES.includes(currentStatus);
+    // --- Handlers ---
+    const handleEditClick = async (booking) => {
+        const stations = await fetchMasterData();
+        setEditingBooking(booking);
+        
+        // Map StationName -> StationId nếu cần
+        let resolvedStationId = booking.stationId;
+        if (!resolvedStationId && booking.stationName) {
+            const foundStation = stations.find(s => s.stationName.trim().toLowerCase() === booking.stationName.trim().toLowerCase());
+            if (foundStation) resolvedStationId = foundStation.stationId;
         }
-        // Nếu filterStatus là "ALL" thì matchesStatus luôn là true
 
-        if (!matchesStatus) return false; // Nếu không khớp trạng thái thì loại luôn
+        setFormData({
+            bookingId: booking.bookingId,
+            stationId: resolvedStationId || "", 
+            vehicleModelId: booking.vehicleModelId || "",
+            vehicleDetailId: booking.vehicleDetailId || "",
+            startTime: formatForInput(booking.startTime),
+            expectedReturnTime: formatForInput(booking.expectedReturnTime),
+            actualReturnTime: formatForInput(booking.actualReturnTime),
+            status: booking.status
+        });
 
-        // 2. Lọc theo từ khóa (Search Term)
+        setShowModal(true);
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => {
+            const next = { ...prev, [name]: value };
+            if (name === 'stationId') {
+                next.vehicleModelId = "";
+                next.vehicleDetailId = "";
+            }
+            if (name === 'vehicleModelId') {
+                next.vehicleDetailId = "";
+            }
+            return next;
+        });
+    };
+
+    const handleUpdate = async () => {
+        try {
+            setSubmitting(true);
+            const payload = {
+                ...formData,
+                bookingId: editingBooking.bookingId,
+                stationId: formData.stationId ? Number(formData.stationId) : null,
+                vehicleModelId: formData.vehicleModelId ? Number(formData.vehicleModelId) : null,
+                vehicleDetailId: formData.vehicleDetailId ? Number(formData.vehicleDetailId) : null,
+            };
+
+            const res = await fetch(`${API_BASE}/api/user-management/update-booking`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || "Cập nhật thất bại");
+            }
+
+            alert("Cập nhật đơn hàng thành công!");
+            setShowModal(false);
+            fetchBookings(); 
+        } catch (err) {
+            alert("Lỗi: " + err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // --- Logic Client Filtering ---
+    const currentStationData = masterData.find(s => s.stationId === Number(formData.stationId));
+    const availableModels = currentStationData ? currentStationData.models : [];
+    const currentModelData = availableModels.find(m => m.vehicleModelId === Number(formData.vehicleModelId));
+    const availableCars = currentModelData ? currentModelData.cars : [];
+
+    // --- LOGIC PHÂN QUYỀN TRẠNG THÁI (CORE LOGIC) ---
+    
+    // Nhóm 1: Được đổi Model + Detail
+    const canChangeModel = (status) => status === 'Pending_Deposit_Payment';
+
+    // Nhóm 2: Được đổi Detail (nhưng khóa Model)
+    const canChangeDetail = (status) => {
+        const group2 = [
+            'Pending_Deposit_Payment',
+            'Pending_Deposit_Confirmation',
+            'Pending_Contract_Signing',
+            'Pending_Vehicle_Pickup',
+            'Vehicle_Inspected_Before_Pickup'
+        ];
+        return group2.includes(status);
+    };
+
+    // Khóa nút Sửa
+    const isEditDisabled = (status) => status === 'Completed' || status === 'Cancelled';
+
+    // --- Filtering Rows ---
+    const filteredRows = rows.filter(r => {
+        const PROCESSING = [
+            "Pending_Deposit_Payment", "Pending_Deposit_Confirmation", "Pending_Contract_Signing",
+            "Pending_Vehicle_Pickup", "Vehicle_Inspected_Before_Pickup", "Currently_Renting",
+            "Vehicle_Returned", "Vehicle_Inspected_After_Pickup", "Pending_Total_Payment",
+            "Total_Fees_Charged", "Pending_Total_Payment_Confirmation"
+        ];
+        
+        let matchStatus = true;
+        if (filterStatus === 'COMPLETED') matchStatus = r.status === 'Completed';
+        else if (filterStatus === 'CANCELLED') matchStatus = r.status === 'Cancelled';
+        else if (filterStatus === 'PROCESSING') matchStatus = PROCESSING.includes(r.status);
+
+        if (!matchStatus) return false;
         if (!searchTerm) return true;
         const q = searchTerm.toLowerCase();
-
-        // Check các cột đã định nghĩa
-        for (const c of orderedColumns) {
-            const v = r[c.key];
-            if (v !== null && v !== undefined && String(v).toLowerCase().includes(q)) return true;
-        }
-        // Fallback check toàn bộ object
-        return Object.values(r).some((v) => (v ?? "").toString().toLowerCase().includes(q));
+        return (
+            (r.renterName || "").toLowerCase().includes(q) ||
+            (r.vehicleBrand || "").toLowerCase().includes(q) ||
+            (r.vehicleModel || "").toLowerCase().includes(q) ||
+            String(r.bookingId).includes(q)
+        );
     });
-
-    // render cell value with formatting
-    const renderCell = (key, value) => {
-        if (value === null || value === undefined) return "-";
-        const lowerKey = (key || "").toLowerCase();
-        if (lowerKey.includes("time") || lowerKey.includes("date") || lowerKey.includes("at")) {
-            return formatDateTime(value);
-        }
-        if (typeof value === "number") {
-            if (lowerKey.includes("total") || lowerKey.includes("payment") || lowerKey.includes("price") || lowerKey.includes("deposit")) {
-                return formatMoney(value) + " đ";
-            }
-            return String(value);
-        }
-        if (!isNaN(Number(value))) {
-            if (lowerKey.includes("total") || lowerKey.includes("payment") || lowerKey.includes("deposit") || lowerKey.includes("price")) {
-                return formatMoney(Number(value)) + " đ";
-            }
-        }
-        return String(value);
-    };
 
     return (
         <ErrorBoundary>
-            {/* Breadcrumb */}
             <div className="admin-breadcrumb">
-                <i className="fas fa-home"></i>
-                <span>Quản trị</span>
-                <i className="fas fa-chevron-right"></i>
-                <span>Quản lý đơn hàng</span>
+                <i className="fas fa-home"></i> <span>Quản trị</span> <i className="fas fa-chevron-right"></i> <span>Quản lý đơn hàng</span>
             </div>
 
-            {/* Header */}
             <div className="admin-page-header">
                 <div className="admin-page-header-left">
                     <div className="admin-page-icon" style={{ background: "linear-gradient(135deg,#3b82f6,#2563eb)" }}>
@@ -227,30 +268,13 @@ const BookingManagement = () => {
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <div className="vehicle-toolbar" style={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+            <div className="vehicle-toolbar" style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
                 <div className="vehicle-search">
                     <i className="fas fa-search"></i>
-                    <input
-                        placeholder="Tìm kiếm (tất cả trường)..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    <input placeholder="Tìm tên khách, xe, mã đơn..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                 </div>
-                <div className="vehicle-filter" style={{ marginLeft: "12px", display: "flex", alignItems: "center" }}>
-                    <i className="fas fa-filter" style={{ marginRight: "8px", color: "#64748b" }}></i>
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        style={{
-                            padding: "8px 12px",
-                            borderRadius: "6px",
-                            border: "1px solid #e2e8f0",
-                            outline: "none",
-                            cursor: "pointer",
-                            minWidth: "160px"
-                        }}
-                    >
+                <div className="vehicle-filter" style={{ marginLeft: "12px" }}>
+                    <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="booking-form-select" style={{ minWidth: "160px" }}>
                         <option value="ALL">Tất cả đơn hàng</option>
                         <option value="PROCESSING">Đang xử lý</option>
                         <option value="COMPLETED">Đã hoàn thành</option>
@@ -258,70 +282,182 @@ const BookingManagement = () => {
                     </select>
                 </div>
                 <button className="admin-btn admin-btn-secondary" onClick={fetchBookings}>
-                    <i className="fas fa-sync-alt"></i>
-                    <span>Làm mới</span>
+                    <i className="fas fa-sync-alt"></i> Làm mới
                 </button>
-
             </div>
 
-            {/* Table */}
             <div className="vehicles-table-container">
-                {loading ? (
-                    <div className="empty-state">
-                        <i className="fas fa-spinner fa-spin"></i>
-                        <p>Đang tải danh sách...</p>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="empty-state">
-                        <i className="fas fa-list"></i>
-                        <p>Không tìm thấy đơn hàng</p>
-                    </div>
-                ) : (
+                {loading ? <div className="empty-state"><i className="fas fa-spinner fa-spin"></i> <p>Đang tải...</p></div> : 
+                filteredRows.length === 0 ? <div className="empty-state"><i className="fas fa-list"></i> <p>Không tìm thấy đơn hàng</p></div> : (
                     <table className="vehicles-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                {orderedColumns.map((c) => (
-                                    <th key={c.key}>{c.label}</th>
-                                ))}
+                                <th>Mã đơn</th>
+                                <th>Khách thuê</th>
+                                <th>Trạm xe</th> 
+                                <th>Xe (Biển số)</th>
+                                <th>Thời gian nhận</th>
+                                <th>Trả dự kiến</th>
+                                <th>Cọc</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th style={{ textAlign: "center" }}>Hành động</th>
                             </tr>
                         </thead>
-
                         <tbody>
-                            {filtered.map((r, i) => {
-                                const id = r.bookingId ?? r.id ?? JSON.stringify(r);
-                                return (
-                                    <tr key={id}>
-                                        <td>{i + 1}</td>
-
-                                        {orderedColumns.map((c) => {
-                                            // for status column just show pretty label
-                                            if (c.key === statusKey) {
-                                                return (
-                                                    <td key={c.key}>{getStatusText(r[c.key])}</td>
-                                                );
-                                            }
-                                            return <td key={c.key}>{renderCell(c.key, r[c.key])}</td>;
-                                        })}
-                                    </tr>
-                                );
-                            })}
+                            {filteredRows.map((r) => (
+                                <tr key={r.bookingId}>
+                                    <td style={{ fontWeight: "bold", color: "#3b82f6" }}>#{r.bookingId}</td>
+                                    <td>
+                                        <div>{r.renterName}</div>
+                                        <div style={{ fontSize: "11px", color: "#64748b" }}>{r.renterPhone}</div>
+                                    </td>
+                                    <td><div style={{ fontWeight: 500 }}>{r.stationName || "-"}</div></td>
+                                    <td>
+                                        {r.vehicleBrand} {r.vehicleModel}
+                                        {r.licensePlate && <div className="vehicle-license-cell" style={{ fontSize: "12px" }}>{r.licensePlate}</div>}
+                                    </td>
+                                    <td>{formatDateTime(r.startTime)}</td>
+                                    <td>{formatDateTime(r.expectedReturnTime)}</td>
+                                    <td>{formatMoney(r.deposit)}</td>
+                                    <td>{formatMoney(r.paymentTotal)}</td>
+                                    <td><span className={`status-badge ${r.status}`}>{getStatusText(r.status)}</span></td>
+                                    <td style={{ textAlign: "center" }}>
+                                        <button className="admin-btn-secondary" style={{ padding: "6px 12px", fontSize: "12px" }}
+                                            onClick={() => handleEditClick(r)} disabled={isEditDisabled(r.status)}>
+                                            <i className="fas fa-edit"></i> Sửa
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 )}
             </div>
 
-            {/* Internal CSS for better table spacing (kept minimal) */}
-            <style>{`
-                .vehicles-table td, .vehicles-table th {
-                    padding: 10px 12px;
-                    vertical-align: middle;
-                }
-                .vehicles-table tbody tr:hover {
-                    background: rgba(59,130,246,0.03);
-                }
-            `}</style>
+            {/* --- EDIT MODAL OVERLAY --- */}
+            {showModal && editingBooking && (
+                <div className="booking-modal-overlay">
+                    <div className="booking-modal-content">
+                        <div className="booking-modal-header">
+                            <h2><i className="fas fa-edit" style={{ color: "#3b82f6" }}></i> Chỉnh sửa đơn hàng #{editingBooking.bookingId}</h2>
+                            <button className="booking-modal-close" onClick={() => setShowModal(false)}><i className="fas fa-times"></i></button>
+                        </div>
 
+                        <div className="booking-modal-body">
+                            {loadingMaster ? <div style={{ textAlign: "center", padding: "20px" }}><i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu xe...</div> : (
+                                <div className="booking-form-grid">
+                                    {/* 1. TRẠM XE - LUÔN DISABLE */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Trạm xe</label>
+                                        <select 
+                                            name="stationId"
+                                            className="booking-form-select"
+                                            value={formData.stationId}
+                                            disabled={true} 
+                                            style={{ background: "#f1f5f9", cursor: "not-allowed" }}
+                                        >
+                                            <option value="">-- Chọn Trạm --</option>
+                                            {masterData.map(st => (
+                                                <option key={st.stationId} value={st.stationId}>{st.stationName}</option>
+                                            ))}
+                                            {!formData.stationId && editingBooking.stationName && (
+                                                <option value="" selected>{editingBooking.stationName}</option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    {/* 2. MODEL - Disable nếu chưa có Trạm HOẶC trạng thái bị khóa */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">
+                                            Dòng xe (Model) 
+                                            {!canChangeModel(formData.status) && <span style={{fontSize: '11px', color: '#dc2626', marginLeft: '5px'}}>(Đã khóa)</span>}
+                                        </label>
+                                        <select 
+                                            name="vehicleModelId"
+                                            className="booking-form-select"
+                                            value={formData.vehicleModelId}
+                                            onChange={handleFormChange}
+                                            disabled={!formData.stationId || !canChangeModel(formData.status)}
+                                        >
+                                            <option value="">-- Chọn Dòng xe --</option>
+                                            {availableModels.map(md => (
+                                                <option key={md.vehicleModelId} value={md.vehicleModelId}>{md.brand} {md.modelName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* 3. DETAIL - Disable nếu chưa có Model HOẶC trạng thái bị khóa */}
+                                    <div className="booking-form-group full-width">
+                                        <label className="booking-form-label">
+                                            Chi tiết xe (Biển số)
+                                            {!canChangeDetail(formData.status) && <span style={{fontSize: '11px', color: '#dc2626', marginLeft: '5px'}}>(Đã khóa)</span>}
+                                        </label>
+                                        <select 
+                                            name="vehicleDetailId"
+                                            className="booking-form-select"
+                                            value={formData.vehicleDetailId}
+                                            onChange={handleFormChange}
+                                            disabled={!formData.vehicleModelId || !canChangeDetail(formData.status)}
+                                        >
+                                            <option value="">-- Chọn xe cụ thể --</option>
+                                            {editingBooking.vehicleDetailId && (
+                                                <option value={editingBooking.vehicleDetailId}>{editingBooking.licensePlate} (Hiện tại)</option>
+                                            )}
+                                            {availableCars.map(car => (
+                                                car.vehicleDetailId !== editingBooking.vehicleDetailId && (
+                                                    <option key={car.vehicleDetailId} value={car.vehicleDetailId} disabled={car.status !== 'AVAILABLE'}>
+                                                        {car.licensePlate} - {car.color} {car.status !== 'AVAILABLE' ? `(${car.status})` : ''}
+                                                    </option>
+                                                )
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* 4. Thời gian */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Thời gian nhận</label>
+                                        <input type="datetime-local" name="startTime" className="booking-form-input" value={formData.startTime} onChange={handleFormChange} />
+                                    </div>
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Trả dự kiến (Gia hạn)</label>
+                                        <input type="datetime-local" name="expectedReturnTime" className="booking-form-input" value={formData.expectedReturnTime} onChange={handleFormChange} />
+                                    </div>
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Trả thực tế</label>
+                                        <input type="datetime-local" name="actualReturnTime" className="booking-form-input" value={formData.actualReturnTime} onChange={handleFormChange} />
+                                    </div>
+
+                                    {/* 5. Trạng thái - CHỈ HIỂN THỊ LIST CHO PHÉP */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Trạng thái đơn hàng</label>
+                                        <select name="status" className="booking-form-select" value={formData.status} onChange={handleFormChange}>
+                                            {/* Luôn hiển thị trạng thái hiện tại nếu nó không nằm trong list cho phép (để tránh lỗi UI) */}
+                                            {!ALLOWED_MANUAL_STATUSES.includes(formData.status) && (
+                                                <option value={formData.status}>{getStatusText(formData.status)}</option>
+                                            )}
+                                            
+                                            {/* List các trạng thái được phép chọn */}
+                                            {ALLOWED_MANUAL_STATUSES.map(status => (
+                                                <option key={status} value={status}>
+                                                    {getStatusText(status)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="booking-modal-footer">
+                            <button className="btn-cancel" onClick={() => setShowModal(false)}>Hủy bỏ</button>
+                            <button className="btn-save" onClick={handleUpdate} disabled={submitting || loadingMaster}>
+                                {submitting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>} <span>Lưu thay đổi</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ErrorBoundary>
     );
 };
