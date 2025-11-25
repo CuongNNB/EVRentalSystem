@@ -2,6 +2,7 @@ package com.evrental.evrentalsystem.controller.admin;
 
 import com.evrental.evrentalsystem.entity.VehicleDetail;
 import com.evrental.evrentalsystem.entity.VehicleModel;
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import com.evrental.evrentalsystem.request.*;
 import com.evrental.evrentalsystem.response.admin.*;
 import com.evrental.evrentalsystem.service.VehicleManagementService;
@@ -73,6 +74,7 @@ public class VehicleManagementController {
             @RequestParam("color") String color,
             @RequestParam("stationId") Integer stationId,
             @RequestParam("vehicleModelId") Integer vehicleModelId,
+            @RequestParam(value = "status") String status,
             @RequestParam(value = "picture", required = false) MultipartFile picture) {
 
         AdminUpdateVehicleDetailRequest req = new AdminUpdateVehicleDetailRequest();
@@ -83,6 +85,7 @@ public class VehicleManagementController {
         req.setColor(color);
         req.setStationId(stationId);
         req.setVehicleModelId(vehicleModelId);
+        req.setStatus(VehicleStatus.valueOf(status));
 
         String message = vehicleManagementService.updateVehicleDetail(req, picture);
 

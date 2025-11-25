@@ -276,7 +276,7 @@ const AdminVehicleDetail = () => {
         return
       }
       form.append('vehicleModelId', String(vehicleModelIdToSend))
-
+      form.append('status', formData.status)
 
       // picture must be a MultipartFile — attach File object if user selected one
       if (pictureFile) {
@@ -739,7 +739,6 @@ const AdminVehicleDetail = () => {
                           <option value="AVAILABLE">Khả dụng</option>
                           <option value="RENTED">Đang thuê</option>
                           <option value="FIXING">Bảo trì</option>
-                          <option value="MAINTENANCE">Bảo dưỡng</option>
                         </select>
                       ) : (
                         <span className={`vehicle-info-value ${getStatusBadgeClass(currentVehicle.status)}`}>

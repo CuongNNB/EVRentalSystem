@@ -128,6 +128,7 @@ public class VehicleManagementService {
         }
         vd.setStation(station);
         vd.setVehicleModel(vm);
+        vd.setStatus(req.getStatus());
         vehicleDetailRepository.save(vd);
         return "Vehicle update created successfully.";
     }

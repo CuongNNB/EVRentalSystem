@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.request;
 
+import com.evrental.evrentalsystem.enums.VehicleStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +19,5 @@ public class AdminUpdateVehicleDetailRequest {
     private String color;
     private Integer stationId;
     private Integer vehicleModelId;
+    private VehicleStatus status;
 }
