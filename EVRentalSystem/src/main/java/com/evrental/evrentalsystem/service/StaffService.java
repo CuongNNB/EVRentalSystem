@@ -117,25 +117,41 @@ public class StaffService {
 
     public boolean changeStatus(int id, BookingStatus status) {
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
-        VehicleDetail vd = vehicleDetailRepository.findById(booking.getVehicleDetail().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Booking not found with ID: " + id));
+
         try {
             int updated = bookingRepository.updateBookingStatus(id, status);
-            if (updated > 0) {
-                if(status.equals(BookingStatus.Vehicle_Inspected_After_Pickup)) {
-                    vd.setStatus(VehicleStatus.AVAILABLE);
-                    vehicleDetailRepository.save(vd);
-                }
-                log.info("✅ Update success! (Booking ID: {})", id);
-                return true;
-            } else {
+
+            if (updated <= 0) {
                 log.warn("⚠️ No booking found with ID: {}", id);
                 return false;
             }
+
+            // ⭐ Chỉ xử lý xe khi cần
+            if (status == BookingStatus.Vehicle_Inspected_After_Pickup) {
+
+                // Nếu booking chưa có vehicleDetail thì bỏ qua phần update xe
+                if (booking.getVehicleDetail() == null) {
+                    log.warn("Booking {} has no vehicleDetail, skip vehicle status update", id);
+                    return true; // booking vẫn đã được update status
+                }
+
+                VehicleDetail vd = vehicleDetailRepository.findById(booking.getVehicleDetail().getId())
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "VehicleDetail not found for booking ID: " + id));
+
+                vd.setStatus(VehicleStatus.AVAILABLE);
+                vehicleDetailRepository.save(vd);
+            }
+
+            log.info("✅ Update success! (Booking ID: {})", id);
+            return true;
+
         } catch (Exception e) {
             log.error("❌ Error updating booking status for ID: {}", id, e);
-            throw e; // ném lỗi lên controller
+            throw e;
         }
     }
 

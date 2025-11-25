@@ -1148,7 +1148,7 @@ const OrdersList = () => {
 
         try {
             // attemptStatusUpdate sẽ gọi /api/bookings/{orderId}/status?status=Pending_Deposit_Payment
-            const ok = await attemptStatusUpdate(order.id, "pending_deposit_payment");
+            const ok = await attemptStatusUpdate(order.id, "Pending_Deposit_Payment");
 
             // attemptStatusUpdate đã gọi applyStatusUpdate khi thành công hoặc tạm cập nhật khi fail
             setConnectionState({

@@ -6,7 +6,6 @@ import "../staff/StaffLayout.css";
 import KpiCard from '../../components/admin/KpiCard'
 import RevenueChart from '../../components/admin/RevenueChart'
 import TopStations from '../../components/admin/TopStations'
-import RecentRentals from '../../components/admin/RecentRentals'
 import ActivityFeed from '../../components/admin/ActivityFeed'
 import AdminSlideBar from '../../components/admin/AdminSlideBar'
 import StationVehiclesCard from '../../components/admin/StationVehiclesCard'
@@ -204,7 +203,6 @@ export function AdminOverview() {
       </div>
       <div className="panels-grid">
         <TopStations />
-        <RecentRentals />
       </div>
     </>
   );

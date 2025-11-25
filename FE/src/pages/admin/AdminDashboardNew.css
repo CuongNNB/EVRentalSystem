@@ -384,14 +384,6 @@
   overflow: hidden;
 }
 
-/* Panels Grid (Top Stations & Recent Rentals) */
-.panels-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 24px;
-}
-
 .panels-grid .stat-card {
   height: 100%;
   min-height: 520px;
@@ -402,13 +394,7 @@
   border-radius: 16px !important;
 }
 
-/* Hai panel cao đồng đều, phần nội dung cuộn mềm */
-.panels-grid .top-stations-card,
-.panels-grid .recent-rentals-card {
-  min-height: 520px;
-  max-height: 580px;
-  padding: 0 !important;
-}
+
 
 .recent-rentals-scroll {
   max-height: calc(100% - 64px);

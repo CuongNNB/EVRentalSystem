@@ -52,7 +52,7 @@ public class BookingController {
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> updateBookingStatus(
             @PathVariable int id,
-            @RequestParam BookingStatus status) {
+            @RequestParam("status") BookingStatus status) {
 
         try {
             boolean updated = staffService.changeStatus(id, status);
