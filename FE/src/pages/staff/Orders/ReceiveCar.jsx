@@ -464,7 +464,7 @@ export default function ReceiveCar() {
 					
 							<div className="return-check__action-group">
 								<button type="button" className="return-check__action return-check__action--primary" onClick={handleReceive} disabled={isSending}>
-									{isSending ? "Đang xử lý..." : "Hoàn tất nhận xe"}
+									{isSending ? "Đang xử lý..." : "Tính phí phát sinh"}
 								</button>
 							</div>
 						</footer>

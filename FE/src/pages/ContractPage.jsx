@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react"; // Bỏ useRef
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import SignatureCanvas from "react-signature-canvas";
+// Bỏ import SignatureCanvas
 import OtpInput from "react-otp-input";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./ContractPage.css";
+
 export default function ContractPage() {
     const { carId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const renterSignRef = useRef(null);
+    // Bỏ const renterSignRef = useRef(null);
 
     // ✅ Lấy dữ liệu forward từ BookingPage
     const { fullBooking, response, viewOnly, contract } = location.state || {};
@@ -52,12 +53,9 @@ export default function ContractPage() {
         },
     }));
 
-    // Helper: format number as VND
     const formatPrice = (p) => new Intl.NumberFormat("vi-VN").format(p || 0);
 
-    // NEW: function to format rental duration as "X ngày Y giờ"
     const formatRentalDuration = () => {
-        // Prefer using totals.days and totals.hours if present
         const dFromTotals = typeof totals.days === "number" ? totals.days : null;
         const hFromTotals = typeof totals.hours === "number" ? totals.hours : null;
 
@@ -68,7 +66,6 @@ export default function ContractPage() {
             return `${daysLabel}${daysLabel && hoursLabel ? " " : ""}${hoursLabel}`.trim();
         }
 
-        // Fallback: compute from booking.pickupDateTime and booking.returnDateTime
         const start = booking.pickupDateTime ? new Date(booking.pickupDateTime) : null;
         const end = booking.returnDateTime ? new Date(booking.returnDateTime) : null;
 
@@ -76,7 +73,6 @@ export default function ContractPage() {
             let diffMs = end.getTime() - start.getTime();
             if (diffMs <= 0) return "Dưới 1 giờ";
             const totalHoursFloat = diffMs / (1000 * 60 * 60);
-            // We'll floor hours for display (so 1.9h -> 1 giờ); if you prefer round up, change to Math.ceil
             const totalHours = Math.floor(totalHoursFloat);
             if (totalHours <= 0) return "Dưới 1 giờ";
             const days = Math.floor(totalHours / 24);
@@ -87,7 +83,6 @@ export default function ContractPage() {
             return `${daysLabel}${daysLabel && hoursLabel ? " " : ""}${hoursLabel}`.trim();
         }
 
-        // Fallback to contractData.car.rentalDays if available
         if (contractData.car && typeof contractData.car.rentalDays === "number") {
             return `${contractData.car.rentalDays} ngày`;
         }
@@ -107,25 +102,20 @@ export default function ContractPage() {
     const [resendTimer, setResendTimer] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Overlay state for success message after signing
     const [successOverlay, setSuccessOverlay] = useState({ visible: false, message: "" });
-    // store last contract summary to forward on confirm
     const [lastContractSummary, setLastContractSummary] = useState(null);
 
-    // ✅ Ký mặc định bên A
+    // ✅ Chữ ký mẫu (dùng cho cả Owner và Renter khi bấm nút)
+    const SAMPLE_SIGNATURE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
     useEffect(() => {
-        setOwnerSign(
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-        );
+        setOwnerSign(SAMPLE_SIGNATURE);
     }, []);
 
-    // ✅ Effect xử lý chế độ View Only
     useEffect(() => {
         if (viewOnly) {
-            // Nếu xem lại hợp đồng đã ký, ta set trạng thái là đã ký luôn
             setIsSignedB(true);
-
-            setRenterSign("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+            setRenterSign(SAMPLE_SIGNATURE);
         }
     }, [viewOnly]);
 
@@ -136,16 +126,15 @@ export default function ContractPage() {
         }
     }, [resendTimer]);
 
+    // ✅ SỬA: Thay vì lấy từ canvas, ta set ảnh mẫu luôn
     const handleConfirmSign = () => {
-        const sign = renterSignRef.current?.toDataURL();
-        if (sign) {
-            setRenterSign(sign);
-            setIsSignedB(true);
-        }
+        // Ở đây bạn có thể thay bằng ảnh chữ ký thật của user nếu có
+        setRenterSign(SAMPLE_SIGNATURE); 
+        setIsSignedB(true);
     };
 
+    // ✅ SỬA: Bỏ dòng renterSignRef.current?.clear()
     const handleClearSign = () => {
-        renterSignRef.current?.clear();
         setRenterSign(null);
         setIsSignedB(false);
         setOtp("");
@@ -156,7 +145,6 @@ export default function ContractPage() {
         setResendTimer(0);
     };
 
-    // ✅ GỬI OTP bằng API backend
     const handleSendOtp = async () => {
         if (!bookingId || !userEmail) {
             setOtpError("Không tìm thấy thông tin booking hoặc email.");
@@ -184,7 +172,6 @@ export default function ContractPage() {
         }
     };
 
-    // ✅ XÁC THỰC OTP bằng API backend
     const handleVerifyOtp = async () => {
         if (otp.length !== 6) {
             setOtpError("Nhập đủ 6 số OTP");
@@ -221,10 +208,8 @@ export default function ContractPage() {
                     verifyMessage: result,
                 };
 
-                // Lưu lại vào localStorage để dự phòng
                 localStorage.setItem("currentContract", JSON.stringify(contractSummary));
 
-                // Show success overlay instead of navigate immediately
                 setLastContractSummary(contractSummary);
                 setSuccessOverlay({
                     visible: true,
@@ -258,7 +243,6 @@ export default function ContractPage() {
 
         localStorage.setItem("currentContract", JSON.stringify(contractSummary));
 
-        // Show overlay and wait user confirmation to navigate
         setLastContractSummary(contractSummary);
         setSuccessOverlay({
             visible: true,
@@ -267,7 +251,6 @@ export default function ContractPage() {
     };
 
     const handleConfirmOverlay = () => {
-        // close overlay and navigate to home with contractSummary in state
         setSuccessOverlay({ visible: false, message: "" });
         if (lastContractSummary) {
             navigate("/", { state: { contractSummary: lastContractSummary } });
@@ -313,7 +296,6 @@ export default function ContractPage() {
 
                             <h2>Điều 3: Chi phí và thời gian</h2>
                             <p><strong>Giá thuê/ngày:</strong> {formatPrice(contractData.car.price)}₫</p>
-                            {/* UPDATED: show rental duration as "X ngày Y giờ" */}
                             <p><strong>Thời gian thuê:</strong> {formatRentalDuration()}</p>
                             <p><strong>Đặt cọc:</strong> {formatPrice(contractData.car.deposit)}₫</p>
                             <p><strong>Tổng cộng:</strong> {formatPrice(contractData.car.totalAmount)}₫</p>
@@ -325,30 +307,24 @@ export default function ContractPage() {
 
                             <h2>Điều 6: Bảo hiểm và giới hạn quãng đường</h2>
                             <p>• Xe đã được đăng ký bảo hiểm bắt buộc dân sự, chi phí bồi thường sẽ tuân theo quy định của công ty bảo hiểm.</p>
-                            <p>• Mỗi gói thuê bao gồm <strong>{contractData.car.includedKm}</strong> km/ngày. Nếu vượt quá giới hạn này, phụ thu 5.000₫/km sẽ được áp dụng.</p>
+                            <p>• Mỗi gói thuê bao gồm <strong>{contractData.car.includedKm || "không giới hạn"}</strong> km/ngày.</p>
                             <p>• Trường hợp tai nạn xảy ra do lỗi của Bên B, Bên B chịu toàn bộ chi phí khắc phục và bồi thường cho Bên A.</p>
 
                             <h2>Điều 7: Chấm dứt và hiệu lực hợp đồng</h2>
                             <p>• Hợp đồng có hiệu lực kể từ khi hai bên ký tên và xác thực OTP.</p>
                             <p>• Nếu một bên vi phạm nghiêm trọng các điều khoản, bên còn lại có quyền chấm dứt hợp đồng và yêu cầu bồi thường thiệt hại.</p>
-                            <p>• Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng; nếu không đạt thỏa thuận, vụ việc sẽ được đưa ra Tòa án Nhân dân TP.HCM.</p>
 
                             <h2>Điều 8: Nghĩa vụ bảo dưỡng và nhiên liệu</h2>
                             <p>• Bên B có trách nhiệm kiểm tra tình trạng xe trước khi nhận và báo ngay cho Bên A nếu phát hiện lỗi kỹ thuật.</p>
                             <p>• Xe được giao trong tình trạng sạc đầy pin; Bên B cần hoàn trả xe với mức pin không thấp hơn 20%.</p>
-                            <p>• Mọi chi phí phát sinh do sử dụng sai cách hoặc không tuân thủ hướng dẫn kỹ thuật sẽ do Bên B chịu trách nhiệm.</p>
 
                             <h2>Điều 9: Gia hạn và hủy hợp đồng</h2>
                             <p>• Bên B có thể gia hạn thời gian thuê xe nếu thông báo trước ít nhất 12 giờ và được Bên A chấp thuận.</p>
                             <p>• Nếu Bên B muốn hủy hợp đồng sau khi đã đặt cọc, số tiền đặt cọc sẽ không được hoàn lại.</p>
-                            <p>• Trường hợp bất khả kháng (thiên tai, dịch bệnh, tai nạn nghiêm trọng, v.v.) hai bên sẽ thương lượng giải pháp hợp lý.</p>
 
                             <h2>Điều 10: Cam kết của các bên</h2>
                             <p>• Bên A cam kết cung cấp xe đảm bảo chất lượng, an toàn và đúng thời gian đã thỏa thuận.</p>
                             <p>• Bên B cam kết cung cấp thông tin cá nhân chính xác và sử dụng xe đúng mục đích thuê.</p>
-                            <p>• Hai bên cam kết tuân thủ đầy đủ các điều khoản của hợp đồng này và cùng chịu trách nhiệm trước pháp luật nếu vi phạm.</p>
-
-
                         </div>
                     </div>
 
@@ -358,26 +334,41 @@ export default function ContractPage() {
                         <div className="signature-grid">
                             <div className="signature-box">
                                 <h3>Bên B - Người thuê xe</h3>
+                                
+                                {/* SỬA: Thay thế Canvas bằng Nút Ký hoặc Ảnh đã ký */}
                                 {!isSignedB ? (
-                                    <SignatureCanvas
-                                        ref={renterSignRef}
-                                        canvasProps={{ width: 300, height: 150, className: "signature-canvas" }}
-                                    />
+                                    <div className="sign-placeholder" style={{
+                                        height: '150px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: '2px dashed #cbd5e1',
+                                        borderRadius: '8px',
+                                        background: '#f8fafc',
+                                        flexDirection: 'column',
+                                        gap: '12px'
+                                    }}>
+                                        <p style={{color: '#64748b', margin:0}}>Vui lòng xác nhận ký hợp đồng</p>
+                                        {/* Chỉ hiện nút Ký nếu không phải chế độ xem lại */}
+                                        {!viewOnly && (
+                                            <button 
+                                                className="btn-primary" 
+                                                onClick={handleConfirmSign}
+                                                style={{padding: '10px 24px'}}
+                                            >
+                                                ✍️ Ký xác nhận
+                                            </button>
+                                        )}
+                                    </div>
                                 ) : (
-                                    <img src={renterSign} alt="Chữ ký Bên B" className="signature-image" />
+                                    <div style={{textAlign: 'center'}}>
+                                        <img src={renterSign} alt="Chữ ký Bên B" className="signature-image" />
+                                        <p style={{color: '#10b981', fontWeight: 'bold', marginTop: '8px'}}>✅ Đã ký xác nhận</p>
+                                    </div>
                                 )}
+
                                 <div className="signature-actions">
-                                    {/* Nếu chưa ký B và KHÔNG PHẢI chế độ xem -> Hiện nút ký */}
-                                    {!isSignedB && !viewOnly ? (
-                                        <>
-                                            <button className="btn-clear" onClick={handleClearSign}>Xóa ký</button>
-                                            <button className="btn-confirm" onClick={handleConfirmSign}>Xác nhận ký</button>
-                                        </>
-                                    ) : (
-                                        // Nếu đã ký nhưng KHÔNG PHẢI viewOnly (tức là vừa ký xong tức thì) -> Hiện nút Ký lại
-                                        // Nếu là viewOnly -> Ẩn luôn nút (render null)
-                                        !viewOnly && <button className="btn-clear" onClick={handleClearSign}>Ký lại</button>
-                                    )}
+
                                 </div>
                             </div>
 
@@ -450,7 +441,6 @@ export default function ContractPage() {
                     )}
                 </div>
 
-                {/* Success overlay shown after signing */}
                 {successOverlay.visible && (
                     <div style={{
                         position: 'fixed',
