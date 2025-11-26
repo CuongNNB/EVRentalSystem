@@ -622,7 +622,7 @@ const AdminVehicleDetail = () => {
                 <button
                   className="vehicle-detail-action-btn vehicle-detail-action-btn--primary"
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || isDeleted}
                 >
                   <i className="fas fa-save"></i>
                   <span>{saving ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
@@ -729,6 +729,7 @@ const AdminVehicleDetail = () => {
                           className="vehicle-info-input"
                           value={formData.licensePlate}
                           onChange={handleChange}
+                          disabled={isRented || isDeleted}
                           required
                         />
                       ) : (
@@ -792,7 +793,7 @@ const AdminVehicleDetail = () => {
                           className="vehicle-info-select"
                           value={formData.vehicleModelId ?? ''}
                           onChange={handleChange}
-                          required
+                          disabled={isRented || isDeleted}
                         >
                           <option value="">Chọn model</option>
                           {vehicleModels.map(m => (
@@ -824,7 +825,7 @@ const AdminVehicleDetail = () => {
                           value={formData.odo}
                           onChange={handleChange}
                           min="0"
-                          required
+                          disabled={isRented || isDeleted}
                         />
                       ) : (
                         <span className="vehicle-info-value">
@@ -848,6 +849,7 @@ const AdminVehicleDetail = () => {
                           value={formData.batteryCapacity}
                           onChange={handleChange}
                           placeholder="ví dụ: 42 kWh"
+                          disabled={isDeleted}
                         />
                       ) : (
                         <span className="vehicle-info-value">{currentVehicle.batteryCapacity ?? formData.batteryCapacity ?? 'N/A'}</span>
@@ -868,6 +870,7 @@ const AdminVehicleDetail = () => {
                           value={formData.color}
                           onChange={handleChange}
                           placeholder="ví dụ: Trắng"
+                          disabled={isDeleted}
                         />
                       ) : (
                         <span className="vehicle-info-value">{currentVehicle.color ?? formData.color ?? 'N/A'}</span>
@@ -897,7 +900,7 @@ const AdminVehicleDetail = () => {
                           className="vehicle-info-select"
                           value={formData.stationId ?? ''}
                           onChange={handleChange}
-                          required
+                          disabled={isRented || isDeleted}
                         >
                           <option value="">Chọn trạm</option>
                           {stationOptions.map(s => (
@@ -928,7 +931,7 @@ const AdminVehicleDetail = () => {
                           value={formData.picture}
                           onChange={handleChange}
                           placeholder="ví dụ: 1.jpg hoặc 1"
-
+                          disabled={isDeleted}
                         />
                       </div>
                     </div>
