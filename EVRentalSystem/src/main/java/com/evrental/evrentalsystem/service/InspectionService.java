@@ -131,10 +131,23 @@ public class InspectionService {
 
         for (InspectionAfter inspection : inspections) {
             inspection.setStatus(InspectionStatusEnum.valueOf(status));
+
+            if (inspection.getPartName().name().equalsIgnoreCase("ODOMETER")) {
+                Integer newOdo = parseOdoFromDescription(inspection.getDescription());
+
+                if (newOdo != null) {
+                    VehicleDetail vehicle = inspection.getBooking().getVehicleDetail();
+                    if (vehicle != null) {
+                        vehicle.setOdo(newOdo);
+                        vehicleDetailRepository.save(vehicle);
+                    }
+                }
+            }
         }
 
         Booking checkBooking = bookingRepository.findById(bookingId).orElse(null);
         checkBooking.setStatus(BookingStatus.Pending_Total_Payment);
+        VehicleDetail vd = vehicleDetailRepository.findByLicensePlate(checkBooking.getVehicleDetail().getLicensePlate());
 
         if (status.equals(InspectionStatusEnum.REJECTED.toString())) {
             bookingRepository.findById(bookingId).ifPresent(booking -> {
@@ -161,7 +174,19 @@ public class InspectionService {
         return additionalFeeRepository.deleteByBookingId(bookingId);
     }
 
-
-
+    private Integer parseOdoFromDescription(String description) {
+        if (description == null || description.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            String numericString = description.replaceAll("[^0-9]", "");
+            if (numericString.isEmpty()) {
+                return null;
+            }
+            return Integer.parseInt(numericString);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
     //End code here
 }
