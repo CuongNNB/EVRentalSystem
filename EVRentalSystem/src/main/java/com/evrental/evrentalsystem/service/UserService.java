@@ -139,11 +139,11 @@ public class UserService {
         String cccdFront = null;
         String cccdBack = null;
         String driverLicense = null;
-
+        String baseUrl = "http://localhost:8084/EVRentalSystem/api/users/";
         if (user.getRenterDetail() != null) {
-            cccdFront = user.getRenterDetail().getCccdFront();
-            cccdBack = user.getRenterDetail().getCccdBack();
-            driverLicense = user.getRenterDetail().getDriverLicense();
+            cccdFront = "http://localhost:8084/EVRentalSystem/api/users/" + user.getUserId() + "/renter-detail/cccd-front";
+            cccdBack = "http://localhost:8084/EVRentalSystem/api/users/" + user.getUserId() + "/renter-detail/cccd-back";
+            driverLicense = "http://localhost:8084/EVRentalSystem/api/users/" + user.getUserId() + "/renter-detail/driver-license";
         }
 
         return new UserLoginResponse(

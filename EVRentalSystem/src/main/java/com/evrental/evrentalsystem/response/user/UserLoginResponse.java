@@ -1,5 +1,6 @@
 package com.evrental.evrentalsystem.response.user;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class UserLoginResponse {
     private String role;
     private String phone;
     private String address;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     private String cccdFront;
     private String cccdBack;
