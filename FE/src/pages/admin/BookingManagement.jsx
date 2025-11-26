@@ -37,32 +37,23 @@ const BookingManagement = () => {
     const getStatusText = (status) => {
         if (!status) return 'Không xác định';
         switch (status) {
-            case 'Pending_Deposit_Confirmation': return 'Chờ xác nhận cọc';
-            case 'Pending_Contract_Signing': return 'Chờ ký hợp đồng';
-            case 'Pending_Vehicle_Pickup': return 'Chờ kiểm tra xe';
-            case 'Vehicle_Inspected_Before_Pickup': return 'Đã kiểm tra xe';
-            case 'Currently_Renting': return 'Đang thuê xe';
-            case 'Vehicle_Returned': return 'Xe đã trả';
+            case 'Pending_Deposit_Confirmation': return 'Chờ xác nhận cọc'; // 2
+            case 'Pending_Contract_Signing': return 'Chờ ký hợp đồng'; // 3
+            case 'Pending_Vehicle_Pickup': return 'Chờ kiểm tra xe'; // 4
+            case 'Vehicle_Inspected_Before_Pickup': return 'Đã kiểm tra xe'; // 5
+            case 'Currently_Renting': return 'Đang thuê xe'; // 6
+            case 'Vehicle_Returned': return 'Xe đã trả'; // 7
             case 'Completed': return 'Đã hoàn thành';
             case 'Vehicle_Return_Overdue': return 'Quá hạn trả xe';
             case 'Cancelled': return 'Đã hủy';
-            case 'Pending_Deposit_Payment': return 'Đợi thanh toán cọc';
-            case 'Vehicle_Inspected_After_Pickup': return 'Đợi xác nhận nhận xe';
-            case 'Pending_Total_Payment': return 'Đợi thanh toán đơn hàng';
-            case 'Pending_Total_Payment_Confirmation': return 'Đợi xác nhận tổng thanh toán';
+            case 'Pending_Deposit_Payment': return 'Đợi thanh toán cọc'; // 1
+            case 'Vehicle_Inspected_After_Pickup': return 'Đợi xác nhận nhận xe'; // 8
+            case 'Pending_Total_Payment': return 'Đợi thanh toán đơn hàng'; // 9
+            case 'Pending_Total_Payment_Confirmation': return 'Đợi xác nhận tổng thanh toán'; // 10
             case 'Total_Fees_Charged': return 'Đã tính phí tổng';
             default: return status;
         }
     };
-
-    // Danh sách các trạng thái Admin được phép chọn thủ công (Theo yêu cầu)
-    const ALLOWED_MANUAL_STATUSES = [
-        "Pending_Deposit_Confirmation",
-        "Vehicle_Inspected_Before_Pickup",
-        "Currently_Renting",
-        "Pending_Total_Payment",
-        "Pending_Total_Payment_Confirmation"
-    ];
 
     // Helper: Format
     const formatMoney = (val) => (val || val === 0) ? Number(val).toLocaleString("vi-VN") + " đ" : "-";
@@ -156,6 +147,7 @@ const BookingManagement = () => {
         const { name, value } = e.target;
         setFormData(prev => {
             const next = { ...prev, [name]: value };
+            // Logic cascade reset
             if (name === 'stationId') {
                 next.vehicleModelId = "";
                 next.vehicleDetailId = "";
@@ -199,7 +191,7 @@ const BookingManagement = () => {
         }
     };
 
-    // --- Logic Client Filtering ---
+    // --- Logic Client Filtering (Dropdown Options) ---
     const currentStationData = masterData.find(s => s.stationId === Number(formData.stationId));
     const availableModels = currentStationData ? currentStationData.models : [];
     const currentModelData = availableModels.find(m => m.vehicleModelId === Number(formData.vehicleModelId));
@@ -207,22 +199,40 @@ const BookingManagement = () => {
 
     // --- LOGIC PHÂN QUYỀN TRẠNG THÁI (CORE LOGIC) ---
     
-    // Nhóm 1: Được đổi Model + Detail
-    const canChangeModel = (status) => status === 'Pending_Deposit_Payment';
-
-    // Nhóm 2: Được đổi Detail (nhưng khóa Model)
-    const canChangeDetail = (status) => {
-        const group2 = [
-            'Pending_Deposit_Payment',
-            'Pending_Deposit_Confirmation',
-            'Pending_Contract_Signing',
-            'Pending_Vehicle_Pickup',
-            'Vehicle_Inspected_Before_Pickup'
-        ];
-        return group2.includes(status);
+    // 1. Dòng xe (Model): 1, 2
+    const canChangeModel = (status) => {
+        return ['Pending_Deposit_Payment', 'Pending_Deposit_Confirmation'].includes(status);
     };
 
-    // Khóa nút Sửa
+    // 2. Chi tiết xe (Biển số): 5
+    const canChangeDetail = (status) => {
+        return status === 'Vehicle_Inspected_Before_Pickup';
+    };
+
+    // 3. Thời gian nhận: 1, 2, 3
+    const canChangeStartTime = (status) => {
+        return [
+            'Pending_Deposit_Payment',
+            'Pending_Deposit_Confirmation',
+            'Pending_Contract_Signing'
+        ].includes(status);
+    };
+
+    // 4. Trả dự kiến (Gia hạn): 6
+    // 4. Trả dự kiến (Gia hạn): 1 -> 6
+    const canChangeExpectedReturn = (status) => {
+        const allowed = [
+            'Pending_Deposit_Payment',          // 1
+            'Pending_Deposit_Confirmation',     // 2
+            'Pending_Contract_Signing',         // 3
+            'Pending_Vehicle_Pickup',           // 4
+            'Vehicle_Inspected_Before_Pickup',  // 5
+            'Currently_Renting'                 // 6
+        ];
+        return allowed.includes(status);
+    };
+
+    // Check disable cho nút sửa ở bảng ngoài (Completed/Cancelled)
     const isEditDisabled = (status) => status === 'Completed' || status === 'Cancelled';
 
     // --- Filtering Rows ---
@@ -347,7 +357,7 @@ const BookingManagement = () => {
                         <div className="booking-modal-body">
                             {loadingMaster ? <div style={{ textAlign: "center", padding: "20px" }}><i className="fas fa-spinner fa-spin"></i> Đang tải dữ liệu xe...</div> : (
                                 <div className="booking-form-grid">
-                                    {/* 1. TRẠM XE - LUÔN DISABLE */}
+                                    {/* 1. TRẠM XE - DISABLE TOÀN BỘ */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Trạm xe</label>
                                         <select 
@@ -367,10 +377,10 @@ const BookingManagement = () => {
                                         </select>
                                     </div>
 
-                                    {/* 2. MODEL - Disable nếu chưa có Trạm HOẶC trạng thái bị khóa */}
+                                    {/* 2. MODEL - Chỉ được chọn khi trạng thái 1, 2 */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">
-                                            Dòng xe (Model) 
+                                            Model xe
                                             {!canChangeModel(formData.status) && <span style={{fontSize: '11px', color: '#dc2626', marginLeft: '5px'}}>(Đã khóa)</span>}
                                         </label>
                                         <select 
@@ -387,11 +397,11 @@ const BookingManagement = () => {
                                         </select>
                                     </div>
 
-                                    {/* 3. DETAIL - Disable nếu chưa có Model HOẶC trạng thái bị khóa */}
+                                    {/* 3. DETAIL - Chỉ được chọn khi trạng thái 5 */}
                                     <div className="booking-form-group full-width">
                                         <label className="booking-form-label">
-                                            Chi tiết xe (Biển số)
-                                            {!canChangeDetail(formData.status) && <span style={{fontSize: '11px', color: '#dc2626', marginLeft: '5px'}}>(Đã khóa)</span>}
+                                            Chi tiết xe
+                                            {!canChangeDetail(formData.status)}
                                         </label>
                                         <select 
                                             name="vehicleDetailId"
@@ -415,34 +425,58 @@ const BookingManagement = () => {
                                     </div>
 
                                     {/* 4. Thời gian */}
+                                    {/* Thời gian nhận - Trạng thái 1, 2, 3 */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Thời gian nhận</label>
-                                        <input type="datetime-local" name="startTime" className="booking-form-input" value={formData.startTime} onChange={handleFormChange} />
-                                    </div>
-                                    <div className="booking-form-group">
-                                        <label className="booking-form-label">Trả dự kiến (Gia hạn)</label>
-                                        <input type="datetime-local" name="expectedReturnTime" className="booking-form-input" value={formData.expectedReturnTime} onChange={handleFormChange} />
-                                    </div>
-                                    <div className="booking-form-group">
-                                        <label className="booking-form-label">Trả thực tế</label>
-                                        <input type="datetime-local" name="actualReturnTime" className="booking-form-input" value={formData.actualReturnTime} onChange={handleFormChange} />
+                                        <input 
+                                            type="datetime-local" 
+                                            name="startTime" 
+                                            className="booking-form-input" 
+                                            value={formData.startTime} 
+                                            onChange={handleFormChange} 
+                                            disabled={!canChangeStartTime(formData.status)}
+                                        />
                                     </div>
 
-                                    {/* 5. Trạng thái - CHỈ HIỂN THỊ LIST CHO PHÉP */}
+                                    {/* Trả dự kiến - Trạng thái 6 */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Thời gian trả dự kiến</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            name="expectedReturnTime" 
+                                            className="booking-form-input" 
+                                            value={formData.expectedReturnTime} 
+                                            onChange={handleFormChange} 
+                                            disabled={!canChangeExpectedReturn(formData.status)}
+                                        />
+                                    </div>
+
+                                    {/* Trả thực tế - DISABLE TOÀN BỘ */}
+                                    <div className="booking-form-group">
+                                        <label className="booking-form-label">Trả thực tế</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            name="actualReturnTime" 
+                                            className="booking-form-input" 
+                                            value={formData.actualReturnTime} 
+                                            onChange={handleFormChange} 
+                                            disabled={true}
+                                            style={{ background: "#f1f5f9", cursor: "not-allowed" }}
+                                        />
+                                    </div>
+
+                                    {/* 5. Trạng thái - DISABLE TOÀN BỘ */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Trạng thái đơn hàng</label>
-                                        <select name="status" className="booking-form-select" value={formData.status} onChange={handleFormChange}>
-                                            {/* Luôn hiển thị trạng thái hiện tại nếu nó không nằm trong list cho phép (để tránh lỗi UI) */}
-                                            {!ALLOWED_MANUAL_STATUSES.includes(formData.status) && (
-                                                <option value={formData.status}>{getStatusText(formData.status)}</option>
-                                            )}
-                                            
-                                            {/* List các trạng thái được phép chọn */}
-                                            {ALLOWED_MANUAL_STATUSES.map(status => (
-                                                <option key={status} value={status}>
-                                                    {getStatusText(status)}
-                                                </option>
-                                            ))}
+                                        <select 
+                                            name="status" 
+                                            className="booking-form-select" 
+                                            value={formData.status} 
+                                            onChange={handleFormChange}
+                                            disabled={true}
+                                            style={{ background: "#f1f5f9", cursor: "not-allowed" }}
+                                        >
+                                            <option value={formData.status}>{getStatusText(formData.status)}</option>
                                         </select>
                                     </div>
                                 </div>
