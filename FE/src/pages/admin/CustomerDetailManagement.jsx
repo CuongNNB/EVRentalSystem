@@ -81,6 +81,12 @@ const CustomerDetailManagement = () => {
     const [saveError, setSaveError] = useState(null)
     const [savedMessage, setSavedMessage] = useState(null)
     const [showSuccess, setShowSuccess] = useState(false)
+    // helper: đã up đủ giấy tờ chưa
+    const hasAllDocs = !!(data?.cccdFrontUrl && data?.cccdBackUrl && data?.driverLicenseUrl)
+    const tooltipStyle = {
+        cursor: 'not-allowed',
+        backgroundColor: '#f3f4f6'
+    }
 
     // Helper: get last two words initials
     const getLastTwoInitials = (fullName = '') => {
@@ -146,6 +152,21 @@ const CustomerDetailManagement = () => {
                 setSaving(false)
                 return
             }
+            // ===== BUSINESS VALIDATION (tối thiểu) =====
+            // 1) Chỉ được chọn "Đã xác thực" khi đủ hình CCCD + GPLX
+            if (form.verificationStatus === 'VERIFIED' && !hasAllDocs) {
+                setSaveError('Không thể đặt "Đã xác thực" khi thiếu hình CCCD hoặc Giấy phép lái.')
+                setSaving(false)
+                return
+            }
+
+            // 2) Chỉ tài khoản đã xác thực mới được "Có hiệu lực"
+            if (form.status === 'ACTIVE' && form.verificationStatus !== 'VERIFIED') {
+                setSaveError('Chỉ tài khoản đã xác thực mới được đặt trạng thái "Có hiệu lực".')
+                setSaving(false)
+                return
+            }
+            // ===== END BUSINESS VALIDATION =====
 
             // build payload exactly matching UpdateRenterDetailRequest
             const payload = {
@@ -238,12 +259,24 @@ const CustomerDetailManagement = () => {
                             </div>
                             <div className="rd-field">
                                 <label><strong>Email:</strong></label>
-                                <input className="rd-input" value={form.email} onChange={onChange('email')} />
+                                <input
+                                    className="rd-input"
+                                    value={form.email}
+                                    disabled
+                                    style={tooltipStyle}
+                                    title="Không cho phép chỉnh sửa email khách hàng tại trang này."
+                                />
                             </div>
 
                             <div className="rd-field">
                                 <label><strong>Số điện thoại:</strong></label>
-                                <input className="rd-input" value={form.phone} onChange={onChange('phone')} />
+                                <input
+                                    className="rd-input"
+                                    value={form.phone}
+                                    disabled
+                                    style={tooltipStyle}
+                                    title="Không cho phép chỉnh sửa số điện thoại khách hàng tại trang này."
+                                />
                             </div>
 
                             <div className="rd-field">
