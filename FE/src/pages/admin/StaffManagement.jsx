@@ -300,7 +300,7 @@ const StaffManagement = () => {
               {/* Cố định độ rộng từng cột để thẳng hàng tuyệt đối */}
               <thead>
                 <tr>
-                  <th className="col-id">ID</th>
+                  <th className="col-id">#</th>
                   <th className="col-name">Nhân viên</th>
                   <th className="col-position">Vị trí</th>
                   <th className="col-station">Điểm làm việc</th>
@@ -312,9 +312,9 @@ const StaffManagement = () => {
               </thead>
 
               <tbody>
-                {filteredStaff.map((s) => (
+                {filteredStaff.map((s, index) => (
                   <tr key={s.id}>
-                    <td className="col-id staff-id" style={{ minWidth: 0, width: "-10px"}}>{s.id}</td>
+                    <td className="col-id staff-id" style={{ minWidth: 0, width: "-10px"}}>{index + 1}</td>
 
                     <td className="col-name">
                       <div className="staff-info-table" style={{ minWidth: 0 }}>

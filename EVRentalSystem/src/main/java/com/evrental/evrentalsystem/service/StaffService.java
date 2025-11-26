@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -255,8 +256,8 @@ public class StaffService {
             }
 
         }
-        if (feeName == AdditionalFeeEnum.Over_Mileage_Fee.toString()) {
-            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Odometer.toString());
+        if (Objects.equals(feeName, AdditionalFeeEnum.Over_Mileage_Fee.toString())) {
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Odometer);
             int odoBefore = Integer.parseInt(i.getDescription().replaceAll("[^0-9]", ""));
             int odoAfter = amount;
             long minutes = Duration.between(booking.getExpectedReturnTime(), booking.getActualReturnTime()).toMinutes();
@@ -283,15 +284,15 @@ public class StaffService {
                 return false;
             }
         }
-        if (feeName == AdditionalFeeEnum.Fuel_Fee.toString()) {
-            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Battery.toString());
+        if (Objects.equals(feeName, AdditionalFeeEnum.Fuel_Fee.toString())) {
+            Inspection i = inspectionRepository.findByBookingAndPartName(booking, PartCarName.Battery);
             if (amount < Integer.parseInt(i.getDescription())) {
                 try {
                     AdditionalFee af = new AdditionalFee();
                     af.setBooking(booking);
                     af.setFeeName(AdditionalFeeEnum.valueOf(feeName));
                     int batteryCapacity = Integer.parseInt(booking.getVehicleDetail().getBatteryCapacity().replaceAll("[^0-9]", ""));
-                    double cost = (Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue() / 100;
+                    double cost =((Integer.parseInt(i.getDescription()) - amount) * batteryCapacity * Enum.Cost_per_kWh.getValue()) / 100;
                     af.setAmount(cost);
                     af.setDescription(desc);
                     additionalFeeRepository.save(af);

@@ -351,7 +351,7 @@ const CustomerManagement = () => {
                         <table className="customers-table">
                             <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>#</th>
                                 <th>Khách hàng</th>
                                 <th>Liên hệ</th>
                                 <th>Rủi ro</th>
@@ -360,9 +360,9 @@ const CustomerManagement = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {filteredCustomers.map((customer) => (
+                            {filteredCustomers.map((customer, index) => (
                                 <tr key={customer.id}>
-                                    <td className="customer-id">{customer.id}</td>
+                                    <td className="customer-id">{index + 1}</td>
                                     <td>
                                         <div className="customer-info">
                                             <div className="customer-avatar">
@@ -430,7 +430,7 @@ const CustomerManagement = () => {
                         <table className="customers-table">
                             <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>#</th>
                                 <th>Khách hàng</th>
                                 <th>Liên hệ</th>
                                 <th>Rủi ro</th>
@@ -439,10 +439,10 @@ const CustomerManagement = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {filteredCustomers.map((customer) => (
+                            {filteredCustomers.map((customer, index) => (
                                 /* same row as above */
                                 <tr key={customer.id}>
-                                    <td className="customer-id">{customer.id}</td>
+                                    <td className="customer-id">{index + 1}</td>
                                     <td>
                                         <div className="customer-info">
                                             <div className="customer-avatar">

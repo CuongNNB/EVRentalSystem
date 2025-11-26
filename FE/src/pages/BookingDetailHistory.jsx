@@ -10,6 +10,7 @@ import CheckOutPage from './CheckoutPage'; // <- import CheckoutPage để nhún
 const API_BASE = 'http://localhost:8084/EVRentalSystem/api';
 
 // Map bookingStatus enum → Vietnamese text
+
 const getStatusText = (status) => {
     if (!status) return 'Không xác định';
     switch (status) {

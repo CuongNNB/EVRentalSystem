@@ -459,38 +459,6 @@ export default function StaffReport() {
         </div>
       </div>
 
-      {/* Quick report form */}
-      <section style={{marginTop:24}}>
-        <div style={{background:'#fff',borderRadius:10,padding:16,boxShadow:'0 1px 3px rgba(15,23,42,0.06)'}}>
-          <h3 style={{fontWeight:600,marginBottom:12}}>Báo cáo nhanh</h3>
-          <form onSubmit={handleSendReport} className="sr-form">
-            <div>
-              <label htmlFor="reportType" className="small-muted">Loại báo cáo</label>
-              <select id="reportType" value={reportType} onChange={(e) => setReportType(e.target.value)} className="sr-select">
-                <option> Sự cố</option>
-                <option> Pin yếu</option>
-                <option> Thiếu xe</option>
-                <option> Khác</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="reportDesc" className="small-muted">Mô tả</label>
-              <textarea id="reportDesc" value={reportDesc} onChange={(e) => setReportDesc(e.target.value)} rows={3} className="sr-textarea" />
-            </div>
-
-            <div>
-              <label htmlFor="reportFile" className="small-muted">Ảnh</label>
-              <input id="reportFile" type="file" onChange={(e) => setReportFile(e.target.files?.[0] ?? null)} />
-            </div>
-
-            <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
-              <button type="submit" className="sr-btn sr-btn--primary">Gửi báo cáo</button>
-              <button type="button" onClick={() => { setReportDesc(''); setReportFile(null); }} className="sr-btn sr-btn--ghost">Hủy</button>
-            </div>
-          </form>
-        </div>
-      </section>
           </section>
         </main>
       </div>
