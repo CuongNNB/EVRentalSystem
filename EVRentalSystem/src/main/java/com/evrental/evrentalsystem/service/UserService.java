@@ -14,6 +14,7 @@ import com.evrental.evrentalsystem.response.user.UpdateUserProfile;
 import com.evrental.evrentalsystem.response.user.UserLoginResponse;
 import com.evrental.evrentalsystem.response.user.UserResponse;
 import com.evrental.evrentalsystem.security.JwtService;
+import com.evrental.evrentalsystem.util.ImageUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -262,5 +263,42 @@ public class UserService {
         if (req.getAddress() != null) user.setAddress(req.getAddress().trim());
 
         return userRepository.save(user);
+    }
+
+    public void updateRenterPictures(Integer renterId,
+                                     MultipartFile cccdFrontFile,
+                                     MultipartFile cccdBackFile,
+                                     MultipartFile driverLicenseFile) {
+
+        // 1. Tìm thông tin RenterDetail
+        RenterDetail renterDetail = renterDetailRepository.findById(renterId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin người thuê với ID: " + renterId));
+
+        // 2. Kiểm tra trạng thái VerificationStatus
+        // Nếu KHÔNG phải là PENDING thì không cho phép cập nhật -> ném lỗi hoặc return
+        if (!RenterDetailVerificationStatusEnum.PENDING.equals(renterDetail.getVerificationStatus())) {
+            throw new RuntimeException("Chỉ được phép cập nhật ảnh khi trạng thái xác minh là PENDING (Đang chờ duyệt).");
+        }
+
+        // 3. Encode file sang Base64 bằng ImageUtil và cập nhật vào entity
+        // Kiểm tra null để tránh lỗi nếu người dùng không gửi đủ 3 file (tùy nghiệp vụ của bạn bắt buộc hay không)
+
+        if (cccdFrontFile != null && !cccdFrontFile.isEmpty()) {
+            String base64Front = ImageUtil.encodeToBase64(cccdFrontFile);
+            renterDetail.setCccdFront(base64Front);
+        }
+
+        if (cccdBackFile != null && !cccdBackFile.isEmpty()) {
+            String base64Back = ImageUtil.encodeToBase64(cccdBackFile);
+            renterDetail.setCccdBack(base64Back);
+        }
+
+        if (driverLicenseFile != null && !driverLicenseFile.isEmpty()) {
+            String base64License = ImageUtil.encodeToBase64(driverLicenseFile);
+            renterDetail.setDriverLicense(base64License);
+        }
+
+        // 4. Lưu xuống database
+        renterDetailRepository.save(renterDetail);
     }
 }

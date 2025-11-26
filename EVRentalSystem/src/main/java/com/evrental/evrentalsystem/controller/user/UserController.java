@@ -171,32 +171,56 @@ public class UserController {
                 ImageReader r = readers.next();
                 String format = r.getFormatName().toLowerCase(); // e.g. "png", "jpeg"
                 switch (format) {
-                    case "png": return "image/png";
+                    case "png":
+                        return "image/png";
                     case "jpeg":
-                    case "jpg": return "image/jpeg";
-                    case "gif": return "image/gif";
-                    case "bmp": return "image/bmp";
-                    default: return "image/" + format;
+                    case "jpg":
+                        return "image/jpeg";
+                    case "gif":
+                        return "image/gif";
+                    case "bmp":
+                        return "image/bmp";
+                    default:
+                        return "image/" + format;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return null;
     }
 
-//API http://localhost:8084/EVRentalSystem/api/users/{userId}/profile
-@PutMapping("/{userId}/profile")
-public ResponseEntity<UpdateUserProfile> updateProfile(
-        @PathVariable Integer userId,
-        @RequestBody UpdateUserProfile request) {
+    //API http://localhost:8084/EVRentalSystem/api/users/{userId}/profile
+    @PutMapping("/{userId}/profile")
+    public ResponseEntity<UpdateUserProfile> updateProfile(
+            @PathVariable Integer userId,
+            @RequestBody UpdateUserProfile request) {
 
-    User updated = userService.updateUserProfile(userId, request);
+        User updated = userService.updateUserProfile(userId, request);
 
-    UpdateUserProfile response = new UpdateUserProfile();
-    response.setFullName(updated.getFullName());
-    response.setPhone(updated.getPhone());
-    response.setEmail(updated.getEmail());
-    response.setAddress(updated.getAddress());
+        UpdateUserProfile response = new UpdateUserProfile();
+        response.setFullName(updated.getFullName());
+        response.setPhone(updated.getPhone());
+        response.setEmail(updated.getEmail());
+        response.setAddress(updated.getAddress());
 
-    return ResponseEntity.ok(response);
-}
+        return ResponseEntity.ok(response);
+    }
+
+    //API: http://localhost:8084/EVRentalSystem/api/users/{renterId}/update-pictures
+    @PutMapping(value = "/{renterId}/update-pictures", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateRenterPictures(
+            @PathVariable Integer renterId,
+            @RequestPart(value = "cccdFront", required = false) MultipartFile cccdFront,
+            @RequestPart(value = "cccdBack", required = false) MultipartFile cccdBack,
+            @RequestPart(value = "driverLicense", required = false) MultipartFile driverLicense
+    ) {
+        try {
+            userService.updateRenterPictures(renterId, cccdFront, cccdBack, driverLicense);
+            return ResponseEntity.ok("Cập nhật hình ảnh thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
+        }
+    }
 }
