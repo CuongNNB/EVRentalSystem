@@ -12,7 +12,7 @@ export default function ContractPage() {
     const renterSignRef = useRef(null);
 
     // ✅ Lấy dữ liệu forward từ BookingPage
-    const { fullBooking, response } = location.state || {};
+    const { fullBooking, response, viewOnly, contract } = location.state || {};
     const storedBooking =
         fullBooking || JSON.parse(localStorage.getItem("currentBooking")) || {};
 
@@ -118,6 +118,16 @@ export default function ContractPage() {
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
         );
     }, []);
+
+    // ✅ Effect xử lý chế độ View Only
+    useEffect(() => {
+        if (viewOnly) {
+            // Nếu xem lại hợp đồng đã ký, ta set trạng thái là đã ký luôn
+            setIsSignedB(true);
+
+            setRenterSign("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+        }
+    }, [viewOnly]);
 
     useEffect(() => {
         if (resendTimer > 0) {
@@ -357,13 +367,16 @@ export default function ContractPage() {
                                     <img src={renterSign} alt="Chữ ký Bên B" className="signature-image" />
                                 )}
                                 <div className="signature-actions">
-                                    {!isSignedB ? (
+                                    {/* Nếu chưa ký B và KHÔNG PHẢI chế độ xem -> Hiện nút ký */}
+                                    {!isSignedB && !viewOnly ? (
                                         <>
                                             <button className="btn-clear" onClick={handleClearSign}>Xóa ký</button>
                                             <button className="btn-confirm" onClick={handleConfirmSign}>Xác nhận ký</button>
                                         </>
                                     ) : (
-                                        <button className="btn-clear" onClick={handleClearSign}>Ký lại</button>
+                                        // Nếu đã ký nhưng KHÔNG PHẢI viewOnly (tức là vừa ký xong tức thì) -> Hiện nút Ký lại
+                                        // Nếu là viewOnly -> Ẩn luôn nút (render null)
+                                        !viewOnly && <button className="btn-clear" onClick={handleClearSign}>Ký lại</button>
                                     )}
                                 </div>
                             </div>
@@ -376,7 +389,7 @@ export default function ContractPage() {
                         </div>
                     </div>
 
-                    {isSignedB && (
+                    {isSignedB && !viewOnly && (
                         <div className="otp-section">
                             <h2>XÁC THỰC OTP</h2>
 

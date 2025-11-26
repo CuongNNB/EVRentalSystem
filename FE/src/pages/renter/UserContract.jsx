@@ -69,6 +69,7 @@ export default function UserContract() {
                     const s = String(status).toUpperCase();
                     if (s.includes("PENDING")) return "Đang chờ ký";
                     if (s.includes("SIGNED")) return "Đã ký";
+                    if (s.includes("WATING_FOR_VERIFICATION")) return "Đang chờ xác thực";
                     return status;
                 };
 
@@ -94,8 +95,15 @@ export default function UserContract() {
     }, []);
 
     const handleSignContract = (contract) => {
+        // Kiểm tra trạng thái gốc hoặc trạng thái đã map
+        const isSigned = String(contract.statusRaw || contract.status).toUpperCase().includes("SIGNED") || contract.status === "Đã ký";
+
         navigate(`/contract/${contract.contractId}`, {
-            state: { contract: contract.original || contract },
+            state: {
+                contract: contract.original || contract,
+                // Truyền thêm cờ viewOnly nếu đã ký
+                viewOnly: isSigned
+            },
         });
     };
 
@@ -173,55 +181,63 @@ export default function UserContract() {
                     ) : (
                         <table className="contract-table">
                             <thead>
-                            <tr>
-                                <th>MÃ HỢP ĐỒNG</th>
-                                <th>KHÁCH HÀNG</th>
-                                <th>NHÂN VIÊN PHỤ TRÁCH</th>
-                                <th>
-                                    <button
-                                        className={`sort-btn ${sortOrder}`}
-                                        onClick={toggleSort}
-                                    >
-                                        Ngày tạo
-                                        <span className="sort-arrow">▲</span>
-                                    </button>
-                                </th>
-                                <th>TRẠNG THÁI</th>
-                                <th>HÀNH ĐỘNG</th>
-                            </tr>
+                                <tr>
+                                    <th>MÃ HỢP ĐỒNG</th>
+                                    <th>KHÁCH HÀNG</th>
+                                    <th>NHÂN VIÊN PHỤ TRÁCH</th>
+                                    <th>
+                                        <button
+                                            className={`sort-btn ${sortOrder}`}
+                                            onClick={toggleSort}
+                                        >
+                                            Ngày tạo
+                                            <span className="sort-arrow">▲</span>
+                                        </button>
+                                    </th>
+                                    <th>TRẠNG THÁI</th>
+                                    <th>HÀNH ĐỘNG</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            {visibleContracts.map((contract, idx) => (
-                                <tr key={idx}>
-                                    <td>{contract.contractId}</td>
-                                    <td>{userName}</td>
-                                    <td>{contract.staffName}</td>
-                                    <td>{formatDateTime(contract.startTime)}</td>
-                                    <td>
-                      <span
-                          className={`status-badge ${
-                              contract.status === "Đang chờ ký"
-                                  ? "pending"
-                                  : contract.status === "Đã ký"
-                                      ? "signed"
-                                      : ""
-                          }`}
-                      >
-                        {contract.status}
-                      </span>
-                                    </td>
-                                    <td>
-                                        {contract.status === "Đang chờ ký" && (
-                                            <button
-                                                className="btn-view"
-                                                onClick={() => handleSignContract(contract)}
+                                {visibleContracts.map((contract, idx) => (
+                                    <tr key={idx}>
+                                        <td>{contract.contractId}</td>
+                                        <td>{userName}</td>
+                                        <td>{contract.staffName}</td>
+                                        <td>{formatDateTime(contract.startTime)}</td>
+                                        <td>
+                                            <span
+                                                className={`status-badge ${contract.status === "Đang chờ ký"
+                                                        ? "pending"
+                                                        : contract.status === "Đã ký"
+                                                            ? "signed"
+                                                            : ""
+                                                    }`}
                                             >
-                                                Ký hợp đồng
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
+                                                {contract.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {/* LOGIC MỚI: Hiển thị nút dựa trên trạng thái */}
+                                            {(contract.status === "Đang chờ ký" || contract.status === "Đang chờ xác thực") && (
+                                                <button
+                                                    className="btn-view"
+                                                    onClick={() => handleSignContract(contract)}
+                                                >
+                                                    Ký hợp đồng
+                                                </button>
+                                            )}
+                                            {contract.status === "Đã ký" && (
+                                                <button
+                                                    className="btn-view"
+                                                    onClick={() => handleSignContract(contract)}
+                                                >
+                                                    Xem hợp đồng
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     )}

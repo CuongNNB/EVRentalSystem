@@ -31,7 +31,7 @@ public class ContractService {
         String otp = otpService.generateOtp(bookingId);
         contract.setBooking(boooking);
         contract.setOtpCode(otp);
-        contract.setStatus(ContractStatusEnum.WATING_FOR_VERIFICATION);
+        contract.setStatus(ContractStatusEnum.PENDING);
         contractRepository.save(contract);
 
         mailService.sendOtpMail(email, otp);
