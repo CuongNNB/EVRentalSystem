@@ -84,8 +84,26 @@ public class VehicleManagementService {
     public String updateVehicleDetailStatus(Integer vehicleDetailId, String newStatus) {
         VehicleDetail vehicleDetail = vehicleDetailRepository.findById(vehicleDetailId)
                 .orElseThrow(() -> new RuntimeException("Vehicle detail not found with id: " + vehicleDetailId));
+        VehicleStatus current = vehicleDetail.getStatus();
+        VehicleStatus target = VehicleStatus.valueOf(newStatus);
 
-        vehicleDetail.setStatus(VehicleStatus.valueOf(newStatus));
+        // ❌ Đang thuê thì không cho đổi sang bất kỳ trạng thái nào khác
+        if (current == VehicleStatus.RENTED && target != VehicleStatus.RENTED) {
+            throw new RuntimeException("Xe đang được thuê. Trạng thái chỉ có thể thay đổi sau khi xe được trả lại.");
+        }
+
+        // ❌ Không cho set RENTED thủ công từ màn admin
+        if (current != VehicleStatus.RENTED && target == VehicleStatus.RENTED) {
+            throw new RuntimeException("Không thể đặt trạng thái 'Đang thuê' thủ công. Trạng thái này chỉ được cập nhật qua quy trình booking.");
+        }
+
+        // (Optional) Nếu đã DELETED thì không cho đổi nữa
+        if (current == VehicleStatus.DELETED) {
+            throw new RuntimeException("Xe đã bị xóa, không thể thay đổi trạng thái.");
+        }
+
+        vehicleDetail.setStatus(target);
+//        vehicleDetail.setStatus(VehicleStatus.valueOf(newStatus));
         vehicleDetailRepository.save(vehicleDetail);
 
         return "Vehicle detail status updated successfully.";
@@ -122,15 +140,36 @@ public class VehicleManagementService {
         vd.setBatteryCapacity(req.getBatteryCapacity());
         vd.setOdo(req.getOdo());
         vd.setColor(req.getColor());
-        vd.setStatus(VehicleStatus.AVAILABLE);
+//        vd.setStatus(VehicleStatus.AVAILABLE);
+//        if (detailPicture != null) {
+//            vd.setPicture(imageUtil.encodeToBase64(detailPicture));
+//        }
+        vd.setStation(station);
+        vd.setVehicleModel(vm);
+        VehicleStatus current = vd.getStatus();     // Trạng thái hiện tại trong DB
+        VehicleStatus target  = req.getStatus();
+        // Đang thuê -> không được đổi sang bất kỳ trạng thái khác
+        if (current == VehicleStatus.RENTED && target != VehicleStatus.RENTED) {
+            throw new RuntimeException("Xe đang được thuê. Trạng thái chỉ có thể thay đổi sau khi xe được trả lại.");
+        }
+
+        // Không cho set RENTED thủ công
+        if (current != VehicleStatus.RENTED && target == VehicleStatus.RENTED) {
+            throw new RuntimeException("Không thể đặt trạng thái 'Đang thuê' thủ công. Trạng thái này chỉ được cập nhật qua quy trình booking.");
+        }
+
+        // Optional: khóa luôn DELETED
+        if (current == VehicleStatus.DELETED && target != VehicleStatus.DELETED) {
+            throw new RuntimeException("Xe đã bị xóa, không thể thay đổi trạng thái.");
+        }
+
+        vd.setStatus(target);
         if (detailPicture != null) {
             vd.setPicture(imageUtil.encodeToBase64(detailPicture));
         }
-        vd.setStation(station);
-        vd.setVehicleModel(vm);
-        vd.setStatus(req.getStatus());
+//        vd.setStatus(req.getStatus());
         vehicleDetailRepository.save(vd);
-        return "Vehicle update created successfully.";
+        return "Vehicle detail updated successfully.";
     }
 
     public AdminGetAllVehicleDetailResponse getVehicleDetailById(Integer vehicleDetailId) {

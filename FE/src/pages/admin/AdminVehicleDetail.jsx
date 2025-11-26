@@ -194,6 +194,11 @@ const AdminVehicleDetail = () => {
   }
 
   const handleEdit = () => {
+    const status = (vehicle?.status || formData.status || '').toString().toUpperCase()
+    if (status === 'DELETED') {
+      setError('Xe đã bị xóa. Không thể chỉnh sửa thông tin.')
+      return
+    }
     setIsEditing(true)
     setSuccess(false)
     setError(null)
@@ -444,6 +449,8 @@ const AdminVehicleDetail = () => {
       case 'FIXING':
       case 'MAINTENANCE':
         return 'vehicle-status--fixing'
+      case 'DELETED':
+        return 'vehicle-status--deleted'
       default:
         return ''
     }
@@ -458,6 +465,8 @@ const AdminVehicleDetail = () => {
       case 'FIXING':
       case 'MAINTENANCE':
         return 'Bảo trì'
+      case 'DELETED':
+        return 'Đã xóa'
       default:
         return status || 'Không xác định'
     }
@@ -540,7 +549,9 @@ const AdminVehicleDetail = () => {
 
   const currentVehicle = vehicle || {}
   const imageSrc = imagePreview || (currentVehicle?.detailPicture ? String(currentVehicle.detailPicture).trim() : getImageSrc(currentVehicle))
-
+  const effectiveStatus = (isEditing ? formData.status : currentVehicle?.status) || ''
+  const isRented = String(effectiveStatus).toUpperCase() === 'RENTED'
+  const isDeleted = String(effectiveStatus).toUpperCase() === 'DELETED'
   return (
     <ErrorBoundary>
       <div className="vehicle-detail-page">
@@ -581,6 +592,8 @@ const AdminVehicleDetail = () => {
                 <button
                   className="vehicle-detail-action-btn vehicle-detail-action-btn--primary vehicle-detail-action-btn--edit"
                   onClick={handleEdit}
+                  disabled={isDeleted}
+                  title={isDeleted ? 'Xe đã bị xóa, không thể chỉnh sửa.' : 'Chỉnh sửa thông tin xe'}
                 >
                   <i className="fas fa-edit"></i>
                   <span>Chỉnh sửa</span>
@@ -588,6 +601,8 @@ const AdminVehicleDetail = () => {
                 <button
                   className="vehicle-detail-action-btn vehicle-detail-action-btn--warning"
                   onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isDeleted}
+                  title={isDeleted ? 'Xe đã bị xóa, không thể xóa thêm.' : 'Xóa xe'}
                 >
                   <i className="fas fa-trash"></i>
                   <span>Xóa xe</span>
@@ -728,18 +743,34 @@ const AdminVehicleDetail = () => {
                         <i className="fas fa-circle"></i>
                         Trạng thái
                       </span>
+
                       {isEditing ? (
-                        <select
-                          name="status"
-                          className="vehicle-info-select"
-                          value={formData.status}
-                          onChange={handleChange}
-                          required
-                        >
-                          <option value="AVAILABLE">Khả dụng</option>
-                          <option value="RENTED">Đang thuê</option>
-                          <option value="FIXING">Bảo trì</option>
-                        </select>
+                        <>
+                          <select
+                            name="status"
+                            className="vehicle-info-select"
+                            value={formData.status}
+                            onChange={handleChange}
+                            disabled={isRented}
+                            required
+                          >
+                            <option value="AVAILABLE">Khả dụng</option>
+                            <option value="RENTED" disabled>Đang thuê</option>
+                            <option value="FIXING">Bảo trì</option>
+                          </select>
+
+                          {isRented && (
+                            <p className="vehicle-info-hint">
+                              Xe đang trong chuyến thuê. Trạng thái chỉ được phép thay đổi sau khi xe được trả lại.
+                            </p>
+                          )}
+
+                          {isDeleted && (
+                            <p className="vehicle-info-hint">
+                              Xe đã bị xóa. Không thể thay đổi trạng thái.
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <span className={`vehicle-info-value ${getStatusBadgeClass(currentVehicle.status)}`}>
                           {getStatusLabel(currentVehicle.status)}
