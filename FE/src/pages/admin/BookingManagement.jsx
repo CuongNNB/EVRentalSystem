@@ -8,6 +8,8 @@ import ErrorBoundary from "../../components/admin/ErrorBoundary";
 const BookingManagement = () => {
     const API_BASE = "http://localhost:8084/EVRentalSystem";
 
+    const [confirmAction, setConfirmAction] = useState(null);
+
     // --- State cho Table ---
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -77,7 +79,7 @@ const BookingManagement = () => {
             const res = await fetch(`${API_BASE}/api/user-management/get-bookings`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            
+
             let arr = [];
             if (Array.isArray(data)) arr = data;
             else if (data && Array.isArray(data.data)) arr = data.data;
@@ -96,7 +98,7 @@ const BookingManagement = () => {
     };
 
     const fetchMasterData = async () => {
-        if (masterData.length > 0) return masterData; 
+        if (masterData.length > 0) return masterData;
         try {
             setLoadingMaster(true);
             const res = await fetch(`${API_BASE}/vehicle-management/get-all-about-station`);
@@ -121,7 +123,7 @@ const BookingManagement = () => {
     const handleEditClick = async (booking) => {
         const stations = await fetchMasterData();
         setEditingBooking(booking);
-        
+
         // Map StationName -> StationId nếu cần
         let resolvedStationId = booking.stationId;
         if (!resolvedStationId && booking.stationName) {
@@ -131,7 +133,7 @@ const BookingManagement = () => {
 
         setFormData({
             bookingId: booking.bookingId,
-            stationId: resolvedStationId || "", 
+            stationId: resolvedStationId || "",
             vehicleModelId: booking.vehicleModelId || "",
             vehicleDetailId: booking.vehicleDetailId || "",
             startTime: formatForInput(booking.startTime),
@@ -183,7 +185,7 @@ const BookingManagement = () => {
 
             alert("Cập nhật đơn hàng thành công!");
             setShowModal(false);
-            fetchBookings(); 
+            fetchBookings();
         } catch (err) {
             alert("Lỗi: " + err.message);
         } finally {
@@ -198,7 +200,7 @@ const BookingManagement = () => {
     const availableCars = currentModelData ? currentModelData.cars : [];
 
     // --- LOGIC PHÂN QUYỀN TRẠNG THÁI (CORE LOGIC) ---
-    
+
     // 1. Dòng xe (Model): 1, 2
     const canChangeModel = (status) => {
         return ['Pending_Deposit_Payment', 'Pending_Deposit_Confirmation'].includes(status);
@@ -243,7 +245,7 @@ const BookingManagement = () => {
             "Vehicle_Returned", "Vehicle_Inspected_After_Pickup", "Pending_Total_Payment",
             "Total_Fees_Charged", "Pending_Total_Payment_Confirmation"
         ];
-        
+
         let matchStatus = true;
         if (filterStatus === 'COMPLETED') matchStatus = r.status === 'Completed';
         else if (filterStatus === 'CANCELLED') matchStatus = r.status === 'Cancelled';
@@ -297,52 +299,52 @@ const BookingManagement = () => {
             </div>
 
             <div className="vehicles-table-container">
-                {loading ? <div className="empty-state"><i className="fas fa-spinner fa-spin"></i> <p>Đang tải...</p></div> : 
-                filteredRows.length === 0 ? <div className="empty-state"><i className="fas fa-list"></i> <p>Không tìm thấy đơn hàng</p></div> : (
-                    <table className="vehicles-table">
-                        <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Khách thuê</th>
-                                <th>Trạm xe</th> 
-                                <th>Xe (Biển số)</th>
-                                <th>Thời gian nhận</th>
-                                <th>Trả dự kiến</th>
-                                <th>Cọc</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th style={{ textAlign: "center" }}>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRows.map((r) => (
-                                <tr key={r.bookingId}>
-                                    <td style={{ fontWeight: "bold", color: "#3b82f6" }}>#{r.bookingId}</td>
-                                    <td>
-                                        <div>{r.renterName}</div>
-                                        <div style={{ fontSize: "11px", color: "#64748b" }}>{r.renterPhone}</div>
-                                    </td>
-                                    <td><div style={{ fontWeight: 500 }}>{r.stationName || "-"}</div></td>
-                                    <td>
-                                        {r.vehicleBrand} {r.vehicleModel}
-                                        {r.licensePlate && <div className="vehicle-license-cell" style={{ fontSize: "12px" }}>{r.licensePlate}</div>}
-                                    </td>
-                                    <td>{formatDateTime(r.startTime)}</td>
-                                    <td>{formatDateTime(r.expectedReturnTime)}</td>
-                                    <td>{formatMoney(r.deposit)}</td>
-                                    <td>{formatMoney(r.paymentTotal)}</td>
-                                    <td><span className={`status-badge ${r.status}`}>{getStatusText(r.status)}</span></td>
-                                    <td style={{ textAlign: "center" }}>
-                                        <button className="admin-btn-secondary" style={{ padding: "6px 12px", fontSize: "12px" }}
-                                            onClick={() => handleEditClick(r)} disabled={isEditDisabled(r.status)}>
-                                            <i className="fas fa-edit"></i> Sửa
-                                        </button>
-                                    </td>
+                {loading ? <div className="empty-state"><i className="fas fa-spinner fa-spin"></i> <p>Đang tải...</p></div> :
+                    filteredRows.length === 0 ? <div className="empty-state"><i className="fas fa-list"></i> <p>Không tìm thấy đơn hàng</p></div> : (
+                        <table className="vehicles-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách thuê</th>
+                                    <th>Trạm xe</th>
+                                    <th>Xe (Biển số)</th>
+                                    <th>Thời gian nhận</th>
+                                    <th>Trả dự kiến</th>
+                                    <th>Cọc</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th style={{ textAlign: "center" }}>Hành động</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            </thead>
+                            <tbody>
+                                {filteredRows.map((r) => (
+                                    <tr key={r.bookingId}>
+                                        <td style={{ fontWeight: "bold", color: "#3b82f6" }}>#{r.bookingId}</td>
+                                        <td>
+                                            <div>{r.renterName}</div>
+                                            <div style={{ fontSize: "11px", color: "#64748b" }}>{r.renterPhone}</div>
+                                        </td>
+                                        <td><div style={{ fontWeight: 500 }}>{r.stationName || "-"}</div></td>
+                                        <td>
+                                            {r.vehicleBrand} {r.vehicleModel}
+                                            {r.licensePlate && <div className="vehicle-license-cell" style={{ fontSize: "12px" }}>{r.licensePlate}</div>}
+                                        </td>
+                                        <td>{formatDateTime(r.startTime)}</td>
+                                        <td>{formatDateTime(r.expectedReturnTime)}</td>
+                                        <td>{formatMoney(r.deposit)}</td>
+                                        <td>{formatMoney(r.paymentTotal)}</td>
+                                        <td><span className={`status-badge ${r.status}`}>{getStatusText(r.status)}</span></td>
+                                        <td style={{ textAlign: "center" }}>
+                                            <button className="admin-btn-secondary" style={{ padding: "6px 12px", fontSize: "12px" }}
+                                                onClick={() => handleEditClick(r)} disabled={isEditDisabled(r.status)}>
+                                                <i className="fas fa-edit"></i> Sửa
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
             </div>
 
             {/* --- EDIT MODAL OVERLAY --- */}
@@ -360,11 +362,11 @@ const BookingManagement = () => {
                                     {/* 1. TRẠM XE - DISABLE TOÀN BỘ */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Trạm xe</label>
-                                        <select 
+                                        <select
                                             name="stationId"
                                             className="booking-form-select"
                                             value={formData.stationId}
-                                            disabled={true} 
+                                            disabled={true}
                                             style={{ background: "#f1f5f9", cursor: "not-allowed" }}
                                         >
                                             <option value="">-- Chọn Trạm --</option>
@@ -381,9 +383,9 @@ const BookingManagement = () => {
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">
                                             Model xe
-                                            {!canChangeModel(formData.status) && <span style={{fontSize: '11px', color: '#dc2626', marginLeft: '5px'}}>(Đã khóa)</span>}
+                                            {!canChangeModel(formData.status) && <span style={{ fontSize: '11px', color: '#dc2626', marginLeft: '5px' }}>(Đã khóa)</span>}
                                         </label>
-                                        <select 
+                                        <select
                                             name="vehicleModelId"
                                             className="booking-form-select"
                                             value={formData.vehicleModelId}
@@ -403,7 +405,7 @@ const BookingManagement = () => {
                                             Chi tiết xe
                                             {!canChangeDetail(formData.status)}
                                         </label>
-                                        <select 
+                                        <select
                                             name="vehicleDetailId"
                                             className="booking-form-select"
                                             value={formData.vehicleDetailId}
@@ -428,12 +430,12 @@ const BookingManagement = () => {
                                     {/* Thời gian nhận - Trạng thái 1, 2, 3 */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Thời gian nhận</label>
-                                        <input 
-                                            type="datetime-local" 
-                                            name="startTime" 
-                                            className="booking-form-input" 
-                                            value={formData.startTime} 
-                                            onChange={handleFormChange} 
+                                        <input
+                                            type="datetime-local"
+                                            name="startTime"
+                                            className="booking-form-input"
+                                            value={formData.startTime}
+                                            onChange={handleFormChange}
                                             disabled={!canChangeStartTime(formData.status)}
                                         />
                                     </div>
@@ -441,12 +443,12 @@ const BookingManagement = () => {
                                     {/* Trả dự kiến - Trạng thái 6 */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Thời gian trả dự kiến</label>
-                                        <input 
-                                            type="datetime-local" 
-                                            name="expectedReturnTime" 
-                                            className="booking-form-input" 
-                                            value={formData.expectedReturnTime} 
-                                            onChange={handleFormChange} 
+                                        <input
+                                            type="datetime-local"
+                                            name="expectedReturnTime"
+                                            className="booking-form-input"
+                                            value={formData.expectedReturnTime}
+                                            onChange={handleFormChange}
                                             disabled={!canChangeExpectedReturn(formData.status)}
                                         />
                                     </div>
@@ -454,12 +456,12 @@ const BookingManagement = () => {
                                     {/* Trả thực tế - DISABLE TOÀN BỘ */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Trả thực tế</label>
-                                        <input 
-                                            type="datetime-local" 
-                                            name="actualReturnTime" 
-                                            className="booking-form-input" 
-                                            value={formData.actualReturnTime} 
-                                            onChange={handleFormChange} 
+                                        <input
+                                            type="datetime-local"
+                                            name="actualReturnTime"
+                                            className="booking-form-input"
+                                            value={formData.actualReturnTime}
+                                            onChange={handleFormChange}
                                             disabled={true}
                                             style={{ background: "#f1f5f9", cursor: "not-allowed" }}
                                         />
@@ -468,10 +470,10 @@ const BookingManagement = () => {
                                     {/* 5. Trạng thái - DISABLE TOÀN BỘ */}
                                     <div className="booking-form-group">
                                         <label className="booking-form-label">Trạng thái đơn hàng</label>
-                                        <select 
-                                            name="status" 
-                                            className="booking-form-select" 
-                                            value={formData.status} 
+                                        <select
+                                            name="status"
+                                            className="booking-form-select"
+                                            value={formData.status}
                                             onChange={handleFormChange}
                                             disabled={true}
                                             style={{ background: "#f1f5f9", cursor: "not-allowed" }}
@@ -484,14 +486,63 @@ const BookingManagement = () => {
                         </div>
 
                         <div className="booking-modal-footer">
-                            <button className="btn-cancel" onClick={() => setShowModal(false)}>Hủy bỏ</button>
-                            <button className="btn-save" onClick={handleUpdate} disabled={submitting || loadingMaster}>
-                                {submitting ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>} <span>Lưu thay đổi</span>
+                            <button
+                                className="btn-cancel"
+                                onClick={() => setConfirmAction('cancel')}   // ✅ mở popup xác nhận HỦY
+                            >
+                                Hủy bỏ
+                            </button>
+
+                            <button
+                                className="btn-save"
+                                onClick={() => setConfirmAction('save')}     // ✅ mở popup xác nhận LƯU
+                                disabled={submitting || loadingMaster}
+                            >
+                                {submitting
+                                    ? <i className="fas fa-spinner fa-spin"></i>
+                                    : <i className="fas fa-save"></i>
+                                }
+                                <span>Lưu thay đổi</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+            {confirmAction && (
+                <div className="booking-confirm-overlay">
+                    <div className="booking-confirm-box">
+                        <h3>Xác nhận</h3>
+
+                        <p>
+                            {confirmAction === 'save'
+                                ? 'Bạn có chắc muốn lưu thay đổi?'
+                                : 'Bạn có chắc muốn hủy bỏ?'}
+                        </p>
+
+                        <div className="booking-confirm-actions">
+                            <button className="btn-cancel" onClick={() => setConfirmAction(null)}>
+                                Không
+                            </button>
+
+                            <button
+                                className="btn-save"
+                                onClick={async () => {
+                                    if (confirmAction === 'save') {
+                                        await handleUpdate();
+                                    } else {
+                                        setShowModal(false);
+                                    }
+                                    setConfirmAction(null);
+                                }}
+                            >
+                                Đồng ý
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
         </ErrorBoundary>
     );
 };
