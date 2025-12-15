@@ -8,7 +8,7 @@ The **EV Station-based Rental System** is designed to handle the end-to-end work
 
 ## 🌟 Key Features
 
-### 1. For EV Renters (Mobile App) 📱
+### 1. For EV Renters
 * **Registration & Verification:**
     * Create accounts and upload necessary documents (Driving License, ID/Passport).
     * Quick identity verification via station staff.
@@ -28,7 +28,7 @@ The **EV Station-based Rental System** is designed to handle the end-to-end work
     * View past trip history, costs, and mileage.
     * Usage statistics (Rental frequency, peak/off-peak usage).
 
-### 2. For Station Staff (Tablet/Web App) 📋
+### 2. For Station Staff
 * **Handover & Return Management:**
     * View lists of available, reserved, and currently rented vehicles.
     * Execute handover procedures: Check vehicle, take photos, update status.
@@ -69,8 +69,7 @@ The **EV Station-based Rental System** is designed to handle the end-to-end work
 ## 🛠 Tech Stack (Suggested)
 *(Note: You can update this section based on your actual implementation)*
 
-* **Mobile App (Renter):** React Native / Flutter
-* **Web Portal (Staff/Admin):** React.js / Vue.js / Angular
-* **Backend:** Node.js / Python (Django/FastAPI) / Java (Spring Boot)
-* **Database:** PostgreSQL / MongoDB
-* **Maps API:** Google Maps API / Mapbox
+* **Mobile App (Renter):** React Native
+* **Web Portal (Staff/Admin):** React.js
+* **Backend:** Java (Spring Boot)
+* **Database:** SQL Server
